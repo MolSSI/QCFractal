@@ -49,7 +49,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.extlinks",
     "sphinx_design",
-    "sphinxcontrib.autodoc_pydantic",
+#    "sphinxcontrib.autodoc_pydantic",
     "sphinx_copybutton",
     "myst_nb",
 ]
@@ -65,8 +65,8 @@ autodoc_default_options = {
     "show-inheritance": True,
     "member-order": "bysource",
 }
-autodoc_pydantic_model_show_json = False
-autodoc_pydantic_settings_show_json = False
+#autodoc_pydantic_model_show_json = False
+#autodoc_pydantic_settings_show_json = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = [

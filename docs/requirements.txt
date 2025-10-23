@@ -1,9 +1,7 @@
-sphinx<8.0
+sphinx
 sphinx_design
 sphinx-copybutton
 pydata_sphinx_theme
-pydantic<2.0a0
-autodoc-pydantic<2.0a0
 myst-nb
 nglview
 -e ../qcportal

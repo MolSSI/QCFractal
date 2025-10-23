@@ -1,14 +1,11 @@
 import logging
 import os
 from typing import List, Optional, Union, Dict, Any
+from typing import Literal, Annotated
 
 import yaml
-
-try:
-    from pydantic.v1 import BaseModel, Field, validator, root_validator
-except ImportError:
-    from pydantic import BaseModel, Field, validator, root_validator
-from typing_extensions import Literal
+from pydantic import BaseModel, Field, field_validator, model_validator, BeforeValidator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from qcportal.utils import seconds_to_hms, duration_to_seconds, update_nested_dict
 
@@ -31,7 +28,28 @@ def _make_abs_path(path: Optional[str], base_folder: str, default_filename: Opti
         return os.path.abspath(path)
 
 
-class PackageEnvironmentSettings(BaseModel):
+def _walltime_must_be_str(w) -> str:
+    """
+    Converts walltime to a string if it is a number
+
+    If walltime is an int, float, or a string that is a integer, convert it to a
+    string in the format HH:MM:SS. Otherwise, return the original value.
+    """
+
+    """"""
+    if isinstance(w, (float, int)):
+        return seconds_to_hms(w)
+    elif isinstance(w, str) and w.isdigit():
+        return seconds_to_hms(int(w))
+    else:
+        return w
+
+
+class QCFComputeConfigBase(BaseSettings):
+    model_config = SettingsConfigDict(extra="forbid", case_sensitive=False, env_prefix="QCF_COMPUTE_")
+
+
+class PackageEnvironmentSettings(QCFComputeConfigBase):
     """
     Environments with installed packages that can be used to run calculations
 
@@ -39,14 +57,17 @@ class PackageEnvironmentSettings(BaseModel):
     direct appropriate calculations to them.
     """
 
-    use_manager_environment: bool = True
+    use_manager_environment: bool = Field(
+        True,
+        description="Use the environment that the manager is running in for computation. May be in addition to other environments",
+    )
     conda: List[str] = Field([], description="List of conda environments to query for installed packages")
     apptainer: List[str] = Field(
         [], description="List of paths to apptainer/singularity files to query for installed packages"
     )
 
 
-class ExecutorConfig(BaseModel):
+class ExecutorConfig(QCFComputeConfigBase):
     type: str
     compute_tags: List[str]
     worker_init: List[str] = []
@@ -59,19 +80,7 @@ class ExecutorConfig(BaseModel):
 
     extra_executor_options: Dict[str, Any] = {}
 
-    environments: PackageEnvironmentSettings = PackageEnvironmentSettings()
-
-    class Config(BaseModel.Config):
-        case_insensitive = True
-        extra = "forbid"
-
-    # TODO - DEPRECATED - REMOVE EVENTUALLY
-    @root_validator(pre=True)
-    def _old_queue_tag(cls, values):
-        if "queue_tags" in values:
-            values["compute_tags"] = values.pop("queue_tags")
-
-        return values
+    environments: PackageEnvironmentSettings = Field(default_factory=PackageEnvironmentSettings)
 
 
 class CustomExecutorConfig(ExecutorConfig):
@@ -87,7 +96,7 @@ class LocalExecutorConfig(ExecutorConfig):
 class SlurmExecutorConfig(ExecutorConfig):
     type: Literal["slurm"] = "slurm"
 
-    walltime: str
+    walltime: Annotated[str, BeforeValidator(_walltime_must_be_str)]
     exclusive: bool = True
     partition: Optional[str] = None
     account: Optional[str] = None
@@ -97,18 +106,11 @@ class SlurmExecutorConfig(ExecutorConfig):
 
     scheduler_options: List[str] = []
 
-    @validator("walltime", pre=True)
-    def walltime_must_be_str(cls, v):
-        if isinstance(v, int):
-            return seconds_to_hms(v)
-        else:
-            return v
-
 
 class TorqueExecutorConfig(ExecutorConfig):
     type: Literal["torque"] = "torque"
 
-    walltime: str
+    walltime: Annotated[str, BeforeValidator(_walltime_must_be_str)]
     account: Optional[str] = None
     queue: Optional[str] = None
 
@@ -117,15 +119,11 @@ class TorqueExecutorConfig(ExecutorConfig):
 
     scheduler_options: List[str] = []
 
-    @validator("walltime", pre=True)
-    def walltime_must_be_str(cls, v):
-        return seconds_to_hms(duration_to_seconds(v))
-
 
 class LSFExecutorConfig(ExecutorConfig):
     type: Literal["lsf"] = "lsf"
 
-    walltime: str
+    walltime: Annotated[str, BeforeValidator(_walltime_must_be_str)]
     project: Optional[str] = None
     queue: Optional[str] = None
 
@@ -137,17 +135,20 @@ class LSFExecutorConfig(ExecutorConfig):
 
     scheduler_options: List[str] = []
 
-    @validator("walltime", pre=True)
-    def walltime_must_be_str(cls, v):
-        return seconds_to_hms(duration_to_seconds(v))
 
-
-AllExecutorTypes = Union[
-    CustomExecutorConfig, LocalExecutorConfig, SlurmExecutorConfig, TorqueExecutorConfig, LSFExecutorConfig
+AllExecutorTypes = Annotated[
+    Union[
+        CustomExecutorConfig,
+        LocalExecutorConfig,
+        SlurmExecutorConfig,
+        TorqueExecutorConfig,
+        LSFExecutorConfig,
+    ],
+    Field(discriminator="type"),
 ]
 
 
-class FractalServerSettings(BaseModel):
+class FractalServerSettings(QCFComputeConfigBase):
     """
     Settings pertaining to the Fractal Server you wish to pull tasks from and push completed tasks to. Each manager
     supports exactly 1 Fractal Server to be in communication with, and exactly 1 user on that Fractal Server. These
@@ -169,12 +170,8 @@ class FractalServerSettings(BaseModel):
     )
     verify: Optional[bool] = Field(None, description="Use Server-side generated SSL certification or not.")
 
-    class Config(BaseModel.Config):
-        case_insensitive = True
-        extra = "forbid"
 
-
-class FractalComputeConfig(BaseModel):
+class FractalComputeConfig(QCFComputeConfigBase):
     base_folder: str = Field(
         ...,
         description="The base folder to use as the default for some options (logs, etc). Default is the location of the config file.",
@@ -218,24 +215,22 @@ class FractalComputeConfig(BaseModel):
     parsl_usage_tracking: int = 0
 
     server: FractalServerSettings = Field(...)
-    environments: PackageEnvironmentSettings = PackageEnvironmentSettings()
+    environments: PackageEnvironmentSettings = Field(default_factory=PackageEnvironmentSettings)
     executors: Dict[str, AllExecutorTypes] = Field(...)
 
-    class Config(BaseModel.Config):
-        case_insensitive = True
-        extra = "forbid"
+    @model_validator(mode="after")
+    def _check_paths(self):
+        self.logfile = _make_abs_path(self.logfile, self.base_folder, None)
+        self.parsl_run_dir = _make_abs_path(self.parsl_run_dir, self.base_folder, "parsl_run_dir")
+        return self
 
-    @validator("logfile")
-    def _check_logfile(cls, v, values):
-        return _make_abs_path(v, values["base_folder"], None)
-
-    @validator("parsl_run_dir")
-    def _check_run_dir(cls, v, values):
-        return _make_abs_path(v, values["base_folder"], "parsl_run_dir")
-
-    @validator("update_frequency", "max_idle_time", pre=True)
+    @field_validator("update_frequency", "max_idle_time", mode="before")
+    @classmethod
     def _convert_durations(cls, v):
-        return duration_to_seconds(v)
+        if v is None:
+            return None
+        else:
+            return duration_to_seconds(v)
 
 
 def read_configuration(file_paths: List[str], extra_config: Optional[Dict[str, Any]] = None) -> FractalComputeConfig:

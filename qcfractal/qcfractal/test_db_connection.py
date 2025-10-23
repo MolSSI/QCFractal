@@ -157,13 +157,13 @@ def test_db_connection_hosts(tmp_path):
 
     try:
         # Make sure tests can fail
-        new_db_config = pg_harness.config.copy(update={"password": "not_correct"})
+        new_db_config = pg_harness.config.model_copy(update={"password": "not_correct"})
         new_pg_harness = PostgresHarness(new_db_config)
         assert new_pg_harness.can_connect() is False
 
         sock_path = os.path.join(db_config.data_directory, "sock")
         for test_host in ["localhost", "127.0.0.1", sock_path]:
-            new_db_config = db_config.copy(update={"host": test_host})
+            new_db_config = db_config.model_copy(update={"host": test_host})
             assert PostgresHarness(new_db_config).can_connect()
             assert create_engine(new_db_config.sqlalchemy_url).connect()
             SQLAlchemySocket.upgrade_database(new_db_config)
@@ -197,12 +197,12 @@ def test_db_connection_full_uri(tmp_path):
     assert pg_harness.can_connect()
 
     # Make sure tests can fail
-    new_db_config = pg_harness.config.copy(update={"password": "not_correct"})
+    new_db_config = pg_harness.config.model_copy(update={"password": "not_correct"})
     new_pg_harness = PostgresHarness(new_db_config)
     assert new_pg_harness.can_connect() is False
 
     def can_connect(full_uri):
-        test_cfg = db_config.copy(update={"full_uri": full_uri})
+        test_cfg = db_config.model_copy(update={"full_uri": full_uri})
         assert PostgresHarness(test_cfg).can_connect()
         assert create_engine(test_cfg.sqlalchemy_url).connect()
         SQLAlchemySocket.upgrade_database(test_cfg)

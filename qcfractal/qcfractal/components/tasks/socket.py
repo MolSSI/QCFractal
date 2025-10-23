@@ -43,7 +43,7 @@ class TaskSocket:
         self._logger = logging.getLogger(__name__)
 
         self._tasks_claim_limit = root_socket.qcf_config.api_limits.manager_tasks_claim
-        self._strict_queue_tags = root_socket.qcf_config.strict_queue_tags
+        self._strict_compute_tags = root_socket.qcf_config.strict_compute_tags
 
     def update_finished(
         self, manager_name: str, results_compressed: Dict[int, bytes], *, session: Optional[Session] = None
@@ -331,9 +331,9 @@ class TaskSocket:
                     TaskQueueORM.compute_priority.desc(), TaskQueueORM.sort_date.asc(), TaskQueueORM.id.asc()
                 )
 
-                # If tag is "*" (and strict_queue_tags is False), then the manager can pull anything
-                # If tag is "*" and strict_queue_tags is enabled, only pull tasks with tag == '*'
-                if tag != "*" or self._strict_queue_tags:
+                # If tag is "*" (and strict_compute_tags is False), then the manager can pull anything
+                # If tag is "*" and strict_compute_tags is enabled, only pull tasks with tag == '*'
+                if tag != "*" or self._strict_compute_tags:
                     stmt = stmt.filter(TaskQueueORM.compute_tag == tag)
 
                 # Skip locked rows - They may be in the process of being claimed by someone else

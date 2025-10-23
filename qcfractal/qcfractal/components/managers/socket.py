@@ -313,9 +313,9 @@ class ManagerSocket:
         stmt = stmt.where(ComputeManagerORM.programs.op("?&")(program_names))  # ?& = JSONB contains the keys of ...
 
         # Handle *
-        # If the server doesn't have strict_queue_tags and there is a * in the tags, then
+        # If the server doesn't have strict_compute_tags and there is a * in the tags, then
         # don't limit the query
-        if "*" not in compute_tag or ("*" in compute_tag and self.root_socket.qcf_config.strict_queue_tags):
+        if "*" not in compute_tag or ("*" in compute_tag and self.root_socket.qcf_config.strict_compute_tags):
             stmt = stmt.where(ComputeManagerORM.compute_tags.op("&&")(compute_tag))  # && = overlaps between two arrays
 
         with self.root_socket.optional_session(session, True) as session:
