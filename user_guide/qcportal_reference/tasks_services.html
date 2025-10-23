@@ -31,7 +31,6 @@
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
@@ -43,8 +42,8 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=44d3b0ad"></script>
-    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/documentation_options.js?v=8938c948"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
@@ -56,7 +55,7 @@
     <link rel="prev" title="Metadata Models" href="metadata_models.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.63.post6+g5015d795c" />
+  <meta name="docsearch:version" content="0.63.post17+gaf5c99e6a" />
   </head>
   
   
@@ -508,81 +507,107 @@
                   
   <section id="module-qcportal.generic_result">
 <span id="tasks-and-services"></span><h1>Tasks and Services<a class="headerlink" href="#module-qcportal.generic_result" title="Link to this heading">#</a></h1>
-<dl class="py class pydantic_model">
+<dl class="py class">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult">
-<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GenericTaskResult</span></span><a class="reference internal" href="../../_modules/qcportal/generic_result.html#GenericTaskResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GenericTaskResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'qca_generic_task_result'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stderr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">success</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/generic_result.html#GenericTaskResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ProtoModel</span></code></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>allow_mutation</strong>: <em>bool = False</em></p></li>
-<li><p><strong>extra</strong>: <em>str = forbid</em></p></li>
-<li><p><strong>force_skip_defaults</strong>: <em>bool = False</em></p></li>
-<li><p><strong>json_encoders</strong>: <em>dict = {&lt;class ‘numpy.ndarray’&gt;: &lt;function ProtoModel.Config.&lt;lambda&gt; at 0x7ff0edad8ea0&gt;}</em></p></li>
-<li><p><strong>serialize_default_excludes</strong>: <em>set = set()</em></p></li>
-<li><p><strong>serialize_skip_defaults</strong>: <em>bool = False</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Fields<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.error" title="qcportal.generic_result.GenericTaskResult.error"><code class="xref py py-obj docutils literal notranslate"><span class="pre">error</span> <span class="pre">(qcelemental.models.common_models.ComputeError</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.extras" title="qcportal.generic_result.GenericTaskResult.extras"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extras</span> <span class="pre">(Dict[str,</span> <span class="pre">Any])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.id" title="qcportal.generic_result.GenericTaskResult.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(int)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.provenance" title="qcportal.generic_result.GenericTaskResult.provenance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">provenance</span> <span class="pre">(qcelemental.models.common_models.Provenance)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.results" title="qcportal.generic_result.GenericTaskResult.results"><code class="xref py py-obj docutils literal notranslate"><span class="pre">results</span> <span class="pre">(Any)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.schema_name" title="qcportal.generic_result.GenericTaskResult.schema_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">schema_name</span> <span class="pre">(Literal['qca_generic_task_result'])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.stderr" title="qcportal.generic_result.GenericTaskResult.stderr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stderr</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.stdout" title="qcportal.generic_result.GenericTaskResult.stdout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stdout</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.success" title="qcportal.generic_result.GenericTaskResult.success"><code class="xref py py-obj docutils literal notranslate"><span class="pre">success</span> <span class="pre">(bool)</span></code></a></p></li>
+<li><p><strong>schema_name</strong> (<em>Literal</em><em>[</em><em>'qca_generic_task_result'</em><em>]</em>)</p></li>
+<li><p><strong>id</strong> (<em>int</em>)</p></li>
+<li><p><strong>results</strong> (<em>Any</em>)</p></li>
+<li><p><strong>stdout</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>stderr</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>success</strong> (<em>bool</em>)</p></li>
+<li><p><strong>provenance</strong> (<em>Provenance</em>)</p></li>
+<li><p><strong>extras</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>error</strong> (<em>ComputeError</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.schema_name">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">schema_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'qca_generic_task_result'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'qca_generic_task_result'</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.schema_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">schema_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'qca_generic_task_result'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.schema_name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.id">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.id" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.results">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">results</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.results" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">results</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.results" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.stdout">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stdout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.stdout" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">stdout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.stdout" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.stderr">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stderr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.stderr" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">stderr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.stderr" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.success">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.success" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.success" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.provenance">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">provenance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Provenance</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.provenance" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">provenance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Provenance</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.provenance" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.extras">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extras</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.extras" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">extras</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.extras" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.error">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ComputeError</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.error" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">error</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ComputeError</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.error" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.Config">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.Config" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.Config.allow_mutation">
+<span class="sig-name descname"><span class="pre">allow_mutation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.Config.allow_mutation" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.Config.extra">
+<span class="sig-name descname"><span class="pre">extra</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.Config.extra" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.Config.force_skip_defaults">
+<span class="sig-name descname"><span class="pre">force_skip_defaults</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.Config.force_skip_defaults" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.Config.json_encoders">
+<span class="sig-name descname"><span class="pre">json_encoders</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{&lt;class</span> <span class="pre">'numpy.ndarray'&gt;:</span> <span class="pre">&lt;function</span> <span class="pre">ProtoModel.Config.&lt;lambda&gt;&gt;}</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.Config.json_encoders" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.Config.serialize_default_excludes">
+<span class="sig-name descname"><span class="pre">serialize_default_excludes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.Config.serialize_default_excludes" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.Config.serialize_skip_defaults">
+<span class="sig-name descname"><span class="pre">serialize_skip_defaults</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.Config.serialize_skip_defaults" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.compare">
@@ -624,7 +649,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.parse_file">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.parse_file" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.parse_file" title="Link to this definition">#</a></dt>
 <dd><p>Parses a file into a Model object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -645,7 +670,7 @@ automatically infer the file type from the file extension if None.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.parse_raw">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.parse_raw" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.parse_raw" title="Link to this definition">#</a></dt>
 <dd><p>Parses raw string or bytes into a Model object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -665,7 +690,7 @@ automatically infer the file type from the file extension if None.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.serialize">
-<span class="sig-name descname"><span class="pre">serialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_unset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_none</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.serialize" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">serialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_unset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_none</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.serialize" title="Link to this definition">#</a></dt>
 <dd><p>Generates a serialized representation of the model</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -748,6 +773,15 @@ automatically infer the file type from the file extension if None.</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.provenance"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.provenance</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.extras"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.extras</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.error"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.error</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.Config"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.Config</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.Config.allow_mutation"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.Config.allow_mutation</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.Config.extra"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.Config.extra</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.Config.force_skip_defaults"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.Config.force_skip_defaults</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.Config.json_encoders"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.Config.json_encoders</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.Config.serialize_default_excludes"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.Config.serialize_default_excludes</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.Config.serialize_skip_defaults"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.Config.serialize_skip_defaults</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.compare"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.compare()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.dict"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.dict()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.json"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.json()</span></code></a></li>
@@ -818,7 +852,7 @@ automatically infer the file type from the file extension if None.</p></li>
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.4.7.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 8.2.3.<br>
         </p>
         
 

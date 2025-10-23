@@ -30,7 +30,6 @@
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
@@ -42,8 +41,8 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=44d3b0ad"></script>
-    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/documentation_options.js?v=8938c948"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
@@ -53,7 +52,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.63.post6+g5015d795c" />
+  <meta name="docsearch:version" content="0.63.post17+gaf5c99e6a" />
   </head>
   
   
@@ -542,8 +541,11 @@
 <span class="sd">    A full description of a dimension to scan over.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="ScanDimension.Config">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.ScanDimension.Config">[docs]</a>
     <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
+
 
     <span class="nb">type</span><span class="p">:</span> <span class="n">ScanTypeEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">ScanTypeEnum</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">))</span>
     <span class="n">indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -602,8 +604,11 @@
 <span class="sd">    Keywords for grid optimizations</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="GridoptimizationKeywords.Config">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationKeywords.Config">[docs]</a>
     <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
+
 
     <span class="n">scans</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ScanDimension</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="p">[],</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The dimensions to scan along (along with their options) for the Gridoptimization.&quot;</span>
@@ -619,8 +624,11 @@
 <div class="viewcode-block" id="GridoptimizationSpecification">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationSpecification">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GridoptimizationSpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="viewcode-block" id="GridoptimizationSpecification.Config">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationSpecification.Config">[docs]</a>
     <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
+
 
     <span class="n">program</span><span class="p">:</span> <span class="n">constr</span><span class="p">(</span><span class="n">to_lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">=</span> <span class="s2">&quot;gridoptimization&quot;</span>
     <span class="n">optimization_specification</span><span class="p">:</span> <span class="n">OptimizationSpecification</span>
@@ -676,8 +684,11 @@
 <div class="viewcode-block" id="GridoptimizationOptimization">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationOptimization">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GridoptimizationOptimization</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="viewcode-block" id="GridoptimizationOptimization.Config">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationOptimization.Config">[docs]</a>
     <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
+
 
     <span class="n">optimization_id</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
@@ -908,7 +919,7 @@
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.4.7.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 8.2.3.<br>
         </p>
         
 

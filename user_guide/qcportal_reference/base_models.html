@@ -31,7 +31,6 @@
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
@@ -43,8 +42,8 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=44d3b0ad"></script>
-    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/documentation_options.js?v=8938c948"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
@@ -56,7 +55,7 @@
     <link rel="prev" title="Authentication and User Management" href="auth.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.63.post6+g5015d795c" />
+  <meta name="docsearch:version" content="0.63.post17+gaf5c99e6a" />
   </head>
   
   
@@ -517,279 +516,299 @@ convert them to a list in flask. But that means we have to convert them
 to single values here</p>
 </dd></dl>
 
-<dl class="py class pydantic_model">
+<dl class="py class">
 <dt class="sig sig-object py" id="qcportal.base_models.RestModelBase">
-<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RestModelBase</span></span><a class="reference internal" href="../../_modules/qcportal/base_models.html#RestModelBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.RestModelBase" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RestModelBase</span></span><a class="reference internal" href="../../_modules/qcportal/base_models.html#RestModelBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.RestModelBase" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Config<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
-<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
-</ul>
-</dd>
 </dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.base_models.RestModelBase.Config">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="reference internal" href="../../_modules/qcportal/base_models.html#RestModelBase.Config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.RestModelBase.Config" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.base_models.RestModelBase.Config.extra">
+<span class="sig-name descname"><span class="pre">extra</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></em><a class="headerlink" href="#qcportal.base_models.RestModelBase.Config.extra" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.base_models.RestModelBase.Config.validate_assignment">
+<span class="sig-name descname"><span class="pre">validate_assignment</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.base_models.RestModelBase.Config.validate_assignment" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
-<dl class="py class pydantic_model">
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetBody">
-<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CommonBulkGetBody</span></span><a class="reference internal" href="../../_modules/qcportal/base_models.html#CommonBulkGetBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.CommonBulkGetBody" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CommonBulkGetBody</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_ok</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/base_models.html#CommonBulkGetBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.CommonBulkGetBody" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
 <p>Common URL parameters for “get_*” functions</p>
 <p>These functions typically take a list for ids, and a bool for missing_ok</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
-<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Fields<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.base_models.CommonBulkGetBody.exclude" title="qcportal.base_models.CommonBulkGetBody.exclude"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exclude</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.base_models.CommonBulkGetBody.ids" title="qcportal.base_models.CommonBulkGetBody.ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ids</span> <span class="pre">(List[int])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.base_models.CommonBulkGetBody.include" title="qcportal.base_models.CommonBulkGetBody.include"><code class="xref py py-obj docutils literal notranslate"><span class="pre">include</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.base_models.CommonBulkGetBody.missing_ok" title="qcportal.base_models.CommonBulkGetBody.missing_ok"><code class="xref py py-obj docutils literal notranslate"><span class="pre">missing_ok</span> <span class="pre">(bool)</span></code></a></p></li>
+<li><p><strong>ids</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>)</p></li>
+<li><p><strong>include</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>exclude</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>missing_ok</strong> (<em>bool</em>)</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetBody.ids">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ids</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetBody.ids" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">ids</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetBody.ids" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetBody.include">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">include</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetBody.include" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">include</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetBody.include" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetBody.exclude">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exclude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetBody.exclude" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">exclude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetBody.exclude" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetBody.missing_ok">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">missing_ok</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetBody.missing_ok" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">missing_ok</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetBody.missing_ok" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetBody.Config">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#qcportal.base_models.CommonBulkGetBody.Config" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetBody.Config.extra">
+<span class="sig-name descname"><span class="pre">extra</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetBody.Config.extra" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetBody.Config.validate_assignment">
+<span class="sig-name descname"><span class="pre">validate_assignment</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetBody.Config.validate_assignment" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
-<dl class="py class pydantic_model">
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetNamesBody">
-<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CommonBulkGetNamesBody</span></span><a class="reference internal" href="../../_modules/qcportal/base_models.html#CommonBulkGetNamesBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.CommonBulkGetNamesBody" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CommonBulkGetNamesBody</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_ok</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/base_models.html#CommonBulkGetNamesBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.CommonBulkGetNamesBody" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
 <p>Common URL parameters for “get_*” functions</p>
 <p>These functions typically take a list for ids, and a bool for missing_ok</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
-<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Fields<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.base_models.CommonBulkGetNamesBody.exclude" title="qcportal.base_models.CommonBulkGetNamesBody.exclude"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exclude</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.base_models.CommonBulkGetNamesBody.include" title="qcportal.base_models.CommonBulkGetNamesBody.include"><code class="xref py py-obj docutils literal notranslate"><span class="pre">include</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.base_models.CommonBulkGetNamesBody.missing_ok" title="qcportal.base_models.CommonBulkGetNamesBody.missing_ok"><code class="xref py py-obj docutils literal notranslate"><span class="pre">missing_ok</span> <span class="pre">(bool)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.base_models.CommonBulkGetNamesBody.names" title="qcportal.base_models.CommonBulkGetNamesBody.names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">names</span> <span class="pre">(List[str])</span></code></a></p></li>
+<li><p><strong>names</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>include</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>exclude</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>missing_ok</strong> (<em>bool</em>)</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetNamesBody.names">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">names</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetNamesBody.names" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">names</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetNamesBody.names" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetNamesBody.include">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">include</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetNamesBody.include" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">include</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetNamesBody.include" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetNamesBody.exclude">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exclude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetNamesBody.exclude" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">exclude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetNamesBody.exclude" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetNamesBody.missing_ok">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">missing_ok</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetNamesBody.missing_ok" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">missing_ok</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetNamesBody.missing_ok" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetNamesBody.Config">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#qcportal.base_models.CommonBulkGetNamesBody.Config" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetNamesBody.Config.extra">
+<span class="sig-name descname"><span class="pre">extra</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetNamesBody.Config.extra" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.base_models.CommonBulkGetNamesBody.Config.validate_assignment">
+<span class="sig-name descname"><span class="pre">validate_assignment</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.base_models.CommonBulkGetNamesBody.Config.validate_assignment" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
-<dl class="py class pydantic_model">
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="qcportal.base_models.ProjURLParameters">
-<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ProjURLParameters</span></span><a class="reference internal" href="../../_modules/qcportal/base_models.html#ProjURLParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.ProjURLParameters" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ProjURLParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/base_models.html#ProjURLParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.ProjURLParameters" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
-<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Fields<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.base_models.ProjURLParameters.exclude" title="qcportal.base_models.ProjURLParameters.exclude"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exclude</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.base_models.ProjURLParameters.include" title="qcportal.base_models.ProjURLParameters.include"><code class="xref py py-obj docutils literal notranslate"><span class="pre">include</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
+<li><p><strong>include</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>exclude</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.base_models.ProjURLParameters.include">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">include</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.ProjURLParameters.include" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">include</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.ProjURLParameters.include" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.base_models.ProjURLParameters.exclude">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exclude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.ProjURLParameters.exclude" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">exclude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.ProjURLParameters.exclude" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.base_models.ProjURLParameters.Config">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#qcportal.base_models.ProjURLParameters.Config" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.base_models.ProjURLParameters.Config.extra">
+<span class="sig-name descname"><span class="pre">extra</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></em><a class="headerlink" href="#qcportal.base_models.ProjURLParameters.Config.extra" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.base_models.ProjURLParameters.Config.validate_assignment">
+<span class="sig-name descname"><span class="pre">validate_assignment</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.base_models.ProjURLParameters.Config.validate_assignment" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
-<dl class="py class pydantic_model">
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="qcportal.base_models.QueryModelBase">
-<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QueryModelBase</span></span><a class="reference internal" href="../../_modules/qcportal/base_models.html#QueryModelBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.QueryModelBase" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QueryModelBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cursor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/base_models.html#QueryModelBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.QueryModelBase" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
 <p>Common parameters for query_* functions, without include/exclude</p>
 <p>These can be either URL parameters or part of a POST body</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
-<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Fields<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.base_models.QueryModelBase.cursor" title="qcportal.base_models.QueryModelBase.cursor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cursor</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.base_models.QueryModelBase.limit" title="qcportal.base_models.QueryModelBase.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-</ul>
-</dd>
-<dt class="field-odd">Validators<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.base_models.QueryModelBase.validate_lists" title="qcportal.base_models.QueryModelBase.validate_lists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></a> » <a class="reference internal" href="#qcportal.base_models.QueryModelBase.cursor" title="qcportal.base_models.QueryModelBase.cursor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cursor</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.base_models.QueryModelBase.validate_lists" title="qcportal.base_models.QueryModelBase.validate_lists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></a> » <a class="reference internal" href="#qcportal.base_models.QueryModelBase.limit" title="qcportal.base_models.QueryModelBase.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span></code></a></p></li>
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>cursor</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.base_models.QueryModelBase.limit">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">limit</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.QueryModelBase.limit" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.base_models.QueryModelBase.validate_lists" title="qcportal.base_models.QueryModelBase.validate_lists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></a></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">limit</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.QueryModelBase.limit" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.base_models.QueryModelBase.cursor">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cursor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.QueryModelBase.cursor" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.base_models.QueryModelBase.validate_lists" title="qcportal.base_models.QueryModelBase.validate_lists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></a></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">cursor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.QueryModelBase.cursor" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
-<dl class="py method pydantic_validator">
+<dl class="py method">
 <dt class="sig sig-object py" id="qcportal.base_models.QueryModelBase.validate_lists">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.base_models.QueryModelBase.limit" title="qcportal.base_models.QueryModelBase.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.base_models.QueryModelBase.cursor" title="qcportal.base_models.QueryModelBase.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><a class="reference internal" href="../../_modules/qcportal/base_models.html#QueryModelBase.validate_lists"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.QueryModelBase.validate_lists" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/base_models.html#QueryModelBase.validate_lists"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.QueryModelBase.validate_lists" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.base_models.QueryModelBase.Config">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#qcportal.base_models.QueryModelBase.Config" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.base_models.QueryModelBase.Config.extra">
+<span class="sig-name descname"><span class="pre">extra</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></em><a class="headerlink" href="#qcportal.base_models.QueryModelBase.Config.extra" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.base_models.QueryModelBase.Config.validate_assignment">
+<span class="sig-name descname"><span class="pre">validate_assignment</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.base_models.QueryModelBase.Config.validate_assignment" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
-<dl class="py class pydantic_model">
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="qcportal.base_models.QueryProjModelBase">
-<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QueryProjModelBase</span></span><a class="reference internal" href="../../_modules/qcportal/base_models.html#QueryProjModelBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.QueryProjModelBase" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QueryProjModelBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cursor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/base_models.html#QueryProjModelBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.QueryProjModelBase" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.base_models.QueryModelBase" title="qcportal.base_models.QueryModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">QueryModelBase</span></code></a>, <a class="reference internal" href="#qcportal.base_models.ProjURLParameters" title="qcportal.base_models.ProjURLParameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProjURLParameters</span></code></a></p>
 <p>Common parameters for query_* functions, with include/exclude (projection)</p>
 <p>These can be either URL parameters or part of a POST body</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
-<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Fields<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.base_models.QueryProjModelBase.cursor" title="qcportal.base_models.QueryProjModelBase.cursor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cursor</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.base_models.QueryProjModelBase.exclude" title="qcportal.base_models.QueryProjModelBase.exclude"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exclude</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.base_models.QueryProjModelBase.include" title="qcportal.base_models.QueryProjModelBase.include"><code class="xref py py-obj docutils literal notranslate"><span class="pre">include</span> <span class="pre">(List[str]</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.base_models.QueryProjModelBase.limit" title="qcportal.base_models.QueryProjModelBase.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-</ul>
-</dd>
-<dt class="field-odd">Validators<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.base_models.QueryProjModelBase.validate_lists" title="qcportal.base_models.QueryProjModelBase.validate_lists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></a> » <a class="reference internal" href="#qcportal.base_models.QueryProjModelBase.cursor" title="qcportal.base_models.QueryProjModelBase.cursor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cursor</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.base_models.QueryProjModelBase.validate_lists" title="qcportal.base_models.QueryProjModelBase.validate_lists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></a> » <a class="reference internal" href="#qcportal.base_models.QueryProjModelBase.limit" title="qcportal.base_models.QueryProjModelBase.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span></code></a></p></li>
+<li><p><strong>include</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>exclude</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>cursor</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py method pydantic_validator">
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.base_models.QueryProjModelBase.Config">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#qcportal.base_models.QueryProjModelBase.Config" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.base_models.QueryProjModelBase.Config.extra">
+<span class="sig-name descname"><span class="pre">extra</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></em><a class="headerlink" href="#qcportal.base_models.QueryProjModelBase.Config.extra" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.base_models.QueryProjModelBase.Config.validate_assignment">
+<span class="sig-name descname"><span class="pre">validate_assignment</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.base_models.QueryProjModelBase.Config.validate_assignment" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qcportal.base_models.QueryProjModelBase.validate_lists">
-<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#qcportal.base_models.QueryProjModelBase.limit" title="qcportal.base_models.QueryProjModelBase.limit"><em class="xref py py-obj"><span class="pre">limit</span></em></a><em class="property"><span class="pre">,</span> </em><a class="reference internal" href="#qcportal.base_models.QueryProjModelBase.cursor" title="qcportal.base_models.QueryProjModelBase.cursor"><em class="xref py py-obj"><span class="pre">cursor</span></em></a><a class="headerlink" href="#qcportal.base_models.QueryProjModelBase.validate_lists" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_lists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.base_models.QueryProjModelBase.validate_lists" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.base_models.QueryProjModelBase.limit">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">limit</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.QueryProjModelBase.limit" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.base_models.QueryProjModelBase.validate_lists" title="qcportal.base_models.QueryProjModelBase.validate_lists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></a></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.base_models.QueryProjModelBase.cursor">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cursor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.QueryProjModelBase.cursor" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.base_models.QueryProjModelBase.validate_lists" title="qcportal.base_models.QueryProjModelBase.validate_lists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></a></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="qcportal.base_models.QueryProjModelBase.include">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">include</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.QueryProjModelBase.include" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">limit</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.QueryProjModelBase.limit" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.base_models.QueryProjModelBase.cursor">
+<span class="sig-name descname"><span class="pre">cursor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.QueryProjModelBase.cursor" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.base_models.QueryProjModelBase.include">
+<span class="sig-name descname"><span class="pre">include</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.QueryProjModelBase.include" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.base_models.QueryProjModelBase.exclude">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exclude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.QueryProjModelBase.exclude" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">exclude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.base_models.QueryProjModelBase.exclude" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.base_models.QueryIteratorBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QueryIteratorBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_filters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_limit</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/base_models.html#QueryIteratorBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.QueryIteratorBase" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QueryIteratorBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_filters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_limit</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/base_models.html#QueryIteratorBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.base_models.QueryIteratorBase" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">T</span></code>]</p>
 <p>Base class for all query result iterators</p>
 <p>Query iterators are used to iterate intelligently over the result of a query.
@@ -860,12 +879,24 @@ This handles pagination, where only batches are downloaded from the server.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.validate_list_to_single"><code class="docutils literal notranslate"><span class="pre">validate_list_to_single()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.RestModelBase"><code class="docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.RestModelBase"><code class="docutils literal notranslate"><span class="pre">RestModelBase</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.RestModelBase.Config"><code class="docutils literal notranslate"><span class="pre">RestModelBase.Config</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.RestModelBase.Config.extra"><code class="docutils literal notranslate"><span class="pre">RestModelBase.Config.extra</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.RestModelBase.Config.validate_assignment"><code class="docutils literal notranslate"><span class="pre">RestModelBase.Config.validate_assignment</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.CommonBulkGetBody"><code class="docutils literal notranslate"><span class="pre">CommonBulkGetBody</span></code></a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.CommonBulkGetBody.ids"><code class="docutils literal notranslate"><span class="pre">CommonBulkGetBody.ids</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.CommonBulkGetBody.include"><code class="docutils literal notranslate"><span class="pre">CommonBulkGetBody.include</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.CommonBulkGetBody.exclude"><code class="docutils literal notranslate"><span class="pre">CommonBulkGetBody.exclude</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.CommonBulkGetBody.missing_ok"><code class="docutils literal notranslate"><span class="pre">CommonBulkGetBody.missing_ok</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.CommonBulkGetBody.Config"><code class="docutils literal notranslate"><span class="pre">CommonBulkGetBody.Config</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.CommonBulkGetBody.Config.extra"><code class="docutils literal notranslate"><span class="pre">CommonBulkGetBody.Config.extra</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.CommonBulkGetBody.Config.validate_assignment"><code class="docutils literal notranslate"><span class="pre">CommonBulkGetBody.Config.validate_assignment</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.CommonBulkGetNamesBody"><code class="docutils literal notranslate"><span class="pre">CommonBulkGetNamesBody</span></code></a><ul class="visible nav section-nav flex-column">
@@ -873,21 +904,41 @@ This handles pagination, where only batches are downloaded from the server.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.CommonBulkGetNamesBody.include"><code class="docutils literal notranslate"><span class="pre">CommonBulkGetNamesBody.include</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.CommonBulkGetNamesBody.exclude"><code class="docutils literal notranslate"><span class="pre">CommonBulkGetNamesBody.exclude</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.CommonBulkGetNamesBody.missing_ok"><code class="docutils literal notranslate"><span class="pre">CommonBulkGetNamesBody.missing_ok</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.CommonBulkGetNamesBody.Config"><code class="docutils literal notranslate"><span class="pre">CommonBulkGetNamesBody.Config</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.CommonBulkGetNamesBody.Config.extra"><code class="docutils literal notranslate"><span class="pre">CommonBulkGetNamesBody.Config.extra</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.CommonBulkGetNamesBody.Config.validate_assignment"><code class="docutils literal notranslate"><span class="pre">CommonBulkGetNamesBody.Config.validate_assignment</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.ProjURLParameters"><code class="docutils literal notranslate"><span class="pre">ProjURLParameters</span></code></a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.ProjURLParameters.include"><code class="docutils literal notranslate"><span class="pre">ProjURLParameters.include</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.ProjURLParameters.exclude"><code class="docutils literal notranslate"><span class="pre">ProjURLParameters.exclude</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.ProjURLParameters.Config"><code class="docutils literal notranslate"><span class="pre">ProjURLParameters.Config</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.ProjURLParameters.Config.extra"><code class="docutils literal notranslate"><span class="pre">ProjURLParameters.Config.extra</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.ProjURLParameters.Config.validate_assignment"><code class="docutils literal notranslate"><span class="pre">ProjURLParameters.Config.validate_assignment</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryModelBase"><code class="docutils literal notranslate"><span class="pre">QueryModelBase</span></code></a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryModelBase.limit"><code class="docutils literal notranslate"><span class="pre">QueryModelBase.limit</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryModelBase.cursor"><code class="docutils literal notranslate"><span class="pre">QueryModelBase.cursor</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryModelBase.validate_lists"><code class="docutils literal notranslate"><span class="pre">QueryModelBase.validate_lists</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryModelBase.validate_lists"><code class="docutils literal notranslate"><span class="pre">QueryModelBase.validate_lists()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryModelBase.Config"><code class="docutils literal notranslate"><span class="pre">QueryModelBase.Config</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryModelBase.Config.extra"><code class="docutils literal notranslate"><span class="pre">QueryModelBase.Config.extra</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryModelBase.Config.validate_assignment"><code class="docutils literal notranslate"><span class="pre">QueryModelBase.Config.validate_assignment</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryProjModelBase"><code class="docutils literal notranslate"><span class="pre">QueryProjModelBase</span></code></a><ul class="visible nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryProjModelBase.validate_lists"><code class="docutils literal notranslate"><span class="pre">QueryProjModelBase.validate_lists</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryProjModelBase.Config"><code class="docutils literal notranslate"><span class="pre">QueryProjModelBase.Config</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryProjModelBase.Config.extra"><code class="docutils literal notranslate"><span class="pre">QueryProjModelBase.Config.extra</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryProjModelBase.Config.validate_assignment"><code class="docutils literal notranslate"><span class="pre">QueryProjModelBase.Config.validate_assignment</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryProjModelBase.validate_lists"><code class="docutils literal notranslate"><span class="pre">QueryProjModelBase.validate_lists()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryProjModelBase.limit"><code class="docutils literal notranslate"><span class="pre">QueryProjModelBase.limit</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryProjModelBase.cursor"><code class="docutils literal notranslate"><span class="pre">QueryProjModelBase.cursor</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.base_models.QueryProjModelBase.include"><code class="docutils literal notranslate"><span class="pre">QueryProjModelBase.include</span></code></a></li>
@@ -960,7 +1011,7 @@ This handles pagination, where only batches are downloaded from the server.</p>
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.4.7.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 8.2.3.<br>
         </p>
         
 

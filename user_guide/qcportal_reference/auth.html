@@ -31,7 +31,6 @@
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
@@ -43,8 +42,8 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=44d3b0ad"></script>
-    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/documentation_options.js?v=8938c948"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
@@ -56,7 +55,7 @@
     <link rel="prev" title="QCPortal Clients" href="clients.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.63.post6+g5015d795c" />
+  <meta name="docsearch:version" content="0.63.post17+gaf5c99e6a" />
   </head>
   
   
@@ -510,7 +509,7 @@
 <span id="authentication-and-user-management"></span><h1>Authentication and User Management<a class="headerlink" href="#module-qcportal.auth.models" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.auth.models.AuthTypeEnum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AuthTypeEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#AuthTypeEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.AuthTypeEnum" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AuthTypeEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#AuthTypeEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.AuthTypeEnum" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.AuthTypeEnum.password">
@@ -558,181 +557,132 @@
 </dl>
 </dd></dl>
 
-<dl class="py class pydantic_model">
+<dl class="py class">
 <dt class="sig sig-object py" id="qcportal.auth.models.GroupInfo">
-<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GroupInfo</span></span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#GroupInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.GroupInfo" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GroupInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groupname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#GroupInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.GroupInfo" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>Information about a group</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Fields<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.auth.models.GroupInfo.description" title="qcportal.auth.models.GroupInfo.description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">description</span> <span class="pre">(str)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.auth.models.GroupInfo.groupname" title="qcportal.auth.models.GroupInfo.groupname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groupname</span> <span class="pre">(str)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.auth.models.GroupInfo.id" title="qcportal.auth.models.GroupInfo.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-</ul>
-</dd>
-<dt class="field-odd">Validators<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_valid_groupname</span></code> » <a class="reference internal" href="#qcportal.auth.models.GroupInfo.groupname" title="qcportal.auth.models.GroupInfo.groupname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groupname</span></code></a></p></li>
+<li><p><strong>id</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>groupname</strong> (<em>str</em>)</p></li>
+<li><p><strong>description</strong> (<em>str</em>)</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute pydantic_field">
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.auth.models.GroupInfo.Config">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#GroupInfo.Config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.GroupInfo.Config" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.auth.models.GroupInfo.Config.extra">
+<span class="sig-name descname"><span class="pre">extra</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></em><a class="headerlink" href="#qcportal.auth.models.GroupInfo.Config.extra" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.GroupInfo.id">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.auth.models.GroupInfo.id" title="Link to this definition">#</a></dt>
-<dd><p>ID of the group</p>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.auth.models.GroupInfo.id" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.GroupInfo.groupname">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">groupname</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.auth.models.GroupInfo.groupname" title="Link to this definition">#</a></dt>
-<dd><p>The name of the group</p>
-<dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_valid_groupname</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">groupname</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qcportal.auth.models.GroupInfo.groupname" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.GroupInfo.description">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></em><a class="headerlink" href="#qcportal.auth.models.GroupInfo.description" title="Link to this definition">#</a></dt>
-<dd><p>Text description of the group</p>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qcportal.auth.models.GroupInfo.description" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
-<dl class="py class pydantic_model">
+<dl class="py class">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo">
-<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UserInfo</span></span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#UserInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.UserInfo" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UserInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auth_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">AuthTypeEnum.password</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">role</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enabled</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fullname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">organization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">email</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#UserInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.UserInfo" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>Information about a user</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>extra</strong>: <em>Extra = Extra.forbid</em></p></li>
-<li><p><strong>validate_assignment</strong>: <em>bool = True</em></p></li>
-</ul>
-</dd>
-<dt class="field-even">Fields<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.auth_type" title="qcportal.auth.models.UserInfo.auth_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">auth_type</span> <span class="pre">(qcportal.auth.models.AuthTypeEnum)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.email" title="qcportal.auth.models.UserInfo.email"><code class="xref py py-obj docutils literal notranslate"><span class="pre">email</span> <span class="pre">(qcportal.auth.models.ConstrainedStrValue)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.enabled" title="qcportal.auth.models.UserInfo.enabled"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enabled</span> <span class="pre">(bool)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.fullname" title="qcportal.auth.models.UserInfo.fullname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fullname</span> <span class="pre">(qcportal.auth.models.ConstrainedStrValue)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.groups" title="qcportal.auth.models.UserInfo.groups"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups</span> <span class="pre">(List[str])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.id" title="qcportal.auth.models.UserInfo.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.organization" title="qcportal.auth.models.UserInfo.organization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">organization</span> <span class="pre">(qcportal.auth.models.ConstrainedStrValue)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.role" title="qcportal.auth.models.UserInfo.role"><code class="xref py py-obj docutils literal notranslate"><span class="pre">role</span> <span class="pre">(str)</span></code></a></p></li>
-<li><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.username" title="qcportal.auth.models.UserInfo.username"><code class="xref py py-obj docutils literal notranslate"><span class="pre">username</span> <span class="pre">(str)</span></code></a></p></li>
-</ul>
-</dd>
-<dt class="field-odd">Validators<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_valid_groupnames</span></code> » <a class="reference internal" href="#qcportal.auth.models.UserInfo.groups" title="qcportal.auth.models.UserInfo.groups"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups</span></code></a></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_valid_username</span></code> » <a class="reference internal" href="#qcportal.auth.models.UserInfo.username" title="qcportal.auth.models.UserInfo.username"><code class="xref py py-obj docutils literal notranslate"><span class="pre">username</span></code></a></p></li>
+<li><p><strong>id</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>auth_type</strong> (<a class="reference internal" href="#qcportal.auth.models.AuthTypeEnum" title="qcportal.auth.models.AuthTypeEnum"><em>AuthTypeEnum</em></a>)</p></li>
+<li><p><strong>username</strong> (<em>str</em>)</p></li>
+<li><p><strong>role</strong> (<em>str</em>)</p></li>
+<li><p><strong>groups</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>enabled</strong> (<em>bool</em>)</p></li>
+<li><p><strong>fullname</strong> (<em>ConstrainedStrValue</em>)</p></li>
+<li><p><strong>organization</strong> (<em>ConstrainedStrValue</em>)</p></li>
+<li><p><strong>email</strong> (<em>ConstrainedStrValue</em>)</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute pydantic_field">
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.Config">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#UserInfo.Config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.UserInfo.Config" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.Config.validate_assignment">
+<span class="sig-name descname"><span class="pre">validate_assignment</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.Config.validate_assignment" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.Config.extra">
+<span class="sig-name descname"><span class="pre">extra</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.Config.extra" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.id">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.id" title="Link to this definition">#</a></dt>
-<dd><p>The id of the user</p>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.id" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.auth_type">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">auth_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.auth.models.AuthTypeEnum" title="qcportal.auth.models.AuthTypeEnum"><span class="pre">AuthTypeEnum</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">AuthTypeEnum.password</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.auth_type" title="Link to this definition">#</a></dt>
-<dd><p>Type of authentication the user uses</p>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">auth_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.auth.models.AuthTypeEnum" title="qcportal.auth.models.AuthTypeEnum"><span class="pre">AuthTypeEnum</span></a></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.auth_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.username">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">username</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.username" title="Link to this definition">#</a></dt>
-<dd><p>The username of this user</p>
-<dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_valid_username</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">username</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.username" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.role">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">role</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.role" title="Link to this definition">#</a></dt>
-<dd><p>The role this user belongs to</p>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">role</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.role" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.groups">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">groups</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.groups" title="Link to this definition">#</a></dt>
-<dd><p>Groups this user belongs to</p>
-<dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_valid_groupnames</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">groups</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.groups" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.enabled">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.enabled" title="Link to this definition">#</a></dt>
-<dd><p>Whether this user is enabled or not</p>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.enabled" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.fullname">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fullname</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ConstrainedStrValue</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.fullname" title="Link to this definition">#</a></dt>
-<dd><p>The full name or description of the user</p>
-<dl class="field-list simple">
-<dt class="field-odd">Constraints<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>maxLength</strong> = 128</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">fullname</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">constr</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">128</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.fullname" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.organization">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">organization</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ConstrainedStrValue</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.organization" title="Link to this definition">#</a></dt>
-<dd><p>The organization the user belongs to</p>
-<dl class="field-list simple">
-<dt class="field-odd">Constraints<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>maxLength</strong> = 128</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">organization</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">constr</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">128</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.organization" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
-<dl class="py attribute pydantic_field">
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.email">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">email</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ConstrainedStrValue</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.email" title="Link to this definition">#</a></dt>
-<dd><p>The email address for the user</p>
-<dl class="field-list simple">
-<dt class="field-odd">Constraints<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>maxLength</strong> = 128</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">email</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">constr</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">128</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#qcportal.auth.models.UserInfo.email" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -793,12 +743,21 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.is_valid_username"><code class="docutils literal notranslate"><span class="pre">is_valid_username()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.is_valid_groupname"><code class="docutils literal notranslate"><span class="pre">is_valid_groupname()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.GroupInfo"><code class="docutils literal notranslate"><span class="pre">GroupInfo</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.GroupInfo.Config"><code class="docutils literal notranslate"><span class="pre">GroupInfo.Config</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.GroupInfo.Config.extra"><code class="docutils literal notranslate"><span class="pre">GroupInfo.Config.extra</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.GroupInfo.id"><code class="docutils literal notranslate"><span class="pre">GroupInfo.id</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.GroupInfo.groupname"><code class="docutils literal notranslate"><span class="pre">GroupInfo.groupname</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.GroupInfo.description"><code class="docutils literal notranslate"><span class="pre">GroupInfo.description</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.UserInfo"><code class="docutils literal notranslate"><span class="pre">UserInfo</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.UserInfo.Config"><code class="docutils literal notranslate"><span class="pre">UserInfo.Config</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.UserInfo.Config.validate_assignment"><code class="docutils literal notranslate"><span class="pre">UserInfo.Config.validate_assignment</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.UserInfo.Config.extra"><code class="docutils literal notranslate"><span class="pre">UserInfo.Config.extra</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.UserInfo.id"><code class="docutils literal notranslate"><span class="pre">UserInfo.id</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.UserInfo.auth_type"><code class="docutils literal notranslate"><span class="pre">UserInfo.auth_type</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.auth.models.UserInfo.username"><code class="docutils literal notranslate"><span class="pre">UserInfo.username</span></code></a></li>
@@ -872,7 +831,7 @@
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.4.7.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 8.2.3.<br>
         </p>
         
 

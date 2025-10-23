@@ -30,7 +30,6 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
@@ -42,8 +41,8 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=44d3b0ad"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/documentation_options.js?v=8938c948"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=f281be69"></script>
@@ -53,7 +52,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.63.post6+g5015d795c" />
+  <meta name="docsearch:version" content="0.63.post17+gaf5c99e6a" />
   </head>
   
   
@@ -447,7 +446,27 @@
 </li>
       <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.TaskReturnMetadata.accepted_ids">accepted_ids (TaskReturnMetadata attribute)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogEntry">AccessLogEntry (class in qcportal.serverinfo.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogEntry.Config">AccessLogEntry.Config (class in qcportal.serverinfo.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogQueryFilters">AccessLogQueryFilters (class in qcportal.serverinfo.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogQueryFilters.Config">AccessLogQueryFilters.Config (class in qcportal.serverinfo.models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogQueryIterator">AccessLogQueryIterator (class in qcportal.serverinfo.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummary">AccessLogSummary (class in qcportal.serverinfo.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummary.Config">AccessLogSummary.Config (class in qcportal.serverinfo.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummaryEntry">AccessLogSummaryEntry (class in qcportal.serverinfo.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummaryEntry.Config">AccessLogSummaryEntry.Config (class in qcportal.serverinfo.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummaryFilters">AccessLogSummaryFilters (class in qcportal.serverinfo.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummaryFilters.Config">AccessLogSummaryFilters.Config (class in qcportal.serverinfo.models)</a>
 </li>
       <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.SlurmExecutorConfig.account">account (SlurmExecutorConfig attribute)</a>
 
@@ -653,14 +672,54 @@
         <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogQueryFilters.after">(ErrorLogQueryFilters attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.after_function">after_function (InternalJob attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.after_function_kwargs">after_function_kwargs (InternalJob attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBKeywords.align">align (NEBKeywords attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.Config.allow_mutation">allow_mutation (BaseDataset.Config attribute)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.Config.allow_mutation">(BaseRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.Citation.Config.allow_mutation">(Citation.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.ContributedValues.Config.allow_mutation">(ContributedValues.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/tasks_services.html#qcportal.generic_result.GenericTaskResult.Config.allow_mutation">(GenericTaskResult.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDataset.Config.allow_mutation">(GridoptimizationDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord.Config.allow_mutation">(GridoptimizationRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDataset.Config.allow_mutation">(ManybodyDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord.Config.allow_mutation">(ManybodyRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDataset.Config.allow_mutation">(NEBDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.Config.allow_mutation">(NEBRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset.Config.allow_mutation">(OptimizationDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord.Config.allow_mutation">(OptimizationRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDataset.Config.allow_mutation">(ReactionDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionRecord.Config.allow_mutation">(ReactionRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset.Config.allow_mutation">(SinglepointDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord.Config.allow_mutation">(SinglepointRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.Config.allow_mutation">(TorsiondriveDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.Config.allow_mutation">(TorsiondriveRecord.Config attribute)</a>
+</li>
+      </ul></li>
       <li><a href="user_guide/qcportal_reference/utils_misc.html#qcportal.exceptions.AlreadyExistsError">AlreadyExistsError</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.ScanTypeEnum.angle">angle (ScanTypeEnum attribute)</a>
@@ -891,8 +950,16 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.background_submit">(TorsiondriveDataset method)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset">BaseDataset (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.Config">BaseDataset.Config (class in qcportal.dataset_models)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord">BaseRecord (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.Config">BaseRecord.Config (class in qcportal.record_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyCluster.basis">basis (ManybodyCluster attribute)</a>
 
       <ul>
@@ -1045,6 +1112,10 @@
 </li>
       <li><a href="user_guide/qcportal_reference/utils_misc.html#qcportal.utils.chunk_iterable_time">chunk_iterable_time() (in module qcportal.utils)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.Citation">Citation (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.Citation.Config">Citation.Config (class in qcportal.dataset_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.ContributedValues.citations">citations (ContributedValues attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogEntry.city">city (AccessLogEntry attribute)</a>
@@ -1157,6 +1228,14 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.comments_">(TorsiondriveRecord attribute)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.comments_">[1]</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.CommonBulkGetBody">CommonBulkGetBody (class in qcportal.base_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.CommonBulkGetBody.Config">CommonBulkGetBody.Config (class in qcportal.base_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.CommonBulkGetNamesBody">CommonBulkGetNamesBody (class in qcportal.base_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.CommonBulkGetNamesBody.Config">CommonBulkGetNamesBody.Config (class in qcportal.base_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/tasks_services.html#qcportal.generic_result.GenericTaskResult.compare">compare() (GenericTaskResult method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.compare_base_records">compare_base_records() (in module qcportal.record_models)</a>
@@ -1347,6 +1426,14 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.computed_properties">(TorsiondriveDataset property)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.ComputeHistory">ComputeHistory (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.ComputeHistory.Config">ComputeHistory.Config (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ComputeManager">ComputeManager (class in qcportal.managers.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ComputeManager.Config">ComputeManager.Config (class in qcportal.managers.models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/utils_misc.html#qcportal.exceptions.ComputeManagerError">ComputeManagerError</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.contributed_values">contributed_values (BaseDataset property)</a>
@@ -1385,6 +1472,10 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.contributed_values_">(TorsiondriveDataset attribute)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.ContributedValues">ContributedValues (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.ContributedValues.Config">ContributedValues.Config (class in qcportal.dataset_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/utils_misc.html#qcportal.serialization.convert_numpy_recursive">convert_numpy_recursive() (in module qcportal.serialization)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCopyFromBody.copy_entries">copy_entries (DatasetCopyFromBody attribute)</a>
@@ -1717,9 +1808,91 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.dataset_type">(TorsiondriveDataset attribute)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAddBody">DatasetAddBody (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAddBody.Config">DatasetAddBody.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAttachment">DatasetAttachment (class in qcportal.dataset_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAttachmentType">DatasetAttachmentType (class in qcportal.dataset_models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache">DatasetCache (class in qcportal.cache)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCloneBody">DatasetCloneBody (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCloneBody.Config">DatasetCloneBody.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCopyFromBody">DatasetCopyFromBody (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCopyFromBody.Config">DatasetCopyFromBody.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCreateViewBody">DatasetCreateViewBody (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCreateViewBody.Config">DatasetCreateViewBody.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteEntryBody">DatasetDeleteEntryBody (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteEntryBody.Config">DatasetDeleteEntryBody.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteParams">DatasetDeleteParams (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteParams.Config">DatasetDeleteParams.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteSpecificationBody">DatasetDeleteSpecificationBody (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteSpecificationBody.Config">DatasetDeleteSpecificationBody.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteStrBody">DatasetDeleteStrBody (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteStrBody.Config">DatasetDeleteStrBody.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetFetchEntryBody">DatasetFetchEntryBody (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetFetchEntryBody.Config">DatasetFetchEntryBody.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetFetchRecordsBody">DatasetFetchRecordsBody (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetFetchRecordsBody.Config">DatasetFetchRecordsBody.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetFetchSpecificationBody">DatasetFetchSpecificationBody (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetFetchSpecificationBody.Config">DatasetFetchSpecificationBody.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetGetInternalJobParams">DatasetGetInternalJobParams (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetGetInternalJobParams.Config">DatasetGetInternalJobParams.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetModifyEntryBody">DatasetModifyEntryBody (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetModifyEntryBody.Config">DatasetModifyEntryBody.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetModifyMetadata">DatasetModifyMetadata (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetModifyMetadata.Config">DatasetModifyMetadata.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetQueryModel">DatasetQueryModel (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetQueryModel.Config">DatasetQueryModel.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetQueryRecords">DatasetQueryRecords (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetQueryRecords.Config">DatasetQueryRecords.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetRecordModifyBody">DatasetRecordModifyBody (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetRecordModifyBody.Config">DatasetRecordModifyBody.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetRecordRevertBody">DatasetRecordRevertBody (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetRecordRevertBody.Config">DatasetRecordRevertBody.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetRemoveRecordsBody">DatasetRemoveRecordsBody (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetRemoveRecordsBody.Config">DatasetRemoveRecordsBody.Config (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetSubmitBody">DatasetSubmitBody (class in qcportal.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetSubmitBody.Config">DatasetSubmitBody.Config (class in qcportal.dataset_models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.GroupByEnum.day">day (GroupByEnum attribute)</a>
 </li>
@@ -1831,6 +2004,8 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.delete_attachment">(TorsiondriveDataset method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordDeleteBody.delete_children">delete_children (RecordDeleteBody attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.delete_dataset">delete_dataset() (PortalClient method)</a>
@@ -1875,8 +2050,6 @@
         <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache.delete_record">(RecordCache method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteEntryBody.delete_records">delete_records (DatasetDeleteEntryBody attribute)</a>
 
       <ul>
@@ -1918,6 +2091,10 @@
 </li>
       </ul></li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.delete_user">delete_user() (PortalClient method)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.DeleteBeforeDateBody">DeleteBeforeDateBody (class in qcportal.serverinfo.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.DeleteBeforeDateBody.Config">DeleteBeforeDateBody.Config (class in qcportal.serverinfo.models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordStatusEnum.deleted">deleted (RecordStatusEnum attribute)</a>
 </li>
@@ -2249,8 +2426,6 @@
         <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.UpdateMetadata.error_description">(UpdateMetadata attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogQueryFilters.error_id">error_id (ErrorLogQueryFilters attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.DeleteMetadata.error_idx">error_idx (DeleteMetadata property)</a>
@@ -2274,6 +2449,14 @@
 </li>
       </ul></li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogEntry.error_text">error_text (ErrorLogEntry attribute)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogEntry">ErrorLogEntry (class in qcportal.serverinfo.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogEntry.Config">ErrorLogEntry.Config (class in qcportal.serverinfo.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogQueryFilters">ErrorLogQueryFilters (class in qcportal.serverinfo.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogQueryFilters.Config">ErrorLogQueryFilters.Config (class in qcportal.serverinfo.models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogQueryIterator">ErrorLogQueryIterator (class in qcportal.serverinfo.models)</a>
 </li>
@@ -2315,16 +2498,324 @@
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.ContributedValues.external_url">external_url (ContributedValues attribute)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/external_files.html#qcportal.external_files.models.ExternalFile">ExternalFile (class in qcportal.external_files.models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/external_files.html#qcportal.external_files.models.ExternalFileStatusEnum">ExternalFileStatusEnum (class in qcportal.external_files.models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/external_files.html#qcportal.external_files.models.ExternalFileTypeEnum">ExternalFileTypeEnum (class in qcportal.external_files.models)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBOptimization.config.extra">extra (NEBOptimization.config attribute)</a>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogEntry.Config.extra">extra (AccessLogEntry.Config attribute)</a>
 
       <ul>
-        <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveSpecification.Config.extra">(TorsiondriveSpecification.Config attribute)</a>
+        <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogQueryFilters.Config.extra">(AccessLogQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummary.Config.extra">(AccessLogSummary.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummaryEntry.Config.extra">(AccessLogSummaryEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummaryFilters.Config.extra">(AccessLogSummaryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.Config.extra">(BaseDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.Config.extra">(BaseRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.Citation.Config.extra">(Citation.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.CommonBulkGetBody.Config.extra">(CommonBulkGetBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.CommonBulkGetNamesBody.Config.extra">(CommonBulkGetNamesBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.ComputeHistory.Config.extra">(ComputeHistory.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ComputeManager.Config.extra">(ComputeManager.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.ContributedValues.Config.extra">(ContributedValues.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAddBody.Config.extra">(DatasetAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCloneBody.Config.extra">(DatasetCloneBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCopyFromBody.Config.extra">(DatasetCopyFromBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCreateViewBody.Config.extra">(DatasetCreateViewBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteEntryBody.Config.extra">(DatasetDeleteEntryBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteParams.Config.extra">(DatasetDeleteParams.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteSpecificationBody.Config.extra">(DatasetDeleteSpecificationBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteStrBody.Config.extra">(DatasetDeleteStrBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetFetchEntryBody.Config.extra">(DatasetFetchEntryBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetFetchRecordsBody.Config.extra">(DatasetFetchRecordsBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetFetchSpecificationBody.Config.extra">(DatasetFetchSpecificationBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetGetInternalJobParams.Config.extra">(DatasetGetInternalJobParams.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetModifyEntryBody.Config.extra">(DatasetModifyEntryBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetModifyMetadata.Config.extra">(DatasetModifyMetadata.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetQueryModel.Config.extra">(DatasetQueryModel.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetQueryRecords.Config.extra">(DatasetQueryRecords.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetRecordModifyBody.Config.extra">(DatasetRecordModifyBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetRecordRevertBody.Config.extra">(DatasetRecordRevertBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetRemoveRecordsBody.Config.extra">(DatasetRemoveRecordsBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetSubmitBody.Config.extra">(DatasetSubmitBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.DeleteBeforeDateBody.Config.extra">(DeleteBeforeDateBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogEntry.Config.extra">(ErrorLogEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogQueryFilters.Config.extra">(ErrorLogQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/tasks_services.html#qcportal.generic_result.GenericTaskResult.Config.extra">(GenericTaskResult.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationAddBody.Config.extra">(GridoptimizationAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDataset.Config.extra">(GridoptimizationDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetEntry.Config.extra">(GridoptimizationDatasetEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetNewEntry.Config.extra">(GridoptimizationDatasetNewEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetRecordItem.Config.extra">(GridoptimizationDatasetRecordItem.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetSpecification.Config.extra">(GridoptimizationDatasetSpecification.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationInput.Config.extra">(GridoptimizationInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationKeywords.Config.extra">(GridoptimizationKeywords.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationMultiInput.Config.extra">(GridoptimizationMultiInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationOptimization.Config.extra">(GridoptimizationOptimization.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationQueryFilters.Config.extra">(GridoptimizationQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord.Config.extra">(GridoptimizationRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationSpecification.Config.extra">(GridoptimizationSpecification.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.GroupInfo.Config.extra">(GroupInfo.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.Config.extra">(InternalJob.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJobQueryFilters.Config.extra">(InternalJobQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerActivationBody.Config.extra">(ManagerActivationBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerName.Config.extra">(ManagerName.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerQueryAvailableFilters.Config.extra">(ManagerQueryAvailableFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerQueryFilters.Config.extra">(ManagerQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerUpdateBody.Config.extra">(ManagerUpdateBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyAddBody.Config.extra">(ManybodyAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyCluster.Config.extra">(ManybodyCluster.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyClusterMeta.Config.extra">(ManybodyClusterMeta.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDataset.Config.extra">(ManybodyDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDatasetEntry.Config.extra">(ManybodyDatasetEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDatasetNewEntry.Config.extra">(ManybodyDatasetNewEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDatasetSpecification.Config.extra">(ManybodyDatasetSpecification.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyInput.Config.extra">(ManybodyInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyKeywords.Config.extra">(ManybodyKeywords.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyMultiInput.Config.extra">(ManybodyMultiInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyQueryFilters.Config.extra">(ManybodyQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord.Config.extra">(ManybodyRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodySpecification.Config.extra">(ManybodySpecification.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/molecules.html#qcportal.molecules.models.MoleculeModifyBody.Config.extra">(MoleculeModifyBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/molecules.html#qcportal.molecules.models.MoleculeQueryFilters.Config.extra">(MoleculeQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/molecules.html#qcportal.molecules.models.MoleculeUploadOptions.Config.extra">(MoleculeUploadOptions.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.NativeFile.Config.extra">(NativeFile.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBAddBody.Config.extra">(NEBAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDataset.Config.extra">(NEBDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetEntry.Config.extra">(NEBDatasetEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetNewEntry.Config.extra">(NEBDatasetNewEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetRecordItem.Config.extra">(NEBDatasetRecordItem.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetSpecification.Config.extra">(NEBDatasetSpecification.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBInput.Config.extra">(NEBInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBKeywords.Config.extra">(NEBKeywords.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBMultiInput.Config.extra">(NEBMultiInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBOptimization.config.extra">(NEBOptimization.config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBQueryFilters.Config.extra">(NEBQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.Config.extra">(NEBRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBSinglepoint.Config.extra">(NEBSinglepoint.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBSpecification.Config.extra">(NEBSpecification.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationAddBody.Config.extra">(OptimizationAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset.Config.extra">(OptimizationDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetEntry.Config.extra">(OptimizationDatasetEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.Config.extra">(OptimizationDatasetNewEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem.Config.extra">(OptimizationDatasetRecordItem.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetSpecification.Config.extra">(OptimizationDatasetSpecification.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationInput.Config.extra">(OptimizationInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationMultiInput.Config.extra">(OptimizationMultiInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationQueryFilters.Config.extra">(OptimizationQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord.Config.extra">(OptimizationRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationSpecification.Config.extra">(OptimizationSpecification.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.OutputStore.Config.extra">(OutputStore.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.ProjURLParameters.Config.extra">(ProjURLParameters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.QCSpecification.Config.extra">(QCSpecification.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.QueryModelBase.Config.extra">(QueryModelBase.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.QueryProjModelBase.Config.extra">(QueryProjModelBase.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionAddBody.Config.extra">(ReactionAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionComponent.Config.extra">(ReactionComponent.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionComponentMeta.Config.extra">(ReactionComponentMeta.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDataset.Config.extra">(ReactionDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetEntry.Config.extra">(ReactionDatasetEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetNewEntry.Config.extra">(ReactionDatasetNewEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetRecordItem.Config.extra">(ReactionDatasetRecordItem.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetSpecification.Config.extra">(ReactionDatasetSpecification.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionInput.Config.extra">(ReactionInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionMultiInput.Config.extra">(ReactionMultiInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionQueryFilters.Config.extra">(ReactionQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionRecord.Config.extra">(ReactionRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionSpecification.Config.extra">(ReactionSpecification.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordAddBodyBase.Config.extra">(RecordAddBodyBase.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordComment.Config.extra">(RecordComment.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordDeleteBody.Config.extra">(RecordDeleteBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordModifyBody.Config.extra">(RecordModifyBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordQueryFilters.Config.extra">(RecordQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordRevertBody.Config.extra">(RecordRevertBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordService.Config.extra">(RecordService.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordTask.Config.extra">(RecordTask.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.RestModelBase.Config.extra">(RestModelBase.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.ScanDimension.Config.extra">(ScanDimension.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.ServiceDependency.Config.extra">(ServiceDependency.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointAddBody.Config.extra">(SinglepointAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset.Config.extra">(SinglepointDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetEntry.Config.extra">(SinglepointDatasetEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetNewEntry.Config.extra">(SinglepointDatasetNewEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetRecordItem.Config.extra">(SinglepointDatasetRecordItem.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification.Config.extra">(SinglepointDatasetSpecification.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointInput.Config.extra">(SinglepointInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointMultiInput.Config.extra">(SinglepointMultiInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointQueryFilters.Config.extra">(SinglepointQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord.Config.extra">(SinglepointRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveAddBody.Config.extra">(TorsiondriveAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.Config.extra">(TorsiondriveDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetEntry.Config.extra">(TorsiondriveDatasetEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetNewEntry.Config.extra">(TorsiondriveDatasetNewEntry.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetRecordItem.Config.extra">(TorsiondriveDatasetRecordItem.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetSpecification.Config.extra">(TorsiondriveDatasetSpecification.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveInput.Config.extra">(TorsiondriveInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords.Config.extra">(TorsiondriveKeywords.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveMultiInput.Config.extra">(TorsiondriveMultiInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveOptimization.Config.extra">(TorsiondriveOptimization.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.Config.extra">(TorsiondriveQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.Config.extra">(TorsiondriveRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveSpecification.Config.extra">(TorsiondriveSpecification.Config attribute)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveSpecification.Config.extra">[1]</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.UserInfo.Config.extra">(UserInfo.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.Wavefunction.Config.extra">(Wavefunction.Config attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.LocalExecutorConfig.extra_executor_options">extra_executor_options (LocalExecutorConfig attribute)</a>
 
       <ul>
@@ -2615,6 +3106,8 @@
       </ul></li>
       <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationSpecification.force_qcspec">force_qcspec() (OptimizationSpecification class method)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/tasks_services.html#qcportal.generic_result.GenericTaskResult.Config.force_skip_defaults">force_skip_defaults (GenericTaskResult.Config attribute)</a>
+</li>
       <li><a href="overview/snowflake.html#qcfractal.snowflake.FractalSnowflake">FractalSnowflake (class in qcfractal.snowflake)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyCluster.fragments">fragments (ManybodyCluster attribute)</a>
@@ -2665,6 +3158,10 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/qcportal_reference/tasks_services.html#qcportal.generic_result.GenericTaskResult">GenericTaskResult (class in qcportal.generic_result)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/tasks_services.html#qcportal.generic_result.GenericTaskResult.Config">GenericTaskResult.Config (class in qcportal.generic_result)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_all_specifications">get_all_specifications() (DatasetCache method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.get_cache_dict">get_cache_dict() (BaseRecord method)</a>
@@ -2811,8 +3308,6 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.get_properties_df">(TorsiondriveDataset method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.get_reactions">get_reactions() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.get_record">get_record() (BaseDataset method)</a>
@@ -2837,6 +3332,8 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.get_record">(TorsiondriveDataset method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_records">get_records() (DatasetCache method)</a>
 
       <ul>
@@ -2927,6 +3424,58 @@
 </li>
       <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords.grid_spacing">grid_spacing (TorsiondriveKeywords attribute)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationAddBody">GridoptimizationAddBody (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationAddBody.Config">GridoptimizationAddBody.Config (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDataset">GridoptimizationDataset (class in qcportal.gridoptimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDataset.Config">GridoptimizationDataset.Config (class in qcportal.gridoptimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetEntry">GridoptimizationDatasetEntry (class in qcportal.gridoptimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetEntry.Config">GridoptimizationDatasetEntry.Config (class in qcportal.gridoptimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetNewEntry">GridoptimizationDatasetNewEntry (class in qcportal.gridoptimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetNewEntry.Config">GridoptimizationDatasetNewEntry.Config (class in qcportal.gridoptimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetRecordItem">GridoptimizationDatasetRecordItem (class in qcportal.gridoptimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetRecordItem.Config">GridoptimizationDatasetRecordItem.Config (class in qcportal.gridoptimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetSpecification">GridoptimizationDatasetSpecification (class in qcportal.gridoptimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetSpecification.Config">GridoptimizationDatasetSpecification.Config (class in qcportal.gridoptimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationInput">GridoptimizationInput (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationInput.Config">GridoptimizationInput.Config (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationKeywords">GridoptimizationKeywords (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationKeywords.Config">GridoptimizationKeywords.Config (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationMultiInput">GridoptimizationMultiInput (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationMultiInput.Config">GridoptimizationMultiInput.Config (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationOptimization">GridoptimizationOptimization (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationOptimization.Config">GridoptimizationOptimization.Config (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationQueryFilters">GridoptimizationQueryFilters (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationQueryFilters.Config">GridoptimizationQueryFilters.Config (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord">GridoptimizationRecord (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord.Config">GridoptimizationRecord.Config (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationSpecification">GridoptimizationSpecification (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationSpecification.Config">GridoptimizationSpecification.Config (class in qcportal.gridoptimization.record_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.group">group (BaseDataset property)</a>
 
       <ul>
@@ -2948,6 +3497,10 @@
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummaryFilters.group_by">group_by (AccessLogSummaryFilters attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.GroupByEnum">GroupByEnum (class in qcportal.serverinfo.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.GroupInfo">GroupInfo (class in qcportal.auth.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.GroupInfo.Config">GroupInfo.Config (class in qcportal.auth.models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.GroupInfo.groupname">groupname (GroupInfo attribute)</a>
 </li>
@@ -3155,8 +3708,6 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.initial_molecule_id">(TorsiondriveQueryFilters attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationAddBody.initial_molecules">initial_molecules (GridoptimizationAddBody attribute)</a>
 
       <ul>
@@ -3183,6 +3734,8 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.initial_molecules">(TorsiondriveRecord property)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.initial_molecules">[1]</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.initial_molecules_">initial_molecules_ (TorsiondriveRecord attribute)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.initial_molecules_">[1]</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.initial_molecules_ids_">initial_molecules_ids_ (TorsiondriveRecord attribute)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.initial_molecules_ids_">[1]</a>
@@ -3192,6 +3745,14 @@
       <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.InsertMetadata.inserted_idx">inserted_idx (InsertMetadata attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.InsertMetadata">InsertMetadata (class in qcportal.metadata_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob">InternalJob (class in qcportal.internal_jobs.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.Config">InternalJob.Config (class in qcportal.internal_jobs.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJobQueryFilters">InternalJobQueryFilters (class in qcportal.internal_jobs.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJobQueryFilters.Config">InternalJobQueryFilters.Config (class in qcportal.internal_jobs.models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJobQueryIterator">InternalJobQueryIterator (class in qcportal.internal_jobs.models)</a>
 </li>
@@ -3331,6 +3892,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/tasks_services.html#qcportal.generic_result.GenericTaskResult.json">json() (GenericTaskResult method)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/tasks_services.html#qcportal.generic_result.GenericTaskResult.Config.json_encoders">json_encoders (GenericTaskResult.Config attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -3419,8 +3982,6 @@
 </li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_groups">list_groups() (PortalClient method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.list_internal_jobs">list_internal_jobs() (BaseDataset method)</a>
 
       <ul>
@@ -3439,6 +4000,8 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.list_internal_jobs">(TorsiondriveDataset method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_projects">list_projects() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_users">list_users() (PortalClient method)</a>
@@ -3469,7 +4032,11 @@
         <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetNewEntry.local_results">(SinglepointDatasetNewEntry attribute)</a>
 </li>
       </ul></li>
+      <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.LocalExecutorConfig">LocalExecutorConfig (class in qcfractalcompute.config)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.PriorityEnum.low">low (PriorityEnum attribute)</a>
+</li>
+      <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.LSFExecutorConfig">LSFExecutorConfig (class in qcfractalcompute.config)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/utils_misc.html#qcportal.compression.CompressionEnum.lzma">lzma (CompressionEnum attribute)</a>
 </li>
@@ -3535,11 +4102,85 @@
         <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerActivationBody.manager_version">(ManagerActivationBody attribute)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerActivationBody">ManagerActivationBody (class in qcportal.managers.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerActivationBody.Config">ManagerActivationBody.Config (class in qcportal.managers.models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.manager_client.ManagerClient">ManagerClient (class in qcportal.manager_client)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerName">ManagerName (class in qcportal.managers.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerName.Config">ManagerName.Config (class in qcportal.managers.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerQueryAvailableFilters">ManagerQueryAvailableFilters (class in qcportal.managers.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerQueryAvailableFilters.Config">ManagerQueryAvailableFilters.Config (class in qcportal.managers.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerQueryFilters">ManagerQueryFilters (class in qcportal.managers.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerQueryFilters.Config">ManagerQueryFilters.Config (class in qcportal.managers.models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerQueryIterator">ManagerQueryIterator (class in qcportal.managers.models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerStatusEnum">ManagerStatusEnum (class in qcportal.managers.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerUpdateBody">ManagerUpdateBody (class in qcportal.managers.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerUpdateBody.Config">ManagerUpdateBody.Config (class in qcportal.managers.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyAddBody">ManybodyAddBody (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyAddBody.Config">ManybodyAddBody.Config (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyCluster">ManybodyCluster (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyCluster.Config">ManybodyCluster.Config (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyClusterMeta">ManybodyClusterMeta (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyClusterMeta.Config">ManybodyClusterMeta.Config (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDataset">ManybodyDataset (class in qcportal.manybody.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDataset.Config">ManybodyDataset.Config (class in qcportal.manybody.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDatasetEntry">ManybodyDatasetEntry (class in qcportal.manybody.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDatasetEntry.Config">ManybodyDatasetEntry.Config (class in qcportal.manybody.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDatasetNewEntry">ManybodyDatasetNewEntry (class in qcportal.manybody.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDatasetNewEntry.Config">ManybodyDatasetNewEntry.Config (class in qcportal.manybody.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDatasetRecordItem">ManybodyDatasetRecordItem (class in qcportal.manybody.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDatasetSpecification">ManybodyDatasetSpecification (class in qcportal.manybody.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDatasetSpecification.Config">ManybodyDatasetSpecification.Config (class in qcportal.manybody.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyInput">ManybodyInput (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyInput.Config">ManybodyInput.Config (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyKeywords">ManybodyKeywords (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyKeywords.Config">ManybodyKeywords.Config (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyMultiInput">ManybodyMultiInput (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyMultiInput.Config">ManybodyMultiInput.Config (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyQueryFilters">ManybodyQueryFilters (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyQueryFilters.Config">ManybodyQueryFilters.Config (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord">ManybodyRecord (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord.Config">ManybodyRecord.Config (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodySpecification">ManybodySpecification (class in qcportal.manybody.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodySpecification.Config">ManybodySpecification.Config (class in qcportal.manybody.record_models)</a>
 </li>
       <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.LSFExecutorConfig.max_nodes">max_nodes (LSFExecutorConfig attribute)</a>
 
@@ -3619,6 +4260,16 @@
       </ul></li>
       <li><a href="user_guide/qcportal_reference/utils_misc.html#qcportal.exceptions.MissingDataError">MissingDataError</a>
 </li>
+      <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.LocalExecutorConfig.model_config">model_config (LocalExecutorConfig attribute)</a>
+
+      <ul>
+        <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.LSFExecutorConfig.model_config">(LSFExecutorConfig attribute)</a>
+</li>
+        <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.SlurmExecutorConfig.model_config">(SlurmExecutorConfig attribute)</a>
+</li>
+        <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.TorqueExecutorConfig.model_config">(TorqueExecutorConfig attribute)</a>
+</li>
+      </ul></li>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationQueryFilters.modified_after">modified_after (GridoptimizationQueryFilters attribute)</a>
 
       <ul>
@@ -3639,6 +4290,8 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.modified_after">(TorsiondriveQueryFilters attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationQueryFilters.modified_before">modified_before (GridoptimizationQueryFilters attribute)</a>
 
       <ul>
@@ -3681,8 +4334,6 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.modified_on">(TorsiondriveRecord attribute)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.modified_on">[1]</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.modify_entries">modify_entries() (BaseDataset method)</a>
 
       <ul>
@@ -3850,6 +4501,14 @@
         <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord.molecule_id">(SinglepointRecord attribute)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/molecules.html#qcportal.molecules.models.MoleculeModifyBody">MoleculeModifyBody (class in qcportal.molecules.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/molecules.html#qcportal.molecules.models.MoleculeModifyBody.Config">MoleculeModifyBody.Config (class in qcportal.molecules.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/molecules.html#qcportal.molecules.models.MoleculeQueryFilters">MoleculeQueryFilters (class in qcportal.molecules.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/molecules.html#qcportal.molecules.models.MoleculeQueryFilters.Config">MoleculeQueryFilters.Config (class in qcportal.molecules.models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/molecules.html#qcportal.molecules.models.MoleculeQueryIterator">MoleculeQueryIterator (class in qcportal.molecules.models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointAddBody.molecules">molecules (SinglepointAddBody attribute)</a>
@@ -3858,6 +4517,10 @@
         <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointMultiInput.molecules">(SinglepointMultiInput attribute)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/molecules.html#qcportal.molecules.models.MoleculeUploadOptions">MoleculeUploadOptions (class in qcportal.molecules.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/molecules.html#qcportal.molecules.models.MoleculeUploadOptions.Config">MoleculeUploadOptions.Config (class in qcportal.molecules.models)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -4046,9 +4709,67 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.native_files_">(TorsiondriveRecord attribute)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.native_files_">[1]</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.NativeFile">NativeFile (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.NativeFile.Config">NativeFile.Config (class in qcportal.record_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.neb_result_">neb_result_ (NEBRecord attribute)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBAddBody">NEBAddBody (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBAddBody.Config">NEBAddBody.Config (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDataset">NEBDataset (class in qcportal.neb.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDataset.Config">NEBDataset.Config (class in qcportal.neb.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetEntry">NEBDatasetEntry (class in qcportal.neb.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetEntry.Config">NEBDatasetEntry.Config (class in qcportal.neb.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetNewEntry">NEBDatasetNewEntry (class in qcportal.neb.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetNewEntry.Config">NEBDatasetNewEntry.Config (class in qcportal.neb.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetRecordItem">NEBDatasetRecordItem (class in qcportal.neb.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetRecordItem.Config">NEBDatasetRecordItem.Config (class in qcportal.neb.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetSpecification">NEBDatasetSpecification (class in qcportal.neb.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetSpecification.Config">NEBDatasetSpecification.Config (class in qcportal.neb.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBInput">NEBInput (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBInput.Config">NEBInput.Config (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBKeywords">NEBKeywords (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBKeywords.Config">NEBKeywords.Config (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBMultiInput">NEBMultiInput (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBMultiInput.Config">NEBMultiInput.Config (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBOptimization">NEBOptimization (class in qcportal.neb.record_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBOptimization.config">NEBOptimization.config (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBQueryFilters">NEBQueryFilters (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBQueryFilters.Config">NEBQueryFilters.Config (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord">NEBRecord (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.Config">NEBRecord.Config (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBSinglepoint">NEBSinglepoint (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBSinglepoint.Config">NEBSinglepoint.Config (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBSpecification">NEBSpecification (class in qcportal.neb.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBSpecification.Config">NEBSpecification.Config (class in qcportal.neb.record_models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCloneBody.new_dataset_name">new_dataset_name (DatasetCloneBody attribute)</a>
 </li>
@@ -4126,8 +4847,6 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.optimization_program">(TorsiondriveQueryFilters attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionComponent.optimization_record">optimization_record (ReactionComponent attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord.optimization_records_">optimization_records_ (GridoptimizationRecord attribute)</a>
@@ -4148,6 +4867,48 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveSpecification.optimization_specification">(TorsiondriveSpecification attribute)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveSpecification.optimization_specification">[1]</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationAddBody">OptimizationAddBody (class in qcportal.optimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationAddBody.Config">OptimizationAddBody.Config (class in qcportal.optimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset">OptimizationDataset (class in qcportal.optimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset.Config">OptimizationDataset.Config (class in qcportal.optimization.dataset_models)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetEntry">OptimizationDatasetEntry (class in qcportal.optimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetEntry.Config">OptimizationDatasetEntry.Config (class in qcportal.optimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry">OptimizationDatasetNewEntry (class in qcportal.optimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.Config">OptimizationDatasetNewEntry.Config (class in qcportal.optimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem">OptimizationDatasetRecordItem (class in qcportal.optimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem.Config">OptimizationDatasetRecordItem.Config (class in qcportal.optimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetSpecification">OptimizationDatasetSpecification (class in qcportal.optimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetSpecification.Config">OptimizationDatasetSpecification.Config (class in qcportal.optimization.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationInput">OptimizationInput (class in qcportal.optimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationInput.Config">OptimizationInput.Config (class in qcportal.optimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationMultiInput">OptimizationMultiInput (class in qcportal.optimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationMultiInput.Config">OptimizationMultiInput.Config (class in qcportal.optimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationQueryFilters">OptimizationQueryFilters (class in qcportal.optimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationQueryFilters.Config">OptimizationQueryFilters.Config (class in qcportal.optimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord">OptimizationRecord (class in qcportal.optimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord.Config">OptimizationRecord.Config (class in qcportal.optimization.record_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord.optimizations">optimizations (GridoptimizationRecord property)</a>
 
       <ul>
@@ -4164,6 +4925,10 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.optimizations_">(TorsiondriveRecord attribute)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.optimizations_">[1]</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationSpecification">OptimizationSpecification (class in qcportal.optimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationSpecification.Config">OptimizationSpecification.Config (class in qcportal.optimization.record_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBKeywords.optimize_endpoints">optimize_endpoints (NEBKeywords attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBKeywords.optimize_ts">optimize_ts (NEBKeywords attribute)</a>
@@ -4177,6 +4942,10 @@
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.ComputeHistory.outputs">outputs (ComputeHistory property)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.ComputeHistory.outputs_">outputs_ (ComputeHistory attribute)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.OutputStore">OutputStore (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.OutputStore.Config">OutputStore.Config (class in qcportal.record_models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.OutputTypeEnum">OutputTypeEnum (class in qcportal.record_models)</a>
 </li>
@@ -4371,6 +5140,10 @@
       <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.progress_description">progress_description (InternalJob attribute)</a>
 </li>
       <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.LSFExecutorConfig.project">project (LSFExecutorConfig attribute)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.ProjURLParameters">ProjURLParameters (class in qcportal.base_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.ProjURLParameters.Config">ProjURLParameters.Config (class in qcportal.base_models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.propagate_client">propagate_client() (BaseDataset method)</a>
 
@@ -4660,8 +5433,6 @@
         <li><a href="user_guide/qcportal_reference/records/manybody.html#module-qcportal.manybody.dataset_models">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     qcportal.manybody.record_models
 
@@ -4676,6 +5447,8 @@
         <li><a href="user_guide/qcportal_reference/metadata_models.html#module-qcportal.metadata_models">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     qcportal.molecules.models
 
@@ -4781,6 +5554,10 @@
         <li><a href="user_guide/qcportal_reference/utils_misc.html#module-qcportal.utils">module</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.QCSpecification">QCSpecification (class in qcportal.singlepoint.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.QCSpecification.Config">QCSpecification.Config (class in qcportal.singlepoint.record_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.query_access_log">query_access_log() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.query_access_summary">query_access_summary() (PortalClient method)</a>
@@ -4815,6 +5592,14 @@
 </li>
       <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.QueryIteratorBase">QueryIteratorBase (class in qcportal.base_models)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.QueryModelBase">QueryModelBase (class in qcportal.base_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.QueryModelBase.Config">QueryModelBase.Config (class in qcportal.base_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.QueryProjModelBase">QueryProjModelBase (class in qcportal.base_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.QueryProjModelBase.Config">QueryProjModelBase.Config (class in qcportal.base_models)</a>
+</li>
       <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.LSFExecutorConfig.queue">queue (LSFExecutorConfig attribute)</a>
 
       <ul>
@@ -4827,6 +5612,64 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionAddBody">ReactionAddBody (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionAddBody.Config">ReactionAddBody.Config (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionComponent">ReactionComponent (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionComponent.Config">ReactionComponent.Config (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionComponentMeta">ReactionComponentMeta (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionComponentMeta.Config">ReactionComponentMeta.Config (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDataset">ReactionDataset (class in qcportal.reaction.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDataset.Config">ReactionDataset.Config (class in qcportal.reaction.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetEntry">ReactionDatasetEntry (class in qcportal.reaction.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetEntry.Config">ReactionDatasetEntry.Config (class in qcportal.reaction.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetEntryStoichiometry">ReactionDatasetEntryStoichiometry (class in qcportal.reaction.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetNewEntry">ReactionDatasetNewEntry (class in qcportal.reaction.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetNewEntry.Config">ReactionDatasetNewEntry.Config (class in qcportal.reaction.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetRecordItem">ReactionDatasetRecordItem (class in qcportal.reaction.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetRecordItem.Config">ReactionDatasetRecordItem.Config (class in qcportal.reaction.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetSpecification">ReactionDatasetSpecification (class in qcportal.reaction.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetSpecification.Config">ReactionDatasetSpecification.Config (class in qcportal.reaction.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionInput">ReactionInput (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionInput.Config">ReactionInput.Config (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionKeywords">ReactionKeywords (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionKeywords.Config">ReactionKeywords.Config (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionMultiInput">ReactionMultiInput (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionMultiInput.Config">ReactionMultiInput.Config (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionQueryFilters">ReactionQueryFilters (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionQueryFilters.Config">ReactionQueryFilters.Config (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionRecord">ReactionRecord (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionRecord.Config">ReactionRecord.Config (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionSpecification">ReactionSpecification (class in qcportal.reaction.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionSpecification.Config">ReactionSpecification.Config (class in qcportal.reaction.record_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.read_dataset_metadata">read_dataset_metadata() (in module qcportal.cache)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetRecordItem.record">record (GridoptimizationDatasetRecordItem attribute)</a>
@@ -4965,13 +5808,47 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.record_type">(TorsiondriveRecord attribute)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.record_type">[1]</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordAddBodyBase">RecordAddBodyBase (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordAddBodyBase.Config">RecordAddBodyBase.Config (class in qcportal.record_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache">RecordCache (class in qcportal.cache)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordComment">RecordComment (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordComment.Config">RecordComment.Config (class in qcportal.record_models)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordDeleteBody">RecordDeleteBody (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordDeleteBody.Config">RecordDeleteBody.Config (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordModifyBody">RecordModifyBody (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordModifyBody.Config">RecordModifyBody.Config (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordQueryFilters">RecordQueryFilters (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordQueryFilters.Config">RecordQueryFilters.Config (class in qcportal.record_models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordQueryIterator">RecordQueryIterator (class in qcportal.record_models)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordRevertBody">RecordRevertBody (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordRevertBody.Config">RecordRevertBody.Config (class in qcportal.record_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.records_from_dicts">records_from_dicts() (in module qcportal.record_models)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordService">RecordService (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordService.Config">RecordService.Config (class in qcportal.record_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordStatusEnum">RecordStatusEnum (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordTask">RecordTask (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordTask.Config">RecordTask.Config (class in qcportal.record_models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/utils_misc.html#qcportal.utils.recursive_normalizer">recursive_normalizer() (in module qcportal.utils)</a>
 </li>
@@ -4995,8 +5872,6 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.refresh_cache">(TorsiondriveDataset method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ComputeManager.rejected">rejected (ComputeManager attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.TaskReturnMetadata.rejected_ids">rejected_ids (TaskReturnMetadata property)</a>
@@ -5123,6 +5998,10 @@
 </li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummaryEntry.response_bytes_info">response_bytes_info (AccessLogSummaryEntry attribute)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.RestModelBase">RestModelBase (class in qcportal.base_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.RestModelBase.Config">RestModelBase.Config (class in qcportal.base_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.result">result (InternalJob attribute)</a>
 
       <ul>
@@ -5167,6 +6046,10 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.NativeFile.save_file">save_file() (NativeFile method)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.ScanDimension">ScanDimension (class in qcportal.gridoptimization.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.ScanDimension.Config">ScanDimension.Config (class in qcportal.gridoptimization.record_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationKeywords.scans">scans (GridoptimizationKeywords attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.ScanTypeEnum">ScanTypeEnum (class in qcportal.gridoptimization.record_models)</a>
@@ -5209,12 +6092,16 @@
         <li><a href="user_guide/qcportal_reference/utils_misc.html#qcportal.serialization.serialize">(in module qcportal.serialization)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/tasks_services.html#qcportal.generic_result.GenericTaskResult.Config.serialize_default_excludes">serialize_default_excludes (GenericTaskResult.Config attribute)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.serialize_key">serialize_key() (in module qcportal.gridoptimization.record_models)</a>
 
       <ul>
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.serialize_key">(in module qcportal.torsiondrive.record_models)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/tasks_services.html#qcportal.generic_result.GenericTaskResult.Config.serialize_skip_defaults">serialize_skip_defaults (GenericTaskResult.Config attribute)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.service">service (BaseRecord property)</a>
 
       <ul>
@@ -5252,6 +6139,10 @@
 </li>
       </ul></li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordService.service_state">service_state (RecordService attribute)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.ServiceDependency">ServiceDependency (class in qcportal.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.ServiceDependency.Config">ServiceDependency.Config (class in qcportal.record_models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_default_compute_priority">set_default_compute_priority() (BaseDataset method)</a>
 
@@ -5489,6 +6380,16 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.set_visibility">(TorsiondriveDataset method)</a>
 </li>
       </ul></li>
+      <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.LocalExecutorConfig.settings_customise_sources">settings_customise_sources() (LocalExecutorConfig class method)</a>
+
+      <ul>
+        <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.LSFExecutorConfig.settings_customise_sources">(LSFExecutorConfig class method)</a>
+</li>
+        <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.SlurmExecutorConfig.settings_customise_sources">(SlurmExecutorConfig class method)</a>
+</li>
+        <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.TorqueExecutorConfig.settings_customise_sources">(TorqueExecutorConfig class method)</a>
+</li>
+      </ul></li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAttachment.sha256sum">sha256sum (DatasetAttachment attribute)</a>
 
       <ul>
@@ -5521,12 +6422,58 @@
         <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionSpecification.singlepoint_specification">(ReactionSpecification attribute)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointAddBody">SinglepointAddBody (class in qcportal.singlepoint.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointAddBody.Config">SinglepointAddBody.Config (class in qcportal.singlepoint.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset">SinglepointDataset (class in qcportal.singlepoint.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset.Config">SinglepointDataset.Config (class in qcportal.singlepoint.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetEntriesFrom">SinglepointDatasetEntriesFrom (class in qcportal.singlepoint.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetEntry">SinglepointDatasetEntry (class in qcportal.singlepoint.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetEntry.Config">SinglepointDatasetEntry.Config (class in qcportal.singlepoint.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetNewEntry">SinglepointDatasetNewEntry (class in qcportal.singlepoint.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetNewEntry.Config">SinglepointDatasetNewEntry.Config (class in qcportal.singlepoint.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetRecordItem">SinglepointDatasetRecordItem (class in qcportal.singlepoint.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetRecordItem.Config">SinglepointDatasetRecordItem.Config (class in qcportal.singlepoint.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification">SinglepointDatasetSpecification (class in qcportal.singlepoint.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification.Config">SinglepointDatasetSpecification.Config (class in qcportal.singlepoint.dataset_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointDriver">SinglepointDriver (class in qcportal.singlepoint.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointInput">SinglepointInput (class in qcportal.singlepoint.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointInput.Config">SinglepointInput.Config (class in qcportal.singlepoint.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointMultiInput">SinglepointMultiInput (class in qcportal.singlepoint.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointMultiInput.Config">SinglepointMultiInput.Config (class in qcportal.singlepoint.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointQueryFilters">SinglepointQueryFilters (class in qcportal.singlepoint.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointQueryFilters.Config">SinglepointQueryFilters.Config (class in qcportal.singlepoint.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord">SinglepointRecord (class in qcportal.singlepoint.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord.Config">SinglepointRecord.Config (class in qcportal.singlepoint.record_models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.singlepoints">singlepoints (NEBRecord property)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.singlepoints_">singlepoints_ (NEBRecord attribute)</a>
 </li>
+      <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.SlurmExecutorConfig">SlurmExecutorConfig (class in qcfractalcompute.config)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordDeleteBody.soft_delete">soft_delete (RecordDeleteBody attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.DeleteMetadata.sort_fields">sort_fields() (DeleteMetadata class method)</a>
@@ -5617,8 +6564,6 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.specification">(TorsiondriveRecord attribute)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.specification">[1]</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.specification_exists">specification_exists() (DatasetCache method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDatasetRecordItem.specification_name">specification_name (GridoptimizationDatasetRecordItem attribute)</a>
@@ -6031,8 +6976,6 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.task">(TorsiondriveRecord property)</a>, <a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord.task">[1]</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.task_">task_ (BaseRecord attribute)</a>
 
       <ul>
@@ -6059,6 +7002,8 @@
 </li>
       <li><a href="user_guide/qcportal_reference/utils_misc.html#qcportal.utils.time_based_cache">time_based_cache() (in module qcportal.utils)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogEntry.timestamp">timestamp (AccessLogEntry attribute)</a>
 
       <ul>
@@ -6073,10 +7018,72 @@
         <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord.to_qcschema_result">(SinglepointRecord method)</a>
 </li>
       </ul></li>
+      <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.TorqueExecutorConfig">TorqueExecutorConfig (class in qcfractalcompute.config)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveAddBody">TorsiondriveAddBody (class in qcportal.torsiondrive.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveAddBody.Config">TorsiondriveAddBody.Config (class in qcportal.torsiondrive.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset">TorsiondriveDataset (class in qcportal.torsiondrive.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.Config">TorsiondriveDataset.Config (class in qcportal.torsiondrive.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetEntry">TorsiondriveDatasetEntry (class in qcportal.torsiondrive.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetEntry.Config">TorsiondriveDatasetEntry.Config (class in qcportal.torsiondrive.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetNewEntry">TorsiondriveDatasetNewEntry (class in qcportal.torsiondrive.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetNewEntry.Config">TorsiondriveDatasetNewEntry.Config (class in qcportal.torsiondrive.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetRecordItem">TorsiondriveDatasetRecordItem (class in qcportal.torsiondrive.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetRecordItem.Config">TorsiondriveDatasetRecordItem.Config (class in qcportal.torsiondrive.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetSpecification">TorsiondriveDatasetSpecification (class in qcportal.torsiondrive.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetSpecification.Config">TorsiondriveDatasetSpecification.Config (class in qcportal.torsiondrive.dataset_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveInput">TorsiondriveInput (class in qcportal.torsiondrive.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveInput.Config">TorsiondriveInput.Config (class in qcportal.torsiondrive.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords">TorsiondriveKeywords (class in qcportal.torsiondrive.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords.Config">TorsiondriveKeywords.Config (class in qcportal.torsiondrive.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveMultiInput">TorsiondriveMultiInput (class in qcportal.torsiondrive.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveMultiInput.Config">TorsiondriveMultiInput.Config (class in qcportal.torsiondrive.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveOptimization">TorsiondriveOptimization (class in qcportal.torsiondrive.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveOptimization.Config">TorsiondriveOptimization.Config (class in qcportal.torsiondrive.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters">TorsiondriveQueryFilters (class in qcportal.torsiondrive.record_models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.Config">TorsiondriveQueryFilters.Config (class in qcportal.torsiondrive.record_models)</a>
+</li>
       <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveRecord">TorsiondriveRecord (class in qcportal.torsiondrive)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord">(class in qcportal.torsiondrive.record_models)</a>
+</li>
+      </ul></li>
+      <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.Config">TorsiondriveRecord.Config (class in qcportal.torsiondrive.record_models)</a>
 </li>
       <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveSpecification">TorsiondriveSpecification (class in qcportal.torsiondrive)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveSpecification">(class in qcportal.torsiondrive.record_models)</a>
 </li>
+      </ul></li>
+      <li><a href="user_guide/records/torsiondrive.html#qcportal.torsiondrive.TorsiondriveSpecification.Config">TorsiondriveSpecification.Config (class in qcportal.torsiondrive)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveSpecification.Config">(class in qcportal.torsiondrive.record_models)</a>
+</li>
+      </ul></li>
       <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ComputeManager.total_cpu_hours">total_cpu_hours (ComputeManager attribute)</a>
 
       <ul>
@@ -6181,10 +7188,10 @@
         <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache.update_records">(RecordCache method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.update_specifications">update_specifications() (DatasetCache method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.UpdateMetadata.updated_idx">updated_idx (UpdateMetadata attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.UpdateMetadata">UpdateMetadata (class in qcportal.metadata_models)</a>
@@ -6229,6 +7236,10 @@
       </ul></li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogEntry.user_agent">user_agent (AccessLogEntry attribute)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.UserInfo">UserInfo (class in qcportal.auth.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.UserInfo.Config">UserInfo.Config (class in qcportal.auth.models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/utils_misc.html#qcportal.exceptions.UserManagementError">UserManagementError</a>
 </li>
       <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ComputeManager.username">username (ComputeManager attribute)</a>
@@ -6253,6 +7264,186 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.PortalCache.vacuum">vacuum() (PortalCache method)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogQueryFilters.Config.validate_assignment">validate_assignment (AccessLogQueryFilters.Config attribute)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummaryFilters.Config.validate_assignment">(AccessLogSummaryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.Config.validate_assignment">(BaseDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.Config.validate_assignment">(BaseRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.CommonBulkGetBody.Config.validate_assignment">(CommonBulkGetBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.CommonBulkGetNamesBody.Config.validate_assignment">(CommonBulkGetNamesBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetAddBody.Config.validate_assignment">(DatasetAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCloneBody.Config.validate_assignment">(DatasetCloneBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCopyFromBody.Config.validate_assignment">(DatasetCopyFromBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCreateViewBody.Config.validate_assignment">(DatasetCreateViewBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteEntryBody.Config.validate_assignment">(DatasetDeleteEntryBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteParams.Config.validate_assignment">(DatasetDeleteParams.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteSpecificationBody.Config.validate_assignment">(DatasetDeleteSpecificationBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetDeleteStrBody.Config.validate_assignment">(DatasetDeleteStrBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetFetchEntryBody.Config.validate_assignment">(DatasetFetchEntryBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetFetchRecordsBody.Config.validate_assignment">(DatasetFetchRecordsBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetFetchSpecificationBody.Config.validate_assignment">(DatasetFetchSpecificationBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetGetInternalJobParams.Config.validate_assignment">(DatasetGetInternalJobParams.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetModifyEntryBody.Config.validate_assignment">(DatasetModifyEntryBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetModifyMetadata.Config.validate_assignment">(DatasetModifyMetadata.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetQueryModel.Config.validate_assignment">(DatasetQueryModel.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetQueryRecords.Config.validate_assignment">(DatasetQueryRecords.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetRecordModifyBody.Config.validate_assignment">(DatasetRecordModifyBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetRecordRevertBody.Config.validate_assignment">(DatasetRecordRevertBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetRemoveRecordsBody.Config.validate_assignment">(DatasetRemoveRecordsBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetSubmitBody.Config.validate_assignment">(DatasetSubmitBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.DeleteBeforeDateBody.Config.validate_assignment">(DeleteBeforeDateBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogQueryFilters.Config.validate_assignment">(ErrorLogQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationAddBody.Config.validate_assignment">(GridoptimizationAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.dataset_models.GridoptimizationDataset.Config.validate_assignment">(GridoptimizationDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationInput.Config.validate_assignment">(GridoptimizationInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationMultiInput.Config.validate_assignment">(GridoptimizationMultiInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationQueryFilters.Config.validate_assignment">(GridoptimizationQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord.Config.validate_assignment">(GridoptimizationRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJobQueryFilters.Config.validate_assignment">(InternalJobQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerActivationBody.Config.validate_assignment">(ManagerActivationBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerQueryAvailableFilters.Config.validate_assignment">(ManagerQueryAvailableFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerQueryFilters.Config.validate_assignment">(ManagerQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerUpdateBody.Config.validate_assignment">(ManagerUpdateBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyAddBody.Config.validate_assignment">(ManybodyAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.dataset_models.ManybodyDataset.Config.validate_assignment">(ManybodyDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyInput.Config.validate_assignment">(ManybodyInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyMultiInput.Config.validate_assignment">(ManybodyMultiInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyQueryFilters.Config.validate_assignment">(ManybodyQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord.Config.validate_assignment">(ManybodyRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/molecules.html#qcportal.molecules.models.MoleculeModifyBody.Config.validate_assignment">(MoleculeModifyBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/molecules.html#qcportal.molecules.models.MoleculeQueryFilters.Config.validate_assignment">(MoleculeQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/molecules.html#qcportal.molecules.models.MoleculeUploadOptions.Config.validate_assignment">(MoleculeUploadOptions.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBAddBody.Config.validate_assignment">(NEBAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDataset.Config.validate_assignment">(NEBDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBInput.Config.validate_assignment">(NEBInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBMultiInput.Config.validate_assignment">(NEBMultiInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBQueryFilters.Config.validate_assignment">(NEBQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBRecord.Config.validate_assignment">(NEBRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationAddBody.Config.validate_assignment">(OptimizationAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset.Config.validate_assignment">(OptimizationDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationInput.Config.validate_assignment">(OptimizationInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationMultiInput.Config.validate_assignment">(OptimizationMultiInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationQueryFilters.Config.validate_assignment">(OptimizationQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord.Config.validate_assignment">(OptimizationRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.ProjURLParameters.Config.validate_assignment">(ProjURLParameters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.QueryModelBase.Config.validate_assignment">(QueryModelBase.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.QueryProjModelBase.Config.validate_assignment">(QueryProjModelBase.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionAddBody.Config.validate_assignment">(ReactionAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDataset.Config.validate_assignment">(ReactionDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionInput.Config.validate_assignment">(ReactionInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionMultiInput.Config.validate_assignment">(ReactionMultiInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionQueryFilters.Config.validate_assignment">(ReactionQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionRecord.Config.validate_assignment">(ReactionRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordAddBodyBase.Config.validate_assignment">(RecordAddBodyBase.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordDeleteBody.Config.validate_assignment">(RecordDeleteBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordModifyBody.Config.validate_assignment">(RecordModifyBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordQueryFilters.Config.validate_assignment">(RecordQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordRevertBody.Config.validate_assignment">(RecordRevertBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.RestModelBase.Config.validate_assignment">(RestModelBase.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointAddBody.Config.validate_assignment">(SinglepointAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset.Config.validate_assignment">(SinglepointDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointInput.Config.validate_assignment">(SinglepointInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointMultiInput.Config.validate_assignment">(SinglepointMultiInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointQueryFilters.Config.validate_assignment">(SinglepointQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord.Config.validate_assignment">(SinglepointRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveAddBody.Config.validate_assignment">(TorsiondriveAddBody.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDataset.Config.validate_assignment">(TorsiondriveDataset.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveInput.Config.validate_assignment">(TorsiondriveInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveMultiInput.Config.validate_assignment">(TorsiondriveMultiInput.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.Config.validate_assignment">(TorsiondriveQueryFilters.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.Config.validate_assignment">(TorsiondriveRecord.Config attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.UserInfo.Config.validate_assignment">(UserInfo.Config attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetEntriesFrom.validate_input">validate_input() (SinglepointDatasetEntriesFrom class method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/base_models.html#qcportal.base_models.validate_list_to_single">validate_list_to_single() (in module qcportal.base_models)</a>
@@ -6293,8 +7484,6 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.validate_lists">(TorsiondriveQueryFilters class method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerActivationBody.validate_programs">validate_programs() (ManagerActivationBody class method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ManagerActivationBody.validate_tags">validate_tags() (ManagerActivationBody class method)</a>
@@ -6347,17 +7536,13 @@
         <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.TorqueExecutorConfig.walltime">(TorqueExecutorConfig attribute)</a>
 </li>
       </ul></li>
-      <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.LSFExecutorConfig.walltime_must_be_str">walltime_must_be_str() (LSFExecutorConfig class method)</a>
-
-      <ul>
-        <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.SlurmExecutorConfig.walltime_must_be_str">(SlurmExecutorConfig class method)</a>
-</li>
-        <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.TorqueExecutorConfig.walltime_must_be_str">(TorqueExecutorConfig class method)</a>
-</li>
-      </ul></li>
       <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.watch">watch() (InternalJob method)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.Wavefunction">Wavefunction (class in qcportal.singlepoint.record_models)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord.wavefunction">wavefunction (SinglepointRecord property)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.Wavefunction.Config">Wavefunction.Config (class in qcportal.singlepoint.record_models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord.wavefunction_">wavefunction_ (SinglepointRecord attribute)</a>
 </li>
@@ -6502,7 +7687,7 @@
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.4.7.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 8.2.3.<br>
         </p>
         
 

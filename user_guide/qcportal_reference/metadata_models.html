@@ -31,7 +31,6 @@
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
@@ -43,8 +42,8 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=44d3b0ad"></script>
-    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/documentation_options.js?v=8938c948"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
@@ -56,7 +55,7 @@
     <link rel="prev" title="Molecule" href="molecules.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.63.post6+g5015d795c" />
+  <meta name="docsearch:version" content="0.63.post17+gaf5c99e6a" />
   </head>
   
   
@@ -510,7 +509,7 @@
 <span id="metadata-models"></span><h1>Metadata Models<a class="headerlink" href="#module-qcportal.metadata_models" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InsertMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inserted_idx=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">existing_idx=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InsertMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inserted_idx=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">existing_idx=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Metadata returned by insertion / adding functions</p>
 <dl class="field-list simple">
@@ -545,42 +544,42 @@
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.n_inserted">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_inserted</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.n_inserted" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_inserted</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.n_inserted" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.n_existing">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_existing</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.n_existing" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_existing</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.n_existing" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.n_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.n_errors" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.n_errors" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.error_idx">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_idx</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.error_idx" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_idx</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.error_idx" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.success" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.success" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.error_string">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_string</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.error_string" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_string</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.error_string" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.sort_fields">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sort_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertMetadata.sort_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.sort_fields" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sort_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertMetadata.sort_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.sort_fields" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.check_all_indices">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_all_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertMetadata.check_all_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.check_all_indices" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_all_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertMetadata.check_all_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.check_all_indices" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -596,7 +595,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.merge">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertMetadata.merge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.merge" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertMetadata.merge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.merge" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>metadata</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><em>InsertMetadata</em></a><em>]</em>)</p>
@@ -611,7 +610,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertCountsMetadata">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InsertCountsMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_inserted</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_existing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertCountsMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InsertCountsMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_inserted</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_existing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertCountsMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Metadata returned by insertion / adding functions, only including counts</p>
 <dl class="field-list simple">
@@ -646,17 +645,17 @@
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertCountsMetadata.n_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.n_errors" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.n_errors" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertCountsMetadata.success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.success" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.success" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertCountsMetadata.error_string">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_string</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.error_string" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_string</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.error_string" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -672,7 +671,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertCountsMetadata.from_insert_metadata">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_insert_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">insert_meta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertCountsMetadata.from_insert_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.from_insert_metadata" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_insert_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">insert_meta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertCountsMetadata.from_insert_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.from_insert_metadata" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>insert_meta</strong> (<a class="reference internal" href="#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><em>InsertMetadata</em></a>)</p>
@@ -687,7 +686,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DeleteMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deleted_idx=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_children_deleted=0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#DeleteMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DeleteMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deleted_idx=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_children_deleted=0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#DeleteMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Metadata returned by delete functions</p>
 <dl class="field-list simple">
@@ -722,37 +721,37 @@
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.n_deleted">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_deleted</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.n_deleted" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_deleted</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.n_deleted" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.n_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.n_errors" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.n_errors" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.error_idx">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_idx</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.error_idx" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_idx</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.error_idx" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.success" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.success" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.error_string">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_string</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.error_string" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_string</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.error_string" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.sort_fields">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sort_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#DeleteMetadata.sort_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.sort_fields" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sort_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#DeleteMetadata.sort_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.sort_fields" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.check_all_indices">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_all_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#DeleteMetadata.check_all_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.check_all_indices" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_all_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#DeleteMetadata.check_all_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.check_all_indices" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -770,7 +769,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UpdateMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">updated_idx=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_children_updated=0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#UpdateMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UpdateMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">updated_idx=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_children_updated=0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#UpdateMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Metadata returned by update functions</p>
 <dl class="field-list simple">
@@ -805,37 +804,37 @@
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.n_updated">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_updated</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.n_updated" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_updated</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.n_updated" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.n_errors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.n_errors" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_errors</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.n_errors" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.error_idx">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_idx</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.error_idx" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_idx</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.error_idx" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.success" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.success" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.error_string">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_string</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.error_string" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_string</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.error_string" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.sort_fields">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sort_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#UpdateMetadata.sort_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.sort_fields" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sort_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#UpdateMetadata.sort_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.sort_fields" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.check_all_indices">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_all_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#UpdateMetadata.check_all_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.check_all_indices" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_all_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#UpdateMetadata.check_all_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.check_all_indices" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -853,7 +852,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TaskReturnMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rejected_info=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accepted_ids=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#TaskReturnMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TaskReturnMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rejected_info=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accepted_ids=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#TaskReturnMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Metadata returned to managers that have sent completed tasks back to the server</p>
 <dl class="field-list simple">
@@ -882,32 +881,32 @@
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.n_accepted">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_accepted</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.n_accepted" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_accepted</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.n_accepted" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.n_rejected">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_rejected</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.n_rejected" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_rejected</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.n_rejected" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.rejected_ids">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rejected_ids</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.rejected_ids" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rejected_ids</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.rejected_ids" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.success">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.success" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.success" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.error_string">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_string</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.error_string" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error_string</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.error_string" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.sort_fields">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sort_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#TaskReturnMetadata.sort_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.sort_fields" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sort_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#TaskReturnMetadata.sort_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.sort_fields" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1106,7 +1105,7 @@
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.4.7.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 8.2.3.<br>
         </p>
         
 

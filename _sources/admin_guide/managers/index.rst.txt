@@ -128,25 +128,15 @@ Configuration for different HPC schedulers
 HPC cluster schedulers vary in behavior, so you will need to adapt your ``qcfractal-manager-config.yml`` to the scheduler of the HPC cluster you intend to use.
 The configuration keys available for each ``type`` of record in the ``executors`` list are referenced here.
 
-----
 
-.. autopydantic_model:: qcfractalcompute.config.SlurmExecutorConfig
-   :model-show-config-summary: false
-   :model-show-field-summary: false
+.. autoclass:: qcfractalcompute.config.SlurmExecutorConfig
 
-----
 
-.. autopydantic_model:: qcfractalcompute.config.TorqueExecutorConfig
-   :model-show-config-summary: false
-   :model-show-field-summary: false
+.. autoclass:: qcfractalcompute.config.TorqueExecutorConfig
 
-----
 
-.. autopydantic_model:: qcfractalcompute.config.LSFExecutorConfig
-   :model-show-config-summary: false
-   :model-show-field-summary: false
+.. autoclass:: qcfractalcompute.config.LSFExecutorConfig
 
-----
 
 .. _compute-manager-local:
 
@@ -178,6 +168,4 @@ Using the ``local`` executor type is also recommended for running a compute mana
 
 ----
 
-.. autopydantic_model:: qcfractalcompute.config.LocalExecutorConfig
-   :model-show-config-summary: false
-   :model-show-field-summary: false
+.. autoclass:: qcfractalcompute.config.LocalExecutorConfig
