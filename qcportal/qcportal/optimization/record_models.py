@@ -1,23 +1,20 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from enum import Enum
+from typing import Iterable
 from typing import Optional, Union, Any, List, Dict
 
-try:
-    from pydantic.v1 import BaseModel, Field, constr, validator, Extra
-except ImportError:
-    from pydantic import BaseModel, Field, constr, validator, Extra
+from pydantic.v1 import BaseModel, Field, constr, validator, Extra
 from qcelemental.models import Molecule
 from qcelemental.models.procedures import (
     OptimizationResult,
-    OptimizationProtocols,
     QCInputSpecification,
-    Model as AtomicResultModel,
 )
 from typing_extensions import Literal
-from typing import Iterable
 
 from qcportal.base_models import RestModelBase
+from qcportal.cache import get_records_with_cache
 from qcportal.record_models import (
     BaseRecord,
     RecordAddBodyBase,
@@ -25,8 +22,6 @@ from qcportal.record_models import (
     RecordStatusEnum,
     compare_base_records,
 )
-from qcportal.utils import is_included
-from qcportal.cache import get_records_with_cache
 from qcportal.singlepoint import (
     SinglepointProtocols,
     SinglepointRecord,
@@ -34,7 +29,28 @@ from qcportal.singlepoint import (
     SinglepointDriver,
     compare_singlepoint_records,
 )
+from qcportal.utils import is_included
 
+
+class TrajectoryProtocolEnum(str, Enum):
+    """
+    Which gradient evaluations to keep in an optimization trajectory.
+    """
+
+    all = "all"
+    initial_and_final = "initial_and_final"
+    final = "final"
+    none = "none"
+
+
+class OptimizationProtocols(BaseModel):
+    """
+    Protocols regarding the manipulation of a Optimization output data.
+    """
+
+    trajectory: TrajectoryProtocolEnum = Field(
+        TrajectoryProtocolEnum.all, description=str(TrajectoryProtocolEnum.__doc__)
+    )
 
 class OptimizationSpecification(BaseModel):
     """
@@ -216,7 +232,7 @@ class OptimizationRecord(BaseRecord):
             keywords=new_keywords,
             input_specification=QCInputSpecification(
                 driver=SinglepointDriver.gradient,  # forced
-                model=AtomicResultModel(
+                model=dict(
                     method=self.specification.qc_specification.method,
                     basis=self.specification.qc_specification.basis,
                 ),

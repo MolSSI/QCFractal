@@ -234,7 +234,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         to_add = []
 
         for qc_spec in qc_specs:
-            protocols_dict = qc_spec.protocols.dict(exclude_defaults=True)
+            protocols_dict = qc_spec.protocols.dict(exclude_defaults=True, exclude_unset=True)
 
             # TODO - if error_correction is manually specified as the default, then it will be an empty dict
             if "error_correction" in protocols_dict:

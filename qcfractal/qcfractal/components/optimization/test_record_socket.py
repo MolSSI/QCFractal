@@ -108,7 +108,7 @@ def test_optimization_socket_task_spec(
 
         task_input = t.function_kwargs["input_data"]
         assert task_input["keywords"] == kw_with_prog
-        assert task_input["protocols"] == spec.protocols.dict(exclude_defaults=True)
+        assert task_input["protocols"] == spec.protocols.dict(exclude_defaults=True, exclude_unset=True)
 
         # Forced to gradient in the qcschema input
         assert task_input["input_specification"]["driver"] == SinglepointDriver.gradient

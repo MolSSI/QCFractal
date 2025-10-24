@@ -4,22 +4,17 @@ from copy import deepcopy
 from enum import Enum
 from typing import Optional, Union, Any, List, Dict, Tuple
 
-try:
-    from pydantic.v1 import BaseModel, Field, constr, validator, Extra, PrivateAttr
-except ImportError:
-    from pydantic import BaseModel, Field, constr, validator, Extra, PrivateAttr
+from pydantic.v1 import BaseModel, Field, constr, validator, Extra, PrivateAttr
 from qcelemental.models import Molecule
 from qcelemental.models.results import (
     AtomicResult,
-    Model as AtomicResultModel,
-    AtomicResultProtocols as SinglepointProtocols,
     AtomicResultProperties,
     WavefunctionProperties,
 )
 from typing_extensions import Literal
 
-from qcportal.compression import CompressionEnum, decompress
 from qcportal.base_models import RestModelBase
+from qcportal.compression import CompressionEnum, decompress
 from qcportal.record_models import (
     RecordStatusEnum,
     BaseRecord,
@@ -29,6 +24,24 @@ from qcportal.record_models import (
 )
 
 
+class Model(BaseModel):
+    """The computational molecular sciences model to run."""
+
+    method: str = Field(  # type: ignore
+        ...,
+        description="The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...). "
+        "For MM, name of the force field.",
+    )
+    basis: Optional[Union[str, BasisSet]] = Field(  # type: ignore
+        None,
+        description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for "
+        "methods without basis sets. For molecular mechanics, name of the atom-typer.",
+    )
+
+    class Config(BaseModel.Config):
+        extra: str = "allow"
+
+
 class SinglepointDriver(str, Enum):
     # Copied from qcelemental to add "deferred"
     energy = "energy"
@@ -36,6 +49,59 @@ class SinglepointDriver(str, Enum):
     hessian = "hessian"
     properties = "properties"
     deferred = "deferred"
+
+
+class WavefunctionProtocolEnum(str, Enum):
+    r"""Wavefunction to keep from a computation."""
+
+    all = "all"
+    orbitals_and_eigenvalues = "orbitals_and_eigenvalues"
+    occupations_and_eigenvalues = "occupations_and_eigenvalues"
+    return_results = "return_results"
+    none = "none"
+
+
+class ErrorCorrectionProtocol(BaseModel):
+    r"""Configuration for how computationaal chemistry programs handle error correction
+    """
+
+    default_policy: bool = Field(
+        True, description="Whether to allow error corrections to be used " "if not directly specified in `policies`"
+    )
+    policies: Optional[Dict[str, bool]] = Field(
+        None,
+        description="Settings that define whether specific error corrections are allowed. "
+        "Keys are the name of a known error and values are whether it is allowed to be used.",
+    )
+
+    def allows(self, policy: str):
+        if self.policies is None:
+            return self.default_policy
+        return self.policies.get(policy, self.default_policy)
+
+
+class NativeFilesProtocolEnum(str, Enum):
+    r"""Any program-specific files to keep from a computation."""
+
+    all = "all"
+    input = "input"
+    none = "none"
+
+
+class SinglepointProtocols(BaseModel):
+    r"""Protocols regarding the manipulation of computational result data."""
+
+    wavefunction: WavefunctionProtocolEnum = Field(
+        WavefunctionProtocolEnum.none, description=str(WavefunctionProtocolEnum.__doc__)
+    )
+    stdout: bool = Field(True, description="Primary output file to keep from the computation")
+    error_correction: ErrorCorrectionProtocol = Field(
+        default_factory=ErrorCorrectionProtocol, description="Policies for error correction"
+    )
+    native_files: NativeFilesProtocolEnum = Field(
+        NativeFilesProtocolEnum.none,
+        description="Policies for keeping processed files from the computation",
+    )
 
 
 class QCSpecification(BaseModel):
@@ -57,7 +123,7 @@ class QCSpecification(BaseModel):
         "methods without basis sets.",
     )
     keywords: Dict[str, Any] = Field({}, description="Program-specific keywords to use for the computation")
-    protocols: SinglepointProtocols = Field(SinglepointProtocols(), description=str(SinglepointProtocols.__base_doc__))
+    protocols: SinglepointProtocols = Field(SinglepointProtocols())
 
     @validator("basis", pre=True)
     def _convert_basis(cls, v):
@@ -178,7 +244,7 @@ class SinglepointRecord(BaseRecord):
 
         return AtomicResult(
             driver=self.specification.driver,
-            model=AtomicResultModel(
+            model=dict(
                 method=self.specification.method,
                 basis=self.specification.basis,
             ),
