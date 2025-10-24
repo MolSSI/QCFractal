@@ -282,7 +282,7 @@ def test_cli_user_password(cli_runner):
 
 def test_cli_restore_noinit(cli_runner_core):
     # Restore where the db does not exist and has not been initialized
-    migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
+    migdata_path = os.path.join(migrationdata_path, "empty_v0.50.sql_dump")
     output = cli_runner_core(["restore", migdata_path])
     assert "Restore complete!" in output
 
@@ -293,7 +293,7 @@ def test_cli_restore_noinit(cli_runner_core):
 
 
 def test_cli_backup_restore(cli_runner_core, tmp_path):
-    migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
+    migdata_path = os.path.join(migrationdata_path, "empty_v0.50.sql_dump")
 
     cli_runner_core(["restore", migdata_path])
     cli_runner_core(["upgrade-db"])
@@ -313,19 +313,19 @@ def test_cli_backup_restore(cli_runner_core, tmp_path):
 
 def test_cli_restore_existing(cli_runner):
     # Restore where the db already exists
-    migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
+    migdata_path = os.path.join(migrationdata_path, "empty_v0.50.sql_dump")
 
     db_name = cli_runner.db_name
     output = cli_runner(["restore", migdata_path], stdin=f"REMOVEALLDATA {db_name}")
     assert "Restore complete!" in output
 
-    migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
+    migdata_path = os.path.join(migrationdata_path, "empty_v0.50.sql_dump")
     output = cli_runner(["restore", migdata_path], stdin="ASD")
     assert "does not match. Aborting" in output
 
 
 def test_cli_upgrade(cli_runner_core):
-    migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
+    migdata_path = os.path.join(migrationdata_path, "empty_v0.50.sql_dump")
 
     db_name = cli_runner_core.db_name
     output = cli_runner_core(["restore", migdata_path], stdin=f"REMOVEALLDATA {db_name}")
@@ -334,7 +334,7 @@ def test_cli_upgrade(cli_runner_core):
     output = cli_runner_core(["upgrade-db"])
 
     # One of the migrations that should be there
-    assert "Running upgrade c1a0b0ee712e -> b9b7b6926b8b" in output
+    assert "Running upgrade d1ee87a66b71 -> 13cb230def11" in output
 
     if cli_runner_core.own_db is True:
         assert "PostgreSQL successfully stopped" in output
@@ -399,7 +399,7 @@ def test_cli_start_options(cli_runner, tmp_path):
 
 
 def test_cli_start_outdated(cli_runner_core):
-    migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
+    migdata_path = os.path.join(migrationdata_path, "empty_v0.50.sql_dump")
 
     db_name = cli_runner_core.db_name
     output = cli_runner_core(["restore", migdata_path], stdin=f"REMOVEALLDATA {db_name}")
