@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-from migration_helpers.hashing import hash_dict_1
+from qcfractal.alembic.migration_helpers.hashing import hash_dict_1
 
 # revision identifiers, used by Alembic.
 revision = "518ee94f4749"

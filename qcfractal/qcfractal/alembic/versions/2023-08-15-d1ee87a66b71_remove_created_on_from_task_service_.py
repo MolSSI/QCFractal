@@ -1,7 +1,7 @@
 """Remove created_on from task/service queue
 
 Revision ID: d1ee87a66b71
-Revises: e6f5053c7600
+Revises:
 Create Date: 2023-08-15 17:58:28.061638
 
 """
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "d1ee87a66b71"
-down_revision = "e6f5053c7600"
+down_revision = None
 branch_labels = None
 depends_on = None
 

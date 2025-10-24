@@ -9,7 +9,7 @@ Create Date: 2024-12-17 10:50:37.251828
 import sqlalchemy as sa
 from alembic import op
 
-from migration_helpers.hashing import hash_dict_1
+from qcfractal.alembic.migration_helpers.hashing import hash_dict_1
 
 # revision identifiers, used by Alembic.
 revision = "e04bf1eedfbc"
