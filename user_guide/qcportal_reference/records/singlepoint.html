@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=cb216544"></script>
+    <script src="../../../_static/documentation_options.js?v=6d42a2ef"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Base Record Models" href="base_record_models.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.63.post22+gc412f9b30" />
+  <meta name="docsearch:version" content="0.63.post24+g41b2e99b9" />
   </head>
   
   
@@ -508,6 +508,268 @@
   <section id="module-qcportal.singlepoint.record_models">
 <span id="singlepoint-records"></span><h1>Singlepoint Records<a class="headerlink" href="#module-qcportal.singlepoint.record_models" title="Link to this heading">#</a></h1>
 <dl class="py class">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/singlepoint/record_models.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.singlepoint.record_models.Model" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>The computational molecular sciences model to run.</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<em>str</em>)</p></li>
+<li><p><strong>basis</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>BasisSet</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>extra_data</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.method">
+<span class="sig-name descname"><span class="pre">method</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.method" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.basis">
+<span class="sig-name descname"><span class="pre">basis</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">BasisSet</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.basis" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="reference internal" href="../../../_modules/qcportal/singlepoint/record_models.html#Model.Config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseConfig</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.extra">
+<span class="sig-name descname"><span class="pre">extra</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'allow'</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.extra" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.alias_generator">
+<span class="sig-name descname"><span class="pre">alias_generator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.alias_generator" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.allow_inf_nan">
+<span class="sig-name descname"><span class="pre">allow_inf_nan</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.allow_inf_nan" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.allow_mutation">
+<span class="sig-name descname"><span class="pre">allow_mutation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.allow_mutation" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.allow_population_by_field_name">
+<span class="sig-name descname"><span class="pre">allow_population_by_field_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.allow_population_by_field_name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.anystr_lower">
+<span class="sig-name descname"><span class="pre">anystr_lower</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.anystr_lower" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.anystr_strip_whitespace">
+<span class="sig-name descname"><span class="pre">anystr_strip_whitespace</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.anystr_strip_whitespace" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.anystr_upper">
+<span class="sig-name descname"><span class="pre">anystr_upper</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.anystr_upper" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.arbitrary_types_allowed">
+<span class="sig-name descname"><span class="pre">arbitrary_types_allowed</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.arbitrary_types_allowed" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.copy_on_model_validation">
+<span class="sig-name descname"><span class="pre">copy_on_model_validation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'none'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'deep'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'shallow'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'shallow'</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.copy_on_model_validation" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.error_msg_templates">
+<span class="sig-name descname"><span class="pre">error_msg_templates</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.error_msg_templates" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.fields">
+<span class="sig-name descname"><span class="pre">fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.fields" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.frozen">
+<span class="sig-name descname"><span class="pre">frozen</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.frozen" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.get_field_info">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_field_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.get_field_info" title="Link to this definition">#</a></dt>
+<dd><p>Get properties of FieldInfo from the <cite>fields</cite> property of the config class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.getter_dict">
+<span class="sig-name descname"><span class="pre">getter_dict</span></span><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.getter_dict" title="Link to this definition">#</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">GetterDict</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.json_dumps">
+<span class="sig-name descname"><span class="pre">json_dumps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipkeys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensure_ascii</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_circular</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_nan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cls</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">separators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.json_dumps" title="Link to this definition">#</a></dt>
+<dd><p>Serialize <code class="docutils literal notranslate"><span class="pre">obj</span></code> to a JSON formatted <code class="docutils literal notranslate"><span class="pre">str</span></code>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">skipkeys</span></code> is true then <code class="docutils literal notranslate"><span class="pre">dict</span></code> keys that are not basic types
+(<code class="docutils literal notranslate"><span class="pre">str</span></code>, <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">bool</span></code>, <code class="docutils literal notranslate"><span class="pre">None</span></code>) will be skipped
+instead of raising a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">ensure_ascii</span></code> is false, then the return value can contain non-ASCII
+characters if they appear in strings contained in <code class="docutils literal notranslate"><span class="pre">obj</span></code>. Otherwise, all
+such characters are escaped in JSON strings.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">check_circular</span></code> is false, then the circular reference check
+for container types will be skipped and a circular reference will
+result in an <code class="docutils literal notranslate"><span class="pre">RecursionError</span></code> (or worse).</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">allow_nan</span></code> is false, then it will be a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> to
+serialize out of range <code class="docutils literal notranslate"><span class="pre">float</span></code> values (<code class="docutils literal notranslate"><span class="pre">nan</span></code>, <code class="docutils literal notranslate"><span class="pre">inf</span></code>, <code class="docutils literal notranslate"><span class="pre">-inf</span></code>) in
+strict compliance of the JSON specification, instead of using the
+JavaScript equivalents (<code class="docutils literal notranslate"><span class="pre">NaN</span></code>, <code class="docutils literal notranslate"><span class="pre">Infinity</span></code>, <code class="docutils literal notranslate"><span class="pre">-Infinity</span></code>).</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">indent</span></code> is a non-negative integer, then JSON array elements and
+object members will be pretty-printed with that indent level. An indent
+level of 0 will only insert newlines. <code class="docutils literal notranslate"><span class="pre">None</span></code> is the most compact
+representation.</p>
+<p>If specified, <code class="docutils literal notranslate"><span class="pre">separators</span></code> should be an <code class="docutils literal notranslate"><span class="pre">(item_separator,</span> <span class="pre">key_separator)</span></code>
+tuple.  The default is <code class="docutils literal notranslate"><span class="pre">(',</span> <span class="pre">',</span> <span class="pre">':</span> <span class="pre">')</span></code> if <em>indent</em> is <code class="docutils literal notranslate"><span class="pre">None</span></code> and
+<code class="docutils literal notranslate"><span class="pre">(',',</span> <span class="pre">':</span> <span class="pre">')</span></code> otherwise.  To get the most compact JSON representation,
+you should specify <code class="docutils literal notranslate"><span class="pre">(',',</span> <span class="pre">':')</span></code> to eliminate whitespace.</p>
+<p><code class="docutils literal notranslate"><span class="pre">default(obj)</span></code> is a function that should return a serializable version
+of obj or raise TypeError. The default simply raises TypeError.</p>
+<p>If <em>sort_keys</em> is true (default: <code class="docutils literal notranslate"><span class="pre">False</span></code>), then the output of
+dictionaries will be sorted by key.</p>
+<p>To use a custom <code class="docutils literal notranslate"><span class="pre">JSONEncoder</span></code> subclass (e.g. one that overrides the
+<code class="docutils literal notranslate"><span class="pre">.default()</span></code> method to serialize additional types), specify it with
+the <code class="docutils literal notranslate"><span class="pre">cls</span></code> kwarg; otherwise <code class="docutils literal notranslate"><span class="pre">JSONEncoder</span></code> is used.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.json_encoders">
+<span class="sig-name descname"><span class="pre">json_encoders</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ForwardRef</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">AnyCallable</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.json_encoders" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.json_loads">
+<span class="sig-name descname"><span class="pre">json_loads</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cls</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">object_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parse_float</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parse_int</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parse_constant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">object_pairs_hook</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.json_loads" title="Link to this definition">#</a></dt>
+<dd><p>Deserialize <code class="docutils literal notranslate"><span class="pre">s</span></code> (a <code class="docutils literal notranslate"><span class="pre">str</span></code>, <code class="docutils literal notranslate"><span class="pre">bytes</span></code> or <code class="docutils literal notranslate"><span class="pre">bytearray</span></code> instance
+containing a JSON document) to a Python object.</p>
+<p><code class="docutils literal notranslate"><span class="pre">object_hook</span></code> is an optional function that will be called with the
+result of any object literal decode (a <code class="docutils literal notranslate"><span class="pre">dict</span></code>). The return value of
+<code class="docutils literal notranslate"><span class="pre">object_hook</span></code> will be used instead of the <code class="docutils literal notranslate"><span class="pre">dict</span></code>. This feature
+can be used to implement custom decoders (e.g. JSON-RPC class hinting).</p>
+<p><code class="docutils literal notranslate"><span class="pre">object_pairs_hook</span></code> is an optional function that will be called with the
+result of any object literal decoded with an ordered list of pairs.  The
+return value of <code class="docutils literal notranslate"><span class="pre">object_pairs_hook</span></code> will be used instead of the <code class="docutils literal notranslate"><span class="pre">dict</span></code>.
+This feature can be used to implement custom decoders.  If <code class="docutils literal notranslate"><span class="pre">object_hook</span></code>
+is also defined, the <code class="docutils literal notranslate"><span class="pre">object_pairs_hook</span></code> takes priority.</p>
+<p><code class="docutils literal notranslate"><span class="pre">parse_float</span></code>, if specified, will be called with the string
+of every JSON float to be decoded. By default this is equivalent to
+float(num_str). This can be used to use another datatype or parser
+for JSON floats (e.g. decimal.Decimal).</p>
+<p><code class="docutils literal notranslate"><span class="pre">parse_int</span></code>, if specified, will be called with the string
+of every JSON int to be decoded. By default this is equivalent to
+int(num_str). This can be used to use another datatype or parser
+for JSON integers (e.g. float).</p>
+<p><code class="docutils literal notranslate"><span class="pre">parse_constant</span></code>, if specified, will be called with one of the
+following strings: -Infinity, Infinity, NaN.
+This can be used to raise an exception if invalid JSON numbers
+are encountered.</p>
+<p>To use a custom <code class="docutils literal notranslate"><span class="pre">JSONDecoder</span></code> subclass, specify it with the <code class="docutils literal notranslate"><span class="pre">cls</span></code>
+kwarg; otherwise <code class="docutils literal notranslate"><span class="pre">JSONDecoder</span></code> is used.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.keep_untouched">
+<span class="sig-name descname"><span class="pre">keep_untouched</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">type</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">()</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.keep_untouched" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.max_anystr_length">
+<span class="sig-name descname"><span class="pre">max_anystr_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.max_anystr_length" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.min_anystr_length">
+<span class="sig-name descname"><span class="pre">min_anystr_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.min_anystr_length" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.orm_mode">
+<span class="sig-name descname"><span class="pre">orm_mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.orm_mode" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.post_init_call">
+<span class="sig-name descname"><span class="pre">post_init_call</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'before_validation'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'after_validation'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'before_validation'</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.post_init_call" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.prepare_field">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prepare_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.prepare_field" title="Link to this definition">#</a></dt>
+<dd><p>Optional hook to check or modify fields during model creation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>field</strong> (<em>ModelField</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.schema_extra">
+<span class="sig-name descname"><span class="pre">schema_extra</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="s"><span class="pre">'SchemaExtraCallable'</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.schema_extra" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.smart_union">
+<span class="sig-name descname"><span class="pre">smart_union</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.smart_union" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.title">
+<span class="sig-name descname"><span class="pre">title</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.title" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.underscore_attrs_are_private">
+<span class="sig-name descname"><span class="pre">underscore_attrs_are_private</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.underscore_attrs_are_private" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.use_enum_values">
+<span class="sig-name descname"><span class="pre">use_enum_values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.use_enum_values" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.validate_all">
+<span class="sig-name descname"><span class="pre">validate_all</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.validate_all" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.Model.Config.validate_assignment">
+<span class="sig-name descname"><span class="pre">validate_assignment</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.Model.Config.validate_assignment" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointDriver">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SinglepointDriver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/singlepoint/record_models.html#SinglepointDriver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointDriver" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
@@ -539,8 +801,138 @@
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.WavefunctionProtocolEnum">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WavefunctionProtocolEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/singlepoint/record_models.html#WavefunctionProtocolEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.singlepoint.record_models.WavefunctionProtocolEnum" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Wavefunction to keep from a computation.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.WavefunctionProtocolEnum.all">
+<span class="sig-name descname"><span class="pre">all</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'all'</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.WavefunctionProtocolEnum.all" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.WavefunctionProtocolEnum.orbitals_and_eigenvalues">
+<span class="sig-name descname"><span class="pre">orbitals_and_eigenvalues</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'orbitals_and_eigenvalues'</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.WavefunctionProtocolEnum.orbitals_and_eigenvalues" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.WavefunctionProtocolEnum.occupations_and_eigenvalues">
+<span class="sig-name descname"><span class="pre">occupations_and_eigenvalues</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'occupations_and_eigenvalues'</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.WavefunctionProtocolEnum.occupations_and_eigenvalues" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.WavefunctionProtocolEnum.return_results">
+<span class="sig-name descname"><span class="pre">return_results</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'return_results'</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.WavefunctionProtocolEnum.return_results" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.WavefunctionProtocolEnum.none">
+<span class="sig-name descname"><span class="pre">none</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'none'</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.WavefunctionProtocolEnum.none" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.ErrorCorrectionProtocol">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ErrorCorrectionProtocol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/singlepoint/record_models.html#ErrorCorrectionProtocol"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.singlepoint.record_models.ErrorCorrectionProtocol" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Configuration for how computationaal chemistry programs handle error correction</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>default_policy</strong> (<em>bool</em>)</p></li>
+<li><p><strong>policies</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>bool</em><em>] </em><em>| </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.ErrorCorrectionProtocol.default_policy">
+<span class="sig-name descname"><span class="pre">default_policy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.ErrorCorrectionProtocol.default_policy" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.ErrorCorrectionProtocol.policies">
+<span class="sig-name descname"><span class="pre">policies</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.ErrorCorrectionProtocol.policies" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.ErrorCorrectionProtocol.allows">
+<span class="sig-name descname"><span class="pre">allows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">policy</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/singlepoint/record_models.html#ErrorCorrectionProtocol.allows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.singlepoint.record_models.ErrorCorrectionProtocol.allows" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>policy</strong> (<em>str</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.NativeFilesProtocolEnum">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NativeFilesProtocolEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/singlepoint/record_models.html#NativeFilesProtocolEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.singlepoint.record_models.NativeFilesProtocolEnum" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Any program-specific files to keep from a computation.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.NativeFilesProtocolEnum.all">
+<span class="sig-name descname"><span class="pre">all</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'all'</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.NativeFilesProtocolEnum.all" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.NativeFilesProtocolEnum.input">
+<span class="sig-name descname"><span class="pre">input</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'input'</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.NativeFilesProtocolEnum.input" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.NativeFilesProtocolEnum.none">
+<span class="sig-name descname"><span class="pre">none</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'none'</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.NativeFilesProtocolEnum.none" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointProtocols">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SinglepointProtocols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavefunction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">WavefunctionProtocolEnum.none</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_correction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">native_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NativeFilesProtocolEnum.none</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/singlepoint/record_models.html#SinglepointProtocols"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointProtocols" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Protocols regarding the manipulation of computational result data.</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wavefunction</strong> (<a class="reference internal" href="#qcportal.singlepoint.record_models.WavefunctionProtocolEnum" title="qcportal.singlepoint.record_models.WavefunctionProtocolEnum"><em>WavefunctionProtocolEnum</em></a>)</p></li>
+<li><p><strong>stdout</strong> (<em>bool</em>)</p></li>
+<li><p><strong>error_correction</strong> (<a class="reference internal" href="#qcportal.singlepoint.record_models.ErrorCorrectionProtocol" title="qcportal.singlepoint.record_models.ErrorCorrectionProtocol"><em>ErrorCorrectionProtocol</em></a>)</p></li>
+<li><p><strong>native_files</strong> (<a class="reference internal" href="#qcportal.singlepoint.record_models.NativeFilesProtocolEnum" title="qcportal.singlepoint.record_models.NativeFilesProtocolEnum"><em>NativeFilesProtocolEnum</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointProtocols.wavefunction">
+<span class="sig-name descname"><span class="pre">wavefunction</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.singlepoint.record_models.WavefunctionProtocolEnum" title="qcportal.singlepoint.record_models.WavefunctionProtocolEnum"><span class="pre">WavefunctionProtocolEnum</span></a></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointProtocols.wavefunction" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointProtocols.stdout">
+<span class="sig-name descname"><span class="pre">stdout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointProtocols.stdout" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointProtocols.error_correction">
+<span class="sig-name descname"><span class="pre">error_correction</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.singlepoint.record_models.ErrorCorrectionProtocol" title="qcportal.singlepoint.record_models.ErrorCorrectionProtocol"><span class="pre">ErrorCorrectionProtocol</span></a></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointProtocols.error_correction" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointProtocols.native_files">
+<span class="sig-name descname"><span class="pre">native_files</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.singlepoint.record_models.NativeFilesProtocolEnum" title="qcportal.singlepoint.record_models.NativeFilesProtocolEnum"><span class="pre">NativeFilesProtocolEnum</span></a></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointProtocols.native_files" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.QCSpecification">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QCSpecification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">program</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">driver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keywords={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocols=AtomicResultProtocols(wavefunction=&lt;WavefunctionProtocolEnum.none:</span> <span class="pre">'none'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdout=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_correction=ErrorCorrectionProtocol(default_policy=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policies=None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">native_files=&lt;NativeFilesProtocolEnum.none:</span> <span class="pre">'none'&gt;)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/singlepoint/record_models.html#QCSpecification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.singlepoint.record_models.QCSpecification" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QCSpecification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">program</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">driver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keywords={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocols=SinglepointProtocols(wavefunction=&lt;WavefunctionProtocolEnum.none:</span> <span class="pre">'none'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdout=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_correction=ErrorCorrectionProtocol(default_policy=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policies=None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">native_files=&lt;NativeFilesProtocolEnum.none:</span> <span class="pre">'none'&gt;)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/singlepoint/record_models.html#QCSpecification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.singlepoint.record_models.QCSpecification" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
@@ -552,7 +944,7 @@
 <li><p><strong>method</strong> (<em>ConstrainedStrValue</em>)</p></li>
 <li><p><strong>basis</strong> (<em>ConstrainedStrValue</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>keywords</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
-<li><p><strong>protocols</strong> (<em>AtomicResultProtocols</em>)</p></li>
+<li><p><strong>protocols</strong> (<a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointProtocols" title="qcportal.singlepoint.record_models.SinglepointProtocols"><em>SinglepointProtocols</em></a>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -594,7 +986,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.QCSpecification.protocols">
-<span class="sig-name descname"><span class="pre">protocols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">SinglepointProtocols</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.QCSpecification.protocols" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">protocols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.singlepoint.record_models.SinglepointProtocols" title="qcportal.singlepoint.record_models.SinglepointProtocols"><span class="pre">SinglepointProtocols</span></a></em><a class="headerlink" href="#qcportal.singlepoint.record_models.QCSpecification.protocols" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -874,7 +1266,7 @@ excludes those children.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.singlepoint.record_models.SinglepointRecord.provenance">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">provenance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Provenance</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointRecord.provenance" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">provenance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base_record_models.html#qcportal.record_models.Provenance" title="qcportal.record_models.Provenance"><span class="pre">Provenance</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.singlepoint.record_models.SinglepointRecord.provenance" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -2806,12 +3198,78 @@ records created for those that don’t match. If False, new records will always 
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model"><code class="docutils literal notranslate"><span class="pre">Model</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.method"><code class="docutils literal notranslate"><span class="pre">Model.method</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.basis"><code class="docutils literal notranslate"><span class="pre">Model.basis</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config"><code class="docutils literal notranslate"><span class="pre">Model.Config</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.extra"><code class="docutils literal notranslate"><span class="pre">Model.Config.extra</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.alias_generator"><code class="docutils literal notranslate"><span class="pre">Model.Config.alias_generator</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.allow_inf_nan"><code class="docutils literal notranslate"><span class="pre">Model.Config.allow_inf_nan</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.allow_mutation"><code class="docutils literal notranslate"><span class="pre">Model.Config.allow_mutation</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.allow_population_by_field_name"><code class="docutils literal notranslate"><span class="pre">Model.Config.allow_population_by_field_name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.anystr_lower"><code class="docutils literal notranslate"><span class="pre">Model.Config.anystr_lower</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.anystr_strip_whitespace"><code class="docutils literal notranslate"><span class="pre">Model.Config.anystr_strip_whitespace</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.anystr_upper"><code class="docutils literal notranslate"><span class="pre">Model.Config.anystr_upper</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.arbitrary_types_allowed"><code class="docutils literal notranslate"><span class="pre">Model.Config.arbitrary_types_allowed</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.copy_on_model_validation"><code class="docutils literal notranslate"><span class="pre">Model.Config.copy_on_model_validation</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.error_msg_templates"><code class="docutils literal notranslate"><span class="pre">Model.Config.error_msg_templates</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.fields"><code class="docutils literal notranslate"><span class="pre">Model.Config.fields</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.frozen"><code class="docutils literal notranslate"><span class="pre">Model.Config.frozen</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.get_field_info"><code class="docutils literal notranslate"><span class="pre">Model.Config.get_field_info()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.getter_dict"><code class="docutils literal notranslate"><span class="pre">Model.Config.getter_dict</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.json_dumps"><code class="docutils literal notranslate"><span class="pre">Model.Config.json_dumps()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.json_encoders"><code class="docutils literal notranslate"><span class="pre">Model.Config.json_encoders</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.json_loads"><code class="docutils literal notranslate"><span class="pre">Model.Config.json_loads()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.keep_untouched"><code class="docutils literal notranslate"><span class="pre">Model.Config.keep_untouched</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.max_anystr_length"><code class="docutils literal notranslate"><span class="pre">Model.Config.max_anystr_length</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.min_anystr_length"><code class="docutils literal notranslate"><span class="pre">Model.Config.min_anystr_length</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.orm_mode"><code class="docutils literal notranslate"><span class="pre">Model.Config.orm_mode</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.post_init_call"><code class="docutils literal notranslate"><span class="pre">Model.Config.post_init_call</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.prepare_field"><code class="docutils literal notranslate"><span class="pre">Model.Config.prepare_field()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.schema_extra"><code class="docutils literal notranslate"><span class="pre">Model.Config.schema_extra</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.smart_union"><code class="docutils literal notranslate"><span class="pre">Model.Config.smart_union</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.title"><code class="docutils literal notranslate"><span class="pre">Model.Config.title</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.underscore_attrs_are_private"><code class="docutils literal notranslate"><span class="pre">Model.Config.underscore_attrs_are_private</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.use_enum_values"><code class="docutils literal notranslate"><span class="pre">Model.Config.use_enum_values</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.validate_all"><code class="docutils literal notranslate"><span class="pre">Model.Config.validate_all</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.Model.Config.validate_assignment"><code class="docutils literal notranslate"><span class="pre">Model.Config.validate_assignment</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointDriver"><code class="docutils literal notranslate"><span class="pre">SinglepointDriver</span></code></a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointDriver.energy"><code class="docutils literal notranslate"><span class="pre">SinglepointDriver.energy</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointDriver.gradient"><code class="docutils literal notranslate"><span class="pre">SinglepointDriver.gradient</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointDriver.hessian"><code class="docutils literal notranslate"><span class="pre">SinglepointDriver.hessian</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointDriver.properties"><code class="docutils literal notranslate"><span class="pre">SinglepointDriver.properties</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointDriver.deferred"><code class="docutils literal notranslate"><span class="pre">SinglepointDriver.deferred</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.WavefunctionProtocolEnum"><code class="docutils literal notranslate"><span class="pre">WavefunctionProtocolEnum</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.WavefunctionProtocolEnum.all"><code class="docutils literal notranslate"><span class="pre">WavefunctionProtocolEnum.all</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.WavefunctionProtocolEnum.orbitals_and_eigenvalues"><code class="docutils literal notranslate"><span class="pre">WavefunctionProtocolEnum.orbitals_and_eigenvalues</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.WavefunctionProtocolEnum.occupations_and_eigenvalues"><code class="docutils literal notranslate"><span class="pre">WavefunctionProtocolEnum.occupations_and_eigenvalues</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.WavefunctionProtocolEnum.return_results"><code class="docutils literal notranslate"><span class="pre">WavefunctionProtocolEnum.return_results</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.WavefunctionProtocolEnum.none"><code class="docutils literal notranslate"><span class="pre">WavefunctionProtocolEnum.none</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.ErrorCorrectionProtocol"><code class="docutils literal notranslate"><span class="pre">ErrorCorrectionProtocol</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.ErrorCorrectionProtocol.default_policy"><code class="docutils literal notranslate"><span class="pre">ErrorCorrectionProtocol.default_policy</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.ErrorCorrectionProtocol.policies"><code class="docutils literal notranslate"><span class="pre">ErrorCorrectionProtocol.policies</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.ErrorCorrectionProtocol.allows"><code class="docutils literal notranslate"><span class="pre">ErrorCorrectionProtocol.allows()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.NativeFilesProtocolEnum"><code class="docutils literal notranslate"><span class="pre">NativeFilesProtocolEnum</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.NativeFilesProtocolEnum.all"><code class="docutils literal notranslate"><span class="pre">NativeFilesProtocolEnum.all</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.NativeFilesProtocolEnum.input"><code class="docutils literal notranslate"><span class="pre">NativeFilesProtocolEnum.input</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.NativeFilesProtocolEnum.none"><code class="docutils literal notranslate"><span class="pre">NativeFilesProtocolEnum.none</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointProtocols"><code class="docutils literal notranslate"><span class="pre">SinglepointProtocols</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointProtocols.wavefunction"><code class="docutils literal notranslate"><span class="pre">SinglepointProtocols.wavefunction</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointProtocols.stdout"><code class="docutils literal notranslate"><span class="pre">SinglepointProtocols.stdout</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointProtocols.error_correction"><code class="docutils literal notranslate"><span class="pre">SinglepointProtocols.error_correction</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.SinglepointProtocols.native_files"><code class="docutils literal notranslate"><span class="pre">SinglepointProtocols.native_files</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.singlepoint.record_models.QCSpecification"><code class="docutils literal notranslate"><span class="pre">QCSpecification</span></code></a><ul class="visible nav section-nav flex-column">

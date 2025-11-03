@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=cb216544"></script>
+    <script src="../../../_static/documentation_options.js?v=6d42a2ef"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Singlepoint Records" href="singlepoint.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.63.post22+gc412f9b30" />
+  <meta name="docsearch:version" content="0.63.post24+g41b2e99b9" />
   </head>
   
   
@@ -508,6 +508,52 @@
   <section id="module-qcportal.optimization.record_models">
 <span id="optimization-records"></span><h1>Optimization Records<a class="headerlink" href="#module-qcportal.optimization.record_models" title="Link to this heading">#</a></h1>
 <dl class="py class">
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.TrajectoryProtocolEnum">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TrajectoryProtocolEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/record_models.html#TrajectoryProtocolEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.record_models.TrajectoryProtocolEnum" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Which gradient evaluations to keep in an optimization trajectory.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.TrajectoryProtocolEnum.all">
+<span class="sig-name descname"><span class="pre">all</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'all'</span></em><a class="headerlink" href="#qcportal.optimization.record_models.TrajectoryProtocolEnum.all" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.TrajectoryProtocolEnum.initial_and_final">
+<span class="sig-name descname"><span class="pre">initial_and_final</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'initial_and_final'</span></em><a class="headerlink" href="#qcportal.optimization.record_models.TrajectoryProtocolEnum.initial_and_final" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.TrajectoryProtocolEnum.final">
+<span class="sig-name descname"><span class="pre">final</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'final'</span></em><a class="headerlink" href="#qcportal.optimization.record_models.TrajectoryProtocolEnum.final" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.TrajectoryProtocolEnum.none">
+<span class="sig-name descname"><span class="pre">none</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'none'</span></em><a class="headerlink" href="#qcportal.optimization.record_models.TrajectoryProtocolEnum.none" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationProtocols">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OptimizationProtocols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TrajectoryProtocolEnum.all</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/record_models.html#OptimizationProtocols"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationProtocols" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Protocols regarding the manipulation of a Optimization output data.</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>trajectory</strong> (<a class="reference internal" href="#qcportal.optimization.record_models.TrajectoryProtocolEnum" title="qcportal.optimization.record_models.TrajectoryProtocolEnum"><em>TrajectoryProtocolEnum</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationProtocols.trajectory">
+<span class="sig-name descname"><span class="pre">trajectory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.optimization.record_models.TrajectoryProtocolEnum" title="qcportal.optimization.record_models.TrajectoryProtocolEnum"><span class="pre">TrajectoryProtocolEnum</span></a></em><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationProtocols.trajectory" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationSpecification">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OptimizationSpecification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">program</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qc_specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keywords={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocols=OptimizationProtocols(trajectory=&lt;TrajectoryProtocolEnum.all:</span> <span class="pre">'all'&gt;)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/record_models.html#OptimizationSpecification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationSpecification" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
@@ -521,7 +567,7 @@
 <li><p><strong>program</strong> (<em>ConstrainedStrValue</em>)</p></li>
 <li><p><strong>qc_specification</strong> (<a class="reference internal" href="singlepoint.html#qcportal.singlepoint.record_models.QCSpecification" title="qcportal.singlepoint.record_models.QCSpecification"><em>QCSpecification</em></a>)</p></li>
 <li><p><strong>keywords</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
-<li><p><strong>protocols</strong> (<em>OptimizationProtocols</em>)</p></li>
+<li><p><strong>protocols</strong> (<a class="reference internal" href="#qcportal.optimization.record_models.OptimizationProtocols" title="qcportal.optimization.record_models.OptimizationProtocols"><em>OptimizationProtocols</em></a>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -553,7 +599,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationSpecification.protocols">
-<span class="sig-name descname"><span class="pre">protocols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">OptimizationProtocols</span></em><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationSpecification.protocols" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">protocols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationProtocols" title="qcportal.optimization.record_models.OptimizationProtocols"><span class="pre">OptimizationProtocols</span></a></em><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationSpecification.protocols" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -827,7 +873,7 @@ that can span multiple records</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.provenance">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">provenance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Provenance</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.provenance" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">provenance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="base_record_models.html#qcportal.record_models.Provenance" title="qcportal.record_models.Provenance"><span class="pre">Provenance</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.provenance" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -2686,6 +2732,17 @@ records created for those that don’t match. If False, new records will always 
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.TrajectoryProtocolEnum"><code class="docutils literal notranslate"><span class="pre">TrajectoryProtocolEnum</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.TrajectoryProtocolEnum.all"><code class="docutils literal notranslate"><span class="pre">TrajectoryProtocolEnum.all</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.TrajectoryProtocolEnum.initial_and_final"><code class="docutils literal notranslate"><span class="pre">TrajectoryProtocolEnum.initial_and_final</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.TrajectoryProtocolEnum.final"><code class="docutils literal notranslate"><span class="pre">TrajectoryProtocolEnum.final</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.TrajectoryProtocolEnum.none"><code class="docutils literal notranslate"><span class="pre">TrajectoryProtocolEnum.none</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationProtocols"><code class="docutils literal notranslate"><span class="pre">OptimizationProtocols</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationProtocols.trajectory"><code class="docutils literal notranslate"><span class="pre">OptimizationProtocols.trajectory</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationSpecification"><code class="docutils literal notranslate"><span class="pre">OptimizationSpecification</span></code></a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationSpecification.Config"><code class="docutils literal notranslate"><span class="pre">OptimizationSpecification.Config</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationSpecification.Config.extra"><code class="docutils literal notranslate"><span class="pre">OptimizationSpecification.Config.extra</span></code></a></li>

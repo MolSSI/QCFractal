@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=cb216544"></script>
+    <script src="../../_static/documentation_options.js?v=6d42a2ef"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Singlepoint calculations" href="singlepoint.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.63.post22+gc412f9b30" />
+  <meta name="docsearch:version" content="0.63.post24+g41b2e99b9" />
   </head>
   
   
@@ -535,7 +535,7 @@ server if it does not exist locally.</p>
 used for the singlepoint calculations.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">qc_specification</span></code> - The singlepoint QC details (method, basis, program, keywords). See <a class="reference internal" href="singlepoint.html#singlepoint-specification"><span class="std std-ref">Singlepoint Specification</span></a>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">keywords</span></code> - Program-specific keywords for the optimization program</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">protocols</span></code> - Controls storage/return of additional information (see <code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationProtocols</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">protocols</span></code> - Controls storage/return of additional information (see <a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationProtocols" title="qcportal.optimization.record_models.OptimizationProtocols"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationProtocols</span></code></a>)</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -604,9 +604,8 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-2">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span><span class="p">,</span> <span class="n">OptimizationProtocols</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qcelemental.models.procedures</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationProtocols</span>
 
 <span class="n">opt_spec</span> <span class="o">=</span> <span class="n">OptimizationSpecification</span><span class="p">(</span>
     <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
