@@ -8,12 +8,11 @@ try:
 except ImportError:
     import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult as QCEl_OptimizationResult
-from qcelemental.models.procedures import OptimizationProtocols
 
 from qcarchivetesting.helpers import read_procedure_data, read_record_data
 from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
 from qcfractal.testing_helpers import run_service
-from qcportal.optimization import OptimizationSpecification
+from qcportal.optimization import OptimizationSpecification, OptimizationProtocols
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords, TorsiondriveRecord

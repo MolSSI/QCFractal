@@ -101,9 +101,8 @@ when adding to datasets).
 
       .. code-block:: py3
 
-        from qcportal.optimization import OptimizationSpecification
+        from qcportal.optimization import OptimizationSpecification, OptimizationProtocols
         from qcportal.singlepoint import QCSpecification
-        from qcelemental.models.procedures import OptimizationProtocols
 
         opt_spec = OptimizationSpecification(
             program="geometric",

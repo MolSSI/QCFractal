@@ -8,23 +8,28 @@ from enum import Enum
 from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequence, ClassVar, TypeVar
 
 from dateutil.parser import parse as date_parser
-
-try:
-    from pydantic.v1 import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as, root_validator
-except ImportError:
-    from pydantic import BaseModel, Extra, constr, validator, PrivateAttr, Field, parse_obj_as, root_validator
-from qcelemental.models.results import Provenance
+from pydantic.v1 import BaseModel, Extra, constr, validator, PrivateAttr, Field, root_validator
 
 from qcportal.base_models import (
     RestModelBase,
     QueryModelBase,
     QueryIteratorBase,
 )
-
 from qcportal.cache import RecordCache, get_records_with_cache
 from qcportal.compression import CompressionEnum, decompress, get_compressed_ext
 
 _T = TypeVar("_T")
+
+
+class Provenance(BaseModel):
+    """Provenance information."""
+
+    creator: str = Field(..., description="The name of the program, library, or person who created the object.")
+    version: str = Field("", description="The version of the creator, blank otherwise")
+    routine: str = Field("", description="The name of the routine or function within the creator, blank otherwise.")
+
+    class Config(BaseModel.Config):
+        extra: str = "allow"
 
 
 class PriorityEnum(int, Enum):

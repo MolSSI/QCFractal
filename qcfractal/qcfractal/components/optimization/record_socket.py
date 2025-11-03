@@ -308,7 +308,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         to_add = []
 
         for opt_spec in opt_specs:
-            protocols_dict = opt_spec.protocols.dict(exclude_defaults=True)
+            protocols_dict = opt_spec.protocols.dict(exclude_defaults=True, exclude_unset=True)
 
             # Don't include lower specifications in the hash
             opt_spec_dict = opt_spec.dict(exclude={"protocols", "qc_specification"})

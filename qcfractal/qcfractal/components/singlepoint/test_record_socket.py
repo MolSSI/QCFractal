@@ -108,7 +108,9 @@ def test_singlepoint_socket_task_spec(
     for t in tasks:
         function_kwargs = t.function_kwargs
         assert function_kwargs["input_data"]["model"] == {"method": spec.method, "basis": spec.basis}
-        assert function_kwargs["input_data"]["protocols"] == spec.protocols.dict(exclude_defaults=True)
+        assert function_kwargs["input_data"]["protocols"] == spec.protocols.dict(
+            exclude_defaults=True, exclude_unset=True
+        )
         assert function_kwargs["input_data"]["keywords"] == spec.keywords
         assert function_kwargs["program"] == spec.program
         assert t.compute_tag == "tag1"
