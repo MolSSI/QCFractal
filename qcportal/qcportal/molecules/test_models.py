@@ -6,17 +6,18 @@ import json
 
 import numpy as np
 import pytest
-import qcelemental as qcel
 
 from qcarchivetesting import load_molecule_data
 from .models import Molecule
+
+bohr_to_ang = 0.52917721067
 
 
 def test_molecule_constructors():
     ### Water Dimer
     water_psi = load_molecule_data("water_dimer_minima")
     ele = np.array([8, 1, 1, 8, 1, 1]).reshape(-1, 1)
-    npwater = np.hstack((ele, water_psi.geometry * qcel.constants.conversion_factor("Bohr", "angstrom")))
+    npwater = np.hstack((ele, water_psi.geometry * bohr_to_ang))
     water_from_np = Molecule.from_data(npwater, name="water dimer", dtype="numpy", frags=[3])
 
     assert water_psi == water_from_np
