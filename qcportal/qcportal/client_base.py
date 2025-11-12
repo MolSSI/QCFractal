@@ -11,6 +11,7 @@ from typing import (
     Union,
     TypeVar,
     Type,
+    overload,
 )
 
 import jwt
@@ -480,11 +481,45 @@ class PortalClientBase:
 
         return r
 
+    # Overload for giving a response model
+    @overload
     def make_request(
         self,
         method: str,
         endpoint: str,
-        response_model: Optional[Type[_V]],
+        response_model: Type[_V],
+        *,
+        body_model: Optional[Type[_T]] = None,
+        url_params_model: Optional[Type[_U]] = None,
+        body: Optional[Union[_T, Dict[str, Any]]] = None,
+        url_params: Optional[Union[_U, Dict[str, Any]]] = None,
+        upload_files: Optional[Iterable[Tuple[str, str]]] = None,
+        allow_retries: bool = True,
+        additional_headers: Optional[Dict[str, Any]] = None,
+    ) -> _V: ...
+
+    # Overload for no response model
+    @overload
+    def make_request(
+        self,
+        method: str,
+        endpoint: str,
+        response_model: None,
+        *,
+        body_model: Optional[Type[_T]] = None,
+        url_params_model: Optional[Type[_U]] = None,
+        body: Optional[Union[_T, Dict[str, Any]]] = None,
+        url_params: Optional[Union[_U, Dict[str, Any]]] = None,
+        upload_files: Optional[Iterable[Tuple[str, str]]] = None,
+        allow_retries: bool = True,
+        additional_headers: Optional[Dict[str, Any]] = None,
+    ) -> None: ...
+
+    def make_request(
+        self,
+        method: str,
+        endpoint: str,
+        response_model: Type[_V],
         *,
         body_model: Optional[Type[_T]] = None,
         url_params_model: Optional[Type[_U]] = None,
