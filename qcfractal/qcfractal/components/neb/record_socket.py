@@ -248,15 +248,7 @@ class NEBRecordSocket(BaseRecordSocket):
                     service_state.nebinfo["params"] = params
 
                     with capture_all_output("geometric.nifty") as (rdout, _):
-                        if service_state.iteration == 1:
-                            newcoords, prev = geometric.qcf_neb.prepare(service_state.nebinfo)
-                            service_state.nebinfo = prev
-
-                            next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
-                            self.submit_singlepoints(session, service_state, service_orm, next_chain)
-                            service_state.iteration += 1
-                        else:
-                            self.submit_nextchain_subtask(session, service_state, service_orm)
+                        self.submit_nextchain_subtask(session, service_state, service_orm)
 
                     output += "\n" + rdout.getvalue()
 
