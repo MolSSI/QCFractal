@@ -1,7 +1,15 @@
 import logging
 import sys
 
-from qcarchivetesting.data_generator import DataGeneratorComputeThread, read_input, write_outputs
+import qcengine
+from qcelemental.models import OptimizationInput
+
+from qcarchivetesting.data_generator import (
+    DataGeneratorComputeThread,
+    read_input,
+    write_outputs,
+    write_schema_v1_outputs,
+)
 from qcfractal.snowflake import FractalSnowflake
 from qcportal.molecules import Molecule
 
@@ -60,3 +68,23 @@ write_outputs(outfile_name, test_data, record)
 
 print(f"** Stopping compute worker")
 compute.stop()
+
+print("++ Running plain QCSchema v1 input through qcengine")
+qc_inp = OptimizationInput(
+    initial_molecule=Molecule(**test_data["initial_molecule"]),
+    input_specification={
+        "driver": "gradient",
+        "model": {
+            "method": test_data["specification"]["qc_specification"]["method"],
+            "basis": test_data["specification"]["qc_specification"]["basis"],
+        },
+        "keywords": test_data["specification"]["qc_specification"]["keywords"]
+        | {"program": test_data["specification"]["qc_specification"]["program"]},
+    },
+    keywords=test_data["specification"]["keywords"],
+    protocols=test_data["specification"]["protocols"],
+)
+
+qc_res = qcengine.compute_procedure(qc_inp, procedure=test_data["specification"]["program"])
+print(f"++ Result: {qc_res.success}")
+write_schema_v1_outputs(outfile_name, qc_inp, qc_res)
