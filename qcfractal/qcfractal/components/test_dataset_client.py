@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.components.singlepoint.testing_helpers import load_test_data, run_test_data
+from qcfractal.components.singlepoint.testing_helpers import load_procedure_data, run_procedure_data
 from qcportal import PortalRequestError
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum
@@ -58,8 +58,8 @@ def test_dataset_client_status(snowflake: QCATestingSnowflake):
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status() == {}
 
-    input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
-    run_test_data(storage_socket, manager_name, "sp_psi4_peroxide_energy_wfn")
+    input_spec, molecule, _ = load_procedure_data("sp_psi4_peroxide_energy_wfn")
+    run_procedure_data(storage_socket, manager_name, "sp_psi4_peroxide_energy_wfn")
 
     molecule_2 = Molecule(symbols=["b"], geometry=[0, 0, 0])
 
@@ -81,7 +81,7 @@ def test_dataset_client_status_by_tag(snowflake: QCATestingSnowflake):
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status_by_compute_tag() == []
 
-    input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
+    input_spec, molecule, _ = load_procedure_data("sp_psi4_peroxide_energy_wfn")
 
     molecule_2 = Molecule(symbols=["b"], geometry=[0, 0, 0])
 
@@ -144,8 +144,8 @@ def test_dataset_client_query_dataset_records(snowflake: QCATestingSnowflake):
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status() == {}
 
-    input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
-    run_test_data(storage_socket, manager_name, "sp_psi4_peroxide_energy_wfn")
+    input_spec, molecule, _ = load_procedure_data("sp_psi4_peroxide_energy_wfn")
+    run_procedure_data(storage_socket, manager_name, "sp_psi4_peroxide_energy_wfn")
 
     molecule_2 = Molecule(symbols=["b"], geometry=[0, 0, 0])
 
@@ -202,7 +202,7 @@ def test_dataset_rename_specifications(snowflake_client: PortalClient):
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status() == {}
 
-    input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
+    input_spec, molecule, _ = load_procedure_data("sp_psi4_peroxide_energy_wfn")
     ds.add_specification("spec_1", input_spec)
 
     assert len(ds.specifications) == 1
@@ -232,7 +232,7 @@ def test_dataset_rename_entries(snowflake_client: PortalClient):
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status() == {}
 
-    input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
+    input_spec, molecule, _ = load_procedure_data("sp_psi4_peroxide_energy_wfn")
     molecule_2 = Molecule(symbols=["b"], geometry=[0, 0, 0])
 
     ds.add_entry(name="test_molecule", molecule=molecule)
@@ -266,8 +266,8 @@ def test_dataset_client_get_computed_properties(snowflake: QCATestingSnowflake):
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status() == {}
 
-    input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
-    record_id = run_test_data(storage_socket, manager_name, "sp_psi4_peroxide_energy_wfn")
+    input_spec, molecule, _ = load_procedure_data("sp_psi4_peroxide_energy_wfn")
+    record_id = run_procedure_data(storage_socket, manager_name, "sp_psi4_peroxide_energy_wfn")
 
     # Add this as a part of the dataset
     ds.add_specification("spec_1", input_spec)

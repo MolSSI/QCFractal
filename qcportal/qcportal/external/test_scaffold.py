@@ -49,8 +49,8 @@ def test_dataset_scaffold(snowflake: QCATestingSnowflake, dataset_type: str, tmp
         ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test SP Dataset")
         assert ds.status() == {}
 
-        input_spec, molecule, _ = testing_helper["singlepoint"].load_test_data("sp_psi4_peroxide_energy_wfn")
-        testing_helper["singlepoint"].run_test_data(storage_socket, manager_name, "sp_psi4_peroxide_energy_wfn")
+        input_spec, molecule, _ = testing_helper["singlepoint"].load_procedure_data("sp_psi4_peroxide_energy_wfn")
+        testing_helper["singlepoint"].run_procedure_data(storage_socket, manager_name, "sp_psi4_peroxide_energy_wfn")
 
         ds.add_entry(name="test_molecule", molecule=molecule)
         ds.add_entry(name="test_molecule_2", molecule=molecule_2)
@@ -58,8 +58,8 @@ def test_dataset_scaffold(snowflake: QCATestingSnowflake, dataset_type: str, tmp
         ds = snowflake_client.add_dataset("optimization", "Test Opt Dataset")
         assert ds.status() == {}
 
-        input_spec, molecule, _ = testing_helper["optimization"].load_test_data("opt_psi4_benzene")
-        testing_helper["optimization"].run_test_data(storage_socket, manager_name, "opt_psi4_benzene")
+        input_spec, molecule, _ = testing_helper["optimization"].load_procedure_data("opt_psi4_benzene")
+        testing_helper["optimization"].run_procedure_data(storage_socket, manager_name, "opt_psi4_benzene")
 
         ds.add_entry(name="test_molecule", initial_molecule=molecule)
         ds.add_entry(name="test_molecule_2", initial_molecule=molecule_2)
@@ -67,8 +67,8 @@ def test_dataset_scaffold(snowflake: QCATestingSnowflake, dataset_type: str, tmp
         ds = snowflake_client.add_dataset("torsiondrive", "Test TD Dataset")
         assert ds.status() == {}
 
-        input_spec, molecules, _ = testing_helper["torsiondrive"].load_test_data("td_H2O2_psi4_pbe")
-        testing_helper["torsiondrive"].run_test_data(storage_socket, manager_name, "td_H2O2_psi4_pbe")
+        input_spec, molecules, _ = testing_helper["torsiondrive"].load_procedure_data("td_H2O2_psi4_pbe")
+        testing_helper["torsiondrive"].run_procedure_data(storage_socket, manager_name, "td_H2O2_psi4_pbe")
 
         ds.add_entry(name="test_molecule", initial_molecules=molecules)
         ds.add_entry(name="test_molecule_2", initial_molecules=[molecule_2])
@@ -76,8 +76,8 @@ def test_dataset_scaffold(snowflake: QCATestingSnowflake, dataset_type: str, tmp
         ds = snowflake_client.add_dataset("gridoptimization", "Test GridOpt Dataset")
         assert ds.status() == {}
 
-        input_spec, molecule, _ = testing_helper["gridoptimization"].load_test_data("go_H3NS_psi4_pbe")
-        testing_helper["gridoptimization"].run_test_data(storage_socket, manager_name, "go_H3NS_psi4_pbe")
+        input_spec, molecule, _ = testing_helper["gridoptimization"].load_procedure_data("go_H3NS_psi4_pbe")
+        testing_helper["gridoptimization"].run_procedure_data(storage_socket, manager_name, "go_H3NS_psi4_pbe")
 
         ds.add_entry(name="test_molecule", initial_molecule=molecule)
         ds.add_entry(name="test_molecule_2", initial_molecule=molecule_2)
@@ -85,8 +85,8 @@ def test_dataset_scaffold(snowflake: QCATestingSnowflake, dataset_type: str, tmp
         ds = snowflake_client.add_dataset("manybody", "Test Manybody Dataset")
         assert ds.status() == {}
 
-        input_spec, molecule, _ = testing_helper["manybody"].load_test_data("mb_all_he4_psi4_multi")
-        testing_helper["manybody"].run_test_data(storage_socket, manager_name, "mb_all_he4_psi4_multi")
+        input_spec, molecule, _ = testing_helper["manybody"].load_procedure_data("mb_all_he4_psi4_multi")
+        testing_helper["manybody"].run_procedure_data(storage_socket, manager_name, "mb_all_he4_psi4_multi")
 
         ds.add_entry(name="test_molecule", initial_molecule=molecule)
         ds.add_entry(name="test_molecule_2", initial_molecule=molecule_2)
@@ -94,16 +94,16 @@ def test_dataset_scaffold(snowflake: QCATestingSnowflake, dataset_type: str, tmp
         ds = snowflake_client.add_dataset("reaction", "Test Reaction Dataset")
         assert ds.status() == {}
 
-        input_spec, stoichiometries, _ = testing_helper["reaction"].load_test_data("rxn_H2O_psi4_b3lyp_sp")
-        testing_helper["reaction"].run_test_data(storage_socket, manager_name, "rxn_H2O_psi4_b3lyp_sp")
+        input_spec, stoichiometries, _ = testing_helper["reaction"].load_procedure_data("rxn_H2O_psi4_b3lyp_sp")
+        testing_helper["reaction"].run_procedure_data(storage_socket, manager_name, "rxn_H2O_psi4_b3lyp_sp")
 
         ds.add_entry(name="test_molecule", stoichiometries=stoichiometries)
     elif dataset_type == "neb":
         ds = snowflake_client.add_dataset("neb", "Test NEB Dataset")
         assert ds.status() == {}
 
-        input_spec, molecules, _ = testing_helper["neb"].load_test_data("neb_HCN_psi4_pbe")
-        testing_helper["neb"].run_test_data(storage_socket, manager_name, "neb_HCN_psi4_pbe")
+        input_spec, molecules, _ = testing_helper["neb"].load_procedure_data("neb_HCN_psi4_pbe")
+        testing_helper["neb"].run_procedure_data(storage_socket, manager_name, "neb_HCN_psi4_pbe")
 
         ds.add_entry(name="test_molecule", initial_chain=molecules)
         ds.add_entry(name="test_molecule_2", initial_chain=[molecule_2])

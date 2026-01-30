@@ -10,7 +10,7 @@ from qcelemental.models import ComputeError, FailedOperation
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_models import BaseRecordORM
-from qcfractal.components.singlepoint.testing_helpers import load_test_data, submit_test_data
+from qcfractal.components.singlepoint.testing_helpers import load_procedure_data, submit_procedure_data
 from qcfractalcompute.compress import compress_result
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import now_at_utc
@@ -24,8 +24,8 @@ def test_task_socket_fullworkflow_success(snowflake: QCATestingSnowflake):
     mname, mid = snowflake.activate_manager()
     activated_manager_programs = snowflake.activated_manager_programs()
 
-    id1, result_data1 = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1", PriorityEnum.normal)
-    id2, result_data2 = submit_test_data(storage_socket, "sp_psi4_fluoroethane_wfn", "tag1", PriorityEnum.normal)
+    id1, result_data1 = submit_procedure_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1", PriorityEnum.normal)
+    id2, result_data2 = submit_procedure_data(storage_socket, "sp_psi4_fluoroethane_wfn", "tag1", PriorityEnum.normal)
 
     time_1 = now_at_utc()
 
@@ -95,8 +95,8 @@ def test_task_socket_fullworkflow_error(snowflake: QCATestingSnowflake):
     mname, mid = snowflake.activate_manager()
     activated_manager_programs = snowflake.activated_manager_programs()
 
-    id1, _ = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1")
-    id2, _ = submit_test_data(storage_socket, "sp_psi4_fluoroethane_wfn")
+    id1, _ = submit_procedure_data(storage_socket, "sp_psi4_benzene_energy_1")
+    id2, _ = submit_procedure_data(storage_socket, "sp_psi4_fluoroethane_wfn")
 
     time_1 = now_at_utc()
 
@@ -149,7 +149,7 @@ def test_task_socket_fullworkflow_error_retry(snowflake: QCATestingSnowflake):
     mname, mid = snowflake.activate_manager()
     activated_manager_programs = snowflake.activated_manager_programs()
 
-    input_spec1, molecule1, result_data1 = load_test_data("sp_psi4_benzene_energy_1")
+    input_spec1, molecule1, result_data1 = load_procedure_data("sp_psi4_benzene_energy_1")
     result_data1_compressed = compress_result(result_data1.dict())
 
     meta1, id1 = storage_socket.records.singlepoint.add(
@@ -223,7 +223,7 @@ def test_task_socket_fullworkflow_error_autoreset(snowflake: QCATestingSnowflake
     storage_socket.qcf_config.auto_reset.unknown_error = 1
     storage_socket.qcf_config.auto_reset.random_error = 2
 
-    input_spec1, molecule1, result_data1 = load_test_data("sp_psi4_benzene_energy_1")
+    input_spec1, molecule1, result_data1 = load_procedure_data("sp_psi4_benzene_energy_1")
 
     meta1, id1 = storage_socket.records.singlepoint.add(
         [molecule1], input_spec1, "tag1", PriorityEnum.normal, None, True

@@ -101,28 +101,30 @@ def generate_task_key(task: RecordTask):
     return mol_hash + "|" + constraints_str
 
 
-def load_test_data(name: str) -> Tuple[TorsiondriveSpecification, List[Molecule], Dict[str, QCEl_OptimizationResult]]:
-    test_data = read_procedure_data(name)
+def load_procedure_data(
+    name: str,
+) -> Tuple[TorsiondriveSpecification, List[Molecule], Dict[str, QCEl_OptimizationResult]]:
+    data = read_procedure_data(name)
 
     return (
-        pydantic.parse_obj_as(TorsiondriveSpecification, test_data["specification"]),
-        pydantic.parse_obj_as(List[Molecule], test_data["initial_molecules"]),
-        pydantic.parse_obj_as(Dict[str, QCEl_OptimizationResult], test_data["results"]),
+        pydantic.parse_obj_as(TorsiondriveSpecification, data["specification"]),
+        pydantic.parse_obj_as(List[Molecule], data["initial_molecules"]),
+        pydantic.parse_obj_as(Dict[str, QCEl_OptimizationResult], data["results"]),
     )
 
 
 def load_record_data(name: str) -> TorsiondriveRecord:
-    test_data = read_record_data(name)
-    return TorsiondriveRecord(**test_data)
+    data = read_record_data(name)
+    return TorsiondriveRecord(**data)
 
 
-def submit_test_data(
+def submit_procedure_data(
     storage_socket: SQLAlchemySocket,
     name: str,
     compute_tag: Optional[str] = "*",
     compute_priority: PriorityEnum = PriorityEnum.normal,
 ) -> Tuple[int, Dict[str, QCEl_OptimizationResult]]:
-    input_spec, molecules, result = load_test_data(name)
+    input_spec, molecules, result = load_procedure_data(name)
     meta, record_ids = storage_socket.records.torsiondrive.add(
         [molecules], input_spec, True, compute_tag, compute_priority, None, True
     )
@@ -133,7 +135,7 @@ def submit_test_data(
     return record_ids[0], result
 
 
-def run_test_data(
+def run_procedure_data(
     storage_socket: SQLAlchemySocket,
     manager_name: ManagerName,
     name: str,
@@ -141,7 +143,7 @@ def run_test_data(
     compute_priority: PriorityEnum = PriorityEnum.normal,
     end_status: RecordStatusEnum = RecordStatusEnum.complete,
 ):
-    record_id, result = submit_test_data(storage_socket, name, compute_tag, compute_priority)
+    record_id, result = submit_procedure_data(storage_socket, name, compute_tag, compute_priority)
 
     with storage_socket.session_scope() as session:
         record = session.get(TorsiondriveRecordORM, record_id)

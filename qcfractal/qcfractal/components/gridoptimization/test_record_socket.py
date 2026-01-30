@@ -22,7 +22,7 @@ from qcportal.utils import now_at_utc
 from .testing_helpers import (
     compare_gridoptimization_specs,
     test_specs,
-    load_test_data,
+    load_procedure_data,
     generate_task_key,
     load_record_data,
 )
@@ -173,7 +173,7 @@ def test_gridoptimization_socket_find_existing_2(storage_socket: SQLAlchemySocke
 def test_gridoptimization_socket_run(
     storage_socket: SQLAlchemySocket, session: Session, activated_manager_name: ManagerName, test_data_name: str
 ):
-    input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
+    input_spec_1, molecules_1, result_data_1 = load_procedure_data(test_data_name)
 
     storage_socket.users.add(UserInfo(username="submit_user", role="submit", enabled=True))
 
@@ -225,7 +225,7 @@ def test_gridoptimization_socket_run_duplicate(
     session: Session,
     activated_manager_name: ManagerName,
 ):
-    input_spec_1, molecules_1, result_data_1 = load_test_data("go_H2O2_psi4_b3lyp")
+    input_spec_1, molecules_1, result_data_1 = load_procedure_data("go_H2O2_psi4_b3lyp")
 
     meta_1, id_1 = storage_socket.records.gridoptimization.add(
         [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, True

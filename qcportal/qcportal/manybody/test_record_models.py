@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional, List
 
 import pytest
 
-from qcfractal.components.manybody.testing_helpers import run_test_data, load_test_data
+from qcfractal.components.manybody.testing_helpers import run_procedure_data, load_procedure_data
 from qcportal.record_models import RecordStatusEnum
 
 if TYPE_CHECKING:
@@ -20,9 +20,9 @@ def test_manybody_record_model(snowflake: QCATestingSnowflake, includes: Optiona
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    input_spec, molecule, results = load_test_data("mb_cp_he4_psi4_mp2")
+    input_spec, molecule, results = load_procedure_data("mb_cp_he4_psi4_mp2")
 
-    rec_id = run_test_data(storage_socket, activated_manager_name, "mb_cp_he4_psi4_mp2")
+    rec_id = run_procedure_data(storage_socket, activated_manager_name, "mb_cp_he4_psi4_mp2")
     record = snowflake_client.get_manybodys(rec_id, include=includes)
 
     if includes is not None:

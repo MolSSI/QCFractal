@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.components.singlepoint.testing_helpers import load_test_data, run_test_data
+from qcfractal.components.singlepoint.testing_helpers import load_procedure_data, run_procedure_data
 from qcportal import PortalRequestError
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
@@ -109,8 +109,8 @@ def test_dataset_model_status(snowflake: QCATestingSnowflake):
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status() == {}
 
-    input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
-    run_test_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
+    input_spec, molecule, _ = load_procedure_data("sp_psi4_peroxide_energy_wfn")
+    run_procedure_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
 
     # Add this as a part of the dataset
     ds.add_specification("spec_1", input_spec)

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional, List
 
 import pytest
 
-from qcfractal.components.gridoptimization.testing_helpers import run_test_data, load_test_data
+from qcfractal.components.gridoptimization.testing_helpers import run_procedure_data, load_procedure_data
 from qcportal.gridoptimization import deserialize_key
 from qcportal.molecules import Molecule
 from qcportal.record_models import RecordStatusEnum
@@ -21,9 +21,9 @@ def test_gridoptimization_record_model(snowflake: QCATestingSnowflake, includes:
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    input_spec, molecule, results = load_test_data("go_H3NS_psi4_pbe")
+    input_spec, molecule, results = load_procedure_data("go_H3NS_psi4_pbe")
 
-    rec_id = run_test_data(storage_socket, activated_manager_name, "go_H3NS_psi4_pbe")
+    rec_id = run_procedure_data(storage_socket, activated_manager_name, "go_H3NS_psi4_pbe")
     record = snowflake_client.get_gridoptimizations(rec_id, include=includes)
 
     if includes is not None:

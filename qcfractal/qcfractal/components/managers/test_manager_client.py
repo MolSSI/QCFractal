@@ -9,7 +9,7 @@ try:
 except ImportError:
     from pydantic import ValidationError
 
-from qcfractal.components.singlepoint.testing_helpers import submit_test_data
+from qcfractal.components.singlepoint.testing_helpers import submit_procedure_data
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName, ManagerStatusEnum
 from qcportal.utils import now_at_utc
@@ -152,7 +152,7 @@ def test_manager_mclient_activate_duplicate(snowflake: QCATestingSnowflake):
 def test_manager_mclient_deactivate(snowflake: QCATestingSnowflake):
     client = snowflake.client()
 
-    id1, _ = submit_test_data(snowflake.get_storage_socket(), "sp_psi4_benzene_energy_1", "tag1")
+    id1, _ = submit_procedure_data(snowflake.get_storage_socket(), "sp_psi4_benzene_energy_1", "tag1")
 
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
     mprog1 = {"qcengine": ["unknown"], "psi4": ["v3.0"]}

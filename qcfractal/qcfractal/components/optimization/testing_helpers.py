@@ -76,28 +76,28 @@ test_specs = [
 ]
 
 
-def load_test_data(name: str) -> Tuple[OptimizationSpecification, Molecule, QCEl_OptimizationResult]:
-    test_data = read_procedure_data(name)
+def load_procedure_data(name: str) -> Tuple[OptimizationSpecification, Molecule, QCEl_OptimizationResult]:
+    data = read_procedure_data(name)
 
     return (
-        pydantic.parse_obj_as(OptimizationSpecification, test_data["specification"]),
-        pydantic.parse_obj_as(Molecule, test_data["initial_molecule"]),
-        pydantic.parse_obj_as(QCEl_OptimizationResult, test_data["result"]),
+        pydantic.parse_obj_as(OptimizationSpecification, data["specification"]),
+        pydantic.parse_obj_as(Molecule, data["initial_molecule"]),
+        pydantic.parse_obj_as(QCEl_OptimizationResult, data["result"]),
     )
 
 
 def load_record_data(name: str) -> OptimizationRecord:
-    test_data = read_record_data(name)
-    return OptimizationRecord(**test_data)
+    data = read_record_data(name)
+    return OptimizationRecord(**data)
 
 
-def submit_test_data(
+def submit_procedure_data(
     storage_socket: SQLAlchemySocket,
     name: str,
     compute_tag: Optional[str] = "*",
     compute_priority: PriorityEnum = PriorityEnum.normal,
 ) -> Tuple[int, QCEl_OptimizationResult]:
-    input_spec, molecule, result = load_test_data(name)
+    input_spec, molecule, result = load_procedure_data(name)
     meta, record_ids = storage_socket.records.optimization.add(
         [molecule], input_spec, compute_tag, compute_priority, None, True
     )
@@ -108,7 +108,7 @@ def submit_test_data(
     return record_ids[0], result
 
 
-def run_test_data(
+def run_procedure_data(
     storage_socket: SQLAlchemySocket,
     manager_name: ManagerName,
     name: str,
@@ -117,7 +117,7 @@ def run_test_data(
     end_status: RecordStatusEnum = RecordStatusEnum.complete,
 ):
     time_0 = now_at_utc()
-    record_id, result = submit_test_data(storage_socket, name, compute_tag, compute_priority)
+    record_id, result = submit_procedure_data(storage_socket, name, compute_tag, compute_priority)
     time_1 = now_at_utc()
 
     with storage_socket.session_scope() as session:

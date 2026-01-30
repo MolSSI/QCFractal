@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional, List
 
 import pytest
 
-from qcfractal.components.singlepoint.testing_helpers import run_test_data, load_test_data
+from qcfractal.components.singlepoint.testing_helpers import run_procedure_data, load_procedure_data
 from qcportal.record_models import RecordStatusEnum
 from .record_models import QCSpecification, SinglepointDriver
 
@@ -54,9 +54,9 @@ def test_singlepoint_record_model(snowflake: QCATestingSnowflake, includes: Opti
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    input_spec, molecule, result = load_test_data("sp_psi4_peroxide_energy_wfn")
+    input_spec, molecule, result = load_procedure_data("sp_psi4_peroxide_energy_wfn")
 
-    rec_id = run_test_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
+    rec_id = run_procedure_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
     record = snowflake_client.get_singlepoints(rec_id, include=includes)
 
     if includes is not None:
@@ -93,7 +93,7 @@ def test_singlepoint_record_to_qcschema(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    rec_id = run_test_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
+    rec_id = run_procedure_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
 
     record = snowflake_client.get_singlepoints(rec_id, include=["**"])
     qcs = record.to_qcschema_result()

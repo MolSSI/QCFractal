@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.components.optimization.testing_helpers import (
-    run_test_data as run_opt_test_data,
-    submit_test_data as submit_opt_test_data,
+    run_procedure_data as run_opt_procedure_data,
+    submit_procedure_data as submit_opt_procedure_data,
 )
 from qcfractal.components.record_db_models import BaseRecordORM
-from qcfractal.components.singlepoint.testing_helpers import submit_test_data as submit_sp_test_data
+from qcfractal.components.singlepoint.testing_helpers import submit_procedure_data as submit_sp_procedure_data
 from qcfractal.components.testing_helpers import populate_records_status
 from qcportal.managers import ManagerName
 from qcportal.record_models import RecordStatusEnum
@@ -41,12 +41,12 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket, 
         compute_tags=["tag2"],
     )
 
-    id_1, result_data_1 = submit_sp_test_data(storage_socket, "sp_psi4_water_energy", "tag1")
-    id_2, result_data_2 = submit_sp_test_data(storage_socket, "sp_psi4_water_gradient", "tag2")
-    id_3, result_data_3 = submit_sp_test_data(storage_socket, "sp_psi4_water_hessian", "tag1")
-    id_4, result_data_4 = submit_opt_test_data(storage_socket, "opt_psi4_benzene", "tag2")
-    id_5, result_data_5 = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
-    id_6, result_data_6 = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_2", "tag1")
+    id_1, result_data_1 = submit_sp_procedure_data(storage_socket, "sp_psi4_water_energy", "tag1")
+    id_2, result_data_2 = submit_sp_procedure_data(storage_socket, "sp_psi4_water_gradient", "tag2")
+    id_3, result_data_3 = submit_sp_procedure_data(storage_socket, "sp_psi4_water_hessian", "tag1")
+    id_4, result_data_4 = submit_opt_procedure_data(storage_socket, "opt_psi4_benzene", "tag2")
+    id_5, result_data_5 = submit_sp_procedure_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
+    id_6, result_data_6 = submit_sp_procedure_data(storage_socket, "sp_psi4_benzene_energy_2", "tag1")
     all_id = [id_1, id_2, id_3, id_4, id_5, id_6]
 
     tasks_1 = storage_socket.tasks.claim_tasks(mname1.fullname, manager_programs, ["tag1"])
@@ -711,7 +711,7 @@ def test_record_client_delete_children(snowflake: QCATestingSnowflake, opt_file:
     snowflake_client = snowflake.client()
 
     # Deleting with deleting children
-    id1 = run_opt_test_data(storage_socket, activated_manager_name, opt_file)
+    id1 = run_opt_procedure_data(storage_socket, activated_manager_name, opt_file)
 
     with storage_socket.session_scope() as session:
         rec = session.get(BaseRecordORM, id1)
@@ -746,7 +746,7 @@ def test_record_client_delete_nochildren(snowflake: QCATestingSnowflake, opt_fil
     snowflake_client = snowflake.client()
 
     # Deleting without deleting children
-    id1 = run_opt_test_data(storage_socket, activated_manager_name, opt_file)
+    id1 = run_opt_procedure_data(storage_socket, activated_manager_name, opt_file)
 
     with storage_socket.session_scope() as session:
         rec = session.get(BaseRecordORM, id1)
@@ -781,7 +781,7 @@ def test_record_client_undelete_children(snowflake: QCATestingSnowflake, opt_fil
     snowflake_client = snowflake.client()
 
     # Deleting with deleting children, then undeleting
-    id1 = run_opt_test_data(storage_socket, activated_manager_name, opt_file)
+    id1 = run_opt_procedure_data(storage_socket, activated_manager_name, opt_file)
 
     with storage_socket.session_scope() as session:
         rec = session.get(BaseRecordORM, id1)
