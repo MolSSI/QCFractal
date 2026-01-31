@@ -4,6 +4,7 @@ Contains testing infrastructure for QCFractal.
 
 from __future__ import annotations
 
+import glob
 import json
 import lzma
 import os
@@ -102,6 +103,12 @@ test_users = {
         },
     },
 }
+
+
+def find_test_data(pattern: str) -> list[str]:
+    d = glob.glob(os.path.join(_my_path, "data_generator", pattern))
+    d = [os.path.basename(x) for x in d]
+    return [d.split(".", 1)[0] for d in d]
 
 
 def _read_data(directory: str, name: str):
@@ -229,3 +236,10 @@ def caplog_handler_at_level(caplog_fixture, level, logger=None):
     with caplog_fixture.at_level(level, logger=logger):
         yield
     caplog_fixture.handler.setLevel(starting_handler_level)
+
+
+def compare_is_included(is_included, test_value, ref_value):
+    if is_included:
+        assert (test_value is None) == (ref_value is None)
+    else:
+        assert test_value is None
