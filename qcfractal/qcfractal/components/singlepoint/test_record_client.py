@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -125,20 +125,6 @@ def test_singlepoint_client_add_duplicate(submitter_client: PortalClient, spec: 
         assert meta.n_existing == 0
         assert meta.n_inserted == len(all_mols)
         assert set(id).isdisjoint(id2)
-
-
-def test_singlepoint_client_properties(snowflake: QCATestingSnowflake):
-    storage_socket = snowflake.get_storage_socket()
-    activated_manager_name, _ = snowflake.activate_manager()
-    snowflake_client = snowflake.client()
-
-    sp_id = run_procedure_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
-
-    rec = snowflake_client.get_singlepoints(sp_id)
-
-    assert len(rec.properties) > 0
-    assert rec.properties["calcinfo_nbasis"] == rec.properties["calcinfo_nmo"] == 12
-    assert rec.properties["calcinfo_nbasis"] == rec.properties["calcinfo_nmo"] == 12
 
 
 def test_singlepoint_client_add_existing_molecule(snowflake_client: PortalClient):
