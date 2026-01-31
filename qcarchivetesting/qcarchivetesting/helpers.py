@@ -7,9 +7,6 @@ from __future__ import annotations
 import json
 import lzma
 import os
-import signal
-import sys
-import time
 from contextlib import contextmanager
 
 from qcelemental.models import Molecule
@@ -246,21 +243,3 @@ def caplog_handler_at_level(caplog_fixture, level, logger=None):
     with caplog_fixture.at_level(level, logger=logger):
         yield
     caplog_fixture.handler.setLevel(starting_handler_level)
-
-
-def terminate_process(proc):
-    if proc.poll() is None:
-        # Interrupt (SIGINT)
-        if sys.platform.startswith("win"):
-            proc.send_signal(signal.CTRL_BREAK_EVENT)
-        else:
-            proc.send_signal(signal.SIGINT)
-
-        try:
-            start = time.time()
-            while (proc.poll() is None) and (time.time() < (start + 15)):
-                time.sleep(0.02)
-
-        # Kill (SIGKILL)
-        finally:
-            proc.kill()
