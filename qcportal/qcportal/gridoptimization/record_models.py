@@ -334,14 +334,14 @@ class GridoptimizationRecord(BaseRecord):
 def compare_gridoptimization_records(record_1: GridoptimizationRecord, record_2: GridoptimizationRecord):
     compare_base_records(record_1, record_2)
 
-    assert record_1.initial_molecule.get_hash() == record_2.initial_molecule.get_hash()
-    assert record_1.starting_molecule.get_hash() == record_2.starting_molecule.get_hash()
+    assert record_1.initial_molecule == record_2.initial_molecule
+    assert record_1.starting_molecule == record_2.starting_molecule
     assert record_1.starting_grid == record_2.starting_grid
 
-    assert (record_1.optimization_records_ is None) == (record_2.optimizations_ is None)
+    assert (record_1.optimizations is None) == (record_2.optimizations is None)
 
-    if record_1.optimization_records_ is not None:
-        assert len(record_1.optimization_records_) == len(record_2.optimization_records_)
+    if record_1.optimizations is not None:
+        assert len(record_1.optimizations) == len(record_2.optimizations)
         for k, t1 in record_1.optimization_records_.items():
             t2 = record_2.optimization_records_[k]
             compare_optimization_records(t1, t2)

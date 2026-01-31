@@ -335,17 +335,14 @@ def compare_torsiondrive_records(record_1: TorsiondriveRecord, record_2: Torsion
     compare_base_records(record_1, record_2)
 
     assert len(record_1.initial_molecules) == len(record_2.initial_molecules)
+    molecules_1 = sorted(record_1.initial_molecules, key=lambda x: x.get_hash())
+    molecules_2 = sorted(record_2.initial_molecules, key=lambda x: x.get_hash())
+    assert all(x == y for x, y in zip(molecules_1, molecules_2))
 
-    mol1 = sorted(record_1.initial_molecules, key=lambda x: x.get_hash())
-    mol2 = sorted(record_2.initial_molecules, key=lambda x: x.get_hash())
-    assert mol1 == mol2
-
-    assert (record_1.optimization_records_ is None) == (record_2.optimizations_ is None)
-
-    if record_1.optimization_records_ is not None:
-        assert len(record_1.optimization_records_) == len(record_2.optimization_records_)
-        for k, t1_lst in record_1.optimization_records_.items():
-            t2_lst = record_2.optimization_records_[k]
+    if record_1.optimizations is not None:
+        assert len(record_1.optimizations) == len(record_2.optimizations)
+        for k, t1_lst in record_1.optimizations.items():
+            t2_lst = record_2.optimizations[k]
             assert len(t1_lst) == len(t2_lst)
             for t1, t2 in zip(t1_lst, t2_lst):
                 compare_optimization_records(t1, t2)

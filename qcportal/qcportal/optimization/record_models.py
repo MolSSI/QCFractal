@@ -53,6 +53,7 @@ class OptimizationProtocols(BaseModel):
         TrajectoryProtocolEnum.all, description=str(TrajectoryProtocolEnum.__doc__)
     )
 
+
 class OptimizationSpecification(BaseModel):
     """
     An OptimizationSpecification as stored on the server
@@ -290,18 +291,14 @@ class OptimizationAddBody(RecordAddBodyBase, OptimizationMultiInput):
 def compare_optimization_records(record_1: OptimizationRecord, record_2: OptimizationRecord):
     compare_base_records(record_1, record_2)
 
-    assert record_1.initial_molecule.get_hash() == record_2.initial_molecule.get_hash()
-
-    assert (record_1.final_molecule_id is None) == (record_2.final_molecule_id is None)
+    assert record_1.initial_molecule == record_2.initial_molecule
     if record_1.final_molecule_id is not None:
-        assert record_1.final_molecule.get_hash() == record_2.final_molecule.get_hash()
+        assert record_1.final_molecule == record_2.final_molecule
 
     assert record_1.energies == record_2.energies
+    assert (record_1.trajectory is None) == (record_2.trajectory is None)
 
-    assert (record_1.trajectory_records_ is None) == (record_2.trajectory_records_ is None)
-    assert (record_1.trajectory_ids_ is None) == (record_2.trajectory_ids_ is None)
-
-    if record_1.trajectory_records_ is not None:
-        assert len(record_1.trajectory_records_) == len(record_2.trajectory_records_)
-        for t1, t2 in zip(record_1.trajectory_records_, record_2.trajectory_records_):
+    if record_1.trajectory is not None:
+        assert len(record_1.trajectory) == len(record_2.trajectory)
+        for t1, t2 in zip(record_1.trajectory, record_2.trajectory):
             compare_singlepoint_records(t1, t2)

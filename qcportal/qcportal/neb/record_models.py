@@ -351,17 +351,16 @@ class NEBRecord(BaseRecord):
 def compare_neb_records(record_1: NEBRecord, record_2: NEBRecord):
     compare_base_records(record_1, record_2)
 
-    assert len(record_1.initial_chain_) == len(record_2.initial_chain_)
-    for m1, m2 in zip(record_1.initial_chain_, record_2.initial_chain_):
-        assert m1.get_hash() == m2.get_hash()
+    assert len(record_1.initial_chain) == len(record_2.initial_chain)
+    for m1, m2 in zip(record_1.initial_chain, record_2.initial_chain):
+        assert m1 == m2
 
     if record_1.status == RecordStatusEnum.complete:
-        assert record_1.result.get_hash() == record_2.result.get_hash()
+        assert record_1.result == record_2.result
 
-    assert (record_1.singlepoint_records_.keys()) == (record_2.singlepoint_records_.keys())
-
-    # sort singlepoint info by iteration and position
-    assert len(record_1.singlepoints_) == len(record_2.singlepoints_)
+    # Singlepoints
+    assert (record_1.singlepoints.keys()) == (record_2.singlepoints.keys())
+    assert len(record_1.singlepoints) == len(record_2.singlepoints)
     singlepoint_info_1 = sorted(record_1.singlepoints_, key=lambda x: (x.chain_iteration, x.position))
     singlepoint_info_2 = sorted(record_2.singlepoints_, key=lambda x: (x.chain_iteration, x.position))
     assert len(singlepoint_info_1) == len(singlepoint_info_2)
@@ -371,27 +370,28 @@ def compare_neb_records(record_1: NEBRecord, record_2: NEBRecord):
         assert m1.position == m2.position
 
     # compare actual records
-    for k, sp1 in record_1.singlepoint_records_.items():
-        sp2 = record_2.singlepoint_records_[k]
+    for k, sp1 in record_1.singlepoints.items():
+        sp2 = record_2.singlepoints[k]
         assert len(sp1) == len(sp2)
         for m1, m2 in zip(sp1, sp2):
             compare_singlepoint_records(m1, m2)
 
     # Hessian part
-    assert (record_1.ts_hessian_ is None) == (record_2.ts_hessian_ is None)
-    if record_1.ts_hessian_ is not None:
-        compare_singlepoint_records(record_1.ts_hessian_, record_2.ts_hessian_)
+    assert (record_1.ts_hessian is None) == (record_2.ts_hessian is None)
+    if record_1.ts_hessian is not None:
+        compare_singlepoint_records(record_1.ts_hessian, record_2.ts_hessian)
 
     # Optimizations
-    assert (record_1.optimizations_ is None) == (record_2.optimizations_ is None)
-    if record_1.optimizations_ is not None:
-        assert len(record_1.optimizations_) == len(record_2.optimizations_)
+    assert (record_1.optimizations.keys()) == (record_2.optimizations.keys())
+    assert (record_1.optimizations is None) == (record_2.optimizations is None)
+    if record_1.optimizations is not None:
+        assert len(record_1.optimizations) == len(record_2.optimizations)
 
         for k, v in record_1.optimizations_.items():
             v2 = record_2.optimizations_[k]
             assert v.position == v2.position
             assert v.ts == v2.ts
 
-        for k, c1 in record_1.optimization_records_.items():
-            c2 = record_2.optimization_records_[k]
+        for k, c1 in record_1.optimizations.items():
+            c2 = record_2.optimizations[k]
             compare_optimization_records(c1, c2)
