@@ -6,7 +6,7 @@ try:
     import pydantic.v1 as pydantic
 except ImportError:
     import pydantic
-from qcarchivetesting.helpers import read_procedure_data, read_record_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data, find_test_data
 from qcelemental.models import (
     Molecule,
     FailedOperation,
@@ -24,6 +24,10 @@ from qcportal.utils import now_at_utc
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+
+
+all_test_data = find_test_data("opt_*")
+all_includes = ["initial_molecule", "final_molecule", "trajectory", "molecule"]
 
 test_specs = [
     OptimizationSpecification(

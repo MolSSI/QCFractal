@@ -8,7 +8,7 @@ except ImportError:
     import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult as QCEl_AtomicResult
 
-from qcarchivetesting.helpers import read_procedure_data, read_record_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data, find_test_data
 from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.manybody import ManybodySpecification, ManybodyRecord
@@ -18,6 +18,10 @@ from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+
+
+all_test_data = find_test_data("mb_*")
+all_includes = ["initial_molecule", "clusters", "molecule", "comments"]
 
 test_specs = [
     ManybodySpecification(

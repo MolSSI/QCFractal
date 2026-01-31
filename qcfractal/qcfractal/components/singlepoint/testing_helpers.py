@@ -19,10 +19,14 @@ from qcfractalcompute.compress import compress_result
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification, SinglepointDriver, SinglepointRecord
 from qcportal.utils import now_at_utc
+from qcarchivetesting.helpers import find_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+
+all_test_data = find_test_data("sp_*")
+all_includes = ["molecule", "wavefunction"]
 
 test_specs = [
     QCSpecification(

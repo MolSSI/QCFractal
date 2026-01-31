@@ -9,7 +9,7 @@ except ImportError:
     import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult as QCEl_OptimizationResult
 
-from qcarchivetesting.helpers import read_procedure_data, read_record_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data, find_test_data
 from qcfractal.components.gridoptimization.record_db_models import GridoptimizationRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.gridoptimization import GridoptimizationSpecification, GridoptimizationKeywords, GridoptimizationRecord
@@ -21,6 +21,14 @@ from qcportal.utils import recursive_normalizer
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+
+all_test_data = find_test_data("go_*")
+all_includes = [
+    "initial_molecule",
+    "starting_molecule",
+    "optimizations",
+    "final_molecule",
+]
 
 
 def compare_gridoptimization_specs(

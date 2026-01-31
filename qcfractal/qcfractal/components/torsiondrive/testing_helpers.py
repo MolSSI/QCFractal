@@ -9,7 +9,7 @@ except ImportError:
     import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult as QCEl_OptimizationResult
 
-from qcarchivetesting.helpers import read_procedure_data, read_record_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data, find_test_data
 from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.optimization import OptimizationSpecification, OptimizationProtocols
@@ -22,6 +22,8 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
 
+all_test_data = find_test_data("td_*")
+all_includes = ["initial_molecules", "optimizations", "initial_molecule", "final_molecule"]
 
 test_specs = [
     TorsiondriveSpecification(

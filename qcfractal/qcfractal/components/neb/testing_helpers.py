@@ -6,7 +6,7 @@ try:
     import pydantic.v1 as pydantic
 except ImportError:
     import pydantic
-from qcarchivetesting.helpers import read_procedure_data, read_record_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data, find_test_data
 from qcelemental.models import (
     Molecule,
     FailedOperation,
@@ -26,6 +26,10 @@ from qcportal.utils import recursive_normalizer, hash_dict
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+
+
+all_test_data = find_test_data("neb_*")
+all_includes = ["initial_chain", "singlepoints", "optimizations", "molecule", "comments", "initial_molecule"]
 
 test_specs = [
     NEBSpecification(
