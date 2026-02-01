@@ -10,7 +10,6 @@ import os
 from contextlib import contextmanager
 
 from qcelemental.models import Molecule
-from qcelemental.models.results import WavefunctionProperties
 
 from qcfractal.components.serverinfo.socket import geoip2_found
 from qcportal.serialization import _json_decode
@@ -189,19 +188,6 @@ def load_molecule_data(name: str) -> Molecule:
     data_path = os.path.join(_my_path, "molecule_data")
     file_path = os.path.join(data_path, name + ".json")
     return Molecule.from_file(file_path)
-
-
-def load_wavefunction_data(name: str) -> WavefunctionProperties:
-    """
-    Loads a wavefunction object for use in testing
-    """
-
-    data_path = os.path.join(_my_path, "wavefunction_data")
-    file_path = os.path.join(data_path, name + ".json")
-
-    with open(file_path, "r") as f:
-        data = json.load(f)
-    return WavefunctionProperties(**data)
 
 
 def load_ip_test_data():
