@@ -21,9 +21,6 @@ if len(sys.argv) != 2:
 infile_name = sys.argv[1]
 test_data, outfile_name = read_input(infile_name)
 
-# Are we generating error data?
-is_error = infile_name.startswith("error_")
-
 # Set up the snowflake and compute process
 print(f"** Starting snowflake")
 snowflake = FractalSnowflake(compute_workers=0)
@@ -51,7 +48,7 @@ snowflake.await_results([record_id], timeout=None)
 
 print("** Computation complete. Assembling results **")
 record = client.get_singlepoints(record_id, include=["**"])
-if not is_error and record.status != "complete":
+if record.status != "complete":
     print(record.error)
     errs = client.query_records(status="error")
     for x in errs:
@@ -63,7 +60,7 @@ assert len(result_data) == 1
 
 task, result = result_data[0]
 assert task.record_id == record_id
-assert result["success"] is not is_error
+assert result["success"] is True
 
 test_data["result"] = result
 

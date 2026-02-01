@@ -68,9 +68,22 @@ def load_test_data(name: str) -> Tuple[QCSpecification, Molecule, QCEl_AtomicRes
     )
 
 
+def load_error_procedure_data(name: str) -> Tuple[QCSpecification, Molecule, FailedOperation]:
+    data = read_procedure_data(name)
+    return (
+        pydantic.parse_obj_as(QCSpecification, data["specification"]),
+        pydantic.parse_obj_as(Molecule, data["molecule"]),
+        pydantic.parse_obj_as(FailedOperation, data["result"]),
+    )
+
+
 def load_record_data(name: str) -> SinglepointRecord:
     test_data = read_record_data(name)
     return SinglepointRecord(**test_data)
+
+def load_error_record_data(name: str) -> FailedOperation:
+    data = read_record_data(name)
+    return FailedOperation(**data)
 
 
 def submit_test_data(
