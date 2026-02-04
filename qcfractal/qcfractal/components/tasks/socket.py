@@ -12,10 +12,10 @@ except ImportError:
 from qcelemental.models import FailedOperation
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import array
-from sqlalchemy.orm import joinedload, load_only, lazyload
+from sqlalchemy.orm import selectinload, load_only, lazyload, undefer
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
-from qcfractal.components.record_db_models import BaseRecordORM
+from qcfractal.components.record_db_models import BaseRecordORM, RecordComputeHistoryORM, OutputStoreORM
 from qcportal.all_results import AllResultTypes
 from qcportal.compression import CompressionEnum, compress
 from qcportal.compression import decompress
@@ -159,7 +159,15 @@ class TaskSocket:
                         # Should we automatically reset?
                         if self.root_socket.qcf_config.auto_reset.enabled:
                             # TODO - Move to update_failed_task?
-                            stmt = select(BaseRecordORM).where(BaseRecordORM.id == record_id)
+                            stmt = select(BaseRecordORM)
+
+                            # We will need to load the compute history and outputs to determine if we should reset
+                            stmt = stmt.options(
+                                selectinload(BaseRecordORM.compute_history).options(
+                                    selectinload(RecordComputeHistoryORM.outputs).options(undefer(OutputStoreORM.data))
+                                )
+                            )
+                            stmt = stmt.where(BaseRecordORM.id == record_id)
                             record_orm = session.execute(stmt).scalar_one()
                             if should_reset(record_orm, self.root_socket.qcf_config.auto_reset):
                                 to_be_reset.append(record_id)
@@ -221,7 +229,10 @@ class TaskSocket:
 
             # Automatically reset ones that should be reset
             if self.root_socket.qcf_config.auto_reset.enabled and to_be_reset:
-                self._logger.info(f"Auto resetting {len(to_be_reset)} records")
+                self._logger.info(f"Auto resetting {len(to_be_reset)} records: ")
+                for record_id in to_be_reset:
+                    self._logger.info(f"    {record_id}")
+
                 self.root_socket.records.reset(to_be_reset, session=session)
 
         self._logger.info(
