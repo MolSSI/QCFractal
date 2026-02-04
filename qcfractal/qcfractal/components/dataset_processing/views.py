@@ -12,7 +12,7 @@ from qcfractal.components.record_db_models import BaseRecordORM
 from qcportal.cache import DatasetCache
 from qcportal.dataset_models import BaseDataset
 from qcportal.record_models import RecordStatusEnum, BaseRecord
-from qcportal.utils import chunk_iterable
+from qcportal.utils import chunk_iterable, make_list
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -128,6 +128,10 @@ def create_view_file(
         # Get all the children ids
         children_ids = socket.records.get_children_ids(session, record_ids)
         all_ids |= set(children_ids)
+
+    # Always include the base record information
+    if include is not None:
+        include = make_list(include) + ["*"]
 
     ############################################################################
     # Determine the record types of all the ids (top-level and children if desired)
