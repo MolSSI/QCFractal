@@ -28,7 +28,7 @@ class Provenance(BaseModel):
     version: str = Field("", description="The version of the creator, blank otherwise")
     routine: str = Field("", description="The name of the routine or function within the creator, blank otherwise.")
 
-    class Config(BaseModel.Config):
+    class Config:
         extra: str = "allow"
 
 

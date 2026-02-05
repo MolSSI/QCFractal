@@ -62,7 +62,7 @@ class ManagerStatistics(BaseModel):
     Manager statistics
     """
 
-    class Config(BaseModel.Config):
+    class Config:
         extra = Extra.forbid
 
     last_update_time: float = Field(default_factory=time.time)

@@ -136,7 +136,7 @@ class GridoptimizationServiceState(BaseModel):
     This represents the current state of a gridoptimization service
     """
 
-    class Config(BaseModel.Config):
+    class Config:
         extra = Extra.forbid
         allow_mutation = True
         validate_assignment = True
