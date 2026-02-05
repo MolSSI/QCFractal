@@ -67,6 +67,10 @@ class InvalidUpdateError(UserReportableError):
     pass
 
 
+class NoClientError(RuntimeError):
+    pass
+
+
 class ComputeManagerError(UserReportableError):
     pass
 

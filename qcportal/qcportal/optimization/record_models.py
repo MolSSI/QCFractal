@@ -15,6 +15,7 @@ from typing_extensions import Literal
 
 from qcportal.base_models import RestModelBase
 from qcportal.cache import get_records_with_cache
+from qcportal.exceptions import NoClientError
 from qcportal.record_models import (
     BaseRecord,
     RecordAddBodyBase,
@@ -212,38 +213,45 @@ class OptimizationRecord(BaseRecord):
         if self.status != RecordStatusEnum.complete:
             raise RuntimeError(f"Cannot create QCSchema result from record with status {self.status}")
 
-        extras = deepcopy(self.extras)
-        extras["_qcfractal_modified_on"] = self.compute_history[0].modified_on
+        try:
+            extras = deepcopy(self.extras)
+            extras["_qcfractal_modified_on"] = self.compute_history[0].modified_on
 
-        if self.trajectory is not None:
-            trajectory = [x.to_qcschema_result() for x in self.trajectory]
-        else:
-            trajectory = None
+            if self.trajectory is not None:
+                trajectory = [x.to_qcschema_result() for x in self.trajectory]
+            else:
+                trajectory = None
 
-        # TODO - correct?
-        new_keywords = deepcopy(self.specification.keywords)
-        new_keywords["program"] = self.specification.qc_specification.program
+            # TODO - correct?
+            new_keywords = deepcopy(self.specification.keywords)
+            new_keywords["program"] = self.specification.qc_specification.program
 
-        return OptimizationResult(
-            initial_molecule=self.initial_molecule,
-            final_molecule=self.final_molecule,
-            trajectory=trajectory,
-            energies=self.energies,
-            keywords=new_keywords,
-            input_specification=QCInputSpecification(
-                driver=SinglepointDriver.gradient,  # forced
-                model=dict(
-                    method=self.specification.qc_specification.method,
-                    basis=self.specification.qc_specification.basis,
+            return OptimizationResult(
+                initial_molecule=self.initial_molecule,
+                final_molecule=self.final_molecule,
+                trajectory=trajectory,
+                energies=self.energies,
+                keywords=new_keywords,
+                input_specification=QCInputSpecification(
+                    driver=SinglepointDriver.gradient,  # forced
+                    model=dict(
+                        method=self.specification.qc_specification.method,
+                        basis=self.specification.qc_specification.basis,
+                    ),
+                    keywords=self.specification.qc_specification.keywords,
                 ),
-                keywords=self.specification.qc_specification.keywords,
-            ),
-            protocols=self.specification.protocols,
-            extras=extras,
-            stdout=self.stdout,
-            provenance=self.provenance,
-            success=True,  # Status has been checked above
-        )
+                protocols=self.specification.protocols,
+                extras=extras,
+                stdout=self.stdout,
+                provenance=self.provenance,
+                success=True,  # Status has been checked above
+            )
+        except NoClientError:
+            raise RuntimeError(
+                "Record does not contain the required data for a QCSchema result, and this record is "
+                "not connected to a client. Try include=['**'] and/or fetch_children=True when retrieving this record "
+                "or creating a dataset view"
+            )
 
 
 class OptimizationQueryFilters(RecordQueryFilters):

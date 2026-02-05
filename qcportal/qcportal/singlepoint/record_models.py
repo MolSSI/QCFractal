@@ -15,6 +15,7 @@ from typing_extensions import Literal
 
 from qcportal.base_models import RestModelBase
 from qcportal.compression import CompressionEnum, decompress
+from qcportal.exceptions import NoClientError
 from qcportal.record_models import (
     RecordStatusEnum,
     BaseRecord,
@@ -231,35 +232,42 @@ class SinglepointRecord(BaseRecord):
         if self.status != RecordStatusEnum.complete:
             raise RuntimeError(f"Cannot create QCSchema result from record with status {self.status}")
 
-        extras = deepcopy(self.extras)
-        extras["_qcfractal_modified_on"] = self.compute_history[0].modified_on
+        try:
+            extras = deepcopy(self.extras)
+            extras["_qcfractal_modified_on"] = self.compute_history[0].modified_on
 
-        # QCArchive properties include more than AtomicResultProperties
-        if self.properties:
-            prop_fields = AtomicResultProperties.__fields__.keys()
-            new_properties = {k: v for k, v in self.properties.items() if k in prop_fields}
-            extras["extra_properties"] = {k: v for k, v in self.properties.items() if k not in prop_fields}
-        else:
-            new_properties = {}
+            # QCArchive properties include more than AtomicResultProperties
+            if self.properties:
+                prop_fields = AtomicResultProperties.__fields__.keys()
+                new_properties = {k: v for k, v in self.properties.items() if k in prop_fields}
+                extras["extra_properties"] = {k: v for k, v in self.properties.items() if k not in prop_fields}
+            else:
+                new_properties = {}
 
-        return AtomicResult(
-            driver=self.specification.driver,
-            model=dict(
-                method=self.specification.method,
-                basis=self.specification.basis,
-            ),
-            molecule=self.molecule,
-            keywords=self.specification.keywords,
-            properties=AtomicResultProperties(**new_properties),
-            protocols=self.specification.protocols,
-            return_result=self.return_result,
-            extras=extras,
-            stdout=self.stdout,
-            native_files={k: v.data for k, v in self.native_files.items()},
-            wavefunction=self.wavefunction,
-            provenance=self.provenance,
-            success=True,  # Status has been checked above
-        )
+            return AtomicResult(
+                driver=self.specification.driver,
+                model=dict(
+                    method=self.specification.method,
+                    basis=self.specification.basis,
+                ),
+                molecule=self.molecule,
+                keywords=self.specification.keywords,
+                properties=AtomicResultProperties(**new_properties),
+                protocols=self.specification.protocols,
+                return_result=self.return_result,
+                extras=extras,
+                stdout=self.stdout,
+                native_files={k: v.data for k, v in self.native_files.items()},
+                wavefunction=self.wavefunction,
+                provenance=self.provenance,
+                success=True,  # Status has been checked above
+            )
+        except NoClientError:
+            raise RuntimeError(
+                 "Record does not contain the required data for a QCSchema result, and this record is "
+                 "not connected to a client. Try include=['**'] and/or fetch_children=True when retrieving this record "
+                 "or creating a dataset view"
+            )
 
 
 class SinglepointInput(RestModelBase):

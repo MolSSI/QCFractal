@@ -16,6 +16,7 @@ from qcportal.base_models import (
     QueryIteratorBase,
 )
 from qcportal.cache import RecordCache, get_records_with_cache
+from qcportal.exceptions import NoClientError
 from qcportal.compression import CompressionEnum, decompress, get_compressed_ext
 
 _T = TypeVar("_T")
@@ -641,7 +642,7 @@ class BaseRecord(BaseModel):
     def _assert_online(self):
         """Raises an exception if this record does not have an associated client"""
         if self.offline:
-            raise RuntimeError("Record is not connected to a client")
+            raise NoClientError("Record is not connected to a client")
 
     def _fetch_compute_history(self):
         self._assert_online()
