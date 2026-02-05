@@ -42,9 +42,9 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=6d42a2ef"></script>
-    <script src="../../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/documentation_options.js?v=548f5ba6"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="External Files" href="external_files.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.63.post24+g41b2e99b9" />
+  <meta name="docsearch:version" content="0.63.post30+g4b1b0fead" />
   </head>
   
   
@@ -509,7 +509,7 @@
 <span id="utilities-and-miscellaneous"></span><h1>Utilities and Miscellaneous<a class="headerlink" href="#module-qcportal.exceptions" title="Link to this heading">#</a></h1>
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.UserReportableError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UserReportableError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#UserReportableError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.UserReportableError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">UserReportableError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#UserReportableError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.UserReportableError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></p>
 <p>An error reportable to the end user</p>
 <p>Exceptions of this class or derived classes are able to be reported to the end user.
@@ -539,7 +539,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.UserManagementError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UserManagementError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#UserManagementError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.UserManagementError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">UserManagementError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#UserManagementError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.UserManagementError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserReportableError" title="qcportal.exceptions.UserReportableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserReportableError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.UserManagementError.add_note">
@@ -564,7 +564,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.AuthenticationFailure">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AuthenticationFailure</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#AuthenticationFailure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.AuthenticationFailure" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">AuthenticationFailure</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#AuthenticationFailure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.AuthenticationFailure" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserReportableError" title="qcportal.exceptions.UserReportableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserReportableError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.AuthenticationFailure.add_note">
@@ -589,7 +589,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.AuthorizationFailure">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AuthorizationFailure</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#AuthorizationFailure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.AuthorizationFailure" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">AuthorizationFailure</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#AuthorizationFailure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.AuthorizationFailure" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserReportableError" title="qcportal.exceptions.UserReportableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserReportableError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.AuthorizationFailure.add_note">
@@ -614,7 +614,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.InvalidUsernameError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InvalidUsernameError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#InvalidUsernameError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.InvalidUsernameError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">InvalidUsernameError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#InvalidUsernameError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.InvalidUsernameError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserManagementError" title="qcportal.exceptions.UserManagementError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserManagementError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.InvalidUsernameError.add_note">
@@ -639,7 +639,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.InvalidRolenameError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InvalidRolenameError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#InvalidRolenameError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.InvalidRolenameError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">InvalidRolenameError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#InvalidRolenameError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.InvalidRolenameError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserManagementError" title="qcportal.exceptions.UserManagementError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserManagementError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.InvalidRolenameError.add_note">
@@ -664,7 +664,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.InvalidGroupnameError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InvalidGroupnameError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#InvalidGroupnameError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.InvalidGroupnameError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">InvalidGroupnameError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#InvalidGroupnameError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.InvalidGroupnameError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserManagementError" title="qcportal.exceptions.UserManagementError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserManagementError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.InvalidGroupnameError.add_note">
@@ -689,7 +689,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.InconsistentUpdateError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InconsistentUpdateError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#InconsistentUpdateError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.InconsistentUpdateError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">InconsistentUpdateError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#InconsistentUpdateError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.InconsistentUpdateError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserManagementError" title="qcportal.exceptions.UserManagementError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserManagementError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.InconsistentUpdateError.add_note">
@@ -714,7 +714,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.SecurityNotEnabledError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SecurityNotEnabledError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#SecurityNotEnabledError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.SecurityNotEnabledError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">SecurityNotEnabledError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#SecurityNotEnabledError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.SecurityNotEnabledError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserManagementError" title="qcportal.exceptions.UserManagementError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserManagementError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.SecurityNotEnabledError.add_note">
@@ -739,7 +739,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.InvalidPasswordError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InvalidPasswordError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#InvalidPasswordError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.InvalidPasswordError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">InvalidPasswordError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#InvalidPasswordError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.InvalidPasswordError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserManagementError" title="qcportal.exceptions.UserManagementError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserManagementError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.InvalidPasswordError.add_note">
@@ -764,7 +764,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.MissingDataError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MissingDataError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#MissingDataError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.MissingDataError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MissingDataError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#MissingDataError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.MissingDataError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserReportableError" title="qcportal.exceptions.UserReportableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserReportableError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.MissingDataError.add_note">
@@ -789,7 +789,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.CorruptDataError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CorruptDataError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#CorruptDataError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.CorruptDataError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">CorruptDataError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#CorruptDataError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.CorruptDataError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserReportableError" title="qcportal.exceptions.UserReportableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserReportableError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.CorruptDataError.add_note">
@@ -814,7 +814,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.AlreadyExistsError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AlreadyExistsError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#AlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.AlreadyExistsError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">AlreadyExistsError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#AlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.AlreadyExistsError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserReportableError" title="qcportal.exceptions.UserReportableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserReportableError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.AlreadyExistsError.add_note">
@@ -839,7 +839,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.LimitExceededError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LimitExceededError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#LimitExceededError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.LimitExceededError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">LimitExceededError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#LimitExceededError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.LimitExceededError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserReportableError" title="qcportal.exceptions.UserReportableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserReportableError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.LimitExceededError.add_note">
@@ -864,7 +864,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.InvalidUpdateError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InvalidUpdateError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#InvalidUpdateError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.InvalidUpdateError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">InvalidUpdateError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#InvalidUpdateError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.InvalidUpdateError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserReportableError" title="qcportal.exceptions.UserReportableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserReportableError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.InvalidUpdateError.add_note">
@@ -889,7 +889,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.ComputeManagerError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ComputeManagerError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#ComputeManagerError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.ComputeManagerError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ComputeManagerError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#ComputeManagerError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.ComputeManagerError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserReportableError" title="qcportal.exceptions.UserReportableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserReportableError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.ComputeManagerError.add_note">
@@ -914,7 +914,7 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.InvalidArgumentsError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InvalidArgumentsError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#InvalidArgumentsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.InvalidArgumentsError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">InvalidArgumentsError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#InvalidArgumentsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.InvalidArgumentsError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserReportableError" title="qcportal.exceptions.UserReportableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserReportableError</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.exceptions.InvalidArgumentsError.add_note">
@@ -939,22 +939,22 @@ set self.__traceback__ to tb and return self.</p>
 
 <dl class="py class" id="module-qcportal.compression">
 <dt class="sig sig-object py" id="qcportal.compression.CompressionEnum">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CompressionEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/compression.html#CompressionEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.compression.CompressionEnum" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">CompressionEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/compression.html#CompressionEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.compression.CompressionEnum" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>How data is compressed (compression method only, ie lzma, zstd)</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.compression.CompressionEnum.none">
-<span class="sig-name descname"><span class="pre">none</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'none'</span></em><a class="headerlink" href="#qcportal.compression.CompressionEnum.none" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">none</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'none'</span></span><a class="headerlink" href="#qcportal.compression.CompressionEnum.none" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.compression.CompressionEnum.lzma">
-<span class="sig-name descname"><span class="pre">lzma</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'lzma'</span></em><a class="headerlink" href="#qcportal.compression.CompressionEnum.lzma" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">lzma</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'lzma'</span></span><a class="headerlink" href="#qcportal.compression.CompressionEnum.lzma" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.compression.CompressionEnum.zstd">
-<span class="sig-name descname"><span class="pre">zstd</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'zstd'</span></em><a class="headerlink" href="#qcportal.compression.CompressionEnum.zstd" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">zstd</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'zstd'</span></span><a class="headerlink" href="#qcportal.compression.CompressionEnum.zstd" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1566,7 +1566,7 @@ where max_limit is the set value for the table/type of object</p>
  
         
         <p class="sphinx-version">
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 8.2.3.<br>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 9.0.4.<br>
         </p>
         
 
