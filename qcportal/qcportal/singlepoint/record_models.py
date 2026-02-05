@@ -32,13 +32,13 @@ class Model(BaseModel):
         description="The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...). "
         "For MM, name of the force field.",
     )
-    basis: Optional[Union[str, BasisSet]] = Field(  # type: ignore
+    basis: Optional[str] = Field(  # type: ignore
         None,
         description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for "
         "methods without basis sets. For molecular mechanics, name of the atom-typer.",
     )
 
-    class Config(BaseModel.Config):
+    class Config:
         extra: str = "allow"
 
 

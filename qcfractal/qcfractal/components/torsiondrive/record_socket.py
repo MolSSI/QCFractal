@@ -72,7 +72,7 @@ class TorsiondriveServiceState(BaseModel):
     This represents the current state of a torsiondrive service
     """
 
-    class Config(BaseModel.Config):
+    class Config:
         extra = Extra.forbid
         allow_mutation = True
         validate_assignment = True
