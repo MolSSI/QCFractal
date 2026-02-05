@@ -48,6 +48,9 @@ def should_reset(record_orm: BaseRecordORM, config: AutoResetConfig) -> bool:
     unique_errors = set(error_types)
 
     error_counts = {x: error_types.count(x) for x in unique_errors}
+    logger.debug(f"Record {record_orm.id} has {len(error_counts)} types of errors:")
+    for k, v in error_counts.items():
+        logger.debug(f"    {k}: {v}")
 
     # Map to more general error categories
     error_counts = {error_map.get(k, "unknown_error"): v for k, v in error_counts.items()}
