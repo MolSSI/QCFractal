@@ -5,7 +5,6 @@ import React, { useEffect, useState } from "react";
 import * as qcpTypes from "../PortalTypes";
 import { useParams } from "react-router-dom";
 import {
-  Box,
   Chip,
   Grid,
   Paper,

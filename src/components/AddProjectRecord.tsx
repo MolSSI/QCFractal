@@ -6,18 +6,13 @@ import { FetchedData } from "../PortalClientContext";
 import { useDebounce } from "use-debounce";
 import {
   Typography,
-  Chip,
   Grid,
   Stack,
-  Paper,
-  Box,
-  Divider, TextField
+  TextField
 } from "@mui/material";
-import { format } from "date-fns";
 
 
 function AddProjectRecord() {
-  const { projectId } = useParams();
   const { fetchData } = usePortalClientRequest();
 
   const [possibleManagers, setPossibleManagers] = React.useState<

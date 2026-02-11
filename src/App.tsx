@@ -9,7 +9,7 @@ import ProjectList from "./components/ProjectList.tsx";
 import Record from "./components/Record.tsx";
 import Manager from "./components/Manager.tsx";
 import ManagerList from "./components/ManagerList.tsx";
-import {MyUserInfo, UserInfo} from "./components/UserInfo.tsx";
+import { UserInfo} from "./components/UserInfo.tsx";
 import AddProjectRecord from "./components/AddProjectRecord.tsx";
 
 function App() {

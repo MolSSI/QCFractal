@@ -1,4 +1,3 @@
-import * as React from "react";
 import Stack from "@mui/material/Stack";
 import NavbarBreadcrumbs from "./NavbarBreadcrumbs";
 import ColorModeIconDropdown from "../shared-theme/ColorModeIconDropdown";

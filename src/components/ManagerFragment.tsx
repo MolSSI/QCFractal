@@ -79,7 +79,7 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
           <Grid  size={6}>
             <Typography variant="h6">Programs</Typography>
             <ul>
-              {Object.entries(managerData.programs).map(([p, v]) => {
+              {Object.entries(managerData.programs).map(([p]) => {
                 return <li key={p}>{p}</li>;
               })}
             </ul>

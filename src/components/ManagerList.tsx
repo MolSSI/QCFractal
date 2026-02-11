@@ -1,6 +1,6 @@
 import { usePortalClientRequest } from "../usePortalClient";
 import { FetchedData } from "../PortalClientContext";
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import { ManagerFragment } from "./ManagerFragment";
 import * as qcpTypes from "../PortalTypes";
 import { Box, Stack, Dialog, DialogContent, Grid, Typography } from "@mui/material";
@@ -10,7 +10,7 @@ import { parseToDate } from "../Utils";
 import { PieChart } from "@mui/x-charts/PieChart";
 
 export default function ManagerList() {
-  const [managerQueryBody, setManagerQueryBody] =
+  const [managerQueryBody] =
     useState<qcpTypes.ManagerQueryFilters>({
       status: ["active", "inactive"],
       include: [
