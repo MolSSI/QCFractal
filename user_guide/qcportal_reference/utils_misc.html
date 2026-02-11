@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=548f5ba6"></script>
+    <script src="../../_static/documentation_options.js?v=5970a0d9"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="External Files" href="external_files.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.63.post30+g4b1b0fead" />
+  <meta name="docsearch:version" content="0.63.post33+g35fe3de28" />
   </head>
   
   
@@ -888,6 +888,31 @@ set self.__traceback__ to tb and return self.</p>
 </dd></dl>
 
 <dl class="py exception">
+<dt class="sig sig-object py" id="qcportal.exceptions.NoClientError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">NoClientError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#NoClientError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.NoClientError" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.exceptions.NoClientError.add_note">
+<span class="sig-name descname"><span class="pre">add_note</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.exceptions.NoClientError.add_note" title="Link to this definition">#</a></dt>
+<dd><p>Exception.add_note(note) –
+add a note to the exception</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.exceptions.NoClientError.args">
+<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#qcportal.exceptions.NoClientError.args" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.exceptions.NoClientError.with_traceback">
+<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.exceptions.NoClientError.with_traceback" title="Link to this definition">#</a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
 <dt class="sig sig-object py" id="qcportal.exceptions.ComputeManagerError">
 <span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ComputeManagerError</span></span><a class="reference internal" href="../../_modules/qcportal/exceptions.html#ComputeManagerError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.exceptions.ComputeManagerError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.exceptions.UserReportableError" title="qcportal.exceptions.UserReportableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserReportableError</span></code></a></p>
@@ -1461,6 +1486,12 @@ where max_limit is the set value for the table/type of object</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.exceptions.InvalidUpdateError.add_note"><code class="docutils literal notranslate"><span class="pre">InvalidUpdateError.add_note()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.exceptions.InvalidUpdateError.args"><code class="docutils literal notranslate"><span class="pre">InvalidUpdateError.args</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.exceptions.InvalidUpdateError.with_traceback"><code class="docutils literal notranslate"><span class="pre">InvalidUpdateError.with_traceback()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.exceptions.NoClientError"><code class="docutils literal notranslate"><span class="pre">NoClientError</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.exceptions.NoClientError.add_note"><code class="docutils literal notranslate"><span class="pre">NoClientError.add_note()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.exceptions.NoClientError.args"><code class="docutils literal notranslate"><span class="pre">NoClientError.args</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.exceptions.NoClientError.with_traceback"><code class="docutils literal notranslate"><span class="pre">NoClientError.with_traceback()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.exceptions.ComputeManagerError"><code class="docutils literal notranslate"><span class="pre">ComputeManagerError</span></code></a><ul class="visible nav section-nav flex-column">
