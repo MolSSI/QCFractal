@@ -86,3 +86,28 @@ def test_singlepoint_record_model(snowflake: QCATestingSnowflake, includes: Opti
     assert record.properties == all_properties
 
     assert record.wavefunction.dict(encoding="json") == result.wavefunction.dict(encoding="json")
+
+
+def test_singlepoint_record_to_qcschema(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+    activated_manager_name, _ = snowflake.activate_manager()
+
+    rec_id = run_test_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
+
+    record = snowflake_client.get_singlepoints(rec_id, include=["**"])
+    qcs = record.to_qcschema_result()
+    assert qcs.success
+    assert qcs.schema_name == "qcschema_output"
+
+    # Test if not connected to a client, but data is there
+    record.propagate_client(None, None)
+    qcs = record.to_qcschema_result()
+    assert qcs.success
+    assert qcs.schema_name == "qcschema_output"
+
+    # Test if not connected to a client and missing data
+    record = snowflake_client.get_singlepoints(rec_id)
+    record.propagate_client(None, None)
+    with pytest.raises(RuntimeError, match="Record does not contain the required data"):
+        record.to_qcschema_result()
