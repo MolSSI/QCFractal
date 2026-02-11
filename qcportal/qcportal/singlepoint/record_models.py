@@ -263,9 +263,10 @@ class SinglepointRecord(BaseRecord):
             )
         except NoClientError:
             raise RuntimeError(
-                 "Record does not contain the required data for a QCSchema result, and this record is "
-                 "not connected to a client. Try include=['**'] and/or fetch_children=True when retrieving this record "
-                 "or creating a dataset view"
+                "Record does not contain the required data for a QCSchema result, and this record is "
+                "not connected to a client. If fetching records, use include=['**']. "
+                "If this is from a dataset view, use include=['**'] and include_children=True "
+                "when creating the view"
             )
 
 
