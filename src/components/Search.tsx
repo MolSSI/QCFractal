@@ -7,7 +7,7 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 
-const API_BASE = "https://prodtest.qcarchive.molssi.org";
+export const server_address = import.meta.env.VITE_QCFRACTAL_URI;
 
 export default function Search() {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ export default function Search() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/v1/records/${recordId}`);
+      const res = await fetch(`${server_address}/api/v1/records/${recordId}`);
       if (res.ok) {
         navigate(`/records/${recordId}`);
       } else if (res.status === 404) {
