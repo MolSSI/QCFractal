@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, String, JSON, Float, Index, CHAR, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Column, Integer, String, JSON, Float, Boolean, Index, CHAR, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.orm import column_property
 
 from qcfractal.db_socket.base_orm import BaseORM
@@ -63,6 +63,21 @@ class MoleculeORM(BaseORM):
     # Extra
     provenance = Column(JSON)
     extras = Column(JSON)
+
+    ################
+    # Temporaries for migrations from msgpack
+    _migrated_status = Column(Boolean, nullable=True, index=True)
+
+    symbols_tmp = Column(ARRAY(String), nullable=True)
+    geometry_tmp = Column(ARRAY(Float), nullable=True)
+    masses_tmp = Column(ARRAY(Float), nullable=True)
+    real_tmp = Column(ARRAY(Boolean), nullable=True)
+    atom_labels_tmp = Column(ARRAY(String), nullable=True)
+    atomic_numbers_tmp = Column(ARRAY(Integer), nullable=True)
+    mass_numbers_tmp = Column(ARRAY(Float), nullable=True)
+    fragments_tmp = Column(JSON(), nullable=True)
+    fragment_charges_tmp = Column(ARRAY(Float), nullable=True)
+    fragment_multiplicities_tmp = Column(ARRAY(Float), nullable=True)
 
     __table_args__ = (
         Index("ix_molecule_identifiers", "identifiers", postgresql_using="gin"),
