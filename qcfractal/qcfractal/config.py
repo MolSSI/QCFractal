@@ -5,6 +5,7 @@ The global qcfractal config file specification.
 from __future__ import annotations
 
 import logging
+import re
 import os
 import secrets
 import tempfile
@@ -12,8 +13,8 @@ from typing import Optional, Dict, Union, List, Any
 
 import yaml
 from psycopg2.extensions import make_dsn, parse_dsn
-from pydantic import Field, field_validator, model_validator, ValidationError
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel, Field, field_validator, model_validator, ValidationError, ConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict, PydanticBaseSettingsSource
 from sqlalchemy.engine.url import URL, make_url
 
 from qcfractal.port_util import find_open_port
@@ -59,8 +60,8 @@ def make_uri_string(
         return f"postgresql://{username}{password}{sep}{host}:{port}/{dbname}{query_str}"
 
 
-class QCFConfigBase(BaseSettings):
-    model_config = SettingsConfigDict(extra="forbid", case_sensitive=False)
+class QCFConfigBase(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
 
 class DatabaseConfig(QCFConfigBase):
@@ -121,8 +122,6 @@ class DatabaseConfig(QCFConfigBase):
         "postgres",
         description="[ADVANCED] An existing database (not the one you want to use/create). This is used for database management",
     )
-
-    model_config = QCFConfigBase.model_config | SettingsConfigDict(env_prefix="QCF_DB_")
 
     @model_validator(mode="after")
     def _check_paths(self):
@@ -201,8 +200,6 @@ class AutoResetConfig(QCFConfigBase):
     compute_lost: int = Field(5, description="Max restarts for computations where the compute resource disappeared")
     random_error: int = Field(5, description="Max restarts for random errors")
 
-    model_config = QCFConfigBase.model_config | SettingsConfigDict(env_prefix="QCF_AUTORESET_")
-
 
 class APILimitConfig(QCFConfigBase):
     """
@@ -225,8 +222,6 @@ class APILimitConfig(QCFConfigBase):
     get_access_logs: int = Field(1000, description="Number of access log records to return")
     get_error_logs: int = Field(100, description="Number of error log records to return")
     get_internal_jobs: int = Field(1000, description="Number of internal jobs to return")
-
-    model_config = QCFConfigBase.model_config | SettingsConfigDict(env_prefix="QCF_APILIMIT_")
 
 
 class WebAPIConfig(QCFConfigBase):
@@ -290,8 +285,6 @@ class WebAPIConfig(QCFConfigBase):
     def _convert_durations(cls, v):
         return duration_to_seconds(v)
 
-    model_config = QCFConfigBase.model_config | SettingsConfigDict(env_prefix="QCF_API_")
-
 
 class S3BucketMap(QCFConfigBase):
     dataset_attachment: str = Field("dataset_attachment", description="Bucket to hold dataset views")
@@ -312,8 +305,6 @@ class S3Config(QCFConfigBase):
     bucket_map: S3BucketMap = Field(
         default_factory=S3BucketMap, description="Configuration for where to store various files"
     )
-
-    model_config = QCFConfigBase.model_config | SettingsConfigDict(env_prefix="QCF_S3_")
 
     @model_validator(mode="after")
     def _check_enabled(self):
@@ -336,7 +327,7 @@ class CORSconfig(QCFConfigBase):
     methods: List[str] = Field([])
 
 
-class FractalConfig(QCFConfigBase):
+class FractalConfig(BaseSettings):
     """
     Fractal Server settings
     """
@@ -502,7 +493,22 @@ class FractalConfig(QCFConfigBase):
         os.makedirs(self.temporary_dir, exist_ok=True)
         return self
 
-    model_config = QCFConfigBase.model_config | SettingsConfigDict(env_prefix="QCF_")
+    model_config = SettingsConfigDict(
+        extra="forbid", case_sensitive=False, env_prefix="QCF_", env_nested_delimiter="__"
+    )
+
+    # Since we manually read the yaml files, the values passed into the init
+    # come from files and should be lower priority that env settings
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return env_settings, dotenv_settings, init_settings, file_secret_settings
 
 
 def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, Any]] = None) -> FractalConfig:
@@ -538,9 +544,20 @@ def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, A
 
     config_data["base_folder"] = os.path.abspath(base_dir)
 
-    # Handle an old configuration
-    if "fractal" in config_data:
-        raise RuntimeError("Found an old configuration. Please migrate with qcfractal-server upgrade-config")
+    # Test environment values for old names
+    for key in os.environ.keys():
+        if re.match(r"QCF_DB_[^_]", key):
+            new_key = key.replace("QCF_DB_", "QCF_DATABASE__")
+            raise RuntimeError(f"Environment variable {key} is deprecated. Use {new_key} instead.")
+        if re.match(r"QCF_API_[^_]", key):
+            new_key = key.replace("QCF_API_", "QCF_API__")
+            raise RuntimeError(f"Environment variable {key} is deprecated. Use {new_key} instead.")
+        if re.match("QCF_AUTORESET_[^_]", key):
+            new_key = key.replace("QCF_AUTORESET_", "QCF_AUTO_RESET__")
+            raise RuntimeError(f"Environment variable {key} is deprecated. Use {new_key} instead.")
+        if re.match("QCF_S3_[^_]", key):
+            new_key = key.replace("QCF_S3_", "QCF_S3__")
+            raise RuntimeError(f"Environment variable {key} is deprecated. Use {new_key} instead.")
 
     # Pydantic will handle reading from environment variables
     # See if it can assemble a config. If there was a problem, and no

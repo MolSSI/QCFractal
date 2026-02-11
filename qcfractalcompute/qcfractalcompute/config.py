@@ -4,8 +4,8 @@ from typing import List, Optional, Union, Dict, Any
 from typing import Literal, Annotated
 
 import yaml
-from pydantic import BaseModel, Field, field_validator, model_validator, BeforeValidator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel, Field, field_validator, model_validator, BeforeValidator, ConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict, PydanticBaseSettingsSource
 
 from qcportal.utils import seconds_to_hms, duration_to_seconds, update_nested_dict
 
@@ -45,8 +45,8 @@ def _walltime_must_be_str(w) -> str:
         return w
 
 
-class QCFComputeConfigBase(BaseSettings):
-    model_config = SettingsConfigDict(extra="forbid", case_sensitive=False, env_prefix="QCF_COMPUTE_")
+class QCFComputeConfigBase(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
 
 class PackageEnvironmentSettings(QCFComputeConfigBase):
@@ -171,7 +171,7 @@ class FractalServerSettings(QCFComputeConfigBase):
     verify: Optional[bool] = Field(None, description="Use Server-side generated SSL certification or not.")
 
 
-class FractalComputeConfig(QCFComputeConfigBase):
+class FractalComputeConfig(BaseSettings):
     base_folder: str = Field(
         ...,
         description="The base folder to use as the default for some options (logs, etc). Default is the location of the config file.",
@@ -217,6 +217,23 @@ class FractalComputeConfig(QCFComputeConfigBase):
     server: FractalServerSettings = Field(...)
     environments: PackageEnvironmentSettings = Field(default_factory=PackageEnvironmentSettings)
     executors: Dict[str, AllExecutorTypes] = Field(...)
+
+    model_config = SettingsConfigDict(
+        extra="forbid", case_sensitive=False, env_prefix="QCF_COMPUTE_", env_nested_delimiter="__"
+    )
+
+    # Since we manually read the yaml files, the values passed into the init
+    # come from files and should be lower priority that env settings
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return env_settings, dotenv_settings, init_settings, file_secret_settings
 
     @model_validator(mode="after")
     def _check_paths(self):
