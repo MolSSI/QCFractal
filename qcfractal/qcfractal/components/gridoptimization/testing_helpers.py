@@ -3,17 +3,14 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Tuple, Optional, Dict, Union, Any
 
-try:
-    import pydantic.v1 as pydantic
-except ImportError:
-    import pydantic
-from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult as QCEl_OptimizationResult
+import pydantic
 
 from qcarchivetesting.helpers import read_procedure_data, read_record_data, find_test_data
 from qcfractal.components.gridoptimization.record_db_models import GridoptimizationRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.gridoptimization import GridoptimizationSpecification, GridoptimizationKeywords, GridoptimizationRecord
 from qcportal.optimization import OptimizationSpecification, OptimizationProtocols
+from qcportal.qcschema_v1 import Molecule, FailedOperation, ComputeError, OptimizationResult as QCEl_OptimizationResult
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 from qcportal.utils import recursive_normalizer
@@ -114,9 +111,9 @@ def load_procedure_data(
     data = read_procedure_data(name)
 
     return (
-        pydantic.parse_obj_as(GridoptimizationSpecification, data["specification"]),
-        pydantic.parse_obj_as(Molecule, data["initial_molecule"]),
-        pydantic.parse_obj_as(Dict[str, QCEl_OptimizationResult], data["results"]),
+        pydantic.TypeAdapter(GridoptimizationSpecification).validate_python(data["specification"]),
+        pydantic.TypeAdapter(Molecule).validate_python(data["initial_molecule"]),
+        pydantic.TypeAdapter(Dict[str, QCEl_OptimizationResult]).validate_python(data["results"]),
     )
 
 

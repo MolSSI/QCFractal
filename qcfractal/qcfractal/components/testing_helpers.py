@@ -7,14 +7,16 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import TYPE_CHECKING
 
-from qcelemental.models import FailedOperation, ComputeError
+from pydantic import TypeAdapter
 
 from qcfractal.components.optimization.testing_helpers import load_procedure_data as load_opt_procedure_data
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import load_procedure_data as load_sp_procedure_data
 from qcfractal.testing_helpers import mname1
 from qcfractalcompute.compress import compress_result
+from qcportal.common_types import QCPortalBytes
 from qcportal.compression import decompress
+from qcportal.qcschema_v1 import FailedOperation, ComputeError
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:
@@ -96,9 +98,9 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
         mname1.fullname,
         {
             # tasks[1] is left running (corresponds to record 2)
-            tasks[0]["id"]: compress_result(result_data_1.dict()),
-            tasks[2]["id"]: compress_result(fop.dict()),
-            tasks[3]["id"]: compress_result(result_data_6.dict()),
+            tasks[0]["id"]: compress_result(result_data_1.model_dump()),
+            tasks[2]["id"]: compress_result(fop.model_dump()),
+            tasks[3]["id"]: compress_result(result_data_6.model_dump()),
         },
     )
 
@@ -112,7 +114,7 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
         assert len(tasks) == 1
         assert tasks[0]["tag"] == "tag3"
 
-        fop_compress = compress_result(fop.dict())
+        fop_compress = compress_result(fop.model_dump())
         storage_socket.tasks.update_finished(mname1.fullname, {tasks[0]["id"]: fop_compress})
 
     meta = storage_socket.records.cancel(id_4)
@@ -164,6 +166,6 @@ def convert_to_plain_qcschema_result(result):
             update["native_files"][k] = decompress(v["data"], v["compression_type"])
 
     if update:
-        return result.copy(update=update)
+        return result.model_copy(update=update)
     else:
         return result

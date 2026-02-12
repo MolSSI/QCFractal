@@ -2,18 +2,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Tuple, Optional, Dict, Union, Any
 
-try:
-    import pydantic.v1 as pydantic
-except ImportError:
-    import pydantic
-from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult as QCEl_AtomicResult
+import pydantic
 
 from qcarchivetesting.helpers import read_procedure_data, read_record_data, find_test_data
 from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.manybody import ManybodySpecification, ManybodyRecord
-from qcportal.singlepoint import QCSpecification, SinglepointProtocols
+from qcportal.qcschema_v1 import Molecule, FailedOperation, ComputeError, AtomicResult as QCEl_AtomicResult
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
+from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -103,9 +100,9 @@ def load_procedure_data(name: str) -> Tuple[ManybodySpecification, Molecule, Dic
     data = read_procedure_data(name)
 
     return (
-        pydantic.parse_obj_as(ManybodySpecification, data["specification"]),
-        pydantic.parse_obj_as(Molecule, data["molecule"]),
-        pydantic.parse_obj_as(Dict[str, QCEl_AtomicResult], data["results"]),
+        pydantic.TypeAdapter(ManybodySpecification).validate_python(data["specification"]),
+        pydantic.TypeAdapter(Molecule).validate_python(data["molecule"]),
+        pydantic.TypeAdapter(dict[str, QCEl_AtomicResult]).validate_python(data["results"]),
     )
 
 
