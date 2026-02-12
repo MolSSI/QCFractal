@@ -34,7 +34,7 @@ def _compress_common(result: Dict[str, Any]):
 
     if error is not None:
         result["extras"].setdefault("_qcfractal_compressed_outputs", {})
-        new_error, ctype, clevel = compress(error.dict(), CompressionEnum.zstd)
+        new_error, ctype, clevel = compress(error.model_dump(), CompressionEnum.zstd)
         compressed_outputs["error"] = {"compression_type": ctype, "compression_level": clevel, "data": new_error}
         result["error"] = None
 
