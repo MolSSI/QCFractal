@@ -1,27 +1,20 @@
 from __future__ import annotations
 
-import dataclasses
-from typing import List, Optional, Tuple, Dict, Sequence, Any
+from collections.abc import Sequence
 
-try:
-    from pydantic.v1 import validator, root_validator
-    from pydantic.v1.dataclasses import dataclass
-except ImportError:
-    from pydantic import validator, root_validator
-    from pydantic.dataclasses import dataclass
+from pydantic import Field, field_validator, model_validator, BaseModel
 
 
-@dataclass
-class InsertMetadata:
+class InsertMetadata(BaseModel):
     """
     Metadata returned by insertion / adding functions
     """
 
     # Integers in errors, inserted, existing are indices in the input/output list
-    error_description: Optional[str] = None
-    errors: List[Tuple[int, str]] = dataclasses.field(default_factory=list)
-    inserted_idx: List[int] = dataclasses.field(default_factory=list)  # inserted into the db
-    existing_idx: List[int] = dataclasses.field(default_factory=list)  # existing but not updated
+    error_description: str | None = None
+    errors: list[tuple[int, str]] = Field(default_factory=list)
+    inserted_idx: list[int] = Field(default_factory=list)  # inserted into the db
+    existing_idx: list[int] = Field(default_factory=list)  # existing but not updated
 
     @property
     def n_inserted(self):
@@ -51,17 +44,18 @@ class InsertMetadata:
         s += "\n".join(f"    Index {x}: {y}" for x, y in self.errors)
         return s
 
-    @validator("errors", "inserted_idx", "existing_idx", pre=True)
+    @field_validator("errors", "inserted_idx", "existing_idx", mode="before")
+    @classmethod
     def sort_fields(cls, v):
         return sorted(v)
 
-    @root_validator(pre=False, skip_on_failure=True)
-    def check_all_indices(cls, values):
+    @model_validator(mode="after")
+    def check_all_indices(self):
         # Test that all indices are accounted for and that the same index doesn't show up in
         # inserted_idx, existing_idx, or errors
-        ins_idx = set(values["inserted_idx"])
-        existing_idx = set(values["existing_idx"])
-        error_idx = set(x[0] for x in values["errors"])
+        ins_idx = set(self.inserted_idx)
+        existing_idx = set(self.existing_idx)
+        error_idx = set(x[0] for x in self.errors)
 
         if not ins_idx.isdisjoint(existing_idx):
             intersection = ins_idx.intersection(existing_idx)
@@ -79,7 +73,7 @@ class InsertMetadata:
 
         # Skip the rest if we don't have any data
         if len(all_idx) == 0:
-            return values
+            return self
 
         # Are all the indices accounted for?
         all_possible = set(range(max(all_idx) + 1))
@@ -87,21 +81,14 @@ class InsertMetadata:
             missing = all_possible - all_idx
             raise ValueError(f"All indices are not accounted for. Max is {max(all_idx)} and we are missing {missing}")
 
-        return values
-
-    def dict(self) -> Dict[str, Any]:
-        """
-        Returns the information from this dataclass as a dictionary
-        """
-
-        return dataclasses.asdict(self)
+        return self
 
     @staticmethod
     def merge(metadata: Sequence[InsertMetadata]) -> InsertMetadata:
-        new_inserted_idx: List[int] = []
-        new_existing_idx: List[int] = []
-        new_errors: List[Tuple[int, str]] = []
-        new_error_description: Optional[str] = None
+        new_inserted_idx: list[int] = []
+        new_existing_idx: list[int] = []
+        new_errors: list[tuple[int, str]] = []
+        new_error_description: str | None = None
 
         base_idx = 0
         for m in metadata:
@@ -124,8 +111,7 @@ class InsertMetadata:
         )
 
 
-@dataclass
-class InsertCountsMetadata:
+class InsertCountsMetadata(BaseModel):
     """
     Metadata returned by insertion / adding functions, only including counts
     """
@@ -133,8 +119,8 @@ class InsertCountsMetadata:
     # Integers in errors, inserted, existing are indices in the input/output list
     n_inserted: int
     n_existing: int
-    error_description: Optional[str] = None
-    errors: List[str] = dataclasses.field(default_factory=list)
+    error_description: str | None = None
+    errors: list[str] = Field(default_factory=list)
 
     @property
     def n_errors(self):
@@ -152,13 +138,6 @@ class InsertCountsMetadata:
         s += "\n".join(f"    Index {x}: {y}" for x, y in self.errors)
         return s
 
-    def dict(self) -> Dict[str, Any]:
-        """
-        Returns the information from this dataclass as a dictionary
-        """
-
-        return dataclasses.asdict(self)
-
     @staticmethod
     def from_insert_metadata(insert_meta: InsertMetadata) -> InsertCountsMetadata:
         return InsertCountsMetadata(
@@ -169,16 +148,15 @@ class InsertCountsMetadata:
         )
 
 
-@dataclass
-class DeleteMetadata:
+class DeleteMetadata(BaseModel):
     """
     Metadata returned by delete functions
     """
 
     # Integers in errors, missing, found are indices in the input/output list
-    error_description: Optional[str] = None
-    errors: List[Tuple[int, str]] = dataclasses.field(default_factory=list)
-    deleted_idx: List[int] = dataclasses.field(default_factory=list)
+    error_description: str | None = None
+    errors: list[tuple[int, str]] = Field(default_factory=list)
+    deleted_idx: list[int] = Field(default_factory=list)
     n_children_deleted: int = 0
 
     @property
@@ -205,16 +183,17 @@ class DeleteMetadata:
         s += "\n".join(f"    Index {x}: {y}" for x, y in self.errors)
         return s
 
-    @validator("errors", "deleted_idx", pre=True)
+    @field_validator("errors", "deleted_idx", mode="before")
+    @classmethod
     def sort_fields(cls, v):
         return sorted(v)
 
-    @root_validator(pre=False, skip_on_failure=True)
-    def check_all_indices(cls, values):
+    @model_validator(mode="after")
+    def check_all_indices(self):
         # Test that all indices are accounted for and that the same index doesn't show up in
         # deleted_idx, or errors
-        del_idx = set(values["deleted_idx"])
-        error_idx = set(x[0] for x in values["errors"])
+        del_idx = set(self.deleted_idx)
+        error_idx = set(x[0] for x in self.errors)
 
         if not del_idx.isdisjoint(error_idx):
             intersection = del_idx.intersection(error_idx)
@@ -224,7 +203,7 @@ class DeleteMetadata:
 
         # Skip the rest if we don't have any data
         if len(all_idx) == 0:
-            return values
+            return self
 
         # Are all the indices accounted for?
         all_possible = set(range(max(all_idx) + 1))
@@ -232,26 +211,18 @@ class DeleteMetadata:
             missing = all_possible - all_idx
             raise ValueError(f"All indices are not accounted for. Max is {max(all_idx)} and we are missing {missing}")
 
-        return values
-
-    def dict(self) -> Dict[str, Any]:
-        """
-        Returns the information from this dataclass as a dictionary
-        """
-
-        return dataclasses.asdict(self)
+        return self
 
 
-@dataclass
-class UpdateMetadata:
+class UpdateMetadata(BaseModel):
     """
     Metadata returned by update functions
     """
 
     # Integers in errors, updated_idx
-    error_description: Optional[str] = None
-    errors: List[Tuple[int, str]] = dataclasses.field(default_factory=list)
-    updated_idx: List[int] = dataclasses.field(default_factory=list)  # inserted into the db
+    error_description: str | None = None
+    errors: list[tuple[int, str]] = Field(default_factory=list)
+    updated_idx: list[int] = Field(default_factory=list)  # inserted into the db
     n_children_updated: int = 0
 
     @property
@@ -278,16 +249,17 @@ class UpdateMetadata:
         s += "\n".join(f"    Index {x}: {y}" for x, y in self.errors)
         return s
 
-    @validator("errors", "updated_idx", pre=True)
+    @field_validator("errors", "updated_idx", mode="before")
+    @classmethod
     def sort_fields(cls, v):
         return sorted(v)
 
-    @root_validator(pre=False, skip_on_failure=True)
-    def check_all_indices(cls, values):
+    @model_validator(mode="after")
+    def check_all_indices(self):
         # Test that all indices are accounted for and that the same index doesn't show up in
         # inserted_idx, existing_idx, or errors
-        upd_idx = set(values["updated_idx"])
-        error_idx = set(x[0] for x in values["errors"])
+        upd_idx = set(self.updated_idx)
+        error_idx = set(x[0] for x in self.errors)
 
         if not upd_idx.isdisjoint(error_idx):
             intersection = upd_idx.intersection(error_idx)
@@ -297,7 +269,7 @@ class UpdateMetadata:
 
         # Skip the rest if we don't have any data
         if len(all_idx) == 0:
-            return values
+            return self
 
         # Are all the indices accounted for?
         all_possible = set(range(max(all_idx) + 1))
@@ -305,26 +277,18 @@ class UpdateMetadata:
             missing = all_possible - all_idx
             raise ValueError(f"All indices are not accounted for. Max is {max(all_idx)} and we are missing {missing}")
 
-        return values
-
-    def dict(self) -> Dict[str, Any]:
-        """
-        Returns the information from this dataclass as a dictionary
-        """
-
-        return dataclasses.asdict(self)
+        return self
 
 
-@dataclass
-class TaskReturnMetadata:
+class TaskReturnMetadata(BaseModel):
     """
     Metadata returned to managers that have sent completed tasks back to the server
     """
 
     # Integers in errors, accepted_ids are task ids
-    error_description: Optional[str] = None
-    rejected_info: List[Tuple[int, str]] = dataclasses.field(default_factory=list)
-    accepted_ids: List[int] = dataclasses.field(default_factory=list)  # Accepted by the server
+    error_description: str | None = None
+    rejected_info: list[tuple[int, str]] = Field(default_factory=list)
+    accepted_ids: list[int] = Field(default_factory=list)  # Accepted by the server
 
     @property
     def n_accepted(self):
@@ -350,13 +314,7 @@ class TaskReturnMetadata:
         s += "\n".join(f"    Task id {x}: {y}" for x, y in self.rejected_info)
         return s
 
-    @validator("rejected_info", "accepted_ids", pre=True)
+    @field_validator("rejected_info", "accepted_ids", mode="before")
+    @classmethod
     def sort_fields(cls, v):
         return sorted(v)
-
-    def dict(self) -> Dict[str, Any]:
-        """
-        Returns the information from this dataclass as a dictionary
-        """
-
-        return dataclasses.asdict(self)
