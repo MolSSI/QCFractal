@@ -52,7 +52,7 @@ if __name__ == "__main__":
             ret.extras["qcvars"] = {k.lower(): v for k, v in ret.extras["qcvars"].items()}
 
             # Remove any from qcvars that are in properties (but with underscores)
-            prop_dict = ret.properties.dict()
+            prop_dict = ret.properties.model_dump()
             to_delete = [k for k in ret.extras["qcvars"].keys() if k.replace(" ", "_") in prop_dict.keys()]
             for k in to_delete:
                 ret.extras["qcvars"].pop(k)
@@ -60,4 +60,4 @@ if __name__ == "__main__":
             # Replace any names with underscores (and other modifications)
             ret.extras["qcvars"] = {_qcvar_transitions.get(k, k): v for k, v in ret.extras["qcvars"].items()}
 
-    print(json.dumps(ret.dict(encoding="json")))
+    print(json.dumps(ret.model_dump(mode="json")))

@@ -17,16 +17,12 @@ from parsl.config import Config as ParslConfig
 from parsl.dataflow.dflow import DataFlowKernel
 from parsl.dataflow.futures import Future as ParslFuture
 from parsl.executors import HighThroughputExecutor, ThreadPoolExecutor
-
-try:
-    from pydantic.v1 import BaseModel, Extra, Field
-except ImportError:
-    from pydantic import BaseModel, Extra, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from qcfractalcompute.apps.app_manager import AppManager
 from qcportal import ManagerClient
-from qcportal.managers import ManagerName
 from qcportal.client_base import AllowedConnectionExceptions
+from qcportal.managers import ManagerName
 from qcportal.metadata_models import TaskReturnMetadata
 from qcportal.record_models import RecordTask
 from qcportal.utils import seconds_to_hms, apply_jitter
@@ -62,8 +58,7 @@ class ManagerStatistics(BaseModel):
     Manager statistics
     """
 
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     last_update_time: float = Field(default_factory=time.time)
 
