@@ -3,41 +3,29 @@ from __future__ import annotations
 import logging
 import math
 import os
+from collections.abc import Iterable, Callable, Sequence, Mapping
 from datetime import datetime
 from enum import Enum
 from typing import (
     TYPE_CHECKING,
-    Optional,
-    Dict,
     Any,
-    List,
-    Iterable,
     Type,
-    Tuple,
-    Union,
-    Callable,
     ClassVar,
-    Sequence,
-    Mapping,
 )
 
-try:
-    import pydantic.v1 as pydantic
-    from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field, root_validator, constr
-except ImportError:
-    import pydantic
-    from pydantic import BaseModel, Extra, validator, PrivateAttr, Field, root_validator, constr
-from qcelemental.models.types import Array
+import pydantic
+from pydantic import BaseModel, PrivateAttr, Field, ConfigDict, field_validator, model_validator
 from tabulate import tabulate
 from tqdm import tqdm
 
 from qcportal.base_models import RestModelBase, validate_list_to_single, CommonBulkGetBody
+from qcportal.cache import DatasetCache, read_dataset_metadata, get_records_with_cache
+from qcportal.common_types import LowerStr, PydanticNDArray
+from qcportal.external_files import ExternalFile
 from qcportal.internal_jobs import InternalJob, InternalJobStatusEnum
 from qcportal.metadata_models import DeleteMetadata, InsertMetadata, InsertCountsMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, BaseRecord
 from qcportal.utils import make_list, chunk_iterable
-from qcportal.cache import DatasetCache, read_dataset_metadata, get_records_with_cache
-from qcportal.external_files import ExternalFile
 
 if TYPE_CHECKING:
     from qcportal.client import PortalClient
@@ -60,14 +48,12 @@ class DatasetAttachment(ExternalFile):
 class Citation(BaseModel):
     """A literature citation."""
 
-    class Config:
-        extra = Extra.forbid
-        allow_mutation = False
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
-    acs_citation: Optional[str] = None  # hand-formatted citation in ACS style
-    bibtex: Optional[str] = None  # bibtex blob for later use with bibtex-renderer
-    doi: Optional[str] = None
-    url: Optional[str] = None
+    acs_citation: str | None = None  # hand-formatted citation in ACS style
+    bibtex: str | None = None  # bibtex blob for later use with bibtex-renderer
+    doi: str | None = None
+    url: str | None = None
 
     def to_acs(self) -> str:
         """Returns an ACS-formatted citation"""
@@ -75,51 +61,48 @@ class Citation(BaseModel):
 
 
 class ContributedValues(BaseModel):
-    class Config:
-        extra = Extra.forbid
-        allow_mutation = False
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
     name: str
     values: Any
-    index: Array[str]
-    values_structure: Dict[str, Any] = {}
+    index: PydanticNDArray
+    values_structure: dict[str, Any] = {}
 
-    theory_level: Union[str, Dict[str, str]]
+    theory_level: str | dict[str, str]
     units: str
-    theory_level_details: Optional[Union[str, Dict[str, Optional[str]]]] = None
+    theory_level_details: str | dict[str, str | None] | None = None
 
-    citations: Optional[List[Citation]] = None
-    external_url: Optional[str] = None
-    doi: Optional[str] = None
+    citations: list[Citation] | None = None
+    external_url: str | None = None
+    doi: str | None = None
 
-    comments: Optional[str] = None
+    comments: str | None = None
 
 
 class BaseDataset(BaseModel):
-    class Config:
-        extra = Extra.forbid
-        allow_mutation = True
-        validate_assignment = True
+
+    model_config = ConfigDict(extra="forbid", frozen=False, validate_assignment=True)
 
     id: int
     dataset_type: str
     name: str
     description: str
     tagline: str
-    tags: List[str]
-    provenance: Dict[str, Any]
-    extras: Dict[str, Any]
+    tags: list[str]
+    provenance: dict[str, Any]
+    extras: dict[str, Any]
 
     default_compute_tag: str
     default_compute_priority: PriorityEnum
 
-    creator_user: Optional[str]
+    creator_user: str | None
 
     ########################################
     # Caches of information
     ########################################
-    _entry_names: List[str] = PrivateAttr([])
-    _specification_names: List[str] = PrivateAttr([])
+    _entry_names: list[str] = PrivateAttr([])
+    _specification_names: list[str] = PrivateAttr([])
 
     # All local cache data. May be backed by memory or disk
     _cache_data: DatasetCache = PrivateAttr()
@@ -127,34 +110,34 @@ class BaseDataset(BaseModel):
     ######################################################
     # Fields not always included when fetching the dataset
     ######################################################
-    contributed_values_: Optional[Dict[str, ContributedValues]] = Field(None, alias="contributed_values")
-    attachments_: Optional[List[DatasetAttachment]] = Field(None, alias="attachments")
+    contributed_values_: dict[str, ContributedValues] | None = Field(None, alias="contributed_values")
+    attachments_: list[DatasetAttachment] | None = Field(None, alias="attachments")
 
     #############################
     # Private non-pydantic fields
     #############################
     _client: Any = PrivateAttr(None)
-    _base_url: Optional[str] = PrivateAttr(None)
-    _base_url_prefix: Optional[str] = PrivateAttr(None)
+    _base_url: str | None = PrivateAttr(None)
+    _base_url_prefix: str | None = PrivateAttr(None)
 
     # To be overridden by the derived classes
-    _entry_type: ClassVar[Optional[Type]] = None
-    _new_entry_type: ClassVar[Optional[Type]] = None
-    _specification_type: ClassVar[Optional[Type]] = None
-    _record_item_type: ClassVar[Optional[Type]] = None
-    _record_type: ClassVar[Optional[Type]] = None
+    _entry_type: ClassVar[Type | None] = None
+    _new_entry_type: ClassVar[Type | None] = None
+    _specification_type: ClassVar[Type | None] = None
+    _record_item_type: ClassVar[Type | None] = None
+    _record_type: ClassVar[Type | None] = None
 
     # A dictionary of all subclasses (dataset types) to the actual class type
-    _all_subclasses: ClassVar[Dict[str, Type[BaseDataset]]] = {}
+    _all_subclasses: ClassVar[dict[str, Type[BaseDataset]]] = {}
 
     # Some dataset options
     auto_fetch_missing: bool = True  # Automatically fetch missing records from the server
 
     def __init__(
         self,
-        client: Optional[PortalClient] = None,
-        base_url_prefix: Optional[str] = None,
-        cache_data: Optional[DatasetCache] = None,
+        client: PortalClient | None = None,
+        base_url_prefix: str | None = None,
+        cache_data: DatasetCache | None = None,
         **kwargs,
     ):
 
@@ -205,11 +188,7 @@ class BaseDataset(BaseModel):
         Register derived classes for later use
         """
 
-        # Get the dataset type. This is kind of ugly, but works.
-        # We could use ClassVar, but in my tests it doesn't work for
-        # disambiguating (ie, via parse_obj_as)
-        dataset_type = cls.__fields__["dataset_type"].default
-
+        dataset_type = cls.dataset_type
         cls._all_subclasses[dataset_type] = cls
 
     @classmethod
@@ -219,7 +198,7 @@ class BaseDataset(BaseModel):
             raise RuntimeError(f"Cannot find subclass for record type {dataset_type}")
         return subcls
 
-    def propagate_client(self, client, base_url_prefix: Optional[str]):
+    def propagate_client(self, client, base_url_prefix: str | None):
         """
         Propagates a client to this record to any fields within this record that need it
 
@@ -235,7 +214,7 @@ class BaseDataset(BaseModel):
             self._base_url_prefix = None
             self._base_url = None
 
-    def _add_entries(self, entries: Union[BaseModel, Sequence[BaseModel]]) -> InsertMetadata:
+    def _add_entries(self, entries: BaseModel | Sequence[BaseModel]) -> InsertMetadata:
         """
         Internal function for adding entries to a dataset
 
@@ -257,7 +236,7 @@ class BaseDataset(BaseModel):
         batch_size: int = math.ceil(self._client.api_limits["get_dataset_entries"] / 4)
         n_batches = math.ceil(len(entries) / batch_size)
 
-        all_meta: List[InsertMetadata] = []
+        all_meta: list[InsertMetadata] = []
         for entry_batch in tqdm(chunk_iterable(entries, batch_size), total=n_batches, disable=None):
             meta = self._client.make_request("post", uri, InsertMetadata, body=entry_batch)
 
@@ -270,7 +249,7 @@ class BaseDataset(BaseModel):
 
         return InsertMetadata.merge(all_meta)
 
-    def _background_add_entries(self, entries: Union[BaseModel, Sequence[BaseModel]]) -> InternalJob:
+    def _background_add_entries(self, entries: BaseModel | Sequence[BaseModel]) -> InternalJob:
         """
         Internal function for adding entries to a dataset as an internal job
 
@@ -292,7 +271,7 @@ class BaseDataset(BaseModel):
 
         return self.get_internal_job(job_id)
 
-    def _add_specifications(self, specifications: Union[BaseModel, Sequence[BaseModel]]) -> InsertMetadata:
+    def _add_specifications(self, specifications: BaseModel | Sequence[BaseModel]) -> InsertMetadata:
         """
         Internal function for adding specifications to a dataset
 
@@ -347,10 +326,10 @@ class BaseDataset(BaseModel):
 
     def submit(
         self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
-        compute_tag: Optional[str] = None,
-        compute_priority: Optional[PriorityEnum] = None,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
+        compute_tag: str | None = None,
+        compute_priority: PriorityEnum | None = None,
         find_existing: bool = True,
         **kwargs,  # For deprecated parameters
     ) -> InsertCountsMetadata:
@@ -426,9 +405,9 @@ class BaseDataset(BaseModel):
 
     def background_submit(
         self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
-        compute_tag: Optional[str] = None,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
+        compute_tag: str | None = None,
         compute_priority: PriorityEnum = None,
         find_existing: bool = True,
         **kwargs,  # For deprecated parameters
@@ -488,14 +467,14 @@ class BaseDataset(BaseModel):
         self.assert_online()
 
         ij_dict = self._client.make_request(
-            "get", f"{self._base_url_prefix}/datasets/{self.id}/internal_jobs/{job_id}", Dict[str, Any]
+            "get", f"{self._base_url_prefix}/datasets/{self.id}/internal_jobs/{job_id}", dict[str, Any]
         )
         refresh_url = f"{self._base_url_prefix}/datasets/{self.id}/internal_jobs/{ij_dict['id']}"
         return InternalJob(client=self._client, refresh_url=refresh_url, **ij_dict)
 
     def list_internal_jobs(
-        self, status: Optional[Union[InternalJobStatusEnum, Iterable[InternalJobStatusEnum]]] = None
-    ) -> List[InternalJob]:
+        self, status: InternalJobStatusEnum | Iterable[InternalJobStatusEnum] | None = None
+    ) -> list[InternalJob]:
         self.assert_is_not_view()
         self.assert_online()
 
@@ -503,7 +482,7 @@ class BaseDataset(BaseModel):
         ij_dicts = self._client.make_request(
             "get",
             f"{self._base_url_prefix}/datasets/{self.id}/internal_jobs",
-            List[Dict[str, Any]],
+            list[dict[str, Any]],
             url_params=url_params,
         )
         return [
@@ -525,7 +504,7 @@ class BaseDataset(BaseModel):
         self.attachments_ = self._client.make_request(
             "get",
             f"{self._base_url_prefix}/datasets/{self.id}/attachments",
-            Optional[List[DatasetAttachment]],
+            list[DatasetAttachment] | None,
         )
 
         if self.attachments_ is not None:
@@ -533,7 +512,7 @@ class BaseDataset(BaseModel):
                 x.propagate_client(self._client)
 
     @property
-    def attachments(self) -> List[DatasetAttachment]:
+    def attachments(self) -> list[DatasetAttachment]:
         if not self.attachments_:
             self.fetch_attachments()
 
@@ -550,7 +529,7 @@ class BaseDataset(BaseModel):
     def download_attachment(
         self,
         attachment_id: int,
-        destination_path: Optional[str] = None,
+        destination_path: str | None = None,
         overwrite: bool = True,
     ):
         """
@@ -587,8 +566,8 @@ class BaseDataset(BaseModel):
 
     def download_view(
         self,
-        view_file_id: Optional[int] = None,
-        destination_path: Optional[str] = None,
+        view_file_id: int | None = None,
+        destination_path: str | None = None,
         overwrite: bool = True,
     ):
         """
@@ -659,7 +638,7 @@ class BaseDataset(BaseModel):
 
         self._cache_data = dcache
 
-    def preload_cache(self, view_file_id: Optional[int] = None):
+    def preload_cache(self, view_file_id: int | None = None):
         """
         Downloads a view file and uses it as the current cache
 
@@ -682,10 +661,10 @@ class BaseDataset(BaseModel):
     def create_view(
         self,
         description: str,
-        provenance: Dict[str, Any],
-        status: Optional[Iterable[RecordStatusEnum]] = None,
-        include: Optional[Iterable[str]] = None,
-        exclude: Optional[Iterable[str]] = None,
+        provenance: dict[str, Any],
+        status: Iterable[RecordStatusEnum] | None = None,
+        include: Iterable[str] | None = None,
+        exclude: Iterable[str] | None = None,
         *,
         include_children: bool = True,
     ) -> InternalJob:
@@ -742,10 +721,10 @@ class BaseDataset(BaseModel):
     def is_view(self) -> bool:
         return self._cache_data is not None and self._cache_data.read_only
 
-    def status(self) -> Dict[str, Any]:
+    def status(self) -> dict[str, Any]:
         self.assert_online()
 
-        return self._client.make_request("get", f"{self._base_url}/status", Dict[str, Dict[RecordStatusEnum, int]])
+        return self._client.make_request("get", f"{self._base_url}/status", dict[str, dict[RecordStatusEnum, int]])
 
     def status_table(self) -> str:
         """
@@ -768,22 +747,22 @@ class BaseDataset(BaseModel):
     def print_status(self) -> None:
         print(self.status_table())
 
-    def detailed_status(self) -> List[Tuple[str, str, RecordStatusEnum]]:
+    def detailed_status(self) -> list[tuple[str, str, RecordStatusEnum]]:
         self.assert_online()
 
         return self._client.make_request(
             "get",
             f"{self._base_url}/detailed_status",
-            List[Tuple[str, str, RecordStatusEnum]],
+            list[tuple[str, str, RecordStatusEnum]],
         )
 
-    def status_by_compute_tag(self) -> List[Tuple[str, RecordStatusEnum, int]]:
+    def status_by_compute_tag(self) -> list[tuple[str, RecordStatusEnum, int]]:
         self.assert_online()
 
         return self._client.make_request(
             "get",
             f"{self._base_url}/status_by_tag",
-            List[Tuple[str, RecordStatusEnum, int]],
+            list[tuple[str, RecordStatusEnum, int]],
         )
 
     @property
@@ -804,7 +783,7 @@ class BaseDataset(BaseModel):
     def computed_properties(self):
         self.assert_online()
 
-        return self._client.make_request("get", f"{self._base_url}/computed_properties", Dict[str, List[str]])
+        return self._client.make_request("get", f"{self._base_url}/computed_properties", dict[str, list[str]])
 
     def assert_is_not_view(self):
         if self.is_view:
@@ -816,16 +795,16 @@ class BaseDataset(BaseModel):
     def set_description(self, new_description: str):
         self._update_metadata(description=new_description)
 
-    def set_tags(self, new_tags: List[str]):
+    def set_tags(self, new_tags: list[str]):
         self._update_metadata(tags=new_tags)
 
     def set_tagline(self, new_tagline: str):
         self._update_metadata(tagline=new_tagline)
 
-    def set_provenance(self, new_provenance: Dict[str, Any]):
+    def set_provenance(self, new_provenance: dict[str, Any]):
         self._update_metadata(provenance=new_provenance)
 
-    def set_extras(self, new_extras: Dict[str, Any]):
+    def set_extras(self, new_extras: dict[str, Any]):
         self._update_metadata(extras=new_extras)
 
     def set_default_compute_tag(self, new_default_compute_tag: str):
@@ -838,12 +817,12 @@ class BaseDataset(BaseModel):
     # DEPRECATED - for backwards compatibility
     ##########################################
     @property
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         logger = logging.getLogger(self.__class__.__name__)
         logger.warning("'metadata' is deprecated and will be removed in a future release. Use 'extras' instead")
         return self.extras
 
-    def set_metadata(self, new_metadata: Dict[str, Any]):
+    def set_metadata(self, new_metadata: dict[str, Any]):
         logger = logging.getLogger(self.__class__.__name__)
         logger.warning("set_metadata is deprecated and will be removed in a future release. Use set_extras instead")
         self.set_extras(new_metadata)
@@ -908,7 +887,7 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        self._specification_names = self._client.make_request("get", f"{self._base_url}/specification_names", List[str])
+        self._specification_names = self._client.make_request("get", f"{self._base_url}/specification_names", list[str])
 
     def _internal_fetch_specifications(
         self,
@@ -935,8 +914,8 @@ class BaseDataset(BaseModel):
         fetched_specifications = self._client.make_request(
             "post",
             f"{self._base_url}/specifications/bulkFetch",
-            Dict[str, self._specification_type],
-            body=DatasetFetchSpecificationBody(names=specification_names),
+            dict[str, self._specification_type],
+            body=DatasetFetchSpecificationBody(names=list(specification_names)),
         )
 
         # The specifications contain their own names, so we don't need the keys
@@ -950,7 +929,7 @@ class BaseDataset(BaseModel):
             )
 
     def fetch_specifications(
-        self, specification_names: Optional[Union[str, Iterable[str]]] = None, force_refetch: bool = False
+        self, specification_names: str | Iterable[str] | None = None, force_refetch: bool = False
     ) -> None:
         """
         Fetch specifications from the remote server, storing them internally
@@ -987,7 +966,7 @@ class BaseDataset(BaseModel):
             self._internal_fetch_specifications(specification_names_batch)
 
     @property
-    def specification_names(self) -> List[str]:
+    def specification_names(self) -> list[str]:
         if not self._specification_names:
             if self.is_view:
                 self._specification_names = self._cache_data.get_specification_names()
@@ -1053,7 +1032,7 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        self._entry_names = self._client.make_request("get", f"{self._base_url}/entry_names", List[str])
+        self._entry_names = self._client.make_request("get", f"{self._base_url}/entry_names", list[str])
 
     def _internal_fetch_entries(
         self,
@@ -1077,12 +1056,12 @@ class BaseDataset(BaseModel):
         if not entry_names:
             return
 
-        body = DatasetFetchEntryBody(names=entry_names)
+        body = DatasetFetchEntryBody(names=list(entry_names))
 
         fetched_entries = self._client.make_request(
             "post",
             f"{self._base_url}/entries/bulkFetch",
-            Dict[str, self._entry_type],
+            dict[str, self._entry_type],
             body=body,
         )
 
@@ -1096,7 +1075,7 @@ class BaseDataset(BaseModel):
 
     def fetch_entries(
         self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
+        entry_names: str | Iterable[str] | None = None,
         force_refetch: bool = False,
     ) -> None:
         """
@@ -1143,7 +1122,7 @@ class BaseDataset(BaseModel):
         self,
         entry_name: str,
         force_refetch: bool = False,
-    ) -> Optional[Any]:
+    ) -> Any | None:
         """
         Obtain entry information
 
@@ -1160,7 +1139,7 @@ class BaseDataset(BaseModel):
 
     def iterate_entries(
         self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
+        entry_names: str | Iterable[str] | None = None,
         force_refetch: bool = False,
     ):
         """
@@ -1225,7 +1204,7 @@ class BaseDataset(BaseModel):
                     yield entry
 
     @property
-    def entry_names(self) -> List[str]:
+    def entry_names(self) -> list[str]:
         if not self._entry_names:
             if self.is_view:
                 self._entry_names = self._cache_data.get_entry_names()
@@ -1234,7 +1213,7 @@ class BaseDataset(BaseModel):
 
         return self._entry_names
 
-    def rename_entries(self, name_map: Dict[str, str]):
+    def rename_entries(self, name_map: dict[str, str]):
         """
         Renames entries in the dataset based on the provided mapping.
 
@@ -1270,8 +1249,8 @@ class BaseDataset(BaseModel):
 
     def modify_entries(
         self,
-        attribute_map: Optional[Dict[str, Dict[str, Any]]] = None,
-        comment_map: Optional[Dict[str, str]] = None,
+        attribute_map: dict[str, dict[str, Any]] | None = None,
+        comment_map: dict[str, str] | None = None,
         overwrite_attributes: bool = False,
     ):
         """
@@ -1313,7 +1292,7 @@ class BaseDataset(BaseModel):
 
         self.fetch_entries(entries_to_sync, force_refetch=True)
 
-    def delete_entries(self, names: Union[str, Iterable[str]], delete_records: bool = False) -> DeleteMetadata:
+    def delete_entries(self, names: str | Iterable[str], delete_records: bool = False) -> DeleteMetadata:
         """
         Deletes entries from the dataset.
 
@@ -1362,9 +1341,9 @@ class BaseDataset(BaseModel):
         self,
         entry_names: Iterable[str],
         specification_names: Iterable[str],
-        status: Optional[Iterable[RecordStatusEnum]],
-        include: Optional[Iterable[str]],
-    ) -> List[Tuple[str, str, BaseRecord]]:
+        status: Iterable[RecordStatusEnum] | None,
+        include: Iterable[str] | None,
+    ) -> list[tuple[str, str, BaseRecord]]:
         """
         Fetches records from the remote server
 
@@ -1401,12 +1380,14 @@ class BaseDataset(BaseModel):
         self.fetch_entries(entry_names)
         self.fetch_specifications(specification_names)
 
-        body = DatasetFetchRecordsBody(entry_names=entry_names, specification_names=specification_names, status=status)
+        body = DatasetFetchRecordsBody(
+            entry_names=list(entry_names), specification_names=list(specification_names), status=make_list(status)
+        )
 
         record_info = self._client.make_request(
             "post",
             f"{self._base_url}/records/bulkFetch",
-            List[Tuple[str, str, int]],  # (entry_name, spec_name, record_id)
+            list[tuple[str, str, int]],  # (entry_name, spec_name, record_id)
             body=body,
         )
 
@@ -1430,9 +1411,9 @@ class BaseDataset(BaseModel):
         self,
         entry_names: Iterable[str],
         specification_names: Iterable[str],
-        status: Optional[Iterable[RecordStatusEnum]],
-        include: Optional[Iterable[str]],
-    ) -> List[Tuple[str, str, BaseRecord]]:
+        status: Iterable[RecordStatusEnum] | None,
+        include: Iterable[str] | None,
+    ) -> list[tuple[str, str, BaseRecord]]:
         """
         Update local record information if the record has been modified on the server
 
@@ -1460,7 +1441,7 @@ class BaseDataset(BaseModel):
             return []
 
         batch_size = math.ceil(self._client.api_limits["get_records"] / 4)
-        server_modified_time: Dict[int, datetime] = {}  # record_id -> modified time on server
+        server_modified_time: dict[int, datetime] = {}  # record_id -> modified time on server
 
         # Find out which records have been updated on the server
         for record_info_batch in chunk_iterable(updateable_record_info, batch_size):
@@ -1471,7 +1452,7 @@ class BaseDataset(BaseModel):
             server_record_info = self._client.make_request(
                 "post",
                 f"{self._base_url_prefix}/records/bulkGet",
-                List[Dict[str, Any]],
+                list[dict[str, Any]],
                 body=CommonBulkGetBody(ids=record_id_batch, include=["id", "modified_on", "status"]),
             )
 
@@ -1479,10 +1460,10 @@ class BaseDataset(BaseModel):
             for sri in server_record_info:
                 # Only store if the status on the server matches what the caller wants
                 if status is None or sri["status"] in status:
-                    server_modified_time[sri["id"]] = pydantic.parse_obj_as(datetime, sri["modified_on"])
+                    server_modified_time[sri["id"]] = pydantic.TypeAdapter(datetime).validate_python(sri["modified_on"])
 
         # Which ones need to be fully updated
-        need_updating: Dict[str, List[str]] = {}  # key is specification, value is list of entry names
+        need_updating: dict[str, list[str]] = {}  # key is specification, value is list of entry names
         for entry_name, spec_name, record_id, _, local_mtime in updateable_record_info:
             server_mtime = server_modified_time.get(record_id, None)
 
@@ -1508,10 +1489,10 @@ class BaseDataset(BaseModel):
 
     def fetch_records(
         self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
-        status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
-        include: Optional[Iterable[str]] = None,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
+        status: RecordStatusEnum | Iterable[RecordStatusEnum] | None = None,
+        include: Iterable[str] | None = None,
         fetch_updated: bool = True,
         force_refetch: bool = False,
     ):
@@ -1608,10 +1589,10 @@ class BaseDataset(BaseModel):
         self,
         entry_name: str,
         specification_name: str,
-        include: Optional[Iterable[str]] = None,
+        include: Iterable[str] | None = None,
         fetch_updated: bool = True,
         force_refetch: bool = False,
-    ) -> Optional[BaseRecord]:
+    ) -> BaseRecord | None:
         """
         Retrieve a calculation record associated with this dataset.
 
@@ -1620,20 +1601,20 @@ class BaseDataset(BaseModel):
 
         Parameters
         ----------
-        entry_name : str
+        entry_name
             The name of the entry for which the record is to be retrieved.
-        specification_name : str
+        specification_name
             The name of the specification for which the record is to be retrieved.
-        include : Optional[Iterable[str]], optional
+        include
             Additional fields to include in the fetched record, by default None.
-        fetch_updated : bool, optional
+        fetch_updated
             If True, fetches updated records from the server if they have been modified, by default True.
-        force_refetch : bool, optional
+        force_refetch
             If True, forces a refetch of the record from the server, ignoring the local cache, by default False.
 
         Returns
         -------
-        Optional[BaseRecord]
+        BaseRecord | None
             The calculation record associated with the specified entry and specification, or None if it does not exist.
         """
 
@@ -1668,10 +1649,10 @@ class BaseDataset(BaseModel):
 
     def iterate_records(
         self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
-        status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
-        include: Optional[Iterable[str]] = None,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
+        status: RecordStatusEnum | Iterable[RecordStatusEnum] | None = None,
+        include: Iterable[str] | None = None,
         fetch_updated: bool = True,
         force_refetch: bool = False,
     ):
@@ -1757,8 +1738,8 @@ class BaseDataset(BaseModel):
 
     def remove_records(
         self,
-        entry_names: Union[str, Iterable[str]],
-        specification_names: Union[str, Iterable[str]],
+        entry_names: str | Iterable[str],
+        specification_names: str | Iterable[str],
         delete_records: bool = False,
     ) -> None:
         self.assert_is_not_view()
@@ -1784,12 +1765,12 @@ class BaseDataset(BaseModel):
 
     def _modify_records(
         self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
-        new_compute_tag: Optional[str] = None,
-        new_compute_priority: Optional[PriorityEnum] = None,
-        new_comment: Optional[str] = None,
-        new_status: Optional[RecordStatusEnum] = None,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
+        new_compute_tag: str | None = None,
+        new_compute_priority: PriorityEnum | None = None,
+        new_comment: str | None = None,
+        new_status: RecordStatusEnum | None = None,
         *,
         refetch_records: bool = False,
     ):
@@ -1831,8 +1812,8 @@ class BaseDataset(BaseModel):
     def _revert_records(
         self,
         revert_status: RecordStatusEnum,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
         *,
         refetch_records: bool = False,
     ):
@@ -1865,11 +1846,11 @@ class BaseDataset(BaseModel):
 
     def modify_records(
         self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
-        new_compute_tag: Optional[str] = None,
-        new_compute_priority: Optional[PriorityEnum] = None,
-        new_comment: Optional[str] = None,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
+        new_compute_tag: str | None = None,
+        new_compute_priority: PriorityEnum | None = None,
+        new_comment: str | None = None,
         *,
         refetch_records: bool = False,
         **kwargs,  # For deprecated parameters
@@ -1915,8 +1896,8 @@ class BaseDataset(BaseModel):
 
     def reset_records(
         self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
         *,
         refetch_records: bool = False,
     ):
@@ -1942,8 +1923,8 @@ class BaseDataset(BaseModel):
 
     def cancel_records(
         self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
         *,
         refetch_records: bool = False,
     ):
@@ -1971,8 +1952,8 @@ class BaseDataset(BaseModel):
 
     def uncancel_records(
         self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
         *,
         refetch_records: bool = False,
     ):
@@ -1997,8 +1978,8 @@ class BaseDataset(BaseModel):
 
     def invalidate_records(
         self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
         *,
         refetch_records: bool = False,
     ):
@@ -2027,8 +2008,8 @@ class BaseDataset(BaseModel):
 
     def uninvalidate_records(
         self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
         *,
         refetch_records: bool = False,
     ):
@@ -2054,7 +2035,7 @@ class BaseDataset(BaseModel):
     def copy_entries_from(
         self,
         source_dataset_id: int,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
+        entry_names: str | Iterable[str] | None = None,
         existing_ok: bool = False,
     ):
         """
@@ -2102,7 +2083,7 @@ class BaseDataset(BaseModel):
     def copy_specifications_from(
         self,
         source_dataset_id: int,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        specification_names: str | Iterable[str] | None = None,
     ):
         """
         Copies specifications from another dataset into this one
@@ -2131,8 +2112,8 @@ class BaseDataset(BaseModel):
     def copy_records_from(
         self,
         source_dataset_id: int,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
         existing_ok: bool = False,
     ):
         """
@@ -2187,9 +2168,9 @@ class BaseDataset(BaseModel):
     def compile_values(
         self,
         value_call: Callable,
-        value_names: Union[Sequence[str], str] = "value",
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        value_names: str | Sequence[str] = "value",
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
         unpack: bool = False,
     ) -> "DataFrame":
         """
@@ -2337,8 +2318,8 @@ class BaseDataset(BaseModel):
     ##############################
     def refresh_cache(
         self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
     ):
         """
         Refreshes some information in the cache with information on the server
@@ -2416,7 +2397,7 @@ class BaseDataset(BaseModel):
                 server_ds_records = self._client.make_request(
                     "post",
                     f"{self._base_url}/records/bulkFetch",
-                    List[Tuple[str, str, int]],  # (entry_name, spec_name, record_id)
+                    list[tuple[str, str, int]],  # (entry_name, spec_name, record_id)
                     body=body,
                 )
 
@@ -2429,7 +2410,7 @@ class BaseDataset(BaseModel):
                 server_record_info = self._client.make_request(
                     "post",
                     f"{self._base_url_prefix}/records/bulkGet",
-                    List[Dict[str, Any]],
+                    list[dict[str, Any]],
                     body=CommonBulkGetBody(ids=server_record_ids, include=["modified_on", "status"]),
                 )
                 server_record_info_map = {r["id"]: r for r in server_record_info}
@@ -2447,7 +2428,7 @@ class BaseDataset(BaseModel):
 
                     # This is guaranteed to exist, right?
                     rinfo = server_record_info_map[record_id]
-                    rinfo_modified = pydantic.parse_obj_as(datetime, rinfo["mod"])
+                    rinfo_modified = pydantic.TypeAdapter(datetime).validate_python(rinfo["mod"])
                     if rinfo_modified > modified_on or rinfo["status"] != status:
                         records_tofetch.append(record_id)  # same as server_ds_record_id
 
@@ -2462,11 +2443,11 @@ class BaseDataset(BaseModel):
         self.contributed_values_ = self._client.make_request(
             "get",
             f"{self._base_url_prefix}/datasets/{self.id}/contributed_values",
-            Optional[Dict[str, ContributedValues]],
+            dict[str, ContributedValues] | None,
         )
 
     @property
-    def contributed_values(self) -> Dict[str, ContributedValues]:
+    def contributed_values(self) -> dict[str, ContributedValues]:
         if not self.contributed_values_:
             self.fetch_contributed_values()
 
@@ -2477,30 +2458,32 @@ class DatasetAddBody(RestModelBase):
     name: str
     description: str
     tagline: str
-    tags: List[str]
-    provenance: Dict[str, Any]
+    tags: list[str]
+    provenance: dict[str, Any]
     default_compute_tag: str
     default_compute_priority: PriorityEnum
-    extras: Dict[str, Any]
+    extras: dict[str, Any]
     existing_ok: bool = False
 
     # TODO - DEPRECATED - Remove eventually
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def _rm_deprecated(cls, values):
-        if "group" in values:
-            del values["group"]
-        if "visibility" in values:
-            del values["visibility"]
-        if "metadata" in values:
-            values["extras"] = values.pop("metadata")
+        if isinstance(values, dict):
+            if "group" in values:
+                del values["group"]
+            if "visibility" in values:
+                del values["visibility"]
+            if "metadata" in values:
+                values["extras"] = values.pop("metadata")
 
-        if "default_tag" in values:
-            values["default_compute_tag"] = values.pop("default_tag")
-        if "default_priority" in values:
-            values["default_compute_priority"] = values.pop("default_priority")
+            if "default_tag" in values:
+                values["default_compute_tag"] = values.pop("default_tag")
+            if "default_priority" in values:
+                values["default_compute_priority"] = values.pop("default_priority")
 
-        if "owner_group" in values:
-            del values["owner_group"]
+            if "owner_group" in values:
+                del values["owner_group"]
 
         return values
 
@@ -2508,28 +2491,30 @@ class DatasetAddBody(RestModelBase):
 class DatasetModifyMetadata(RestModelBase):
     name: str
     description: str
-    tags: List[str]
+    tags: list[str]
     tagline: str
-    provenance: Optional[Dict[str, Any]]
-    extras: Optional[Dict[str, Any]]
+    provenance: dict[str, Any] | None
+    extras: dict[str, Any] | None
 
     default_compute_tag: str
     default_compute_priority: PriorityEnum
 
     # TODO - DEPRECATED - Remove eventually
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def _rm_deprecated(cls, values):
-        if "group" in values:
-            del values["group"]
-        if "visibility" in values:
-            del values["visibility"]
-        if "metadata" in values:
-            values["extras"] = values.pop("metadata")
+        if isinstance(values, dict):
+            if "group" in values:
+                del values["group"]
+            if "visibility" in values:
+                del values["visibility"]
+            if "metadata" in values:
+                values["extras"] = values.pop("metadata")
 
-        if "default_tag" in values:
-            values["default_compute_tag"] = values.pop("default_tag")
-        if "default_priority" in values:
-            values["default_compute_priority"] = values.pop("default_priority")
+            if "default_tag" in values:
+                values["default_compute_tag"] = values.pop("default_tag")
+            if "default_priority" in values:
+                values["default_compute_priority"] = values.pop("default_priority")
 
         return values
 
@@ -2537,35 +2522,36 @@ class DatasetModifyMetadata(RestModelBase):
 class DatasetQueryModel(RestModelBase):
     dataset_type: str
     dataset_name: str
-    include: Optional[List[str]] = None
-    exclude: Optional[List[str]] = None
+    include: list[str] | None = None
+    exclude: list[str] | None = None
 
 
 class DatasetFetchSpecificationBody(RestModelBase):
-    names: List[str]
+    names: list[str]
     missing_ok: bool = False
 
 
 class DatasetFetchEntryBody(RestModelBase):
-    names: List[str]
+    names: list[str]
     missing_ok: bool = False
 
 
 class DatasetDeleteStrBody(RestModelBase):
-    names: List[str]
+    names: list[str]
     delete_records: bool = False
 
 
 class DatasetRemoveRecordsBody(RestModelBase):
-    entry_names: List[str]
-    specification_names: List[str]
+    entry_names: list[str]
+    specification_names: list[str]
     delete_records: bool = False
 
 
 class DatasetDeleteParams(RestModelBase):
     delete_records: bool = False
 
-    @validator("delete_records", pre=True)
+    @field_validator("delete_records", mode="before")
+    @classmethod
     def validate_lists(cls, v):
         return validate_list_to_single(v)
 
@@ -2577,100 +2563,104 @@ class DatasetCloneBody(RestModelBase):
 
 class DatasetCopyFromBody(RestModelBase):
     source_dataset_id: int
-    entry_names: Optional[List[str]] = None
-    specification_names: Optional[List[str]] = None
+    entry_names: list[str] | None = None
+    specification_names: list[str] | None = None
     copy_entries: bool = False
     copy_specifications: bool = False
     copy_records: bool = False
 
 
 class DatasetFetchRecordsBody(RestModelBase):
-    entry_names: List[str]
-    specification_names: List[str]
-    status: Optional[List[RecordStatusEnum]] = None
+    entry_names: list[str]
+    specification_names: list[str]
+    status: list[RecordStatusEnum] | None = None
 
 
 class DatasetCreateViewBody(RestModelBase):
-    description: Optional[str]
-    provenance: Dict[str, Any]
-    status: Optional[List[RecordStatusEnum]] = (None,)
-    include: Optional[List[str]] = (None,)
-    exclude: Optional[List[str]] = (None,)
+    description: str | None
+    provenance: dict[str, Any]
+    status: list[RecordStatusEnum] | None = (None,)
+    include: list[str] | None = (None,)
+    exclude: list[str] | None = (None,)
     include_children: bool = (True,)
 
 
 class DatasetSubmitBody(RestModelBase):
-    entry_names: Optional[List[str]] = None
-    specification_names: Optional[List[str]] = None
-    compute_tag: Optional[str] = None
-    compute_priority: Optional[PriorityEnum] = None
+    entry_names: list[str] | None = None
+    specification_names: list[str] | None = None
+    compute_tag: str | None = None
+    compute_priority: PriorityEnum | None = None
     find_existing: bool = True
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def _rm_deprecated(cls, values):
-        # TODO - DEPRECATED - Remove eventually
-        if "tag" in values:
-            values["compute_tag"] = values.pop("tag")
-        if "priority" in values:
-            values["compute_priority"] = values.pop("priority")
-        if "owner_group" in values:
-            del values["owner_group"]
+        if isinstance(values, dict):
+            # TODO - DEPRECATED - Remove eventually
+            if "tag" in values:
+                values["compute_tag"] = values.pop("tag")
+            if "priority" in values:
+                values["compute_priority"] = values.pop("priority")
+            if "owner_group" in values:
+                del values["owner_group"]
 
         return values
 
 
 class DatasetRecordModifyBody(RestModelBase):
-    entry_names: Optional[List[str]] = None
-    specification_names: Optional[List[str]] = None
-    status: Optional[RecordStatusEnum] = None
-    compute_priority: Optional[PriorityEnum] = None
-    compute_tag: Optional[constr(to_lower=True)] = None
-    comment: Optional[str] = None
+    entry_names: list[str] | None = None
+    specification_names: list[str] | None = None
+    status: RecordStatusEnum | None = None
+    compute_priority: PriorityEnum | None = None
+    compute_tag: LowerStr | None = None
+    comment: str | None = None
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def _rm_deprecated(cls, values):
-        # TODO - DEPRECATED - Remove eventually
-        if "tag" in values:
-            values["compute_tag"] = values.pop("tag")
-        if "priority" in values:
-            values["compute_priority"] = values.pop("priority")
+        if isinstance(values, dict):
+            # TODO - DEPRECATED - Remove eventually
+            if "tag" in values:
+                values["compute_tag"] = values.pop("tag")
+            if "priority" in values:
+                values["compute_priority"] = values.pop("priority")
 
         return values
 
 
 class DatasetRecordRevertBody(RestModelBase):
-    entry_names: Optional[List[str]] = None
-    specification_names: Optional[List[str]] = None
+    entry_names: list[str] | None = None
+    specification_names: list[str] | None = None
     revert_status: RecordStatusEnum = None
 
 
 class DatasetQueryRecords(RestModelBase):
-    record_id: List[int]
-    dataset_type: Optional[List[str]] = None
+    record_id: list[int]
+    dataset_type: list[str] | None = None
 
 
 class DatasetDeleteEntryBody(RestModelBase):
-    names: List[str]
+    names: list[str]
     delete_records: bool = False
 
 
 class DatasetDeleteSpecificationBody(RestModelBase):
-    names: List[str]
+    names: list[str]
     delete_records: bool = False
 
 
 class DatasetModifyEntryBody(RestModelBase):
-    attribute_map: Optional[Dict[str, Dict[str, Any]]] = None
-    comment_map: Optional[Dict[str, str]] = None
+    attribute_map: dict[str, dict[str, Any]] | None = None
+    comment_map: dict[str, str] | None = None
     overwrite_attributes: bool = False
 
 
 class DatasetGetInternalJobParams(RestModelBase):
-    status: Optional[List[InternalJobStatusEnum]] = None
+    status: list[InternalJobStatusEnum] | None = None
 
 
 def dataset_from_dict(
-    data: Dict[str, Any], client: Any, base_url_prefix: Optional[str] = None, cache_data: Optional[DatasetCache] = None
+    data: dict[str, Any], client: Any, base_url_prefix: str | None = None, cache_data: DatasetCache | None = None
 ) -> BaseDataset:
     """
     Create a dataset object from a datamodel
@@ -2708,7 +2698,7 @@ def create_dataset_view(
     client: PortalClient,
     dataset_id: int,
     file_path: str,
-    include: Optional[Iterable[str]] = None,
+    include: Iterable[str] | None = None,
     overwrite: bool = False,
 ):
     file_path = os.path.abspath(file_path)
@@ -2722,7 +2712,7 @@ def create_dataset_view(
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
     # Manually get it, because we want to use a different cache file
-    ds_dict = client.make_request("get", f"api/v1/datasets/{dataset_id}", Dict[str, Any])
+    ds_dict = client.make_request("get", f"api/v1/datasets/{dataset_id}", dict[str, Any])
     ds_cache = DatasetCache(f"file:{file_path}", False, BaseDataset.get_subclass(ds_dict["dataset_type"]))
 
     ds = dataset_from_dict(ds_dict, client, "api/v1", ds_cache)

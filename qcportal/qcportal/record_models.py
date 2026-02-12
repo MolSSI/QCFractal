@@ -5,10 +5,10 @@ import os
 import sys
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List, Union, Iterable, Tuple, Type, Sequence, ClassVar, TypeVar
+from typing import Any, Iterable, Type, Sequence, ClassVar, TypeVar
 
 from dateutil.parser import parse as date_parser
-from pydantic.v1 import BaseModel, Extra, constr, validator, PrivateAttr, Field, root_validator
+from pydantic import BaseModel, field_validator, model_validator, PrivateAttr, Field, ConfigDict
 
 from qcportal.base_models import (
     RestModelBase,
@@ -16,8 +16,9 @@ from qcportal.base_models import (
     QueryIteratorBase,
 )
 from qcportal.cache import RecordCache, get_records_with_cache
-from qcportal.exceptions import NoClientError
+from qcportal.common_types import LowerStr
 from qcportal.compression import CompressionEnum, decompress, get_compressed_ext
+from qcportal.exceptions import NoClientError
 
 _T = TypeVar("_T")
 
@@ -25,12 +26,11 @@ _T = TypeVar("_T")
 class Provenance(BaseModel):
     """Provenance information."""
 
+    model_config = ConfigDict(extra="allow")
+
     creator: str = Field(..., description="The name of the program, library, or person who created the object.")
     version: str = Field("", description="The version of the creator, blank otherwise")
     routine: str = Field("", description="The name of the routine or function within the creator, blank otherwise.")
-
-    class Config:
-        extra: str = "allow"
 
 
 class PriorityEnum(int, Enum):
@@ -94,7 +94,7 @@ class RecordStatusEnum(str, Enum):
                 return status
 
     @classmethod
-    def make_ordered_status(cls, statuses: Iterable[RecordStatusEnum]) -> List[RecordStatusEnum]:
+    def make_ordered_status(cls, statuses: Iterable[RecordStatusEnum]) -> list[RecordStatusEnum]:
         """Returns a list of the given statuses but in a defined order"""
         order = [cls.complete, cls.error, cls.running, cls.waiting, cls.cancelled, cls.invalid, cls.deleted]
         return sorted(statuses, key=lambda x: order.index(x))
@@ -115,14 +115,13 @@ class OutputStore(BaseModel):
     Storage of outputs and error messages, with optional compression
     """
 
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     output_type: OutputTypeEnum = Field(..., description="The type of output this is (stdout, error, etc)")
     compression_type: CompressionEnum = Field(CompressionEnum.none, description="Compression method (such as lzma)")
-    data_: Optional[bytes] = Field(None, alias="data")
+    data_: bytes | None = Field(None, alias="data")
 
-    _data_url: Optional[str] = PrivateAttr(None)
+    _data_url: str | None = PrivateAttr(None)
     _client: Any = PrivateAttr(None)
 
     def propagate_client(self, client, history_base_url):
@@ -139,7 +138,7 @@ class OutputStore(BaseModel):
         cdata, ctype = self._client.make_request(
             "get",
             self._data_url,
-            Tuple[bytes, CompressionEnum],
+            tuple[bytes, CompressionEnum],
         )
 
         assert self.compression_type == ctype
@@ -152,19 +151,19 @@ class OutputStore(BaseModel):
 
 
 class ComputeHistory(BaseModel):
-    class Config:
-        extra = Extra.forbid
+
+    model_config = ConfigDict(extra="forbid")
 
     id: int
     record_id: int
     status: RecordStatusEnum
-    manager_name: Optional[str]
+    manager_name: str | None
     modified_on: datetime
-    provenance: Optional[Provenance]
-    outputs_: Optional[Dict[str, OutputStore]] = Field(None, alias="outputs")
+    provenance: Provenance | None
+    outputs_: dict[str, OutputStore] | None = Field(None, alias="outputs")
 
     _client: Any = PrivateAttr(None)
-    _base_url: Optional[str] = PrivateAttr(None)
+    _base_url: str | None = PrivateAttr(None)
 
     def propagate_client(self, client, record_base_url):
         self._client = client
@@ -184,7 +183,7 @@ class ComputeHistory(BaseModel):
         self.outputs_ = self._client.make_request(
             "get",
             f"{self._base_url}/outputs",
-            Dict[str, OutputStore],
+            dict[str, OutputStore],
         )
 
         for o in self.outputs_.values():
@@ -192,7 +191,7 @@ class ComputeHistory(BaseModel):
             o._fetch_raw_data()
 
     @property
-    def outputs(self) -> Dict[str, OutputStore]:
+    def outputs(self) -> dict[str, OutputStore]:
         if self.outputs_ is None:
             self._fetch_outputs()
         return self.outputs_
@@ -209,15 +208,15 @@ class ComputeHistory(BaseModel):
 
     @property
     def stdout(self) -> Any:
-        return self.get_output("stdout")
+        return self.get_output(OutputTypeEnum.stdout)
 
     @property
     def stderr(self) -> Any:
-        return self.get_output("stderr")
+        return self.get_output(OutputTypeEnum.stderr)
 
     @property
     def error(self) -> Any:
-        return self.get_output("error")
+        return self.get_output(OutputTypeEnum.error)
 
 
 class NativeFile(BaseModel):
@@ -225,14 +224,13 @@ class NativeFile(BaseModel):
     Storage of native files, with compression
     """
 
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     name: str = Field(..., description="Name of the file")
     compression_type: CompressionEnum = Field(..., description="Compression method (such as lzma)")
-    data_: Optional[bytes] = Field(None, alias="data")
+    data_: bytes | None = Field(None, alias="data")
 
-    _data_url: Optional[str] = PrivateAttr(None)
+    _data_url: str | None = PrivateAttr(None)
     _client: Any = PrivateAttr(None)
 
     def propagate_client(self, client, record_base_url):
@@ -252,7 +250,7 @@ class NativeFile(BaseModel):
         cdata, ctype = self._client.make_request(
             "get",
             self._data_url,
-            Tuple[bytes, CompressionEnum],
+            tuple[bytes, CompressionEnum],
         )
 
         assert self.compression_type == ctype
@@ -264,7 +262,7 @@ class NativeFile(BaseModel):
         return decompress(self.data_, self.compression_type)
 
     def save_file(
-        self, directory: str, new_name: Optional[str] = None, keep_compressed: bool = False, overwrite: bool = False
+        self, directory: str, new_name: str | None = None, keep_compressed: bool = False, overwrite: bool = False
     ):
         """
         Saves the file to the given directory
@@ -300,29 +298,27 @@ class NativeFile(BaseModel):
 
 
 class RecordComment(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     id: int
     record_id: int
-    username: Optional[str]
+    username: str | None
     timestamp: datetime
     comment: str
 
 
 class RecordTask(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     id: int
     record_id: int
 
-    function: Optional[str]
-    function_kwargs_compressed: Optional[bytes]
+    function: str | None
+    function_kwargs_compressed: bytes | None
 
     compute_tag: str
     compute_priority: PriorityEnum
-    required_programs: List[str]
+    required_programs: list[str]
 
     # TODO - DEPRECATED - remove at some point
     @property
@@ -340,34 +336,34 @@ class RecordTask(BaseModel):
         return self.compute_priority
 
     @property
-    def function_kwargs(self) -> Optional[Dict[str, Any]]:
+    def function_kwargs(self) -> dict[str, Any] | None:
         if self.function_kwargs_compressed is None:
             return None
         else:
             return decompress(self.function_kwargs_compressed, CompressionEnum.zstd)
 
     # TODO - DEPRECATED - remove at some point
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def _old_tag_priority(cls, values):
-        if "tag" in values:
-            values["compute_tag"] = values.pop("tag")
-        if "priority" in values:
-            values["compute_priority"] = values.pop("priority")
+        if isinstance(values, dict):
+            if "tag" in values:
+                values["compute_tag"] = values.pop("tag")
+            if "priority" in values:
+                values["compute_priority"] = values.pop("priority")
 
         return values
 
 
 class ServiceDependency(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     record_id: int
-    extras: Dict[str, Any]
+    extras: dict[str, Any]
 
 
 class RecordService(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     id: int
     record_id: int
@@ -376,67 +372,73 @@ class RecordService(BaseModel):
     compute_priority: PriorityEnum
     find_existing: bool
 
-    service_state: Optional[Dict[str, Any]] = None
-    dependencies: List[ServiceDependency]
+    service_state: dict[str, Any] | None = None
+    dependencies: list[ServiceDependency]
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def _old_tag_priority(cls, values):
-        if "tag" in values:
-            values["compute_tag"] = values.pop("tag")
-        if "priority" in values:
-            values["compute_priority"] = values.pop("priority")
+        if isinstance(values, dict):
+            if "tag" in values:
+                values["compute_tag"] = values.pop("tag")
+            if "priority" in values:
+                values["compute_priority"] = values.pop("priority")
 
         return values
 
 
 class BaseRecord(BaseModel):
-    class Config:
-        extra = Extra.forbid
-        allow_mutation = True
-        validate_assignment = True
+    model_config = ConfigDict(
+        extra="forbid",
+        validate_assignment=True,
+        frozen=False,
+        serialize_by_alias=True,
+        validate_by_alias=True,
+        validate_by_name=True,
+    )
 
     id: int
     record_type: str
     is_service: bool
 
-    name: Optional[str] = None
-    description: Optional[str] = None
-    tags: Optional[List[str]] = None
+    name: str | None = None
+    description: str | None = None
+    tags: list[str] | None = None
 
-    properties: Optional[Dict[str, Any]]
-    extras: Dict[str, Any] = Field({})
+    properties: dict[str, Any] | None
+    extras: dict[str, Any] = Field({})
 
     status: RecordStatusEnum
-    manager_name: Optional[str]
+    manager_name: str | None
 
     created_on: datetime
     modified_on: datetime
 
-    creator_user: Optional[str]
+    creator_user: str | None
 
     ######################################################
     # Fields not always included when fetching the record
     ######################################################
-    compute_history_: Optional[List[ComputeHistory]] = Field(None, alias="compute_history")
-    task_: Optional[RecordTask] = Field(None, alias="task")
-    service_: Optional[RecordService] = Field(None, alias="service")
-    comments_: Optional[List[RecordComment]] = Field(None, alias="comments")
-    native_files_: Optional[Dict[str, NativeFile]] = Field(None, alias="native_files")
+    compute_history_: list[ComputeHistory] | None = Field(None, alias="compute_history")
+    task_: RecordTask | None = Field(None, alias="task")
+    service_: RecordService | None = Field(None, alias="service")
+    comments_: list[RecordComment] | None = Field(None, alias="comments")
+    native_files_: dict[str, NativeFile] | None = Field(None, alias="native_files")
 
     # Private non-pydantic fields
     _client: Any = PrivateAttr(None)
-    _base_url: Optional[str] = PrivateAttr(None)
-    _base_url_prefix: Optional[str] = PrivateAttr(None)
+    _base_url: str | None = PrivateAttr(None)
+    _base_url_prefix: str | None = PrivateAttr(None)
 
     # A dictionary of all subclasses (calculation types) to actual class type
-    _all_subclasses: ClassVar[Dict[str, Type[BaseRecord]]] = {}
+    _all_subclasses: ClassVar[dict[str, Type[BaseRecord]]] = {}
 
     # Local record cache we can use for child records
     # This record may also be part of the cache
-    _record_cache: Optional[RecordCache] = PrivateAttr(None)
+    _record_cache: RecordCache | None = PrivateAttr(None)
     _cache_dirty: bool = PrivateAttr(False)
 
-    def __init__(self, client=None, base_url_prefix: Optional[str] = None, **kwargs):
+    def __init__(self, client=None, base_url_prefix: str | None = None, **kwargs):
         # TODO - DEPRECATED - REMOVE EVENTUALLY
         if "owner_user" in kwargs:
             kwargs["creator_user"] = kwargs.pop("owner_user")
@@ -451,7 +453,8 @@ class BaseRecord(BaseModel):
 
         assert self._client is client, "Client not set in base record class?"
 
-    @validator("extras", pre=True)
+    @field_validator("extras", mode="before")
+    @classmethod
     def _validate_extras(cls, v):
         # For backwards compatibility. Older servers may have 'None' as the extras
         if v is None:
@@ -463,10 +466,7 @@ class BaseRecord(BaseModel):
         Register derived classes for later use
         """
 
-        # Get the record type. This is kind of ugly, but works.
-        # We could use ClassVar, but in my tests it doesn't work for
-        # disambiguating (ie, via parse_obj_as)
-        record_type = cls.__fields__["record_type"].default
+        record_type = cls.record_type
         cls._all_subclasses[record_type] = cls
 
     def __del__(self):
@@ -515,7 +515,7 @@ class BaseRecord(BaseModel):
 
     @classmethod
     def fetch_children_multi(
-        cls, records: Iterable[Optional[BaseRecord]], include: Optional[Iterable[str]] = None, force_fetch: bool = False
+        cls, records: Iterable[BaseRecord | None], include: Iterable[str] | None = None, force_fetch: bool = False
     ):
         """
         Fetches all children of the given records
@@ -550,7 +550,7 @@ class BaseRecord(BaseModel):
             template_record._client, template_record._record_cache, records, include=include, force_fetch=force_fetch
         )
 
-    def fetch_children(self, include: Optional[Iterable[str]] = None, force_fetch: bool = False):
+    def fetch_children(self, include: Iterable[str] | None = None, force_fetch: bool = False):
         """
         Fetches all children of this record recursively
         """
@@ -574,7 +574,7 @@ class BaseRecord(BaseModel):
         if detach:
             self._record_cache = None
 
-    def get_cache_dict(self, **kwargs) -> Dict[str, Any]:
+    def get_cache_dict(self, **kwargs) -> dict[str, Any]:
         """
         Returns a dictionary of the record meant for caching
 
@@ -585,12 +585,12 @@ class BaseRecord(BaseModel):
         kwargs are passed directly to the pydantic `dict()` function.
         """
 
-        return self.dict(**kwargs)
+        return self.model_dump(**kwargs)
 
     def __str__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id} status={self.status}>"
 
-    def propagate_client(self, client, base_url_prefix: Optional[str]):
+    def propagate_client(self, client, base_url_prefix: str | None):
         """
         Propagates a client and related information to this record to any fields within this record that need it
 
@@ -618,8 +618,8 @@ class BaseRecord(BaseModel):
         self,
         child_record_ids: Sequence[int],
         child_record_type: Type[_Record_T],
-        include: Optional[Iterable[str]] = None,
-    ) -> List[_Record_T]:
+        include: Iterable[str] | None = None,
+    ) -> list[_Record_T]:
         """
         Helper function for obtaining child records either from the cache or from the server
 
@@ -648,7 +648,7 @@ class BaseRecord(BaseModel):
         self._assert_online()
 
         self.compute_history_ = self._client.make_request(
-            "get", f"{self._base_url}/compute_history", List[ComputeHistory]
+            "get", f"{self._base_url}/compute_history", list[ComputeHistory]
         )
 
         self.propagate_client(self._client, self._base_url_prefix)
@@ -657,24 +657,24 @@ class BaseRecord(BaseModel):
         if self.is_service:
             self.task_ = None
         else:
-            self.task_ = self._client.make_request("get", f"{self._base_url}/task", Optional[RecordTask])
+            self.task_ = self._client.make_request("get", f"{self._base_url}/task", RecordTask | None)
 
     def _fetch_service(self):
         if not self.is_service:
             self.service_ = None
         else:
-            self.service_ = self._client.make_request("get", f"{self._base_url}/service", Optional[RecordService])
+            self.service_ = self._client.make_request("get", f"{self._base_url}/service", RecordService | None)
 
     def _fetch_comments(self):
         self._assert_online()
 
-        self.comments_ = self._client.make_request("get", f"{self._base_url}/comments", List[RecordComment])
+        self.comments_ = self._client.make_request("get", f"{self._base_url}/comments", list[RecordComment])
 
     def _fetch_native_files(self):
-        self.native_files_ = self._client.make_request("get", f"{self._base_url}/native_files", Dict[str, NativeFile])
+        self.native_files_ = self._client.make_request("get", f"{self._base_url}/native_files", dict[str, NativeFile])
         self.propagate_client(self._client, self._base_url_prefix)
 
-    def _get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
+    def _get_output(self, output_type: OutputTypeEnum) -> str | dict[str, Any] | None:
         history = self.compute_history
         if not history:
             return None
@@ -685,164 +685,170 @@ class BaseRecord(BaseModel):
         return self._client is None
 
     @property
-    def children_status(self) -> Dict[RecordStatusEnum, int]:
+    def children_status(self) -> dict[RecordStatusEnum, int]:
         """Returns a dictionary of the status of all children of this record"""
         self._assert_online()
 
         return self._client.make_request(
             "get",
             f"{self._base_url}/children_status",
-            Dict[RecordStatusEnum, int],
+            dict[RecordStatusEnum, int],
         )
 
     @property
-    def children_errors(self) -> List[BaseRecord]:
+    def children_errors(self) -> list[BaseRecord]:
         """Returns errored child records"""
         self._assert_online()
 
         error_ids = self._client.make_request(
             "get",
             f"{self._base_url}/children_errors",
-            List[int],
+            list[int],
         )
 
         return self._client._get_records_by_type(self._base_url_prefix, None, error_ids)
 
     @property
-    def compute_history(self) -> List[ComputeHistory]:
+    def compute_history(self) -> list[ComputeHistory]:
         if self.compute_history_ is None:
             self._fetch_compute_history()
         return self.compute_history_
 
     @property
-    def task(self) -> Optional[RecordTask]:
+    def task(self) -> RecordTask | None:
         # task_ may be None because it either hasn't been fetched or it doesn't exist
         # fetch only if it has been set at some point
-        if self.task_ is None and "task_" not in self.__fields_set__:
+        if self.task_ is None and "task_" not in self.model_fields_set:
             self._fetch_task()
         return self.task_
 
     @property
-    def service(self) -> Optional[RecordService]:
+    def service(self) -> RecordService | None:
         # service_ may be None because it either hasn't been fetched or it doesn't exist
         # fetch only if it has been set at some point
-        if self.service_ is None and "service_" not in self.__fields_set__:
+        if self.service_ is None and "service_" not in self.model_fields_set:
             self._fetch_service()
         return self.service_
 
-    def get_waiting_reason(self) -> Dict[str, Any]:
+    def get_waiting_reason(self) -> dict[str, Any]:
         return self._client.make_request(
-            "get", f"{self._base_url_prefix}/records/{self.id}/waiting_reason", Dict[str, Any]
+            "get", f"{self._base_url_prefix}/records/{self.id}/waiting_reason", dict[str, Any]
         )
 
     @property
-    def comments(self) -> Optional[List[RecordComment]]:
+    def comments(self) -> list[RecordComment] | None:
         if self.comments_ is None:
             self._fetch_comments()
         return self.comments_
 
     @property
-    def native_files(self) -> Optional[Dict[str, NativeFile]]:
-        if self.native_files_ is None and "native_files_" not in self.__fields_set__ and not self.offline:
+    def native_files(self) -> dict[str, NativeFile] | None:
+        if self.native_files_ is None and "native_files_" not in self.model_fields_set and not self.offline:
             self._fetch_native_files()
         return self.native_files_
 
     @property
-    def stdout(self) -> Optional[str]:
+    def stdout(self) -> str | None:
         return self._get_output(OutputTypeEnum.stdout)
 
     @property
-    def stderr(self) -> Optional[str]:
+    def stderr(self) -> str | None:
         return self._get_output(OutputTypeEnum.stderr)
 
     @property
-    def error(self) -> Optional[Dict[str, Any]]:
+    def error(self) -> dict[str, Any] | None:
         return self._get_output(OutputTypeEnum.error)
 
     @property
-    def provenance(self) -> Optional[Provenance]:
+    def provenance(self) -> Provenance | None:
         history = self.compute_history
         if not history:
             return None
         return history[-1].provenance
 
 
-ServiceDependency.update_forward_refs()
+ServiceDependency.model_rebuild()
 
 _Record_T = TypeVar("_Record_T", bound=BaseRecord)
 
 
 class RecordAddBodyBase(RestModelBase):
-    compute_tag: constr(to_lower=True)
+    compute_tag: LowerStr
     compute_priority: PriorityEnum
     find_existing: bool = True
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def _rm_deprecated(cls, values):
-        # TODO - DEPRECATED - Remove eventually
-        if "tag" in values:
-            values["compute_tag"] = values.pop("tag")
-        if "priority" in values:
-            values["compute_priority"] = values.pop("priority")
-        if "owner_group" in values:
-            del values["owner_group"]
+        if isinstance(values, dict):
+            # TODO - DEPRECATED - Remove eventually
+            if "tag" in values:
+                values["compute_tag"] = values.pop("tag")
+            if "priority" in values:
+                values["compute_priority"] = values.pop("priority")
+            if "owner_group" in values:
+                del values["owner_group"]
 
         return values
 
 
 class RecordModifyBody(RestModelBase):
-    record_ids: List[int]
-    status: Optional[RecordStatusEnum] = None
-    compute_priority: Optional[PriorityEnum] = None
-    compute_tag: Optional[constr(to_lower=True)] = None
-    comment: Optional[str] = None
+    record_ids: list[int]
+    status: RecordStatusEnum | None = None
+    compute_priority: PriorityEnum | None = None
+    compute_tag: LowerStr | None = None
+    comment: str | None = None
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def _rm_deprecated(cls, values):
-        # TODO - DEPRECATED - Remove eventually
-        if "tag" in values:
-            values["compute_tag"] = values.pop("tag")
-        if "priority" in values:
-            values["compute_priority"] = values.pop("priority")
+        if isinstance(values, dict):
+            # TODO - DEPRECATED - Remove eventually
+            if "tag" in values:
+                values["compute_tag"] = values.pop("tag")
+            if "priority" in values:
+                values["compute_priority"] = values.pop("priority")
 
         return values
 
 
 class RecordDeleteBody(RestModelBase):
-    record_ids: List[int]
+    record_ids: list[int]
     soft_delete: bool
     delete_children: bool
 
 
 class RecordRevertBody(RestModelBase):
     revert_status: RecordStatusEnum
-    record_ids: List[int]
+    record_ids: list[int]
 
 
 class RecordQueryFilters(QueryModelBase):
-    record_id: Optional[List[int]] = None
-    record_type: Optional[List[str]] = None
-    manager_name: Optional[List[str]] = None
-    status: Optional[List[RecordStatusEnum]] = None
-    dataset_id: Optional[List[int]] = None
-    parent_id: Optional[List[int]] = None
-    child_id: Optional[List[int]] = None
-    created_before: Optional[datetime] = None
-    created_after: Optional[datetime] = None
-    modified_before: Optional[datetime] = None
-    modified_after: Optional[datetime] = None
-    creator_user: Optional[List[Union[int, str]]] = None
+    record_id: list[int] | None = None
+    record_type: list[str] | None = None
+    manager_name: list[str] | None = None
+    status: list[RecordStatusEnum] | None = None
+    dataset_id: list[int] | None = None
+    parent_id: list[int] | None = None
+    child_id: list[int] | None = None
+    created_before: datetime | None = None
+    created_after: datetime | None = None
+    modified_before: datetime | None = None
+    modified_after: datetime | None = None
+    creator_user: list[int | str] | None = None
 
     # TODO - DEPRECATED - remove at some point
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def _rm_deprecated(cls, values):
-        if "owner_user" in values:
-            values["creator_user"] = values.pop("owner_user")
-
-        values.pop("owner_group", None)
+        if isinstance(values, dict):
+            if "owner_user" in values:
+                values["creator_user"] = values.pop("owner_user")
+            values.pop("owner_group", None)
         return values
 
-    @validator("created_before", "created_after", "modified_before", "modified_after", pre=True)
+    @field_validator("created_before", "created_after", "modified_before", "modified_after", mode="before")
+    @classmethod
     def parse_dates(cls, v):
         if isinstance(v, str):
             return date_parser(v)
@@ -854,7 +860,7 @@ class RecordQueryIterator(QueryIteratorBase[_Record_T]):
     Iterator for all types of record queries
 
     This iterator transparently handles batching and pagination over the results
-    of a record query, and works with all kinds of records.
+    of a record query and works with all kinds of records.
     """
 
     def __init__(
@@ -862,7 +868,7 @@ class RecordQueryIterator(QueryIteratorBase[_Record_T]):
         client,
         query_filters: RecordQueryFilters,
         record_type: Type[_Record_T],
-        include: Optional[Iterable[str]] = None,
+        include: Iterable[str] | None = None,
     ):
         """
         Construct an iterator
@@ -883,28 +889,28 @@ class RecordQueryIterator(QueryIteratorBase[_Record_T]):
 
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
-    def _request(self) -> List[_Record_T]:
+    def _request(self) -> list[_Record_T]:
         if self.record_type is None:
             record_ids = self._client.make_request(
                 "post",
                 f"api/v1/records/query",
-                List[int],
+                list[int],
                 body=self._query_filters,
             )
         else:
             # Get the record type string. This is kind of ugly, but works.
-            record_type_str = self.record_type.__fields__["record_type"].default
+            record_type_str = self.record_type.model_fields["record_type"].default
             record_ids = self._client.make_request(
                 "post",
                 f"api/v1/records/{record_type_str}/query",
-                List[int],
+                list[int],
                 body=self._query_filters,
             )
 
         return self._client._get_records_by_type("api/v1", self.record_type, record_ids, include=self.include)
 
 
-def record_from_dict(data: Dict[str, Any], client: Any = None, base_url_prefix: Optional[str] = None) -> BaseRecord:
+def record_from_dict(data: dict[str, Any], client: Any = None, base_url_prefix: str | None = None) -> BaseRecord:
     """
     Create a record object from a dictionary containing the record information
 
@@ -918,10 +924,10 @@ def record_from_dict(data: Dict[str, Any], client: Any = None, base_url_prefix: 
 
 
 def records_from_dicts(
-    data: Sequence[Optional[Dict[str, Any]]],
+    data: Sequence[dict[str, Any] | None],
     client: Any = None,
-    base_url_prefix: Optional[str] = None,
-) -> List[Optional[BaseRecord]]:
+    base_url_prefix: str | None = None,
+) -> list[BaseRecord | None]:
     """
     Create a list of record objects from a sequence of datamodels
 
@@ -929,7 +935,7 @@ def records_from_dicts(
     and creates an instance of that class.
     """
 
-    ret: List[Optional[BaseRecord]] = []
+    ret: list[BaseRecord | None] = []
     for rd in data:
         if rd is None:
             ret.append(None)
