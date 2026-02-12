@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING
 from qcelemental.models import FailedOperation
 
 from qcfractal.components.gridoptimization.testing_helpers import (
-    submit_test_data as submit_go_test_data,
+    submit_procedure_data as submit_go_procedure_data,
 )
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
 from qcfractal.components.torsiondrive.testing_helpers import (
-    submit_test_data as submit_td_test_data,
+    submit_procedure_data as submit_td_procedure_data,
     generate_task_key as generate_td_task_key,
 )
 from qcfractal.db_socket import SQLAlchemySocket
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 
 def test_service_socket_error(storage_socket: SQLAlchemySocket, session: Session, activated_manager_name: ManagerName):
-    id_1, result_data_1 = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "test_tag", PriorityEnum.low)
+    id_1, result_data_1 = submit_td_procedure_data(storage_socket, "td_H2O2_mopac_pm6", "test_tag", PriorityEnum.low)
 
     # Inject a failed computation
     failed_key = list(result_data_1.keys())[1]
@@ -72,8 +72,8 @@ def test_service_socket_iterate_order(storage_socket: SQLAlchemySocket, session:
     try:
         storage_socket.services._max_active_services = 1
 
-        id_1, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "*", PriorityEnum.normal)
-        id_2, _ = submit_go_test_data(storage_socket, "go_H3NS_psi4_pbe", "*", PriorityEnum.high)
+        id_1, _ = submit_td_procedure_data(storage_socket, "td_H2O2_mopac_pm6", "*", PriorityEnum.normal)
+        id_2, _ = submit_go_procedure_data(storage_socket, "go_H3NS_psi4_pbe", "*", PriorityEnum.high)
 
         with storage_socket.session_scope() as s:
             storage_socket.services.iterate_services(s)

@@ -12,7 +12,7 @@ from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
 from qcportal.torsiondrive import TorsiondriveKeywords, TorsiondriveSpecification
 from qcportal.utils import now_at_utc
-from .testing_helpers import compare_torsiondrive_specs, test_specs, submit_test_data, run_test_data
+from .testing_helpers import compare_torsiondrive_specs, test_specs, submit_procedure_data, run_procedure_data
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -181,7 +181,7 @@ def test_torsiondrive_client_delete(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    td_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_mopac_pm6")
+    td_id = run_procedure_data(storage_socket, activated_manager_name, "td_H2O2_mopac_pm6")
 
     with storage_socket.session_scope() as session:
         rec = session.get(TorsiondriveRecordORM, td_id)
@@ -231,7 +231,7 @@ def test_torsiondrive_client_harddelete_nochildren(snowflake: QCATestingSnowflak
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    td_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_mopac_pm6")
+    td_id = run_procedure_data(storage_socket, activated_manager_name, "td_H2O2_mopac_pm6")
 
     with storage_socket.session_scope() as session:
         rec = session.get(TorsiondriveRecordORM, td_id)
@@ -254,7 +254,7 @@ def test_torsiondrive_client_delete_opt_inuse(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    td_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_mopac_pm6")
+    td_id = run_procedure_data(storage_socket, activated_manager_name, "td_H2O2_mopac_pm6")
 
     with storage_socket.session_scope() as session:
         rec = session.get(TorsiondriveRecordORM, td_id)
@@ -272,10 +272,10 @@ def test_torsiondrive_client_query(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
 
-    id_1, _ = submit_test_data(storage_socket, "td_H2O2_mopac_pm6")
-    id_2, _ = submit_test_data(storage_socket, "td_H2O2_psi4_pbe")
-    id_3, _ = submit_test_data(storage_socket, "td_C9H11NO2_mopac_pm6")
-    id_4, _ = submit_test_data(storage_socket, "td_H2O2_psi4_pbe0")
+    id_1, _ = submit_procedure_data(storage_socket, "td_H2O2_mopac_pm6")
+    id_2, _ = submit_procedure_data(storage_socket, "td_H2O2_psi4_pbe")
+    id_3, _ = submit_procedure_data(storage_socket, "td_C9H11NO2_mopac_pm6")
+    id_4, _ = submit_procedure_data(storage_socket, "td_H2O2_psi4_pbe0")
 
     all_tds = snowflake_client.get_torsiondrives([id_1, id_2, id_3, id_4], include=["initial_molecules"])
     mol_ids = [x.initial_molecules[0].id for x in all_tds]

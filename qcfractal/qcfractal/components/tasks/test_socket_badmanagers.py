@@ -12,7 +12,7 @@ import pytest
 from qcarchivetesting import caplog_handler_at_level
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_models import BaseRecordORM
-from qcfractal.components.singlepoint.testing_helpers import load_test_data, submit_test_data
+from qcfractal.components.singlepoint.testing_helpers import load_procedure_data, submit_procedure_data
 from qcfractalcompute.compress import compress_result
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerName
@@ -66,7 +66,7 @@ def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket, se
         compute_tags=["tag1"],
     )
 
-    record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
+    record_id, result_data = submit_procedure_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
     result_data_compressed = compress_result(result_data.dict())
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname, _manager_programs, ["tag1"])
@@ -97,7 +97,7 @@ def test_task_socket_return_manager_inactive(storage_socket: SQLAlchemySocket):
         compute_tags=["tag1"],
     )
 
-    record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
+    record_id, result_data = submit_procedure_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
     result_data_compressed = compress_result(result_data.dict())
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname, _manager_programs, ["tag1"])
@@ -132,7 +132,7 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket, sessi
         compute_tags=["tag1"],
     )
 
-    record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
+    record_id, result_data = submit_procedure_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
     result_data_compressed = compress_result(result_data.dict())
 
     # Manager 1 claims tasks
@@ -171,7 +171,7 @@ def test_task_socket_return_manager_badid(snowflake: QCATestingSnowflake, caplog
 
     # Manager returns data for a record that doesn't exist
 
-    _, _, result_data = load_test_data("sp_psi4_benzene_energy_1")
+    _, _, result_data = load_procedure_data("sp_psi4_benzene_energy_1")
     result_data_compressed = compress_result(result_data.dict())
 
     # Should be logged
@@ -204,7 +204,7 @@ def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket
         compute_tags=["tag1"],
     )
 
-    record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
+    record_id, result_data = submit_procedure_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
     result_data_compressed = compress_result(result_data.dict())
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname, _manager_programs, ["tag1"])
@@ -246,7 +246,7 @@ def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket
         compute_tags=["tag1"],
     )
 
-    record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
+    record_id, result_data = submit_procedure_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
     result_data_compressed = compress_result(result_data.dict())
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname, _manager_programs, ["tag1"])
@@ -297,7 +297,7 @@ def test_task_socket_return_manager_badstatus_3(storage_socket: SQLAlchemySocket
         compute_tags=["tag1"],
     )
 
-    record_id, result_data = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
+    record_id, result_data = submit_procedure_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
     result_data_compressed = compress_result(result_data.dict())
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname, _manager_programs, ["tag1"])

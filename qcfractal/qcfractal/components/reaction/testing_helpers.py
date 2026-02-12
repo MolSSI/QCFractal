@@ -6,7 +6,7 @@ try:
     import pydantic.v1 as pydantic
 except ImportError:
     import pydantic
-from qcarchivetesting.helpers import read_procedure_data, read_record_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data, find_test_data
 from qcelemental.models import (
     Molecule,
     FailedOperation,
@@ -24,6 +24,9 @@ from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+
+all_test_data = find_test_data("rxn_*")
+all_includes = ["components", "molecule", "comments", "initial_molecule", "final_molecule"]
 
 test_specs = [
     ReactionSpecification(
@@ -75,32 +78,32 @@ def generate_task_key(task: RecordTask):
     return record_type + "|" + mol_hash
 
 
-def load_test_data(
+def load_procedure_data(
     name: str,
 ) -> Tuple[
     ReactionSpecification, List[Tuple[float, Molecule]], Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult]]
 ]:
-    test_data = read_procedure_data(name)
+    data = read_procedure_data(name)
 
     return (
-        pydantic.parse_obj_as(ReactionSpecification, test_data["specification"]),
-        pydantic.parse_obj_as(List[Tuple[float, Molecule]], test_data["stoichiometry"]),
-        pydantic.parse_obj_as(Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult]], test_data["results"]),
+        pydantic.parse_obj_as(ReactionSpecification, data["specification"]),
+        pydantic.parse_obj_as(List[Tuple[float, Molecule]], data["stoichiometry"]),
+        pydantic.parse_obj_as(Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult]], data["results"]),
     )
 
 
 def load_record_data(name: str) -> ReactionRecord:
-    test_data = read_record_data(name)
-    return ReactionRecord(**test_data)
+    data = read_record_data(name)
+    return ReactionRecord(**data)
 
 
-def submit_test_data(
+def submit_procedure_data(
     storage_socket: SQLAlchemySocket,
     name: str,
     compute_tag: Optional[str] = "*",
     compute_priority: PriorityEnum = PriorityEnum.normal,
 ) -> Tuple[int, Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult]]]:
-    input_spec, stoich, result = load_test_data(name)
+    input_spec, stoich, result = load_procedure_data(name)
     meta, record_ids = storage_socket.records.reaction.add(
         [stoich], input_spec, compute_tag, compute_priority, None, True
     )
@@ -111,7 +114,7 @@ def submit_test_data(
     return record_ids[0], result
 
 
-def run_test_data(
+def run_procedure_data(
     storage_socket: SQLAlchemySocket,
     manager_name: ManagerName,
     name: str,
@@ -119,7 +122,7 @@ def run_test_data(
     compute_priority: PriorityEnum = PriorityEnum.normal,
     end_status: RecordStatusEnum = RecordStatusEnum.complete,
 ):
-    record_id, result = submit_test_data(storage_socket, name, compute_tag, compute_priority)
+    record_id, result = submit_procedure_data(storage_socket, name, compute_tag, compute_priority)
 
     with storage_socket.session_scope() as session:
         record = session.get(ReactionRecordORM, record_id)

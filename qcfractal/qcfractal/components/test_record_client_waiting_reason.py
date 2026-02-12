@@ -7,11 +7,11 @@ from __future__ import annotations
 import re
 
 from qcarchivetesting.testing_classes import QCATestingSnowflake
-from qcfractal.components.optimization.testing_helpers import load_test_data as load_opt_test_data
+from qcfractal.components.optimization.testing_helpers import load_procedure_data as load_opt_procedure_data
 from qcfractal.components.singlepoint.testing_helpers import (
-    load_test_data as load_sp_test_data,
+    load_procedure_data as load_sp_procedure_data,
 )
-from qcfractal.components.torsiondrive.testing_helpers import load_test_data as load_td_test_data
+from qcfractal.components.torsiondrive.testing_helpers import load_procedure_data as load_td_procedure_data
 from qcportal.managers import ManagerName
 from qcportal.record_models import PriorityEnum
 
@@ -20,9 +20,9 @@ def test_record_client_waiting_reason(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
 
-    input_spec_1, molecule_1, result_data_1 = load_sp_test_data("sp_psi4_water_energy")
-    input_spec_2, molecule_2, result_data_2 = load_opt_test_data("opt_psi4_benzene")
-    input_spec_3, molecule_3, result_data_3 = load_sp_test_data("sp_rdkit_benzene_energy")
+    input_spec_1, molecule_1, result_data_1 = load_sp_procedure_data("sp_psi4_water_energy")
+    input_spec_2, molecule_2, result_data_2 = load_opt_procedure_data("opt_psi4_benzene")
+    input_spec_3, molecule_3, result_data_3 = load_sp_procedure_data("sp_rdkit_benzene_energy")
 
     meta, id_1 = storage_socket.records.singlepoint.add(
         [molecule_1], input_spec_1, "tag1", PriorityEnum.low, None, True
@@ -144,8 +144,8 @@ def test_record_client_waiting_reason_2(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
 
-    input_spec_1, molecule_1, result_data_1 = load_sp_test_data("sp_psi4_water_energy")
-    input_spec_2, molecule_2, _ = load_td_test_data("td_H2O2_mopac_pm6")
+    input_spec_1, molecule_1, result_data_1 = load_sp_procedure_data("sp_psi4_water_energy")
+    input_spec_2, molecule_2, _ = load_td_procedure_data("td_H2O2_mopac_pm6")
 
     meta, id_1 = storage_socket.records.singlepoint.add(
         [molecule_1], input_spec_1, "tag1", PriorityEnum.low, None, True

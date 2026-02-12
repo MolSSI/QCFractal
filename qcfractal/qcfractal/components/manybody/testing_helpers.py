@@ -8,7 +8,7 @@ except ImportError:
     import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult as QCEl_AtomicResult
 
-from qcarchivetesting.helpers import read_procedure_data, read_record_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data, find_test_data
 from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.manybody import ManybodySpecification, ManybodyRecord
@@ -18,6 +18,10 @@ from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+
+
+all_test_data = find_test_data("mb_*")
+all_includes = ["initial_molecule", "clusters", "molecule", "comments"]
 
 test_specs = [
     ManybodySpecification(
@@ -95,28 +99,28 @@ def generate_task_key(task: RecordTask):
     return "singlepoint" + "|" + mol_hash
 
 
-def load_test_data(name: str) -> Tuple[ManybodySpecification, Molecule, Dict[str, QCEl_AtomicResult]]:
-    test_data = read_procedure_data(name)
+def load_procedure_data(name: str) -> Tuple[ManybodySpecification, Molecule, Dict[str, QCEl_AtomicResult]]:
+    data = read_procedure_data(name)
 
     return (
-        pydantic.parse_obj_as(ManybodySpecification, test_data["specification"]),
-        pydantic.parse_obj_as(Molecule, test_data["molecule"]),
-        pydantic.parse_obj_as(Dict[str, QCEl_AtomicResult], test_data["results"]),
+        pydantic.parse_obj_as(ManybodySpecification, data["specification"]),
+        pydantic.parse_obj_as(Molecule, data["molecule"]),
+        pydantic.parse_obj_as(Dict[str, QCEl_AtomicResult], data["results"]),
     )
 
 
 def load_record_data(name: str) -> ManybodyRecord:
-    test_data = read_record_data(name)
-    return ManybodyRecord(**test_data)
+    data = read_record_data(name)
+    return ManybodyRecord(**data)
 
 
-def submit_test_data(
+def submit_procedure_data(
     storage_socket: SQLAlchemySocket,
     name: str,
     compute_tag: Optional[str] = "*",
     compute_priority: PriorityEnum = PriorityEnum.normal,
 ) -> Tuple[int, Dict[str, QCEl_AtomicResult]]:
-    input_spec, molecule, result = load_test_data(name)
+    input_spec, molecule, result = load_procedure_data(name)
     meta, record_ids = storage_socket.records.manybody.add(
         [molecule], input_spec, compute_tag, compute_priority, None, True
     )
@@ -127,7 +131,7 @@ def submit_test_data(
     return record_ids[0], result
 
 
-def run_test_data(
+def run_procedure_data(
     storage_socket: SQLAlchemySocket,
     manager_name: ManagerName,
     name: str,
@@ -135,7 +139,7 @@ def run_test_data(
     compute_priority: PriorityEnum = PriorityEnum.normal,
     end_status: RecordStatusEnum = RecordStatusEnum.complete,
 ):
-    record_id, result = submit_test_data(storage_socket, name, compute_tag, compute_priority)
+    record_id, result = submit_procedure_data(storage_socket, name, compute_tag, compute_priority)
 
     with storage_socket.session_scope() as session:
         record = session.get(ManybodyRecordORM, record_id)

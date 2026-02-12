@@ -6,8 +6,8 @@ import pytest
 
 from qcarchivetesting import load_molecule_data
 from qcfractal.components.optimization.testing_helpers import (
-    load_test_data as load_optimization_test_data,
-    run_test_data as run_optimization_test_data,
+    load_procedure_data as load_optimization_procedure_data,
+    run_procedure_data as run_optimization_procedure_data,
 )
 from qcportal import PortalRequestError
 
@@ -24,12 +24,12 @@ def test_singlepoint_dataset_model_entries_from_opt_1(snowflake: QCATestingSnowf
     # Run the data as standalone calculations just so they finish
     activated_manager_name, _ = snowflake.activate_manager()
     socket = snowflake.get_storage_socket()
-    run_optimization_test_data(socket, activated_manager_name, "opt_psi4_benzene")
-    run_optimization_test_data(socket, activated_manager_name, "opt_psi4_methane")
+    run_optimization_procedure_data(socket, activated_manager_name, "opt_psi4_benzene")
+    run_optimization_procedure_data(socket, activated_manager_name, "opt_psi4_methane")
 
     # Now load as a dataset entry/spec
-    input_spec_1, molecule_1, _ = load_optimization_test_data("opt_psi4_benzene")
-    input_spec_2, molecule_2, _ = load_optimization_test_data("opt_psi4_methane")
+    input_spec_1, molecule_1, _ = load_optimization_procedure_data("opt_psi4_benzene")
+    input_spec_2, molecule_2, _ = load_optimization_procedure_data("opt_psi4_methane")
     molecule_3 = load_molecule_data("hooh")  # Won't be run
 
     src_ds.add_entry(

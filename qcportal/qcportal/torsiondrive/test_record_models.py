@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional, List
 
 import pytest
 
-from qcfractal.components.torsiondrive.testing_helpers import run_test_data, load_test_data
+from qcfractal.components.torsiondrive.testing_helpers import run_procedure_data, load_procedure_data
 from qcportal.record_models import RecordStatusEnum
 from qcportal.torsiondrive import deserialize_key
 
@@ -21,9 +21,9 @@ def test_torsiondrive_record_model(snowflake: QCATestingSnowflake, includes: Opt
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    input_spec, molecules, results = load_test_data("td_H2O2_mopac_pm6")
+    input_spec, molecules, results = load_procedure_data("td_H2O2_mopac_pm6")
 
-    rec_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_mopac_pm6")
+    rec_id = run_procedure_data(storage_socket, activated_manager_name, "td_H2O2_mopac_pm6")
     record = snowflake_client.get_torsiondrives(rec_id, include=includes)
 
     if includes is not None:

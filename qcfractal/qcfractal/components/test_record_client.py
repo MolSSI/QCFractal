@@ -9,16 +9,16 @@ import pytest
 from qcarchivetesting import test_users
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.components.optimization.testing_helpers import (
-    run_test_data as run_opt_test_data,
-    submit_test_data as submit_opt_test_data,
+    run_procedure_data as run_opt_procedure_data,
+    submit_procedure_data as submit_opt_procedure_data,
 )
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import (
-    run_test_data as run_sp_test_data,
-    submit_test_data as submit_sp_test_data,
+    run_procedure_data as run_sp_procedure_data,
+    submit_procedure_data as submit_sp_procedure_data,
 )
 from qcfractal.components.testing_helpers import populate_records_status
-from qcfractal.components.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
+from qcfractal.components.torsiondrive.testing_helpers import submit_procedure_data as submit_td_procedure_data
 from qcportal import PortalRequestError
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
@@ -30,8 +30,8 @@ def test_record_client_get(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    id1 = run_sp_test_data(storage_socket, activated_manager_name, "sp_psi4_benzene_energy_1")
-    id2, _ = submit_opt_test_data(storage_socket, "opt_psi4_benzene")
+    id1 = run_sp_procedure_data(storage_socket, activated_manager_name, "sp_psi4_benzene_energy_1")
+    id2, _ = submit_opt_procedure_data(storage_socket, "opt_psi4_benzene")
     all_id = [id1, id2]
 
     r = snowflake_client.get_records(all_id)
@@ -54,8 +54,8 @@ def test_record_client_get_missing(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
 
-    id1, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
-    id2, _ = submit_opt_test_data(storage_socket, "opt_psi4_benzene")
+    id1, _ = submit_sp_procedure_data(storage_socket, "sp_psi4_benzene_energy_1")
+    id2, _ = submit_opt_procedure_data(storage_socket, "opt_psi4_benzene")
 
     all_id = [id1, id2]
 
@@ -72,8 +72,8 @@ def test_record_client_get_empty(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
 
-    submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
-    submit_opt_test_data(storage_socket, "opt_psi4_benzene")
+    submit_sp_procedure_data(storage_socket, "sp_psi4_benzene_energy_1")
+    submit_opt_procedure_data(storage_socket, "opt_psi4_benzene")
 
     r = snowflake_client.get_records([])
     assert r == []
@@ -84,7 +84,7 @@ def test_record_client_query_parents_children(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    id1 = run_opt_test_data(storage_socket, activated_manager_name, "opt_psi4_benzene")
+    id1 = run_opt_procedure_data(storage_socket, activated_manager_name, "opt_psi4_benzene")
 
     opt_rec = snowflake_client.get_optimizations(id1, include=["trajectory"])
     assert opt_rec.status == RecordStatusEnum.complete
@@ -108,10 +108,10 @@ def test_record_client_add_comment(secure_snowflake: QCATestingSnowflake):
 
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
-    id1, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
-    id2, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_2")
-    id3, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_3")
-    id4, _ = submit_opt_test_data(storage_socket, "opt_psi4_benzene")
+    id1, _ = submit_sp_procedure_data(storage_socket, "sp_psi4_benzene_energy_1")
+    id2, _ = submit_sp_procedure_data(storage_socket, "sp_psi4_benzene_energy_2")
+    id3, _ = submit_sp_procedure_data(storage_socket, "sp_psi4_benzene_energy_3")
+    id4, _ = submit_opt_procedure_data(storage_socket, "opt_psi4_benzene")
     all_id = [id1, id2, id3, id4]
 
     # comments not retrieved by default
@@ -161,10 +161,10 @@ def test_record_client_add_comment_nouser(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
 
-    id1, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
-    id2, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_2")
-    id3, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_3")
-    id4, _ = submit_opt_test_data(storage_socket, "opt_psi4_benzene")
+    id1, _ = submit_sp_procedure_data(storage_socket, "sp_psi4_benzene_energy_1")
+    id2, _ = submit_sp_procedure_data(storage_socket, "sp_psi4_benzene_energy_2")
+    id3, _ = submit_sp_procedure_data(storage_socket, "sp_psi4_benzene_energy_3")
+    id4, _ = submit_opt_procedure_data(storage_socket, "opt_psi4_benzene")
     all_id = [id1, id2, id3, id4]
 
     time_0 = now_at_utc()
@@ -191,7 +191,7 @@ def test_record_client_add_comment_badid(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
 
-    id1, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
+    id1, _ = submit_sp_procedure_data(storage_socket, "sp_psi4_benzene_energy_1")
 
     meta = snowflake_client.add_comment([id1, 9999], comment="test")
     assert not meta.success
@@ -265,7 +265,7 @@ def test_record_client_modify_service(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
 
-    rec_id, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "test_tag", PriorityEnum.high)
+    rec_id, _ = submit_td_procedure_data(storage_socket, "td_H2O2_mopac_pm6", "test_tag", PriorityEnum.high)
 
     with storage_socket.session_scope() as s:
         storage_socket.services.iterate_services(s)

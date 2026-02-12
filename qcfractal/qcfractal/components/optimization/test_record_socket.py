@@ -8,8 +8,8 @@ from qcarchivetesting import load_molecule_data, test_users
 from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
 from qcfractal.components.optimization.testing_helpers import (
     test_specs,
-    load_test_data,
-    run_test_data,
+    load_procedure_data,
+    run_procedure_data,
     load_record_data,
 )
 from qcfractal.components.testing_helpers import convert_to_plain_qcschema_result
@@ -283,8 +283,8 @@ def test_optimization_socket_run(
     all_id = []
 
     for test_name in test_names:
-        _, _, result_data = load_test_data(test_name)
-        record_id = run_test_data(storage_socket, activated_manager_name, test_name)
+        _, _, result_data = load_procedure_data(test_name)
+        record_id = run_procedure_data(storage_socket, activated_manager_name, test_name)
         all_results.append(result_data)
         all_id.append(record_id)
 
@@ -310,7 +310,7 @@ def test_optimization_socket_insert_full_schema_v1(secure_snowflake: QCATestingS
     all_ids = []
 
     for test_name in test_names:
-        _, _, result_schema = load_test_data(test_name)
+        _, _, result_schema = load_procedure_data(test_name)
 
         plain_schema = convert_to_plain_qcschema_result(result_schema)
 

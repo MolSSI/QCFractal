@@ -4,16 +4,13 @@ Contains testing infrastructure for QCFractal.
 
 from __future__ import annotations
 
+import glob
 import json
 import lzma
 import os
-import signal
-import sys
-import time
 from contextlib import contextmanager
 
 from qcelemental.models import Molecule
-from qcelemental.models.results import WavefunctionProperties
 
 from qcfractal.components.serverinfo.socket import geoip2_found
 from qcportal.serialization import _json_decode
@@ -108,6 +105,12 @@ test_users = {
 }
 
 
+def find_test_data(pattern: str) -> list[str]:
+    d = glob.glob(os.path.join(_my_path, "data_generator", pattern))
+    d = [os.path.basename(x) for x in d]
+    return [d.split(".", 1)[0] for d in d]
+
+
 def _read_data(directory: str, name: str):
     """
     Loads pre-computed/dummy procedure data from a test directory
@@ -194,19 +197,6 @@ def load_molecule_data(name: str) -> Molecule:
     return Molecule.from_file(file_path)
 
 
-def load_wavefunction_data(name: str) -> WavefunctionProperties:
-    """
-    Loads a wavefunction object for use in testing
-    """
-
-    data_path = os.path.join(_my_path, "wavefunction_data")
-    file_path = os.path.join(data_path, name + ".json")
-
-    with open(file_path, "r") as f:
-        data = json.load(f)
-    return WavefunctionProperties(**data)
-
-
 def load_ip_test_data():
     """
     Loads data for testing IP logging
@@ -248,19 +238,8 @@ def caplog_handler_at_level(caplog_fixture, level, logger=None):
     caplog_fixture.handler.setLevel(starting_handler_level)
 
 
-def terminate_process(proc):
-    if proc.poll() is None:
-        # Interrupt (SIGINT)
-        if sys.platform.startswith("win"):
-            proc.send_signal(signal.CTRL_BREAK_EVENT)
-        else:
-            proc.send_signal(signal.SIGINT)
-
-        try:
-            start = time.time()
-            while (proc.poll() is None) and (time.time() < (start + 15)):
-                time.sleep(0.02)
-
-        # Kill (SIGKILL)
-        finally:
-            proc.kill()
+def compare_is_included(is_included, test_value, ref_value):
+    if is_included:
+        assert (test_value is None) == (ref_value is None)
+    else:
+        assert test_value is None

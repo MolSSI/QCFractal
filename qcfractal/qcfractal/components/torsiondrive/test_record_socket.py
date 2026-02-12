@@ -14,7 +14,13 @@ from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords, compare_torsiondrive_records
 from qcportal.utils import now_at_utc
-from .testing_helpers import compare_torsiondrive_specs, test_specs, load_test_data, generate_task_key, load_record_data
+from .testing_helpers import (
+    compare_torsiondrive_specs,
+    test_specs,
+    load_procedure_data,
+    generate_task_key,
+    load_record_data,
+)
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -280,7 +286,7 @@ def test_torsiondrive_socket_add_different_1(storage_socket: SQLAlchemySocket):
 def test_torsiondrive_socket_run(
     storage_socket: SQLAlchemySocket, session: Session, activated_manager_name: ManagerName, test_data_name: str
 ):
-    input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
+    input_spec_1, molecules_1, result_data_1 = load_procedure_data(test_data_name)
 
     storage_socket.users.add(UserInfo(username="submit_user", role="submit", enabled=True))
 
@@ -326,7 +332,7 @@ def test_torsiondrive_socket_run_duplicate(
     session: Session,
     activated_manager_name: ManagerName,
 ):
-    input_spec_1, molecules_1, result_data_1 = load_test_data("td_H2O2_mopac_pm6")
+    input_spec_1, molecules_1, result_data_1 = load_procedure_data("td_H2O2_mopac_pm6")
 
     meta_1, id_1 = storage_socket.records.torsiondrive.add(
         [molecules_1], input_spec_1, True, "test_tag", PriorityEnum.low, None, True

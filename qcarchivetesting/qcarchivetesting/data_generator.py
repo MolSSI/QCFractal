@@ -1,17 +1,17 @@
 from __future__ import annotations
 
+import json
+import lzma
+import os
 import queue
 import tempfile
-import os
-import lzma
-import json
-from qcportal.serialization import _JSONEncoder
 import threading
 import weakref
 from typing import TYPE_CHECKING
 
 from qcfractalcompute import ComputeManager
 from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
+from qcportal.serialization import _JSONEncoder
 from .helpers import _my_path
 
 if TYPE_CHECKING:
@@ -65,6 +65,22 @@ def write_outputs(outfile_name: str, test_data, record):
     print(f"** Writing record data to {record_data_path}")
     with lzma.open(record_data_path, "wt") as f:
         json.dump(record.dict(by_alias=True), f, cls=_JSONEncoder, indent=4, sort_keys=False)
+
+
+def write_schema_v1_outputs(outfile_name: str, input_data, result_data):
+    data_path = os.path.join(_my_path, "qcschema_v1_data", outfile_name)
+
+    print(f"++ Writing qcschema v1 data to {data_path}")
+    with lzma.open(data_path, "wt") as f:
+        to_write = {
+            "input": input_data.dict(
+                encoding="json",
+                exclude_defaults=False,
+                exclude_unset=False,
+            ),
+            "result": result_data.dict(encoding="json", exclude_defaults=False, exclude_unset=False),
+        }
+        json.dump(to_write, f, indent=4, sort_keys=False)
 
 
 class DataGeneratorManager(ComputeManager):

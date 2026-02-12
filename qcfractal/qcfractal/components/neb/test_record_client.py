@@ -10,8 +10,8 @@ from qcfractal.components.neb.record_db_models import NEBRecordORM
 from qcfractal.components.neb.testing_helpers import (
     compare_neb_specs,
     test_specs,
-    submit_test_data,
-    run_test_data,
+    submit_procedure_data,
+    run_procedure_data,
 )
 from qcportal.neb import (
     NEBSpecification,
@@ -172,7 +172,7 @@ def test_neb_client_delete(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    neb_id = run_test_data(storage_socket, activated_manager_name, "neb_HCN_psi4_pbe_opt2")
+    neb_id = run_procedure_data(storage_socket, activated_manager_name, "neb_HCN_psi4_pbe_opt2")
 
     with storage_socket.session_scope() as session:
         rec = session.get(NEBRecordORM, neb_id)
@@ -235,7 +235,7 @@ def test_neb_client_harddelete_nochildren(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    neb_id = run_test_data(storage_socket, activated_manager_name, "neb_HCN_psi4_pbe_opt2")
+    neb_id = run_procedure_data(storage_socket, activated_manager_name, "neb_HCN_psi4_pbe_opt2")
 
     with storage_socket.session_scope() as session:
         rec = session.get(NEBRecordORM, neb_id)
@@ -256,7 +256,7 @@ def test_neb_client_delete_opt_inuse(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    neb_id = run_test_data(storage_socket, activated_manager_name, "neb_HCN_psi4_pbe_opt2")
+    neb_id = run_procedure_data(storage_socket, activated_manager_name, "neb_HCN_psi4_pbe_opt2")
 
     with storage_socket.session_scope() as session:
         rec = session.get(NEBRecordORM, neb_id)
@@ -274,10 +274,10 @@ def test_neb_client_query(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
 
-    id_1, _ = submit_test_data(storage_socket, "neb_HCN_psi4_pbe")
-    id_2, _ = submit_test_data(storage_socket, "neb_HCN_psi4_pbe0_opt1")
-    id_3, _ = submit_test_data(storage_socket, "neb_HCN_psi4_pbe_opt2")
-    id_4, _ = submit_test_data(storage_socket, "neb_HCN_psi4_b3lyp_opt3")
+    id_1, _ = submit_procedure_data(storage_socket, "neb_HCN_psi4_pbe")
+    id_2, _ = submit_procedure_data(storage_socket, "neb_HCN_psi4_pbe0_opt1")
+    id_3, _ = submit_procedure_data(storage_socket, "neb_HCN_psi4_pbe_opt2")
+    id_4, _ = submit_procedure_data(storage_socket, "neb_HCN_psi4_b3lyp_opt3")
 
     all_records = snowflake_client.get_nebs([id_1, id_2, id_3, id_4], include=["initial_chain"])
 

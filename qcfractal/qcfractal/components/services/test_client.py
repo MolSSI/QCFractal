@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from qcelemental.models import FailedOperation
 
 from qcfractal.components.torsiondrive.testing_helpers import (
-    submit_test_data as submit_td_test_data,
+    submit_procedure_data as submit_td_procedure_data,
     generate_task_key as generate_td_task_key,
 )
 from qcfractal.testing_helpers import run_service
@@ -21,7 +21,7 @@ def test_service_client_error(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     client = snowflake.client()
 
-    id_1, result_data_1 = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "test_tag", PriorityEnum.low)
+    id_1, result_data_1 = submit_td_procedure_data(storage_socket, "td_H2O2_mopac_pm6", "test_tag", PriorityEnum.low)
 
     # Inject a failed computation
     failed_key = list(result_data_1.keys())[1]

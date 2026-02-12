@@ -20,8 +20,8 @@ if TYPE_CHECKING:
 from qcfractal.components.optimization.testing_helpers import (
     compare_optimization_specs,
     test_specs,
-    submit_test_data,
-    run_test_data,
+    submit_procedure_data,
+    run_procedure_data,
 )
 
 
@@ -182,7 +182,7 @@ def test_optimization_client_delete(snowflake: QCATestingSnowflake, opt_file: st
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    opt_id = run_test_data(storage_socket, activated_manager_name, opt_file)
+    opt_id = run_procedure_data(storage_socket, activated_manager_name, opt_file)
 
     rec = snowflake_client.get_optimizations(opt_id)
     child_ids = [x.id for x in rec.trajectory]
@@ -234,7 +234,7 @@ def test_optimization_client_harddelete_nochildren(snowflake: QCATestingSnowflak
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    opt_id = run_test_data(storage_socket, activated_manager_name, "opt_psi4_benzene")
+    opt_id = run_procedure_data(storage_socket, activated_manager_name, "opt_psi4_benzene")
 
     rec = snowflake_client.get_optimizations(opt_id)
     child_ids = [x.id for x in rec.trajectory]
@@ -257,7 +257,7 @@ def test_optimization_client_delete_traj_inuse(snowflake: QCATestingSnowflake, o
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    opt_id = run_test_data(storage_socket, activated_manager_name, opt_file)
+    opt_id = run_procedure_data(storage_socket, activated_manager_name, opt_file)
 
     rec = snowflake_client.get_optimizations(opt_id)
     child_ids = [x.id for x in rec.trajectory]
@@ -277,7 +277,7 @@ def test_optimization_client_traj(snowflake: QCATestingSnowflake, opt_file: str,
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    opt_id = run_test_data(storage_socket, activated_manager_name, opt_file)
+    opt_id = run_procedure_data(storage_socket, activated_manager_name, opt_file)
 
     rec = snowflake_client.get_optimizations(opt_id)
     rec_traj = snowflake_client.get_optimizations(opt_id, include=["trajectory"])
@@ -301,9 +301,9 @@ def test_optimization_client_query(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    id_1, _ = submit_test_data(storage_socket, "opt_psi4_fluoroethane_notraj")
-    id_2, _ = submit_test_data(storage_socket, "opt_psi4_benzene")
-    id_3, _ = submit_test_data(storage_socket, "opt_psi4_methane_sometraj")
+    id_1, _ = submit_procedure_data(storage_socket, "opt_psi4_fluoroethane_notraj")
+    id_2, _ = submit_procedure_data(storage_socket, "opt_psi4_benzene")
+    id_3, _ = submit_procedure_data(storage_socket, "opt_psi4_methane_sometraj")
 
     recs = snowflake_client.get_optimizations([id_1, id_2, id_3])
 

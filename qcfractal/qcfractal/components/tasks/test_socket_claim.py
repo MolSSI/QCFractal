@@ -10,11 +10,11 @@ import pytest
 
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.components.managers.db_models import ComputeManagerORM
-from qcfractal.components.optimization.testing_helpers import load_test_data as load_opt_test_data
+from qcfractal.components.optimization.testing_helpers import load_procedure_data as load_opt_procedure_data
 from qcfractal.components.record_db_models import BaseRecordORM
-from qcfractal.components.singlepoint.testing_helpers import load_test_data as load_sp_test_data
+from qcfractal.components.singlepoint.testing_helpers import load_procedure_data as load_sp_procedure_data
 from qcfractal.components.torsiondrive.testing_helpers import (
-    load_test_data as load_td_test_data,
+    load_procedure_data as load_td_procedure_data,
     generate_task_key as generate_td_task_key,
 )
 from qcfractal.testing_helpers import run_service
@@ -28,13 +28,13 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from sqlalchemy.orm.session import Session
 
-input_spec_1, molecule_1, result_data_1 = load_sp_test_data("sp_psi4_water_energy")
-input_spec_2, molecule_2, result_data_2 = load_sp_test_data("sp_psi4_water_gradient")
-input_spec_3, molecule_3, result_data_3 = load_sp_test_data("sp_psi4_water_hessian")
-input_spec_4, molecule_4, result_data_4 = load_opt_test_data("opt_psi4_benzene")
-input_spec_5, molecule_5, result_data_5 = load_sp_test_data("sp_psi4_benzene_energy_1")
-input_spec_6, molecule_6, result_data_6 = load_sp_test_data("sp_psi4_benzene_energy_2")
-input_spec_7, molecule_7, result_data_7 = load_sp_test_data("sp_rdkit_benzene_energy")
+input_spec_1, molecule_1, result_data_1 = load_sp_procedure_data("sp_psi4_water_energy")
+input_spec_2, molecule_2, result_data_2 = load_sp_procedure_data("sp_psi4_water_gradient")
+input_spec_3, molecule_3, result_data_3 = load_sp_procedure_data("sp_psi4_water_hessian")
+input_spec_4, molecule_4, result_data_4 = load_opt_procedure_data("opt_psi4_benzene")
+input_spec_5, molecule_5, result_data_5 = load_sp_procedure_data("sp_psi4_benzene_energy_1")
+input_spec_6, molecule_6, result_data_6 = load_sp_procedure_data("sp_psi4_benzene_energy_2")
+input_spec_7, molecule_7, result_data_7 = load_sp_procedure_data("sp_rdkit_benzene_energy")
 
 
 def test_task_socket_update_manager_time(storage_socket: SQLAlchemySocket, session: Session):
@@ -520,8 +520,8 @@ def test_task_socket_claim_tags_missing(storage_socket: SQLAlchemySocket):
 
 
 def test_task_socket_claim_service_order(storage_socket: SQLAlchemySocket, session: Session):
-    input_spec_1, molecules_1, result_data_1 = load_td_test_data("td_H2O2_psi4_pbe")
-    input_spec_2, molecules_2, result_data_2 = load_td_test_data("td_H2O2_mopac_pm6")
+    input_spec_1, molecules_1, result_data_1 = load_td_procedure_data("td_H2O2_psi4_pbe")
+    input_spec_2, molecules_2, result_data_2 = load_td_procedure_data("td_H2O2_mopac_pm6")
 
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host1", uuid="1234-5678-1234-5678")
 

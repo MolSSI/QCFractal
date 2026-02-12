@@ -63,8 +63,7 @@ class WavefunctionProtocolEnum(str, Enum):
 
 
 class ErrorCorrectionProtocol(BaseModel):
-    r"""Configuration for how computationaal chemistry programs handle error correction
-    """
+    r"""Configuration for how computationaal chemistry programs handle error correction"""
 
     default_policy: bool = Field(
         True, description="Whether to allow error corrections to be used " "if not directly specified in `policies`"
@@ -264,9 +263,10 @@ class SinglepointRecord(BaseRecord):
             )
         except NoClientError:
             raise RuntimeError(
-                 "Record does not contain the required data for a QCSchema result, and this record is "
-                 "not connected to a client. Try include=['**'] and/or fetch_children=True when retrieving this record "
-                 "or creating a dataset view"
+                "Record does not contain the required data for a QCSchema result, and this record is "
+                "not connected to a client. If fetching records, use include=['**']. "
+                "If this is from a dataset view, use include=['**'] and include_children=True "
+                "when creating the view"
             )
 
 
@@ -306,8 +306,7 @@ class SinglepointQueryFilters(RecordQueryFilters):
 def compare_singlepoint_records(record_1: SinglepointRecord, record_2: SinglepointRecord):
     compare_base_records(record_1, record_2)
 
-    assert record_1.molecule.get_hash() == record_2.molecule.get_hash()
-    assert (record_1.wavefunction_ is not None) == (record_2.wavefunction_ is not None)
-
-    if record_1.wavefunction_ is not None:
-        assert record_1.wavefunction_.data_ == record_2.wavefunction_.data_
+    assert record_1.molecule == record_2.molecule
+    assert (record_1.wavefunction is not None) == (record_2.wavefunction is not None)
+    if record_1.wavefunction is not None:
+        assert record_1.wavefunction.dict(encoding="json") == record_2.wavefunction.dict(encoding="json")

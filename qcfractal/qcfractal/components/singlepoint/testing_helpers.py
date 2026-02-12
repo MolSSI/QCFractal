@@ -19,10 +19,14 @@ from qcfractalcompute.compress import compress_result
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification, SinglepointDriver, SinglepointRecord
 from qcportal.utils import now_at_utc
+from qcarchivetesting.helpers import find_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+
+all_test_data = find_test_data("sp_*")
+all_includes = ["molecule", "wavefunction"]
 
 test_specs = [
     QCSpecification(
@@ -58,29 +62,42 @@ test_specs = [
 ]
 
 
-def load_test_data(name: str) -> Tuple[QCSpecification, Molecule, QCEl_AtomicResult]:
-    test_data = read_procedure_data(name)
+def load_procedure_data(name: str) -> Tuple[QCSpecification, Molecule, QCEl_AtomicResult]:
+    data = read_procedure_data(name)
 
     return (
-        pydantic.parse_obj_as(QCSpecification, test_data["specification"]),
-        pydantic.parse_obj_as(Molecule, test_data["molecule"]),
-        pydantic.parse_obj_as(QCEl_AtomicResult, test_data["result"]),
+        pydantic.parse_obj_as(QCSpecification, data["specification"]),
+        pydantic.parse_obj_as(Molecule, data["molecule"]),
+        pydantic.parse_obj_as(QCEl_AtomicResult, data["result"]),
+    )
+
+
+def load_error_procedure_data(name: str) -> Tuple[QCSpecification, Molecule, FailedOperation]:
+    data = read_procedure_data(name)
+    return (
+        pydantic.parse_obj_as(QCSpecification, data["specification"]),
+        pydantic.parse_obj_as(Molecule, data["molecule"]),
+        pydantic.parse_obj_as(FailedOperation, data["result"]),
     )
 
 
 def load_record_data(name: str) -> SinglepointRecord:
-    test_data = read_record_data(name)
-    return SinglepointRecord(**test_data)
+    data = read_record_data(name)
+    return SinglepointRecord(**data)
+
+def load_error_record_data(name: str) -> FailedOperation:
+    data = read_record_data(name)
+    return FailedOperation(**data)
 
 
-def submit_test_data(
+def submit_procedure_data(
     storage_socket: SQLAlchemySocket,
     name: str,
     compute_tag: Optional[str] = "*",
     compute_priority: PriorityEnum = PriorityEnum.normal,
     find_existing: bool = True,
 ) -> Tuple[int, QCEl_AtomicResult]:
-    input_spec, molecule, result = load_test_data(name)
+    input_spec, molecule, result = load_procedure_data(name)
     meta, record_ids = storage_socket.records.singlepoint.add(
         [molecule], input_spec, compute_tag, compute_priority, None, find_existing
     )
@@ -91,7 +108,7 @@ def submit_test_data(
     return record_ids[0], result
 
 
-def run_test_data(
+def run_procedure_data(
     storage_socket: SQLAlchemySocket,
     manager_name: ManagerName,
     name: str,
@@ -100,7 +117,7 @@ def run_test_data(
     end_status: RecordStatusEnum = RecordStatusEnum.complete,
 ):
     time_0 = now_at_utc()
-    record_id, result = submit_test_data(storage_socket, name, compute_tag, compute_priority)
+    record_id, result = submit_procedure_data(storage_socket, name, compute_tag, compute_priority)
     time_1 = now_at_utc()
 
     with storage_socket.session_scope() as session:

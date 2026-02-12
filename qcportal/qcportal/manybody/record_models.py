@@ -189,16 +189,15 @@ class ManybodyRecord(BaseRecord):
 def compare_manybody_records(record_1: ManybodyRecord, record_2: ManybodyRecord):
     compare_base_records(record_1, record_2)
 
-    assert record_1.initial_molecule.get_hash() == record_2.initial_molecule.get_hash()
+    assert record_1.initial_molecule == record_2.initial_molecule
 
-    assert (record_1.cluster_records_ is None) == (record_2.cluster_records_ is None)
-
-    if record_1.cluster_records_ is not None:
-        assert len(record_1.cluster_records_) == len(record_2.cluster_records_)
+    assert (record_1.clusters is None) == (record_2.clusters is None)
+    if record_1.clusters is not None:
+        assert len(record_1.clusters) == len(record_2.clusters)
 
         # Record ids can be different, so sort by level, fragments, basis
-        cluster_1 = sorted(record_1.cluster_records_, key=lambda x: (x.mc_level, x.fragments, x.basis))
-        cluster_2 = sorted(record_2.cluster_records_, key=lambda x: (x.mc_level, x.fragments, x.basis))
+        cluster_1 = sorted(record_1.clusters, key=lambda x: (x.mc_level, x.fragments, x.basis))
+        cluster_2 = sorted(record_2.clusters, key=lambda x: (x.mc_level, x.fragments, x.basis))
 
         for r1, r2 in zip(cluster_1, cluster_2):
             assert r1.mc_level == r2.mc_level

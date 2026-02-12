@@ -20,7 +20,7 @@ from qcportal.singlepoint import (
     SinglepointProtocols,
 )
 from qcportal.utils import now_at_utc
-from .testing_helpers import compare_neb_specs, test_specs, load_test_data, generate_task_key, load_record_data
+from .testing_helpers import compare_neb_specs, test_specs, load_procedure_data, generate_task_key, load_record_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -202,7 +202,7 @@ def test_neb_socket_add_different_1(storage_socket: SQLAlchemySocket):
 def test_neb_socket_run(
     storage_socket: SQLAlchemySocket, session: Session, activated_manager_name: ManagerName, test_data_name: str
 ):
-    input_spec_1, initial_chain_1, result_data_1 = load_test_data(test_data_name)
+    input_spec_1, initial_chain_1, result_data_1 = load_procedure_data(test_data_name)
 
     storage_socket.users.add(UserInfo(username="submit_user", role="submit", enabled=True))
 
@@ -249,7 +249,7 @@ def test_neb_socket_run_duplicate(
     session: Session,
     activated_manager_name: ManagerName,
 ):
-    input_spec_1, molecules_1, result_data_1 = load_test_data("neb_HCN_psi4_pbe_opt_diff")
+    input_spec_1, molecules_1, result_data_1 = load_procedure_data("neb_HCN_psi4_pbe_opt_diff")
 
     meta_1, id_1 = storage_socket.records.neb.add([molecules_1], input_spec_1, "test_tag", PriorityEnum.low, None, True)
     id_1 = id_1[0]

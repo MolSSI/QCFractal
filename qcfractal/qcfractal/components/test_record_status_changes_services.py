@@ -6,12 +6,12 @@ import pytest
 from qcelemental.models import FailedOperation, ComputeError
 
 from qcfractal.components.gridoptimization.testing_helpers import (
-    submit_test_data as submit_go_test_data,
+    submit_procedure_data as submit_go_procedure_data,
     generate_task_key as generate_go_task_key,
 )
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.torsiondrive.testing_helpers import (
-    submit_test_data as submit_td_test_data,
+    submit_procedure_data as submit_td_procdure_data,
     generate_task_key as generate_td_task_key,
 )
 from qcfractal.testing_helpers import run_service
@@ -30,11 +30,11 @@ test_files = [
 ]
 
 
-def _submit_test_data(storage_socket, name: str, tag="*", priority=PriorityEnum.normal):
+def _submit_procedure_data(storage_socket, name: str, tag="*", priority=PriorityEnum.normal):
     if name.startswith("go"):
-        return submit_go_test_data(storage_socket, name, tag, priority)
+        return submit_go_procedure_data(storage_socket, name, tag, priority)
     else:
-        return submit_td_test_data(storage_socket, name, tag, priority)
+        return submit_td_procdure_data(storage_socket, name, tag, priority)
 
 
 def _get_task_key_generator(name: str):
@@ -50,7 +50,7 @@ def test_record_client_reset_error_service(snowflake: QCATestingSnowflake, proce
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_procedure_data(storage_socket, procedure_file)
     keygen = _get_task_key_generator(procedure_file)
 
     # create an alternative result dict where everything has errored
@@ -108,7 +108,7 @@ def test_record_client_cancel_waiting_service(snowflake: QCATestingSnowflake, pr
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    svc_id, result_data = _submit_test_data(storage_socket, procedure_file, "test_tag", PriorityEnum.low)
+    svc_id, result_data = _submit_procedure_data(storage_socket, procedure_file, "test_tag", PriorityEnum.low)
     keygen = _get_task_key_generator(procedure_file)
 
     snowflake_client.cancel_records([svc_id])
@@ -147,7 +147,7 @@ def test_record_client_cancel_waiting_service_child(snowflake: QCATestingSnowfla
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_procedure_data(storage_socket, procedure_file)
     keygen = _get_task_key_generator(procedure_file)
 
     run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 1)
@@ -182,7 +182,7 @@ def test_record_client_cancel_running_service(snowflake: QCATestingSnowflake, pr
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_procedure_data(storage_socket, procedure_file)
     keygen = _get_task_key_generator(procedure_file)
 
     # Get it running
@@ -231,7 +231,7 @@ def test_record_client_cancel_error_service(snowflake: QCATestingSnowflake, proc
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_procedure_data(storage_socket, procedure_file)
     keygen = _get_task_key_generator(procedure_file)
 
     # create an alternative result dict where everything has errored
@@ -300,7 +300,7 @@ def test_record_client_invalidate_completed_service(snowflake: QCATestingSnowfla
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_procedure_data(storage_socket, procedure_file)
     keygen = _get_task_key_generator(procedure_file)
 
     # Run it straight
@@ -369,7 +369,7 @@ def test_record_client_softdelete_service(snowflake: QCATestingSnowflake, proced
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_procedure_data(storage_socket, procedure_file)
     keygen = _get_task_key_generator(procedure_file)
 
     with storage_socket.session_scope() as session:
@@ -541,7 +541,7 @@ def test_record_client_softdelete_service_child(
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_procedure_data(storage_socket, procedure_file)
     keygen = _get_task_key_generator(procedure_file)
 
     run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 3)
@@ -580,7 +580,7 @@ def test_record_client_harddelete_service(
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_procedure_data(storage_socket, procedure_file)
     keygen = _get_task_key_generator(procedure_file)
 
     with storage_socket.session_scope() as session:

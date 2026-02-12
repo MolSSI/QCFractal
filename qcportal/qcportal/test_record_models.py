@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING, Optional, List
 import pytest
 
 from qcfractal.components.singlepoint.testing_helpers import (
-    run_test_data as run_sp_test_data,
-    load_test_data as load_sp_test_data,
-    submit_test_data as submit_sp_test_data,
+    run_procedure_data as run_sp_procedure_data,
+    load_procedure_data as load_sp_procedure_data,
+    submit_procedure_data as submit_sp_procedure_data,
 )
-from qcfractal.components.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
+from qcfractal.components.torsiondrive.testing_helpers import submit_procedure_data as submit_td_procedure_data
 from qcportal.compression import decompress
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.utils import now_at_utc
@@ -26,10 +26,10 @@ def test_base_record_model_common(snowflake: QCATestingSnowflake, includes: Opti
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    input_spec, _, result = load_sp_test_data("sp_psi4_h2_b3lyp_nativefiles")
+    input_spec, _, result = load_sp_procedure_data("sp_psi4_h2_b3lyp_nativefiles")
 
     time_0 = now_at_utc()
-    rec_id = run_sp_test_data(storage_socket, activated_manager_name, "sp_psi4_h2_b3lyp_nativefiles")
+    rec_id = run_sp_procedure_data(storage_socket, activated_manager_name, "sp_psi4_h2_b3lyp_nativefiles")
     time_1 = now_at_utc()
 
     snowflake_client.add_comment(rec_id, "This is a comment")
@@ -82,7 +82,7 @@ def test_base_record_model_error(snowflake: QCATestingSnowflake, includes: Optio
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    rec_id = run_sp_test_data(
+    rec_id = run_sp_procedure_data(
         storage_socket, activated_manager_name, "sp_psi4_benzene_energy_1", end_status=RecordStatusEnum.error
     )
 
@@ -106,7 +106,7 @@ def test_base_record_model_task(snowflake: QCATestingSnowflake, includes: Option
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    rec_id, _ = submit_sp_test_data(
+    rec_id, _ = submit_sp_procedure_data(
         storage_socket, "sp_psi4_benzene_energy_1", compute_tag="test_tag_123", compute_priority=PriorityEnum.low
     )
 
@@ -133,7 +133,7 @@ def test_base_record_model_service(snowflake: QCATestingSnowflake, includes: Opt
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    rec_id, _ = submit_td_test_data(
+    rec_id, _ = submit_td_procedure_data(
         storage_socket, "td_H2O2_mopac_pm6", compute_tag="test_tag_123", compute_priority=PriorityEnum.low
     )
 

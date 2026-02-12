@@ -208,17 +208,17 @@ def compare_reaction_records(record_1: ReactionRecord, record_2: ReactionRecord)
 
     assert record_1.total_energy == record_2.total_energy
 
-    assert (record_1.component_records_ is None) == (record_2.component_records_ is None)
+    assert (record_1.components is None) == (record_2.components is None)
 
-    if record_1.component_records_ is not None:
-        assert len(record_1.component_records_) == len(record_2.component_records_)
+    if record_1.components is not None:
+        assert len(record_1.components) == len(record_2.components)
 
         # Sort by molecule hash
         components_1 = sorted(record_1.component_records_, key=lambda x: x.molecule.get_hash())
         components_2 = sorted(record_2.component_records_, key=lambda x: x.molecule.get_hash())
 
         for c1, c2 in zip(components_1, components_2):
-            assert c1.molecule.get_hash() == c2.molecule.get_hash()
+            assert c1.molecule == c2.molecule
             assert c1.coefficient == c2.coefficient
             assert (c1.singlepoint_record is None) == (c2.singlepoint_record is None)
             assert (c1.optimization_record is None) == (c2.optimization_record is None)

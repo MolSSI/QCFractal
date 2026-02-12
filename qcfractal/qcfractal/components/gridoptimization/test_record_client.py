@@ -12,7 +12,7 @@ from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
 from qcportal.utils import now_at_utc
-from .testing_helpers import compare_gridoptimization_specs, test_specs, submit_test_data, run_test_data
+from .testing_helpers import compare_gridoptimization_specs, test_specs, submit_procedure_data, run_procedure_data
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -178,7 +178,7 @@ def test_gridoptimization_client_delete(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    go_id = run_test_data(storage_socket, activated_manager_name, "go_H2O2_psi4_pbe")
+    go_id = run_procedure_data(storage_socket, activated_manager_name, "go_H2O2_psi4_pbe")
 
     with storage_socket.session_scope() as session:
         rec = session.get(GridoptimizationRecordORM, go_id)
@@ -228,7 +228,7 @@ def test_gridoptimization_client_harddelete_nochildren(snowflake: QCATestingSnow
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    go_id = run_test_data(storage_socket, activated_manager_name, "go_H2O2_psi4_pbe")
+    go_id = run_procedure_data(storage_socket, activated_manager_name, "go_H2O2_psi4_pbe")
 
     with storage_socket.session_scope() as session:
         rec = session.get(GridoptimizationRecordORM, go_id)
@@ -251,7 +251,7 @@ def test_gridoptimization_client_delete_opt_inuse(snowflake: QCATestingSnowflake
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    go_id = run_test_data(storage_socket, activated_manager_name, "go_H2O2_psi4_pbe")
+    go_id = run_procedure_data(storage_socket, activated_manager_name, "go_H2O2_psi4_pbe")
 
     with storage_socket.session_scope() as session:
         rec = session.get(GridoptimizationRecordORM, go_id)
@@ -269,10 +269,10 @@ def test_gridoptimization_client_query(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
 
-    id_1, _ = submit_test_data(storage_socket, "go_H2O2_psi4_b3lyp")
-    id_2, _ = submit_test_data(storage_socket, "go_H2O2_psi4_pbe")
-    id_3, _ = submit_test_data(storage_socket, "go_C4H4N2OS_mopac_pm6")
-    id_4, _ = submit_test_data(storage_socket, "go_H3NS_psi4_pbe")
+    id_1, _ = submit_procedure_data(storage_socket, "go_H2O2_psi4_b3lyp")
+    id_2, _ = submit_procedure_data(storage_socket, "go_H2O2_psi4_pbe")
+    id_3, _ = submit_procedure_data(storage_socket, "go_C4H4N2OS_mopac_pm6")
+    id_4, _ = submit_procedure_data(storage_socket, "go_H3NS_psi4_pbe")
 
     all_gos = snowflake_client.get_gridoptimizations([id_1, id_2, id_3, id_4])
     mol_ids = [x.initial_molecule_id for x in all_gos]

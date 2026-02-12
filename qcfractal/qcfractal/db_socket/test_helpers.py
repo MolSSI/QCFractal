@@ -6,7 +6,7 @@ import time
 from sqlalchemy import select
 
 from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
-from qcfractal.components.optimization.testing_helpers import submit_test_data
+from qcfractal.components.optimization.testing_helpers import submit_procedure_data
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.db_socket.helpers import get_query_proj_options
 from qcportal.molecules import Molecule
@@ -43,7 +43,7 @@ def test_dbsocket_helper_duplicate_insert(storage_socket: SQLAlchemySocket):
 def test_dbsocket_helper_proj(storage_socket: SQLAlchemySocket):
     empty_record_keys = {"id", "record_type"}
 
-    record_id, _ = submit_test_data(storage_socket, "opt_psi4_methane_sometraj")
+    record_id, _ = submit_procedure_data(storage_socket, "opt_psi4_methane_sometraj")
 
     with storage_socket.session_scope() as session:
 

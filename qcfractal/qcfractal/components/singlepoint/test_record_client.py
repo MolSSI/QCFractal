@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -9,7 +9,7 @@ from qcarchivetesting import load_molecule_data
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import QCSpecification, SinglepointDriver
 from qcportal.utils import now_at_utc
-from .testing_helpers import submit_test_data, run_test_data, compare_singlepoint_specs, test_specs
+from .testing_helpers import submit_procedure_data, run_procedure_data, compare_singlepoint_specs, test_specs
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -127,20 +127,6 @@ def test_singlepoint_client_add_duplicate(submitter_client: PortalClient, spec: 
         assert set(id).isdisjoint(id2)
 
 
-def test_singlepoint_client_properties(snowflake: QCATestingSnowflake):
-    storage_socket = snowflake.get_storage_socket()
-    activated_manager_name, _ = snowflake.activate_manager()
-    snowflake_client = snowflake.client()
-
-    sp_id = run_test_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
-
-    rec = snowflake_client.get_singlepoints(sp_id)
-
-    assert len(rec.properties) > 0
-    assert rec.properties["calcinfo_nbasis"] == rec.properties["calcinfo_nmo"] == 12
-    assert rec.properties["calcinfo_nbasis"] == rec.properties["calcinfo_nmo"] == 12
-
-
 def test_singlepoint_client_add_existing_molecule(snowflake_client: PortalClient):
     spec = test_specs[0]
 
@@ -178,7 +164,7 @@ def test_singlepoint_client_delete(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    sp_id = run_test_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
+    sp_id = run_procedure_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
 
     # deleting with children is ok (even though we don't have children)
     meta = snowflake_client.delete_records(sp_id, soft_delete=True, delete_children=True)
@@ -197,9 +183,9 @@ def test_singlepoint_client_query(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
 
-    id_1, _ = submit_test_data(storage_socket, "sp_psi4_benzene_energy_2")
-    id_2, _ = submit_test_data(storage_socket, "sp_psi4_peroxide_energy_wfn")
-    id_3, _ = submit_test_data(storage_socket, "sp_rdkit_water_energy")
+    id_1, _ = submit_procedure_data(storage_socket, "sp_psi4_benzene_energy_2")
+    id_2, _ = submit_procedure_data(storage_socket, "sp_psi4_peroxide_energy_wfn")
+    id_3, _ = submit_procedure_data(storage_socket, "sp_rdkit_water_energy")
 
     recs = snowflake_client.get_singlepoints([id_1, id_2, id_3])
 

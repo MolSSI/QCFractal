@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional, List
 
 import pytest
 
-from qcfractal.components.optimization.testing_helpers import run_test_data, load_test_data
+from qcfractal.components.optimization.testing_helpers import run_procedure_data, load_procedure_data
 from qcfractal.testing_helpers import compare_validate_molecule
 from qcportal.record_models import RecordStatusEnum
 
@@ -21,9 +21,9 @@ def test_optimization_record_model(snowflake: QCATestingSnowflake, includes: Opt
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    input_spec, molecule, result = load_test_data("opt_psi4_benzene")
+    input_spec, molecule, result = load_procedure_data("opt_psi4_benzene")
 
-    rec_id = run_test_data(storage_socket, activated_manager_name, "opt_psi4_benzene")
+    rec_id = run_procedure_data(storage_socket, activated_manager_name, "opt_psi4_benzene")
     record = snowflake_client.get_optimizations(rec_id, include=includes)
 
     if includes is not None:
@@ -64,7 +64,7 @@ def test_optimization_record_to_qcschema(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
     activated_manager_name, _ = snowflake.activate_manager()
 
-    rec_id = run_test_data(storage_socket, activated_manager_name, "opt_psi4_benzene")
+    rec_id = run_procedure_data(storage_socket, activated_manager_name, "opt_psi4_benzene")
 
     record = snowflake_client.get_optimizations(rec_id, include=["**"])
     qcs = record.to_qcschema_result()

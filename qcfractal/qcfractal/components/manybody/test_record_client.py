@@ -11,7 +11,7 @@ from qcportal.manybody import ManybodySpecification
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
 from qcportal.utils import now_at_utc
-from .testing_helpers import compare_manybody_specs, test_specs, submit_test_data, run_test_data
+from .testing_helpers import compare_manybody_specs, test_specs, submit_procedure_data, run_procedure_data
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
@@ -173,7 +173,7 @@ def test_manybody_client_delete(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    mb_id = run_test_data(storage_socket, activated_manager_name, "mb_cp_he4_psi4_mp2")
+    mb_id = run_procedure_data(storage_socket, activated_manager_name, "mb_cp_he4_psi4_mp2")
 
     with storage_socket.session_scope() as session:
         rec = session.get(ManybodyRecordORM, mb_id)
@@ -223,7 +223,7 @@ def test_manybody_client_harddelete_nochildren(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    mb_id = run_test_data(storage_socket, activated_manager_name, "mb_cp_he4_psi4_mp2")
+    mb_id = run_procedure_data(storage_socket, activated_manager_name, "mb_cp_he4_psi4_mp2")
 
     with storage_socket.session_scope() as session:
         rec = session.get(ManybodyRecordORM, mb_id)
@@ -246,7 +246,7 @@ def test_manybody_client_delete_opt_inuse(snowflake: QCATestingSnowflake):
     activated_manager_name, _ = snowflake.activate_manager()
     snowflake_client = snowflake.client()
 
-    mb_id = run_test_data(storage_socket, activated_manager_name, "mb_cp_he4_psi4_mp2")
+    mb_id = run_procedure_data(storage_socket, activated_manager_name, "mb_cp_he4_psi4_mp2")
 
     with storage_socket.session_scope() as session:
         rec = session.get(ManybodyRecordORM, mb_id)
@@ -264,8 +264,8 @@ def test_manybody_client_query(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
 
-    id_1, _ = submit_test_data(storage_socket, "mb_cp_he4_psi4_mp2")
-    id_2, _ = submit_test_data(storage_socket, "mb_all_he4_psi4_multiss")
+    id_1, _ = submit_procedure_data(storage_socket, "mb_cp_he4_psi4_mp2")
+    id_2, _ = submit_procedure_data(storage_socket, "mb_all_he4_psi4_multiss")
 
     all_mbs = snowflake_client.get_manybodys([id_1, id_2])
     mol_ids = [x.initial_molecule_id for x in all_mbs]
