@@ -64,7 +64,7 @@ def write_outputs(outfile_name: str, test_data, record):
 
     print(f"** Writing record data to {record_data_path}")
     with lzma.open(record_data_path, "wt") as f:
-        json.dump(record.dict(by_alias=True), f, cls=_JSONEncoder, indent=4, sort_keys=False)
+        json.dump(record.model_dump(by_alias=True), f, cls=_JSONEncoder, indent=4, sort_keys=False)
 
 
 def write_schema_v1_outputs(outfile_name: str, input_data, result_data):
@@ -73,12 +73,12 @@ def write_schema_v1_outputs(outfile_name: str, input_data, result_data):
     print(f"++ Writing qcschema v1 data to {data_path}")
     with lzma.open(data_path, "wt") as f:
         to_write = {
-            "input": input_data.dict(
-                encoding="json",
+            "input": input_data.model_dump(
+                mode="json",
                 exclude_defaults=False,
                 exclude_unset=False,
             ),
-            "result": result_data.dict(encoding="json", exclude_defaults=False, exclude_unset=False),
+            "result": result_data.dict(encoding="json"),
         }
         json.dump(to_write, f, indent=4, sort_keys=False)
 
