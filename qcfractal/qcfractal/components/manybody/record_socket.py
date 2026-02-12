@@ -8,10 +8,6 @@ import textwrap
 from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, TYPE_CHECKING
 
 import tabulate
-from sqlalchemy import select, func
-from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
-from sqlalchemy.orm import defer, undefer, lazyload, joinedload, selectinload
-
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
@@ -27,6 +23,10 @@ from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import chunk_iterable, hash_dict, is_included
+from sqlalchemy import select, func
+from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
+from sqlalchemy.orm import defer, undefer, lazyload, joinedload, selectinload
+
 from .record_db_models import (
     ManybodyClusterORM,
     ManybodyRecordORM,
@@ -84,7 +84,7 @@ def _get_qcmanybody_core(
         level_spec_map[sp_name] = lvl
 
     qcm = qcmanybody.ManyBodyCore(
-        molecule=init_mol,
+        molecule=init_mol.convert_v(1),
         levels=qcm_levels,
         bsse_type=[qcmanybody.BsseEnum[x] for x in mb_orm.specification.bsse_correction],
         return_total_data=mb_orm.specification.keywords.get("return_total_data", False),
@@ -409,7 +409,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
             Metadata about the insertion, and the id of the specification.
         """
 
-        mb_kw_dict = mb_spec.keywords.dict()
+        mb_kw_dict = mb_spec.keywords.model_dump()
 
         mb_spec_dict = {
             "program": mb_spec.program,

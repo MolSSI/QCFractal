@@ -111,7 +111,7 @@ class ManybodyDatasetSocket(BaseDatasetSocket):
         # Now the ones with additional keywords
         for spec in spec_orm:
             spec_obj = spec.specification.to_model(ManybodySpecification)
-            spec_input_dict = spec_obj.dict()
+            spec_input_dict = spec_obj.model_dump()
 
             for entry in special_entries:
                 if (entry.name, spec.name) in existing_records:

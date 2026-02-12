@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qcelemental.models.results import WavefunctionProperties
+from qcfractal.components.molecules.db_models import MoleculeORM
+from qcfractal.components.record_db_models import BaseRecordORM
+from qcfractal.db_socket.base_orm import BaseORM
+from qcportal.compression import CompressionEnum, decompress
+from qcportal.singlepoint import SinglepointDriver, WavefunctionProperties
 from sqlalchemy import (
     Column,
     Integer,
@@ -18,12 +22,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, deferred
-
-from qcfractal.components.molecules.db_models import MoleculeORM
-from qcfractal.components.record_db_models import BaseRecordORM
-from qcfractal.db_socket.base_orm import BaseORM
-from qcportal.compression import CompressionEnum, decompress
-from qcportal.singlepoint import SinglepointDriver
 
 if TYPE_CHECKING:
     from typing import Dict, Optional
@@ -142,12 +140,10 @@ event.listen(
 
 
 # Delete base record if this record is deleted
-_del_baserecord_trigger = DDL(
-    """
+_del_baserecord_trigger = DDL("""
     CREATE TRIGGER qca_singlepoint_record_delete_base_tr
     AFTER DELETE ON singlepoint_record
     FOR EACH ROW EXECUTE PROCEDURE qca_base_record_delete();
-    """
-)
+    """)
 
 event.listen(SinglepointRecordORM.__table__, "after_create", _del_baserecord_trigger.execute_if(dialect=("postgresql")))

@@ -84,7 +84,7 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
 
         for spec in spec_orm:
             goopt_spec_obj = spec.specification.to_model(GridoptimizationSpecification)
-            goopt_spec_input_dict = goopt_spec_obj.dict()
+            goopt_spec_input_dict = goopt_spec_obj.model_dump()
 
             for entry in entry_orm:
                 if (entry.name, spec.name) in existing_records:
