@@ -1,27 +1,16 @@
 import base64
 import json
-from typing import Union, Any, Optional
+from typing import Any
 
 import msgpack
 import numpy as np
-
-try:
-    from pydantic.v1 import BaseModel
-    from pydantic.v1.json import pydantic_encoder
-except ImportError:
-    from pydantic import BaseModel
-    from pydantic.json import pydantic_encoder
+from pydantic import BaseModel
+from pydantic_core import to_jsonable_python
 
 
 def _msgpack_encode(obj: Any) -> Any:
     if isinstance(obj, BaseModel):
-        # Don't include unset fields in pydantic models
-        return obj.dict(exclude_unset=True, by_alias=True)
-
-    try:
-        return pydantic_encoder(obj)
-    except TypeError:
-        pass
+        return obj.model_dump(exclude_unset=True, by_alias=True)
 
     if isinstance(obj, np.ndarray):
         if obj.shape:
@@ -29,8 +18,7 @@ def _msgpack_encode(obj: Any) -> Any:
         else:
             return obj.tolist()
 
-    return obj
-
+    return to_jsonable_python(obj)
 
 def _msgpack_decode(obj: Any) -> Any:
     return obj
@@ -63,11 +51,11 @@ def encode_to_json(obj: Any) -> Any:
     # Now do anything with pydantic, excluding unset fields
     # Also always use aliases when serializing
     if isinstance(obj, BaseModel):
-        return encode_to_json(obj.dict(exclude_unset=True, by_alias=True))
+        return encode_to_json(obj.model_dump(mode="json", exclude_unset=True, by_alias=True))
 
     # Let pydantic handle other things
     try:
-        return encode_to_json(pydantic_encoder(obj))
+        return to_jsonable_python(obj)
     except TypeError:
         pass
 
@@ -90,16 +78,11 @@ class _JSONEncoder(json.JSONEncoder):
         if isinstance(obj, bytes):
             return {"_bytes_base64_": base64.b64encode(obj).decode("ascii")}
 
-        # Now do anything with pydantic, excluding unset fields
+        # Now do anything with pydantic
+        # Include unset fields - discriminators might be there!
         # Also always use aliases when serializing
         if isinstance(obj, BaseModel):
-            return obj.dict(exclude_unset=True, by_alias=True)
-
-        # Let pydantic handle other things
-        try:
-            return pydantic_encoder(obj)
-        except TypeError:
-            pass
+            return obj.model_dump(by_alias=True)
 
         # Flatten numpy arrays
         # This is mostly for Molecule class
@@ -110,7 +93,7 @@ class _JSONEncoder(json.JSONEncoder):
             else:
                 return obj.tolist()
 
-        return json.JSONEncoder.default(self, obj)
+        return to_jsonable_python(obj)
 
 
 def _json_decode(obj):
@@ -121,7 +104,7 @@ def _json_decode(obj):
     return obj
 
 
-def deserialize(data: Union[bytes, str], content_type: str):
+def deserialize(data: bytes | str, content_type: str):
     if content_type.startswith("application/"):
         content_type = content_type[12:]
 
