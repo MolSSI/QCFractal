@@ -1,11 +1,7 @@
-from __future__ import annotations
+from collections.abc import Iterator
+from typing import Generic, TypeVar
 
-from typing import Optional, List, Iterator, Generic, TypeVar
-
-try:
-    from pydantic.v1 import BaseModel, validator, Extra
-except ImportError:
-    from pydantic import BaseModel, validator, Extra
+from pydantic import BaseModel, ConfigDict, field_validator
 
 T = TypeVar("T")
 
@@ -26,9 +22,7 @@ def validate_list_to_single(v):
 
 
 class RestModelBase(BaseModel):
-    class Config:
-        extra = Extra.forbid
-        validate_assignment = True
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
 
 
 class CommonBulkGetBody(RestModelBase):
@@ -38,9 +32,9 @@ class CommonBulkGetBody(RestModelBase):
     These functions typically take a list for ids, and a bool for missing_ok
     """
 
-    ids: List[int]
-    include: Optional[List[str]] = None
-    exclude: Optional[List[str]] = None
+    ids: list[int]
+    include: list[str] | None = None
+    exclude: list[str] | None = None
     missing_ok: bool = False
 
 
@@ -51,15 +45,15 @@ class CommonBulkGetNamesBody(RestModelBase):
     These functions typically take a list for ids, and a bool for missing_ok
     """
 
-    names: List[str]
-    include: Optional[List[str]] = None
-    exclude: Optional[List[str]] = None
+    names: list[str]
+    include: list[str] | None = None
+    exclude: list[str] | None = None
     missing_ok: bool = False
 
 
 class ProjURLParameters(RestModelBase):
-    include: Optional[List[str]] = None
-    exclude: Optional[List[str]] = None
+    include: list[str] | None = None
+    exclude: list[str] | None = None
 
 
 class QueryModelBase(RestModelBase):
@@ -69,10 +63,11 @@ class QueryModelBase(RestModelBase):
     These can be either URL parameters or part of a POST body
     """
 
-    limit: Optional[int] = None
-    cursor: Optional[int] = None
+    limit: int | None = None
+    cursor: int | None = None
 
-    @validator("limit", "cursor", pre=True)
+    @field_validator("limit", "cursor", mode="before")
+    @classmethod
     def validate_lists(cls, v):
         return validate_list_to_single(v)
 
@@ -112,12 +107,12 @@ class QueryIteratorBase(Generic[T]):
         Starts retrieval of results from the beginning again
         """
 
-        self._current_batch: Optional[List[T]] = None
+        self._current_batch: list[T] | None = None
         self._fetched: int = 0
 
         self._fetch_batch()
 
-    def _request(self) -> List[T]:
+    def _request(self) -> list[T]:
         raise NotImplementedError("_request must be overridden by a derived class")
 
     def _fetch_batch(self) -> None:
