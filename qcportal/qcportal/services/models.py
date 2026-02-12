@@ -1,8 +1,4 @@
-from __future__ import annotations
-
-from typing import Dict, Any
-
-from typing_extensions import Literal
+from typing import Literal, Any
 
 from qcportal.record_models import BaseRecord
 
@@ -10,7 +6,7 @@ from qcportal.record_models import BaseRecord
 class ServiceSubtaskRecord(BaseRecord):
     record_type: Literal["servicesubtask"] = "servicesubtask"
 
-    required_programs: Dict[str, Any]
+    required_programs: dict[str, Any]
     function: str
-    function_kwargs: Dict[str, Any]
+    function_kwargs: dict[str, Any]
     results: Any
