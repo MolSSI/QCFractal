@@ -6,25 +6,18 @@ from __future__ import annotations
 
 import datetime
 import os
-from typing import TYPE_CHECKING, Optional, TypeVar, Type, Any, List, Iterable, Tuple, Sequence
+from collections.abc import Sequence, Iterable
+from typing import TYPE_CHECKING, TypeVar, Type, Any
 from urllib.parse import urlparse
 
 import apsw
 import msgpack
-
-from .utils import chunk_iterable
-
-try:
-    import pydantic.v1 as pydantic
-    from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field
-    from pydantic.v1.json import pydantic_encoder
-except ImportError:
-    import pydantic
-    from pydantic import BaseModel, Extra, validator, PrivateAttr, Field
-    from pydantic.json import pydantic_encoder
+import pydantic
 import zstandard
+from pydantic import BaseModel
 
 from .serialization import serialize, deserialize, _msgpack_encode
+from .utils import chunk_iterable
 
 if TYPE_CHECKING:
     from qcportal.record_models import RecordStatusEnum
@@ -56,7 +49,7 @@ def compress_for_cache(data: Any) -> bytes:
 def decompress_from_cache(data: bytes, value_type) -> Any:
     decompressed_data = zstandard.decompress(data)
     deserialized_data = deserialize(decompressed_data, "msgpack")
-    return pydantic.parse_obj_as(value_type, deserialized_data)
+    return pydantic.TypeAdapter(value_type).validate_python(deserialized_data)
 
 
 class RecordCache:
@@ -85,16 +78,14 @@ class RecordCache:
     def _create_tables(self):
         self._assert_writable()
 
-        self._conn.execute(
-            """
+        self._conn.execute("""
             CREATE TABLE IF NOT EXISTS records (
                 id INTEGER PRIMARY KEY,
                 status TEXT NOT NULL,
                 modified_on DECIMAL NOT NULL,
                 record BLOB NOT NULL
             )
-            """
-        )
+            """)
 
         self._conn.execute("CREATE INDEX IF NOT EXISTS records_status ON records (status)")
 
@@ -103,7 +94,7 @@ class RecordCache:
         stmt = "REPLACE INTO metadata (key, value) VALUES (?, ?)"
         self._conn.execute(stmt, (key, serialize(value, "msgpack")))
 
-    def get_record(self, record_id: int, record_type: Type[_RECORD_T]) -> Optional[_RECORD_T]:
+    def get_record(self, record_id: int, record_type: Type[_RECORD_T]) -> _RECORD_T | None:
         stmt = "SELECT record FROM records WHERE id = ?"
 
         record_data = self._conn.execute(stmt, (record_id,)).fetchone()
@@ -116,7 +107,7 @@ class RecordCache:
 
         return record
 
-    def get_records(self, record_ids: Iterable[int], record_type: Type[_RECORD_T]) -> List[_RECORD_T]:
+    def get_records(self, record_ids: Iterable[int], record_type: Type[_RECORD_T]) -> list[_RECORD_T]:
         all_records = []
 
         for record_id_batch in chunk_iterable(record_ids, _query_chunk_size):
@@ -134,7 +125,7 @@ class RecordCache:
 
         return all_records
 
-    def get_existing_records(self, record_ids: Iterable[int]) -> List[int]:
+    def get_existing_records(self, record_ids: Iterable[int]) -> list[int]:
         ret = []
         for record_id_batch in chunk_iterable(record_ids, _query_chunk_size):
             record_id_params = ",".join("?" * len(record_id_batch))
@@ -208,35 +199,28 @@ class DatasetCache(RecordCache):
     def _create_tables(self):
         RecordCache._create_tables(self)
 
-        self._conn.execute(
-            """
+        self._conn.execute("""
             CREATE TABLE IF NOT EXISTS metadata (
                 key TEXT PRIMARY KEY,
                 value BLOB NOT NULL
             )
-        """
-        )
+        """)
 
-        self._conn.execute(
-            """
+        self._conn.execute("""
             CREATE TABLE IF NOT EXISTS dataset_entries (
                 name TEXT PRIMARY KEY,
                 entry BLOB NOT NULL
             )
-        """
-        )
+        """)
 
-        self._conn.execute(
-            """
+        self._conn.execute("""
             CREATE TABLE IF NOT EXISTS dataset_specifications (
                 name TEXT PRIMARY KEY,
                 specification BLOB NOT NULL
             )
-        """
-        )
+        """)
 
-        self._conn.execute(
-            """
+        self._conn.execute("""
             CREATE TABLE IF NOT EXISTS dataset_records (
                 entry_name TEXT NOT NULL,
                 specification_name TEXT NOT NULL,
@@ -245,8 +229,7 @@ class DatasetCache(RecordCache):
                 FOREIGN KEY (entry_name) REFERENCES dataset_entries(name) ON DELETE CASCADE ON UPDATE CASCADE,
                 FOREIGN KEY (specification_name) REFERENCES dataset_specifications(name) ON DELETE CASCADE ON UPDATE CASCADE
             )
-        """
-        )
+        """)
 
         self._conn.execute("CREATE INDEX IF NOT EXISTS dataset_records_entry_name ON dataset_records (entry_name)")
         self._conn.execute(
@@ -263,18 +246,18 @@ class DatasetCache(RecordCache):
         stmt = "SELECT 1 FROM dataset_entries WHERE name=?"
         return self._conn.execute(stmt, (name,)).fetchone() is not None
 
-    def get_entry_names(self) -> List[str]:
+    def get_entry_names(self) -> list[str]:
         stmt = "SELECT name FROM dataset_entries"
         return [x[0] for x in self._conn.execute(stmt).fetchall()]
 
-    def get_entry(self, name: str) -> Optional[BaseModel]:
+    def get_entry(self, name: str) -> BaseModel | None:
         stmt = "SELECT entry FROM dataset_entries WHERE name=?"
         entry_data = self._conn.execute(stmt, (name,)).fetchone()
         if entry_data is None:
             return None
         return decompress_from_cache(entry_data[0], self._entry_type)
 
-    def get_entries(self, names: Iterable[str]) -> List[BaseModel]:
+    def get_entries(self, names: Iterable[str]) -> list[BaseModel]:
         all_entries = []
         for names_batch in chunk_iterable(names, _query_chunk_size):
             name_param = ",".join("?" * len(names_batch))
@@ -322,7 +305,7 @@ class DatasetCache(RecordCache):
         stmt = "SELECT 1 FROM dataset_specifications WHERE name=?"
         return self._conn.execute(stmt, (name,)).fetchone() is not None
 
-    def get_specification_names(self) -> List[str]:
+    def get_specification_names(self) -> list[str]:
         stmt = "SELECT name FROM dataset_specifications"
         return [x[0] for x in self._conn.execute(stmt).fetchall()]
 
@@ -333,12 +316,12 @@ class DatasetCache(RecordCache):
             return None
         return decompress_from_cache(spec_data[0], self._specification_type)
 
-    def get_all_specifications(self) -> List[BaseModel]:
+    def get_all_specifications(self) -> list[BaseModel]:
         stmt = "SELECT specification FROM dataset_specifications"
         spec_data = self._conn.execute(stmt).fetchall()
         return [decompress_from_cache(x[0], self._specification_type) for x in spec_data]
 
-    def get_specifications(self, names: Iterable[str]) -> List[BaseModel]:
+    def get_specifications(self, names: Iterable[str]) -> list[BaseModel]:
         name_param = ",".join("?" * len(names))
 
         stmt = f"""SELECT specification FROM dataset_specifications WHERE name IN ({name_param})"""
@@ -384,7 +367,7 @@ class DatasetCache(RecordCache):
         stmt = "SELECT 1 FROM dataset_records WHERE entry_name=? and specification_name=?"
         return self._conn.execute(stmt, (entry_name, specification_name)).fetchone() is not None
 
-    def get_dataset_record(self, entry_name: str, specification_name: str) -> Optional[_RECORD_T]:
+    def get_dataset_record(self, entry_name: str, specification_name: str) -> _RECORD_T | None:
         stmt = """SELECT r.record FROM records r
                   INNER JOIN dataset_records dr ON r.id = dr.record_id
                   WHERE dr.entry_name=? and dr.specification_name=?"""
@@ -402,8 +385,8 @@ class DatasetCache(RecordCache):
         self,
         entry_names: Iterable[str],
         specification_names: Iterable[str],
-        status: Optional[Iterable[RecordStatusEnum]] = None,
-    ) -> List[Tuple[str, str, _RECORD_T]]:
+        status: Iterable[RecordStatusEnum] | None = None,
+    ) -> list[tuple[str, str, _RECORD_T]]:
         specification_params = ",".join("?" * len(specification_names))
         all_records = []
 
@@ -433,7 +416,7 @@ class DatasetCache(RecordCache):
 
         return all_records
 
-    def update_dataset_records(self, record_info: Iterable[Tuple[str, str, int]]):
+    def update_dataset_records(self, record_info: Iterable[tuple[str, str, int]]):
         self._assert_writable()
 
         with self._conn:
@@ -455,9 +438,7 @@ class DatasetCache(RecordCache):
         stmt = "DELETE FROM dataset_records WHERE entry_name=? AND specification_name=?"
         self._conn.execute(stmt, (entry_name, specification_name))
 
-    def delete_dataset_records(
-        self, entry_names: Optional[Iterable[str]], specification_names: Optional[Iterable[str]]
-    ):
+    def delete_dataset_records(self, entry_names: Iterable[str] | None, specification_names: Iterable[str] | None):
         self._assert_writable()
 
         all_params = []
@@ -484,8 +465,8 @@ class DatasetCache(RecordCache):
         self,
         entry_names: Iterable[str],
         specification_names: Iterable[str],
-        status: Optional[Iterable[RecordStatusEnum]],
-    ) -> List[Tuple[str, str, int, RecordStatusEnum, datetime.datetime]]:
+        status: Iterable[RecordStatusEnum] | None,
+    ) -> list[tuple[str, str, int, RecordStatusEnum, datetime.datetime]]:
         all_info = []
         specification_params = ",".join("?" * len(specification_names))
 
@@ -519,7 +500,7 @@ class DatasetCache(RecordCache):
 
     def get_existing_dataset_records(
         self, entry_names: Iterable[str], specification_names: Iterable[str]
-    ) -> List[Tuple[str, str, int]]:
+    ) -> list[tuple[str, str, int]]:
         specification_params = ",".join("?" * len(specification_names))
 
         ret = []
@@ -538,7 +519,7 @@ class DatasetCache(RecordCache):
 
 
 class PortalCache:
-    def __init__(self, server_uri: str, cache_dir: Optional[str], max_size: int):
+    def __init__(self, server_uri: str, cache_dir: str | None, max_size: int):
         parsed_url = urlparse(server_uri)
 
         # Should work as a reasonable fingerprint?
@@ -585,7 +566,7 @@ class PortalCache:
     def is_disk(self) -> bool:
         return self._is_disk
 
-    def vacuum(self, cache_name: Optional[str] = None):
+    def vacuum(self, cache_name: str | None = None):
         if self._is_disk:
             # TODO
             return
@@ -616,14 +597,14 @@ def read_dataset_metadata(file_path: str):
 
 
 def get_records_with_cache(
-    client: Optional[PortalClient],
+    client: PortalClient | None,
     base_url_prefix: str,
-    record_cache: Optional[RecordCache],
+    record_cache: RecordCache | None,
     record_type: Type[_RECORD_T],
     record_ids: Sequence[int],
-    include: Optional[Iterable[str]] = None,
+    include: Iterable[str] | None = None,
     force_fetch: bool = False,
-) -> List[_RECORD_T]:
+) -> list[_RECORD_T]:
     """
     Helper function for obtaining child records either from the cache or from the server
 
