@@ -1,15 +1,13 @@
-from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
+from collections.abc import Iterable
+from typing import Any
+from typing import Literal
 
-try:
-    from pydantic.v1 import BaseModel, Extra
-except ImportError:
-    from pydantic import BaseModel, Extra
-from typing_extensions import Literal
+from pydantic import BaseModel, ConfigDict
 
 from qcportal.dataset_models import BaseDataset
+from qcportal.internal_jobs import InternalJob
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
-from qcportal.internal_jobs import InternalJob
 from qcportal.reaction.record_models import ReactionRecord, ReactionSpecification
 
 
@@ -19,40 +17,38 @@ class ReactionDatasetEntryStoichiometry(BaseModel):
 
 
 class ReactionDatasetNewEntry(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     name: str
-    stoichiometries: List[Union[ReactionDatasetEntryStoichiometry, Tuple[float, Union[int, Molecule]]]]
-    additional_keywords: Dict[str, Any] = {}
-    attributes: Dict[str, Any] = {}
-    comment: Optional[str] = None
+    stoichiometries: list[ReactionDatasetEntryStoichiometry | tuple[float, int | Molecule]]
+    additional_keywords: dict[str, Any] = {}
+    attributes: dict[str, Any] = {}
+    comment: str | None = None
 
 
 class ReactionDatasetEntry(ReactionDatasetNewEntry):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
-    stoichiometries: List[ReactionDatasetEntryStoichiometry]
+    stoichiometries: list[ReactionDatasetEntryStoichiometry]
 
 
 class ReactionDatasetSpecification(BaseModel):
-    class Config:
-        extra = Extra.forbid
+
+    model_config = ConfigDict(extra="forbid")
 
     name: str
     specification: ReactionSpecification
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class ReactionDatasetRecordItem(BaseModel):
-    class Config:
-        extra = Extra.forbid
+
+    model_config = ConfigDict(extra="forbid")
 
     entry_name: str
     specification_name: str
     record_id: int
-    record: Optional[ReactionRecord]
+    record: ReactionRecord | None
 
 
 class ReactionDataset(BaseDataset):
@@ -66,26 +62,26 @@ class ReactionDataset(BaseDataset):
     _record_type = ReactionRecord
 
     def add_specification(
-        self, name: str, specification: ReactionSpecification, description: Optional[str] = None
+        self, name: str, specification: ReactionSpecification, description: str | None = None
     ) -> InsertMetadata:
         spec = ReactionDatasetSpecification(name=name, specification=specification, description=description)
         return self._add_specifications(spec)
 
-    def add_entries(self, entries: Union[ReactionDatasetEntry, Iterable[ReactionDatasetNewEntry]]) -> InsertMetadata:
+    def add_entries(self, entries: ReactionDatasetNewEntry | Iterable[ReactionDatasetNewEntry]) -> InsertMetadata:
         return self._add_entries(entries)
 
     def background_add_entries(
-        self, entries: Union[ReactionDatasetNewEntry, Iterable[ReactionDatasetNewEntry]]
+        self, entries: ReactionDatasetNewEntry | Iterable[ReactionDatasetNewEntry]
     ) -> InternalJob:
         return self._background_add_entries(entries)
 
     def add_entry(
         self,
         name: str,
-        stoichiometries: List[Tuple[float, Union[int, Molecule]]],
-        additional_keywords: Optional[Dict[str, Any]] = None,
-        attributes: Optional[Dict[str, Any]] = None,
-        comment: Optional[str] = None,
+        stoichiometries: list[tuple[float, int | Molecule]],
+        additional_keywords: dict[str, Any] | None = None,
+        attributes: dict[str, Any] | None = None,
+        comment: str | None = None,
     ):
         if additional_keywords is None:
             additional_keywords = {}
