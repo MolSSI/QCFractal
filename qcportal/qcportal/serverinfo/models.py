@@ -1,13 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List, Dict, Union
 
 from dateutil.parser import parse as date_parser
-
-try:
-    from pydantic.v1 import BaseModel, Extra, validator, IPvAnyAddress, constr
-except ImportError:
-    from pydantic import BaseModel, Extra, validator, IPvAnyAddress, constr
+from pydantic import BaseModel, field_validator, IPvAnyAddress, ConfigDict
 
 from qcportal.base_models import (
     RestModelBase,
@@ -16,6 +11,7 @@ from qcportal.base_models import (
     validate_list_to_single,
     QueryIteratorBase,
 )
+from qcportal.common_types import LowerStr
 
 
 class GroupByEnum(str, Enum):
@@ -27,17 +23,25 @@ class GroupByEnum(str, Enum):
 
 
 class DeleteBeforeDateBody(RestModelBase):
-    before: Optional[datetime] = None
+    before: datetime | None = None
+
+    @field_validator("before", mode="before")
+    @classmethod
+    def parse_dates(cls, v):
+        if isinstance(v, str):
+            return date_parser(v)
+        return v
 
 
 class AccessLogQueryFilters(QueryProjModelBase):
-    module: Optional[List[constr(to_lower=True)]] = None
-    method: Optional[List[constr(to_lower=True)]] = None
-    user: Optional[List[Union[int, str]]] = None
-    before: Optional[datetime] = None
-    after: Optional[datetime] = None
+    module: list[LowerStr] | None = None
+    method: list[LowerStr] | None = None
+    user: list[int | str] | None = None
+    before: datetime | None = None
+    after: datetime | None = None
 
-    @validator("before", "after", pre=True)
+    @field_validator("before", "after", mode="before")
+    @classmethod
     def parse_dates(cls, v):
         if isinstance(v, str):
             return date_parser(v)
@@ -45,29 +49,28 @@ class AccessLogQueryFilters(QueryProjModelBase):
 
 
 class AccessLogEntry(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     id: int
     timestamp: datetime
     method: str
-    module: Optional[str]
-    full_uri: Optional[str]
+    module: str | None
+    full_uri: str | None
 
-    request_duration: Optional[float]
-    request_bytes: Optional[float]
-    response_bytes: Optional[float]
+    request_duration: float | None
+    request_bytes: float | None
+    response_bytes: float | None
 
-    user: Optional[str]
+    user: str | None
 
-    ip_address: Optional[IPvAnyAddress]
-    user_agent: Optional[str]
+    ip_address: IPvAnyAddress | None
+    user_agent: str | None
 
-    country_code: Optional[str]
-    subdivision: Optional[str]
-    city: Optional[str]
-    ip_lat: Optional[float]
-    ip_long: Optional[float]
+    country_code: str | None
+    subdivision: str | None
+    city: str | None
+    ip_lat: float | None
+    ip_long: float | None
 
 
 class AccessLogQueryIterator(QueryIteratorBase[AccessLogEntry]):
@@ -93,25 +96,27 @@ class AccessLogQueryIterator(QueryIteratorBase[AccessLogEntry]):
         batch_limit = client.api_limits["get_access_logs"] // 4
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
-    def _request(self) -> List[AccessLogEntry]:
+    def _request(self) -> list[AccessLogEntry]:
         return self._client.make_request(
             "post",
             "api/v1/access_logs/query",
-            List[AccessLogEntry],
+            list[AccessLogEntry],
             body=self._query_filters,
         )
 
 
 class AccessLogSummaryFilters(RestModelBase):
     group_by: GroupByEnum = GroupByEnum.day
-    before: Optional[datetime] = None
-    after: Optional[datetime] = None
+    before: datetime | None = None
+    after: datetime | None = None
 
-    @validator("before", "after", "group_by", pre=True)
+    @field_validator("before", "after", "group_by", mode="before")
+    @classmethod
     def validate_lists(cls, v):
         return validate_list_to_single(v)
 
-    @validator("before", "after", pre=True)
+    @field_validator("before", "after", mode="before")
+    @classmethod
     def parse_dates(cls, v):
         if isinstance(v, str):
             return date_parser(v)
@@ -119,30 +124,29 @@ class AccessLogSummaryFilters(RestModelBase):
 
 
 class AccessLogSummaryEntry(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
-    module: Optional[str]
+    module: str | None
     method: str
     count: int
-    request_duration_info: List[float]
-    response_bytes_info: List[float]
+    request_duration_info: list[float]
+    response_bytes_info: list[float]
 
 
 class AccessLogSummary(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
-    entries: Dict[str, List[AccessLogSummaryEntry]]
+    entries: dict[str, list[AccessLogSummaryEntry]]
 
 
 class ErrorLogQueryFilters(QueryModelBase):
-    error_id: Optional[List[int]] = None
-    user: Optional[List[Union[int, str]]] = None
-    before: Optional[datetime] = None
-    after: Optional[datetime] = None
+    error_id: list[int] | None = None
+    user: list[int | str] | None = None
+    before: datetime | None = None
+    after: datetime | None = None
 
-    @validator("before", "after", pre=True)
+    @field_validator("before", "after", mode="before")
+    @classmethod
     def parse_dates(cls, v):
         if isinstance(v, str):
             return date_parser(v)
@@ -150,18 +154,17 @@ class ErrorLogQueryFilters(QueryModelBase):
 
 
 class ErrorLogEntry(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     id: int
     error_date: datetime
     qcfractal_version: str
-    error_text: Optional[str]
-    user: Optional[str]
+    error_text: str | None
+    user: str | None
 
-    request_path: Optional[str]
-    request_headers: Optional[str]
-    request_body: Optional[str]
+    request_path: str | None
+    request_headers: str | None
+    request_body: str | None
 
 
 class ErrorLogQueryIterator(QueryIteratorBase[ErrorLogEntry]):
@@ -187,10 +190,10 @@ class ErrorLogQueryIterator(QueryIteratorBase[ErrorLogEntry]):
         batch_limit = client.api_limits["get_error_logs"] // 4
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
-    def _request(self) -> List[ErrorLogEntry]:
+    def _request(self) -> list[ErrorLogEntry]:
         return self._client.make_request(
             "post",
             "api/v1/server_errors/query",
-            List[ErrorLogEntry],
+            list[ErrorLogEntry],
             body=self._query_filters,
         )
