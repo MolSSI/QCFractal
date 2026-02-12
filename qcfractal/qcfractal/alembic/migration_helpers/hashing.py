@@ -4,13 +4,8 @@ from hashlib import sha256
 from typing import Any
 
 import numpy as np
-
-try:
-    from pydantic.v1 import BaseModel
-    from pydantic.v1.json import pydantic_encoder
-except ImportError:
-    from pydantic import BaseModel
-    from pydantic.json import pydantic_encoder
+from pydantic import BaseModel
+from pydantic_core import to_jsonable_python
 
 
 class _JSONEncoder_1(json.JSONEncoder):
@@ -23,11 +18,11 @@ class _JSONEncoder_1(json.JSONEncoder):
         # Now do anything with pydantic, excluding unset fields
         # Also always use aliases when serializing
         if isinstance(obj, BaseModel):
-            return obj.dict(exclude_unset=True, by_alias=True)
+            return obj.model_dump(exclude_unset=True, by_alias=True)
 
         # Let pydantic handle other things
         try:
-            return pydantic_encoder(obj)
+            return to_jsonable_python(obj)
         except TypeError:
             pass
 
