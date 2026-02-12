@@ -3,8 +3,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
-from qcelemental.models import Molecule
-
+from qcportal.molecules import Molecule
 from qcportal.record_models import RecordStatusEnum
 
 if TYPE_CHECKING:

@@ -2,7 +2,6 @@ import logging
 import sys
 
 import qcengine
-from qcelemental.models import OptimizationInput
 
 from qcarchivetesting.data_generator import (
     DataGeneratorComputeThread,
@@ -12,6 +11,7 @@ from qcarchivetesting.data_generator import (
 )
 from qcfractal.snowflake import FractalSnowflake
 from qcportal.molecules import Molecule
+from qcportal.qcschema_v1 import OptimizationInput
 
 logging.basicConfig(level=logging.WARNING)
 
