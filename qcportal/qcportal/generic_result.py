@@ -1,19 +1,20 @@
-from typing import Any, Optional, Dict
+from typing import Any, Literal
 
-from qcelemental.models.common_models import Provenance, ComputeError, ProtoModel
-from typing_extensions import Literal
+from pydantic import BaseModel
+
+from .qcschema_v1 import Provenance, ComputeError
 
 
-class GenericTaskResult(ProtoModel):
+class GenericTaskResult(BaseModel):
     schema_name: Literal["qca_generic_task_result"] = "qca_generic_task_result"
 
     id: int
     results: Any
 
-    stdout: Optional[str] = None
-    stderr: Optional[str] = None
+    stdout: str | None = None
+    stderr: str | None = None
 
     success: bool
     provenance: Provenance
-    extras: Dict[str, Any] = {}
-    error: Optional[ComputeError] = None
+    extras: dict[str, Any] = {}
+    error: ComputeError | None = None
