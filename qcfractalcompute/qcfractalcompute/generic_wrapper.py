@@ -4,7 +4,7 @@ import os
 import time
 from typing import Dict, Any, Union
 
-from qcelemental.models import Provenance, FailedOperation, ComputeError
+from qcportal.qcschema_v1 import Provenance, FailedOperation, ComputeError
 
 from qcfractalcompute import __version__
 from qcportal.generic_result import GenericTaskResult
