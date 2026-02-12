@@ -2,24 +2,21 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Tuple, Optional, Union, Dict, Any
 
-try:
-    import pydantic.v1 as pydantic
-except ImportError:
-    import pydantic
+import pydantic
+
+from qcarchivetesting.helpers import find_test_data
 from qcarchivetesting.helpers import read_procedure_data, read_record_data
-from qcelemental.models import (
+from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM
+from qcfractalcompute.compress import compress_result
+from qcportal.qcschema_v1 import (
     Molecule,
     FailedOperation,
     ComputeError,
     AtomicResult as QCEl_AtomicResult,
 )
-
-from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM
-from qcfractalcompute.compress import compress_result
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification, SinglepointDriver, SinglepointRecord
 from qcportal.utils import now_at_utc
-from qcarchivetesting.helpers import find_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -66,9 +63,9 @@ def load_procedure_data(name: str) -> Tuple[QCSpecification, Molecule, QCEl_Atom
     data = read_procedure_data(name)
 
     return (
-        pydantic.parse_obj_as(QCSpecification, data["specification"]),
-        pydantic.parse_obj_as(Molecule, data["molecule"]),
-        pydantic.parse_obj_as(QCEl_AtomicResult, data["result"]),
+        pydantic.TypeAdapter(QCSpecification).validate_python(data["specification"]),
+        pydantic.TypeAdapter(Molecule).validate_python(data["molecule"]),
+        pydantic.TypeAdapter(QCEl_AtomicResult).validate_python(data["result"]),
     )
 
 
@@ -133,7 +130,7 @@ def run_procedure_data(
     tasks = storage_socket.tasks.claim_tasks(manager_name.fullname, manager_programs, [compute_tag], limit=100)
     assert len(tasks) == 1
 
-    result_compressed = compress_result(result.dict())
+    result_compressed = compress_result(result.model_dump())
     result_dict = {tasks[0]["id"]: result_compressed}
 
     storage_socket.tasks.update_finished(manager_name.fullname, result_dict)

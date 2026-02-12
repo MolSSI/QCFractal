@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 from typing import Dict, Any, Tuple, Callable
 
-from qcelemental.models import Molecule
 from sqlalchemy import select
 
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
@@ -12,6 +11,7 @@ from qcfractal.db_socket import SQLAlchemySocket
 from qcfractalcompute.compress import compress_result
 from qcportal.compression import decompress, CompressionEnum
 from qcportal.managers import ManagerName
+from qcportal.qcschema_v1 import Molecule
 from qcportal.record_models import RecordStatusEnum, RecordTask
 
 mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
@@ -130,7 +130,7 @@ def run_service(
             if task_result is None:
                 raise RuntimeError(f"Cannot find task results! key = {task_key}")
 
-            manager_ret[t.id] = compress_result(task_result.dict())
+            manager_ret[t.id] = compress_result(task_result.model_dump())
 
         rmeta = storage_socket.tasks.update_finished(manager_name.fullname, manager_ret)
         assert rmeta.n_accepted == len(manager_tasks)
@@ -147,6 +147,6 @@ def compare_validate_molecule(m1: Molecule, m2: Molecule) -> bool:
     molecules, we often need to validate the input as well.
     """
 
-    m1_v = Molecule(**m1.dict(), validate=True)
-    m2_v = Molecule(**m2.dict(), validate=True)
+    m1_v = Molecule(**m1.model_dump(), validate=True)
+    m2_v = Molecule(**m2.model_dump(), validate=True)
     return m1_v == m2_v

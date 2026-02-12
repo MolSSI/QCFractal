@@ -99,10 +99,10 @@ class MockTestingComputeManager(ComputeManager):
             time.sleep(2)
 
             if result is None:
-                return AppTaskResult(success=False, walltime=2.0, result_compressed=compress_result(failed_op.dict()))
+                return AppTaskResult(success=False, walltime=2.0, result_compressed=compress_result(failed_op.model_dump()))
             else:
                 return AppTaskResult(
-                    success=result.success, walltime=2.0, result_compressed=compress_result(result.dict())
+                    success=result.success, walltime=2.0, result_compressed=compress_result(result.model_dump())
                 )
 
         for task in tasks:
