@@ -1,21 +1,17 @@
-from typing import Dict, Any, Union, Optional, Iterable
+from collections.abc import Iterable
+from typing import Dict, Any, Union, Optional, Literal
 
-try:
-    from pydantic.v1 import BaseModel, Extra
-except ImportError:
-    from pydantic import BaseModel, Extra
-from typing_extensions import Literal
+from pydantic import BaseModel, ConfigDict
 
 from qcportal.dataset_models import BaseDataset
-from qcportal.manybody.record_models import ManybodyRecord, ManybodySpecification
 from qcportal.internal_jobs import InternalJob
+from qcportal.manybody.record_models import ManybodyRecord, ManybodySpecification
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 
 
 class ManybodyDatasetNewEntry(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     name: str
     initial_molecule: Union[Molecule, int]
@@ -29,8 +25,7 @@ class ManybodyDatasetEntry(ManybodyDatasetNewEntry):
 
 
 class ManybodyDatasetSpecification(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     name: str
     specification: ManybodySpecification
