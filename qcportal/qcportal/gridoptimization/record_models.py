@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable, Sequence
 from enum import Enum
-from typing import List, Union, Optional, Dict, Iterable, Tuple, Sequence, Any
+from typing import Any, Literal
 
-try:
-    from pydantic.v1 import BaseModel, Extra, Field, constr, validator, PrivateAttr
-except ImportError:
-    from pydantic import BaseModel, Extra, Field, constr, validator, PrivateAttr
-from typing_extensions import Literal
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator, PrivateAttr
 
 from qcportal.base_models import RestModelBase
+from qcportal.cache import get_records_with_cache
+from qcportal.common_types import LowerStr
 from qcportal.molecules import Molecule
 from qcportal.optimization.record_models import (
     OptimizationSpecification,
@@ -19,10 +18,9 @@ from qcportal.optimization.record_models import (
 )
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters, compare_base_records
 from qcportal.utils import recursive_normalizer, is_included
-from qcportal.cache import get_records_with_cache
 
 
-def serialize_key(key: Union[str, Sequence[int]]) -> str:
+def serialize_key(key: str | Sequence[int]) -> str:
     """
     Serializes the key used to map to optimization calculations
 
@@ -48,7 +46,7 @@ def serialize_key(key: Union[str, Sequence[int]]) -> str:
         return json.dumps(key)
 
 
-def deserialize_key(key: str) -> Union[str, Tuple[int, ...]]:
+def deserialize_key(key: str) -> str | tuple[int, ...]:
     """
     Deserializes the key used to map to optimization calculations
 
@@ -64,7 +62,7 @@ def deserialize_key(key: str) -> Union[str, Tuple[int, ...]]:
 
 class ScanTypeEnum(str, Enum):
     """
-    The type of scan to perform. This choices is limited to the scan types allowed by the scan dimensions.
+    The type of scan to perform. This choice is limited to the scan types allowed by the scan dimensions.
     """
 
     distance = "distance"
@@ -88,47 +86,46 @@ class ScanDimension(BaseModel):
     A full description of a dimension to scan over.
     """
 
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     type: ScanTypeEnum = Field(..., description=str(ScanTypeEnum.__doc__))
-    indices: List[int] = Field(
+    indices: list[int] = Field(
         ...,
         description="The indices of atoms to select for the scan. The size of this is a function of the type. e.g., "
         "distances, angles and dihedrals require 2, 3, and 4 atoms, respectively.",
     )
-    steps: List[float] = Field(
+    steps: list[float] = Field(
         ...,
         description="Step sizes to scan in relative to your current location in the scan. This must be a strictly "
         "monotonic series.",
-        units=["Bohr", "degrees"],
+        json_schema_extra={"units": ["Bohr", "degrees"]},
     )
     step_type: StepTypeEnum = Field(..., description=str(StepTypeEnum.__doc__))
 
-    @validator("type", "step_type", pre=True)
+    @field_validator("type", "step_type", mode="before")
+    @classmethod
     def check_lower_type_step_type(cls, v):
         return v.lower()
 
-    @validator("indices")
-    def check_indices(cls, v, values, **kwargs):
+    @model_validator(mode="after")
+    def check_indices(self):
         sizes = {ScanTypeEnum.distance: 2, ScanTypeEnum.angle: 3, ScanTypeEnum.dihedral: 4}
-        if sizes[values["type"]] != len(v):
+        if sizes[self.type] != len(self.indices):
             raise ValueError(
                 "ScanDimension of type {} must have {} values, found {}.".format(
-                    values["type"], sizes[values["type"]], len(v)
+                    self.type, sizes[self.type], len(self.indices)
                 )
             )
 
-        return v
-
-    @validator("steps")
-    def check_steps(cls, v):
-        if not (all(x < y for x, y in zip(v, v[1:])) or all(x > y for x, y in zip(v, v[1:]))):
+        if not (
+            all(x < y for x, y in zip(self.steps, self.steps[1:]))
+            or all(x > y for x, y in zip(self.steps, self.steps[1:]))
+        ):
             raise ValueError("Steps are not strictly monotonically increasing or decreasing.")
 
-        v = recursive_normalizer(v)
+        self.steps = recursive_normalizer(self.steps)
 
-        return v
+        return self
 
 
 class GridoptimizationKeywords(BaseModel):
@@ -136,10 +133,9 @@ class GridoptimizationKeywords(BaseModel):
     Keywords for grid optimizations
     """
 
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
-    scans: List[ScanDimension] = Field(
+    scans: list[ScanDimension] = Field(
         [], description="The dimensions to scan along (along with their options) for the Gridoptimization."
     )
     preoptimization: bool = Field(
@@ -150,10 +146,9 @@ class GridoptimizationKeywords(BaseModel):
 
 
 class GridoptimizationSpecification(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
-    program: constr(to_lower=True) = "gridoptimization"
+    program: LowerStr = "gridoptimization"
     optimization_specification: OptimizationSpecification
     keywords: GridoptimizationKeywords
 
@@ -161,12 +156,12 @@ class GridoptimizationSpecification(BaseModel):
 class GridoptimizationInput(RestModelBase):
     record_type: Literal["gridoptimization"] = "gridoptimization"
     specification: GridoptimizationSpecification
-    initial_molecule: Union[int, Molecule]
+    initial_molecule: int | Molecule
 
 
 class GridoptimizationMultiInput(RestModelBase):
     specification: GridoptimizationSpecification
-    initial_molecules: List[Union[int, Molecule]]
+    initial_molecules: list[int | Molecule]
 
 
 class GridoptimizationAddBody(RecordAddBodyBase, GridoptimizationMultiInput):
@@ -174,14 +169,15 @@ class GridoptimizationAddBody(RecordAddBodyBase, GridoptimizationMultiInput):
 
 
 class GridoptimizationQueryFilters(RecordQueryFilters):
-    program: Optional[List[str]] = None
-    optimization_program: Optional[List[str]]
-    qc_program: Optional[List[constr(to_lower=True)]] = None
-    qc_method: Optional[List[constr(to_lower=True)]] = None
-    qc_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
-    initial_molecule_id: Optional[List[int]] = None
+    program: list[str] | None = None
+    optimization_program: list[str] | None
+    qc_program: list[LowerStr] | None = None
+    qc_method: list[LowerStr] | None = None
+    qc_basis: list[LowerStr | None] | None = None
+    initial_molecule_id: list[int] | None = None
 
-    @validator("qc_basis")
+    @field_validator("qc_basis")
+    @classmethod
     def _convert_basis(cls, v):
         # Convert empty string to None
         # Lowercasing is handled by constr
@@ -192,38 +188,37 @@ class GridoptimizationQueryFilters(RecordQueryFilters):
 
 
 class GridoptimizationOptimization(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     optimization_id: int
     key: str
-    energy: Optional[float] = None
+    energy: float | None = None
 
 
 class GridoptimizationRecord(BaseRecord):
     record_type: Literal["gridoptimization"] = "gridoptimization"
     specification: GridoptimizationSpecification
-    starting_grid: Optional[List[int]]
+    starting_grid: list[int] | None
     initial_molecule_id: int
-    starting_molecule_id: Optional[int]
+    starting_molecule_id: int | None
 
     ######################################################
     # Fields not always included when fetching the record
     ######################################################
-    initial_molecule_: Optional[Molecule] = Field(None, alias="initial_molecule")
-    starting_molecule_: Optional[Molecule] = Field(None, alias="starting_molecule")
-    optimizations_: Optional[List[GridoptimizationOptimization]] = Field(None, alias="optimizations")
+    initial_molecule_: Molecule | None = Field(None, alias="initial_molecule")
+    starting_molecule_: Molecule | None = Field(None, alias="starting_molecule")
+    optimizations_: list[GridoptimizationOptimization] | None = Field(None, alias="optimizations")
 
     ##############################################
     # Fields with child records
     # (generally not received from the server)
     ##############################################
-    optimization_records_: Optional[Dict[Any, OptimizationRecord]] = Field(None, alias="optimizations_records")
+    optimization_records_: dict[Any, OptimizationRecord] | None = Field(None, alias="optimizations_records")
 
     # Actual mapping, with tuples as keys. These will point to the same lists & records as above
-    _optimization_map: Optional[Dict[Any, OptimizationRecord]] = PrivateAttr(None)
+    _optimization_map: dict[Any, OptimizationRecord] | None = PrivateAttr(None)
 
-    def propagate_client(self, client, base_url_prefix: Optional[str]):
+    def propagate_client(self, client, base_url_prefix: str | None):
         BaseRecord.propagate_client(self, client, base_url_prefix)
 
         if self.optimization_records_ is not None:
@@ -290,13 +285,13 @@ class GridoptimizationRecord(BaseRecord):
             self.optimizations_ = self._client.make_request(
                 "get",
                 f"api/v1/records/gridoptimization/{self.id}/optimizations",
-                List[GridoptimizationOptimization],
+                list[GridoptimizationOptimization],
             )
 
         self.fetch_children(["optimizations"])
 
-    def get_cache_dict(self, **kwargs) -> Dict[str, Any]:
-        return self.dict(exclude={"optimization_records_"}, **kwargs)
+    def get_cache_dict(self, **kwargs) -> dict[str, Any]:
+        return self.model_dump(exclude={"optimization_records_"}, **kwargs)
 
     @property
     def initial_molecule(self) -> Molecule:
@@ -305,13 +300,13 @@ class GridoptimizationRecord(BaseRecord):
         return self.initial_molecule_
 
     @property
-    def starting_molecule(self) -> Optional[Molecule]:
+    def starting_molecule(self) -> Molecule | None:
         if self.starting_molecule_ is None:
             self._fetch_starting_molecule()
         return self.starting_molecule_
 
     @property
-    def optimizations(self) -> Dict[Any, OptimizationRecord]:
+    def optimizations(self) -> dict[Any, OptimizationRecord]:
         if self.optimization_records_ is None:
             self._fetch_optimizations()
 
@@ -321,13 +316,13 @@ class GridoptimizationRecord(BaseRecord):
         return self._optimization_map
 
     @property
-    def preoptimization(self) -> Optional[OptimizationRecord]:
+    def preoptimization(self) -> OptimizationRecord | None:
         if self.optimization_records_ is None:
             self._fetch_optimizations()
         return self.optimization_records_.get("preoptimization", None)
 
     @property
-    def final_energies(self) -> Dict[Tuple[int, ...], float]:
+    def final_energies(self) -> dict[tuple[int, ...], float]:
         return {k: v.energies[-1] for k, v in self.optimizations.items() if v.energies}
 
 

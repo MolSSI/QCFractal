@@ -1,31 +1,27 @@
-from typing import Dict, Any, Union, Optional, Iterable
+from collections.abc import Iterable
+from typing import Any, Literal
 
-try:
-    from pydantic.v1 import BaseModel, Extra
-except ImportError:
-    from pydantic import BaseModel, Extra
-from typing_extensions import Literal
+from pydantic import BaseModel, ConfigDict
 
 from qcportal.dataset_models import BaseDataset
 from qcportal.gridoptimization.record_models import (
     GridoptimizationRecord,
     GridoptimizationSpecification,
 )
-from qcportal.metadata_models import InsertMetadata
 from qcportal.internal_jobs import InternalJob
+from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 
 
 class GridoptimizationDatasetNewEntry(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     name: str
-    initial_molecule: Union[Molecule, int]
-    additional_keywords: Dict[str, Any] = {}
-    additional_optimization_keywords: Dict[str, Any] = {}
-    attributes: Dict[str, Any] = {}
-    comment: Optional[str] = None
+    initial_molecule: int | Molecule
+    additional_keywords: dict[str, Any] = {}
+    additional_optimization_keywords: dict[str, Any] = {}
+    attributes: dict[str, Any] = {}
+    comment: str | None = None
 
 
 class GridoptimizationDatasetEntry(GridoptimizationDatasetNewEntry):
@@ -33,22 +29,20 @@ class GridoptimizationDatasetEntry(GridoptimizationDatasetNewEntry):
 
 
 class GridoptimizationDatasetSpecification(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     name: str
     specification: GridoptimizationSpecification
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class GridoptimizationDatasetRecordItem(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     entry_name: str
     specification_name: str
     record_id: int
-    record: Optional[GridoptimizationRecord]
+    record: GridoptimizationRecord | None
 
 
 class GridoptimizationDataset(BaseDataset):
@@ -62,29 +56,29 @@ class GridoptimizationDataset(BaseDataset):
     _record_type = GridoptimizationRecord
 
     def add_specification(
-        self, name: str, specification: GridoptimizationSpecification, description: Optional[str] = None
+        self, name: str, specification: GridoptimizationSpecification, description: str | None = None
     ) -> InsertMetadata:
         spec = GridoptimizationDatasetSpecification(name=name, specification=specification, description=description)
         return self._add_specifications(spec)
 
     def add_entries(
-        self, entries: Union[GridoptimizationDatasetNewEntry, Iterable[GridoptimizationDatasetNewEntry]]
+        self, entries: GridoptimizationDatasetNewEntry | Iterable[GridoptimizationDatasetNewEntry]
     ) -> InsertMetadata:
         return self._add_entries(entries)
 
     def background_add_entries(
-        self, entries: Union[GridoptimizationDatasetNewEntry, Iterable[GridoptimizationDatasetNewEntry]]
+        self, entries: GridoptimizationDatasetNewEntry | Iterable[GridoptimizationDatasetNewEntry]
     ) -> InternalJob:
         return self._background_add_entries(entries)
 
     def add_entry(
         self,
         name: str,
-        initial_molecule: Union[Molecule, int],
-        additional_keywords: Optional[Dict[str, Any]] = None,
-        additional_optimization_keywords: Optional[Dict[str, Any]] = None,
-        attributes: Optional[Dict[str, Any]] = None,
-        comment: Optional[str] = None,
+        initial_molecule: int | Molecule,
+        additional_keywords: dict[str, Any] | None = None,
+        additional_optimization_keywords: dict[str, Any] | None = None,
+        attributes: dict[str, Any] | None = None,
+        comment: str | None = None,
     ):
         if additional_keywords is None:
             additional_keywords = {}
