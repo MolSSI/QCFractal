@@ -1,24 +1,22 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Tuple, Optional, Dict, List, Union, Any
+from typing import TYPE_CHECKING, Tuple, Optional, Dict, Union, Any
 
-try:
-    import pydantic.v1 as pydantic
-except ImportError:
-    import pydantic
-from qcarchivetesting.helpers import read_procedure_data, read_record_data, find_test_data
-from qcelemental.models import (
+import pydantic
+
+from qcarchivetesting.helpers import find_test_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data
+from qcfractal.components.neb.record_db_models import NEBRecordORM
+from qcfractal.testing_helpers import run_service
+from qcportal.generic_result import GenericTaskResult
+from qcportal.neb import NEBSpecification, NEBKeywords, NEBRecord
+from qcportal.qcschema_v1 import (
     Molecule,
     FailedOperation,
     ComputeError,
     AtomicResult as QCEl_AtomicResult,
     OptimizationResult as QCEl_OptimizationResult,
 )
-
-from qcfractal.components.neb.record_db_models import NEBRecordORM
-from qcfractal.testing_helpers import run_service
-from qcportal.generic_result import GenericTaskResult
-from qcportal.neb import NEBSpecification, NEBKeywords, NEBRecord
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 from qcportal.utils import recursive_normalizer, hash_dict
@@ -102,16 +100,16 @@ def generate_task_key(task: RecordTask):
 def load_procedure_data(
     name: str,
 ) -> Tuple[
-    NEBSpecification, List[Molecule], Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult, GenericTaskResult]]
+    NEBSpecification, list[Molecule], Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult, GenericTaskResult]]
 ]:
     data = read_procedure_data(name)
 
     return (
-        pydantic.parse_obj_as(NEBSpecification, data["specification"]),
-        pydantic.parse_obj_as(List[Molecule], data["initial_chain"]),
-        pydantic.parse_obj_as(
-            Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult, GenericTaskResult]], data["results"]
-        ),
+        pydantic.TypeAdapter(NEBSpecification).validate_python(data["specification"]),
+        pydantic.TypeAdapter(list[Molecule]).validate_python(data["initial_chain"]),
+        pydantic.TypeAdapter(
+            Dict[str, QCEl_AtomicResult | QCEl_OptimizationResult |GenericTaskResult]
+        ).validate_python(data["results"]),
     )
 
 
