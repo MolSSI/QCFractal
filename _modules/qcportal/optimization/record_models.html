@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=e72b19de"></script>
+    <script src="../../../_static/documentation_options.js?v=b7aedd35"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.63.post36+ga99cc4baf" />
+  <meta name="docsearch:version" content="0.63.post47+gd82c54668" />
   </head>
   
   
@@ -498,6 +498,7 @@
     <span class="p">)</span></div>
 
 
+
 <div class="viewcode-block" id="OptimizationSpecification">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationSpecification">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OptimizationSpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
@@ -716,8 +717,9 @@
         <span class="k">except</span> <span class="n">NoClientError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;Record does not contain the required data for a QCSchema result, and this record is &quot;</span>
-                <span class="s2">&quot;not connected to a client. Try include=[&#39;**&#39;] and/or fetch_children=True when retrieving this record &quot;</span>
-                <span class="s2">&quot;or creating a dataset view&quot;</span>
+                <span class="s2">&quot;not connected to a client. If fetching records, use include=[&#39;**&#39;]. &quot;</span>
+                <span class="s2">&quot;If this is from a dataset view, use include=[&#39;**&#39;] and include_children=True &quot;</span>
+                <span class="s2">&quot;when creating the view&quot;</span>
             <span class="p">)</span></div>
 </div>
 
@@ -773,20 +775,16 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">compare_optimization_records</span><span class="p">(</span><span class="n">record_1</span><span class="p">:</span> <span class="n">OptimizationRecord</span><span class="p">,</span> <span class="n">record_2</span><span class="p">:</span> <span class="n">OptimizationRecord</span><span class="p">):</span>
     <span class="n">compare_base_records</span><span class="p">(</span><span class="n">record_1</span><span class="p">,</span> <span class="n">record_2</span><span class="p">)</span>
 
-    <span class="k">assert</span> <span class="n">record_1</span><span class="o">.</span><span class="n">initial_molecule</span><span class="o">.</span><span class="n">get_hash</span><span class="p">()</span> <span class="o">==</span> <span class="n">record_2</span><span class="o">.</span><span class="n">initial_molecule</span><span class="o">.</span><span class="n">get_hash</span><span class="p">()</span>
-
-    <span class="k">assert</span> <span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">final_molecule_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">record_2</span><span class="o">.</span><span class="n">final_molecule_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">record_1</span><span class="o">.</span><span class="n">initial_molecule</span> <span class="o">==</span> <span class="n">record_2</span><span class="o">.</span><span class="n">initial_molecule</span>
     <span class="k">if</span> <span class="n">record_1</span><span class="o">.</span><span class="n">final_molecule_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="n">record_1</span><span class="o">.</span><span class="n">final_molecule</span><span class="o">.</span><span class="n">get_hash</span><span class="p">()</span> <span class="o">==</span> <span class="n">record_2</span><span class="o">.</span><span class="n">final_molecule</span><span class="o">.</span><span class="n">get_hash</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">record_1</span><span class="o">.</span><span class="n">final_molecule</span> <span class="o">==</span> <span class="n">record_2</span><span class="o">.</span><span class="n">final_molecule</span>
 
     <span class="k">assert</span> <span class="n">record_1</span><span class="o">.</span><span class="n">energies</span> <span class="o">==</span> <span class="n">record_2</span><span class="o">.</span><span class="n">energies</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">trajectory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">record_2</span><span class="o">.</span><span class="n">trajectory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
 
-    <span class="k">assert</span> <span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">trajectory_records_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">record_2</span><span class="o">.</span><span class="n">trajectory_records_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">trajectory_ids_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">record_2</span><span class="o">.</span><span class="n">trajectory_ids_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">record_1</span><span class="o">.</span><span class="n">trajectory_records_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">trajectory_records_</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">record_2</span><span class="o">.</span><span class="n">trajectory_records_</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">trajectory_records_</span><span class="p">,</span> <span class="n">record_2</span><span class="o">.</span><span class="n">trajectory_records_</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">record_1</span><span class="o">.</span><span class="n">trajectory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">trajectory</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">record_2</span><span class="o">.</span><span class="n">trajectory</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">record_1</span><span class="o">.</span><span class="n">trajectory</span><span class="p">,</span> <span class="n">record_2</span><span class="o">.</span><span class="n">trajectory</span><span class="p">):</span>
             <span class="n">compare_singlepoint_records</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">)</span></div>
 
 </pre></div>
