@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import random
@@ -13,20 +14,14 @@ from typing import (
     Type,
     overload,
 )
+from typing import Tuple, Iterable
 
 import jwt
-import urllib3.exceptions
-
-try:
-    import pydantic.v1 as pydantic
-except ImportError:
-    import pydantic
+import pydantic
 import requests
-from typing import Tuple, Iterable
+import urllib3.exceptions
 import yaml
-import hashlib
 from packaging.version import parse as parse_version
-
 from tqdm import tqdm
 
 from . import __version__
@@ -538,15 +533,15 @@ class PortalClientBase:
 
         serialized_body = None
         if body_model is not None:
-            parsed_body = pydantic.parse_obj_as(body_model, body)
+            parsed_body = pydantic.TypeAdapter(body_model).validate_python(body)
             serialized_body = serialize(parsed_body, self.encoding)
 
         parsed_url_params = None
         if url_params_model is not None:
-            parsed_url_params = pydantic.parse_obj_as(url_params_model, url_params)
+            parsed_url_params = pydantic.TypeAdapter(url_params_model).validate_python(url_params)
 
         if isinstance(parsed_url_params, pydantic.BaseModel):
-            parsed_url_params = parsed_url_params.dict()
+            parsed_url_params = parsed_url_params.model_dump()
 
         if upload_files is not None:
             # Yes, a list of tuples. We always use the "files" key, and doing it this way
@@ -576,7 +571,7 @@ class PortalClientBase:
         if response_model is None:
             return None
         else:
-            return pydantic.parse_obj_as(response_model, d)
+            return pydantic.TypeAdapter(response_model).validate_python(d)
 
     def download_file(
         self,
