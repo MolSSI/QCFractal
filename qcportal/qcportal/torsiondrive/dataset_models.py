@@ -1,73 +1,68 @@
-from typing import Dict, Any, Union, Optional, List, Iterable
+from collections.abc import Iterable
+from typing import Any, Literal
 
-try:
-    from pydantic.v1 import BaseModel, Extra, root_validator
-except ImportError:
-    from pydantic import BaseModel, Extra, root_validator
-from typing_extensions import Literal
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from qcportal.dataset_models import BaseDataset
+from qcportal.internal_jobs import InternalJob
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
-from qcportal.internal_jobs import InternalJob
 from qcportal.torsiondrive.record_models import TorsiondriveRecord, TorsiondriveSpecification
 
 
 class TorsiondriveDatasetNewEntry(BaseModel):
-    class Config:
-        extra = Extra.forbid
+
+    model_config = ConfigDict(extra="forbid")
 
     name: str
-    initial_molecules: List[Union[Molecule, int]]
-    additional_keywords: Dict[str, Any] = {}
-    additional_optimization_keywords: Dict[str, Any] = {}
-    attributes: Dict[str, Any] = {}
-    comment: Optional[str] = None
+    initial_molecules: list[int | Molecule]
+    additional_keywords: dict[str, Any] = {}
+    additional_optimization_keywords: dict[str, Any] = {}
+    attributes: dict[str, Any] = {}
+    comment: str | None = None
 
 
 class TorsiondriveDatasetEntry(TorsiondriveDatasetNewEntry):
-    initial_molecules: List[Molecule]
+    initial_molecules: list[Molecule]
 
 
 # Torsiondrive dataset specifications are just optimization specifications
 # The torsiondrive keywords are stored in the entries ^^
 class TorsiondriveDatasetSpecification(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     name: str
     specification: TorsiondriveSpecification
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class TorsiondriveDatasetRecordItem(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     entry_name: str
     specification_name: str
     record_id: int
-    record: Optional[TorsiondriveRecord]
+    record: TorsiondriveRecord | None
 
 
 class TorsiondriveDatasetEntriesFrom(BaseModel):
 
-    dataset_id: Optional[int] = None
-    dataset_type: Optional[str] = None
-    dataset_name: Optional[str] = None
-    specification_name: Optional[str] = None
+    dataset_id: int | None = None
+    dataset_type: str | None = None
+    dataset_name: str | None = None
+    specification_name: str | None = None
 
-    @root_validator
-    def validate_input(cls, values):
+    @model_validator(mode="after")
+    def validate_input(self):
         # Dataset id must be specified, or dataset type and name
-        if values.get("dataset_id") is None:
-            if values.get("dataset_type") is None or values.get("dataset_name") is None:
+        if self.dataset_id is None:
+            if self.dataset_type is None or self.dataset_name is None:
                 raise ValueError("Either dataset_id or dataset_type and dataset_name must be specified.")
 
-        if values.get("dataset_type") == "optimization" and values.get("specification_name") is None:
+        if self.dataset_type == "optimization" and self.specification_name is None:
             raise ValueError("specification_name must be given for obtaining entries from an optimization dataset")
 
-        return values
+        return self
 
 
 class TorsiondriveDataset(BaseDataset):
@@ -81,29 +76,29 @@ class TorsiondriveDataset(BaseDataset):
     _record_type = TorsiondriveRecord
 
     def add_specification(
-        self, name: str, specification: TorsiondriveSpecification, description: Optional[str] = None
+        self, name: str, specification: TorsiondriveSpecification, description: str | None = None
     ) -> InsertMetadata:
         spec = TorsiondriveDatasetSpecification(name=name, specification=specification, description=description)
         return self._add_specifications(spec)
 
     def add_entries(
-        self, entries: Union[TorsiondriveDatasetNewEntry, Iterable[TorsiondriveDatasetNewEntry]]
+        self, entries: TorsiondriveDatasetNewEntry | Iterable[TorsiondriveDatasetNewEntry]
     ) -> InsertMetadata:
         return self._add_entries(entries)
 
     def background_add_entries(
-        self, entries: Union[TorsiondriveDatasetNewEntry, Iterable[TorsiondriveDatasetNewEntry]]
+        self, entries: TorsiondriveDatasetNewEntry | Iterable[TorsiondriveDatasetNewEntry]
     ) -> InternalJob:
         return self._background_add_entries(entries)
 
     def add_entry(
         self,
         name: str,
-        initial_molecules: List[Union[Molecule, int]],
-        additional_keywords: Optional[Dict[str, Any]] = None,
-        additional_optimization_keywords: Optional[Dict[str, Any]] = None,
-        attributes: Optional[Dict[str, Any]] = None,
-        comment: Optional[str] = None,
+        initial_molecules: list[int | Molecule],
+        additional_keywords: dict[str, Any] | None = None,
+        additional_optimization_keywords: dict[str, Any] | None = None,
+        attributes: dict[str, Any] | None = None,
+        comment: str | None = None,
     ):
         if additional_keywords is None:
             additional_keywords = {}
@@ -126,10 +121,10 @@ class TorsiondriveDataset(BaseDataset):
     def add_entries_from(
         self,
         *,
-        dataset_type: Optional[str] = None,
-        dataset_name: Optional[str] = None,
-        dataset_id: Optional[int] = None,
-        specification_name: Optional[str] = None,
+        dataset_type: str | None = None,
+        dataset_name: str | None = None,
+        dataset_id: int | None = None,
+        specification_name: str | None = None,
     ) -> InsertCountsMetadata:
         body = TorsiondriveDatasetEntriesFrom(
             dataset_type=dataset_type,
