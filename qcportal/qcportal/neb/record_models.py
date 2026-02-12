@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-from typing import List, Optional, Union, Dict, Iterable, Any
+from collections.abc import Iterable
+from typing import Any, Literal
 
-try:
-    from pydantic.v1 import BaseModel, Field, Extra, root_validator, constr, validator
-except ImportError:
-    from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
-from typing_extensions import Literal
+from pydantic import BaseModel, Field, ConfigDict, model_validator, field_validator
 
 from qcportal.base_models import RestModelBase
 from qcportal.cache import get_records_with_cache
+from qcportal.common_types import LowerStr
 from qcportal.molecules import Molecule
 from qcportal.record_models import (
     BaseRecord,
@@ -28,8 +26,7 @@ class NEBKeywords(BaseModel):
     NEBRecord options
     """
 
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     images: int = Field(
         11,
@@ -75,24 +72,26 @@ class NEBKeywords(BaseModel):
 
     epsilon: float = Field(1e-5, description="Small eigenvalue threshold for resetting Hessian.")
 
-    @root_validator
+    @model_validator(mode="before")
+    @classmethod
     def normalize(cls, values):
-        return recursive_normalizer(values)
+        if isinstance(values, dict):
+            return recursive_normalizer(values)
+        else:
+            return values
 
 
 class NEBSpecification(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
-    program: constr(to_lower=True) = "geometric"
+    program: LowerStr = "geometric"
     singlepoint_specification: QCSpecification
-    optimization_specification: Optional[OptimizationSpecification] = None
+    optimization_specification: OptimizationSpecification | None = None
     keywords: NEBKeywords
 
 
 class NEBOptimization(BaseModel):
-    class config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     optimization_id: int
     position: int
@@ -100,8 +99,7 @@ class NEBOptimization(BaseModel):
 
 
 class NEBSinglepoint(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     singlepoint_id: int
     chain_iteration: int
@@ -111,12 +109,12 @@ class NEBSinglepoint(BaseModel):
 class NEBInput(RestModelBase):
     record_type: Literal["neb"] = "neb"
     specification: NEBSpecification
-    initial_chain: List[Union[int, Molecule]]
+    initial_chain: list[int | Molecule]
 
 
 class NEBMultiInput(RestModelBase):
     specification: NEBSpecification
-    initial_chains: List[List[Union[int, Molecule]]]
+    initial_chains: list[list[int | Molecule]]
 
 
 class NEBAddBody(RecordAddBodyBase, NEBMultiInput):
@@ -124,13 +122,14 @@ class NEBAddBody(RecordAddBodyBase, NEBMultiInput):
 
 
 class NEBQueryFilters(RecordQueryFilters):
-    program: Optional[List[str]] = "geometric"
-    qc_program: Optional[List[constr(to_lower=True)]] = None
-    qc_method: Optional[List[constr(to_lower=True)]] = None
-    qc_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
-    molecule_id: Optional[List[int]] = None
+    program: list[str] | None = "geometric"
+    qc_program: list[LowerStr] | None = None
+    qc_method: list[LowerStr] | None = None
+    qc_basis: list[LowerStr | None] | None = None
+    molecule_id: list[int] | None = None
 
-    @validator("qc_basis")
+    @field_validator("qc_basis")
+    @classmethod
     def _convert_basis(cls, v):
         # Convert empty string to None
         # Lowercasing is handled by constr
@@ -147,21 +146,21 @@ class NEBRecord(BaseRecord):
     ######################################################
     # Fields not always included when fetching the record
     ######################################################
-    initial_chain_molecule_ids_: Optional[List[int]] = Field(None, alias="initial_chain_molecule_ids")
-    singlepoints_: Optional[List[NEBSinglepoint]] = Field(None, alias="singlepoints")
-    optimizations_: Optional[Dict[str, NEBOptimization]] = Field(None, alias="optimizations")
-    neb_result_: Optional[Molecule] = Field(None, alias="neb_result")
-    initial_chain_: Optional[List[Molecule]] = Field(None, alias="initial_chain")
+    initial_chain_molecule_ids_: list[int] | None = Field(None, alias="initial_chain_molecule_ids")
+    singlepoints_: list[NEBSinglepoint] | None = Field(None, alias="singlepoints")
+    optimizations_: dict[str, NEBOptimization] | None = Field(None, alias="optimizations")
+    neb_result_: Molecule | None = Field(None, alias="neb_result")
+    initial_chain_: list[Molecule] | None = Field(None, alias="initial_chain")
 
     ##############################################
     # Fields with child records
     # (generally not received from the server)
     ##############################################
-    optimization_records_: Optional[Dict[str, OptimizationRecord]] = Field(None, field="optimization_records")
-    singlepoint_records_: Optional[Dict[int, List[SinglepointRecord]]] = Field(None, field="singlepoint_records")
-    ts_hessian_: Optional[SinglepointRecord] = Field(None, field="ts_hessian")
+    optimization_records_: dict[str, OptimizationRecord] | None = Field(None, alias="optimization_records")
+    singlepoint_records_: dict[int, list[SinglepointRecord]] | None = Field(None, alias="singlepoint_records")
+    ts_hessian_: SinglepointRecord | None = Field(None, alias="ts_hessian")
 
-    def propagate_client(self, client, base_url_prefix: Optional[str]):
+    def propagate_client(self, client, base_url_prefix: str | None):
         BaseRecord.propagate_client(self, client, base_url_prefix)
 
         if self.optimization_records_ is not None:
@@ -256,7 +255,7 @@ class NEBRecord(BaseRecord):
             self.optimizations_ = self._client.make_request(
                 "get",
                 f"api/v1/records/neb/{self.id}/optimizations",
-                Dict[str, NEBOptimization],
+                dict[str, NEBOptimization],
             )
 
         self.fetch_children(["optimizations"])
@@ -267,7 +266,7 @@ class NEBRecord(BaseRecord):
             self.singlepoints_ = self._client.make_request(
                 "get",
                 f"api/v1/records/neb/{self.id}/singlepoints",
-                List[NEBSinglepoint],
+                list[NEBSinglepoint],
             )
 
         self.fetch_children(["singlepoints"])
@@ -278,7 +277,7 @@ class NEBRecord(BaseRecord):
             self.initial_chain_molecule_ids_ = self._client.make_request(
                 "get",
                 f"api/v1/records/neb/{self.id}/initial_chain",
-                List[int],
+                list[int],
             )
 
         self.initial_chain_ = self._client.get_molecules(self.initial_chain_molecule_ids_)
@@ -290,24 +289,24 @@ class NEBRecord(BaseRecord):
             self.neb_result_ = self._client.make_request(
                 "get",
                 f"api/v1/records/neb/{self.id}/neb_result",
-                Optional[Molecule],
+                Molecule | None,
             )
 
-    def get_cache_dict(self, **kwargs) -> Dict[str, Any]:
-        return self.dict(exclude={"optimization_records_", "singlepoint_records_", "ts_hessian_"}, **kwargs)
+    def get_cache_dict(self, **kwargs) -> dict[str, Any]:
+        return self.model_dump(exclude={"optimization_records_", "singlepoint_records_", "ts_hessian_"}, **kwargs)
 
     @property
-    def initial_chain(self) -> List[Molecule]:
+    def initial_chain(self) -> list[Molecule]:
         if self.initial_chain_ is None:
             self._fetch_initial_chain()
         return self.initial_chain_
 
     @property
-    def final_chain(self) -> List[SinglepointRecord]:
+    def final_chain(self) -> list[SinglepointRecord]:
         return self.singlepoints[max(self.singlepoints.keys())]
 
     @property
-    def singlepoints(self) -> Dict[int, List[SinglepointRecord]]:
+    def singlepoints(self) -> dict[int, list[SinglepointRecord]]:
         if self.singlepoint_records_ is None:
             self._fetch_singlepoints()
         return self.singlepoint_records_
@@ -332,17 +331,17 @@ class NEBRecord(BaseRecord):
         return self.neb_result_
 
     @property
-    def optimizations(self) -> Optional[Dict[str, OptimizationRecord]]:
+    def optimizations(self) -> dict[str, OptimizationRecord] | None:
         if self.optimization_records_ is None:
             self._fetch_optimizations()
         return self.optimization_records_
 
     @property
-    def ts_optimization(self) -> Optional[OptimizationRecord]:
+    def ts_optimization(self) -> OptimizationRecord | None:
         return self.optimizations.get("transition", None)
 
     @property
-    def ts_hessian(self) -> Optional[SinglepointRecord]:
+    def ts_hessian(self) -> SinglepointRecord | None:
         if self.singlepoint_records_ is None:
             self._fetch_singlepoints()
         return self.ts_hessian_
