@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import pytest
-from qcelemental.models import Molecule
 
 from qcportal import PortalClient
+from qcportal.molecules import Molecule
 
 
 @pytest.fixture(scope="module")
