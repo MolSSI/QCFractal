@@ -10,9 +10,8 @@ import lzma
 import os
 from contextlib import contextmanager
 
-from qcelemental.models import Molecule
-
 from qcfractal.components.serverinfo.socket import geoip2_found
+from qcportal.molecules import Molecule
 from qcportal.serialization import _json_decode
 
 # Valid client encodings
