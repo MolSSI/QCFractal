@@ -212,7 +212,7 @@ class SinglepointRecord(BaseRecord):
     @property
     def wavefunction(self) -> WavefunctionProperties | None:
         # wavefunction may be None if it doesn't exist or hasn't been fetched yet
-        if self.wavefunction_ is None and "wavefunction_" not in self.__fields_set__ and not self.offline:
+        if self.wavefunction_ is None and "wavefunction_" not in self.model_fields_set and not self.offline:
             self._fetch_wavefunction()
 
         if self.wavefunction_ is not None:
@@ -245,13 +245,13 @@ class SinglepointRecord(BaseRecord):
                 molecule=self.molecule,
                 keywords=self.specification.keywords,
                 properties=AtomicResultProperties(**new_properties),
-                protocols=self.specification.protocols,
+                protocols=self.specification.protocols.model_dump(),
                 return_result=self.return_result,
                 extras=extras,
                 stdout=self.stdout,
                 native_files={k: v.data for k, v in self.native_files.items()},
                 wavefunction=self.wavefunction,
-                provenance=self.provenance,
+                provenance=self.provenance.model_dump(),
                 success=True,  # Status has been checked above
             )
         except NoClientError:

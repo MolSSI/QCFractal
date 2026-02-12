@@ -3,12 +3,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from qcelemental.models import (
-    OptimizationResult as QCEl_OptimizationResult,
-)
-from sqlalchemy import select, update
-from sqlalchemy.orm import lazyload, joinedload, selectinload, defer, undefer, load_only
-
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
 from qcportal.exceptions import MissingDataError
@@ -21,13 +15,14 @@ from qcportal.optimization import (
     OptimizationInput,
     OptimizationMultiInput,
 )
+from qcportal.qcschema_v1 import OptimizationResult as QCEl_OptimizationResult
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.serialization import convert_numpy_recursive
-from qcportal.singlepoint import QCSpecification
-from qcportal.singlepoint import (
-    SinglepointDriver,
-)
+from qcportal.singlepoint import QCSpecification, SinglepointDriver
 from qcportal.utils import hash_dict, is_included
+from sqlalchemy import select, update
+from sqlalchemy.orm import lazyload, joinedload, selectinload, defer, undefer, load_only
+
 from .record_db_models import OptimizationSpecificationORM, OptimizationRecordORM, OptimizationTrajectoryORM
 from ..base_record_socket import BaseRecordSocket
 
@@ -240,7 +235,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
                 program=result.provenance.creator.lower(),
                 qc_specification=qc_spec,
                 keywords=result.keywords,
-                protocols=result.protocols,
+                protocols=result.protocols.model_dump(),
             )
 
             opt_specs.append(opt_spec)
@@ -307,10 +302,10 @@ class OptimizationRecordSocket(BaseRecordSocket):
         to_add = []
 
         for opt_spec in opt_specs:
-            protocols_dict = opt_spec.protocols.dict(exclude_defaults=True, exclude_unset=True)
+            protocols_dict = opt_spec.protocols.model_dump(exclude_defaults=True, exclude_unset=True)
 
             # Don't include lower specifications in the hash
-            opt_spec_dict = opt_spec.dict(exclude={"protocols", "qc_specification"})
+            opt_spec_dict = opt_spec.model_dump(exclude={"protocols", "qc_specification"})
             opt_spec_dict["protocols"] = protocols_dict
             opt_spec_hash = hash_dict(opt_spec_dict)
 
