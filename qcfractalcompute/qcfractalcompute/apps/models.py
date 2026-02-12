@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-try:
-    import pydantic.v1 as pydantic
-except ImportError:
-    import pydantic
+import pydantic
 
 from qcportal.compression import decompress, CompressionEnum
 
