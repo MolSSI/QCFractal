@@ -1,19 +1,15 @@
 import time
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Optional, Dict, Any, List, Union
+from typing import Any
 
 from dateutil.parser import parse as date_parser
-
-try:
-    from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr
-except ImportError:
-    from pydantic import BaseModel, Extra, validator, PrivateAttr
+from pydantic import BaseModel, ConfigDict, field_validator, PrivateAttr
+from tqdm import tqdm
 
 from qcportal.base_models import QueryProjModelBase
 from qcportal.utils import seconds_to_hms
 from ..base_models import QueryIteratorBase
-from tqdm import tqdm
 
 
 class InternalJobStatusEnum(str, Enum):
@@ -44,34 +40,33 @@ class InternalJobStatusEnum(str, Enum):
 
 
 class InternalJob(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     id: int
     name: str
     status: InternalJobStatusEnum
     added_date: datetime
     scheduled_date: datetime
-    started_date: Optional[datetime]
-    last_updated: Optional[datetime]
-    ended_date: Optional[datetime]
-    runner_hostname: Optional[str]
-    runner_uuid: Optional[str]
-    repeat_delay: Optional[int]
-    serial_group: Optional[str]
+    started_date: datetime | None
+    last_updated: datetime | None
+    ended_date: datetime | None
+    runner_hostname: str | None
+    runner_uuid: str | None
+    repeat_delay: int | None
+    serial_group: str | None
 
     progress: int
-    progress_description: Optional[str] = None
+    progress_description: str | None = None
 
     function: str
-    kwargs: Dict[str, Any]
-    after_function: Optional[str]
-    after_function_kwargs: Optional[Dict[str, Any]]
+    kwargs: dict[str, Any]
+    after_function: str | None
+    after_function_kwargs: dict[str, Any] | None
     result: Any
-    user: Optional[str]
+    user: str | None
 
     _client: Any = PrivateAttr(None)
-    _refresh_url: Optional[str] = PrivateAttr(None)
+    _refresh_url: str | None = PrivateAttr(None)
 
     def __init__(self, client=None, refresh_url=None, **kwargs):
         BaseModel.__init__(self, **kwargs)
@@ -94,7 +89,7 @@ class InternalJob(BaseModel):
         for k, v in server_data:
             setattr(self, k, v)
 
-    def watch(self, interval: float = 2.0, timeout: Optional[float] = None):
+    def watch(self, interval: float = 2.0, timeout: float | None = None):
         """
         Watch an internal job for completion
 
@@ -165,27 +160,28 @@ class InternalJob(BaseModel):
 
 
 class InternalJobQueryFilters(QueryProjModelBase):
-    job_id: Optional[List[int]] = None
-    name: Optional[List[str]] = None
-    user: Optional[List[Union[int, str]]] = None
-    runner_hostname: Optional[List[str]] = None
-    status: Optional[List[InternalJobStatusEnum]] = None
-    last_updated_before: Optional[datetime] = None
-    last_updated_after: Optional[datetime] = None
-    added_before: Optional[datetime] = None
-    added_after: Optional[datetime] = None
-    scheduled_before: Optional[datetime] = None
-    scheduled_after: Optional[datetime] = None
+    job_id: list[int] | None = None
+    name: list[str] | None = None
+    user: list[int | str] | None = None
+    runner_hostname: list[str] | None = None
+    status: list[InternalJobStatusEnum] | None = None
+    last_updated_before: datetime | None = None
+    last_updated_after: datetime | None = None
+    added_before: datetime | None = None
+    added_after: datetime | None = None
+    scheduled_before: datetime | None = None
+    scheduled_after: datetime | None = None
 
-    @validator(
+    @field_validator(
         "last_updated_before",
         "last_updated_after",
         "added_before",
         "added_after",
         "scheduled_before",
         "scheduled_after",
-        pre=True,
+        mode="before",
     )
+    @classmethod
     def parse_dates(cls, v):
         if isinstance(v, str):
             return date_parser(v)
@@ -215,11 +211,11 @@ class InternalJobQueryIterator(QueryIteratorBase[InternalJob]):
         batch_limit = client.api_limits["get_internal_jobs"] // 4
         QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
-    def _request(self) -> List[InternalJob]:
+    def _request(self) -> list[InternalJob]:
         ij_dicts = self._client.make_request(
             "post",
             "api/v1/internal_jobs/query",
-            List[Dict[str, Any]],
+            list[dict[str, Any]],
             body=self._query_filters,
         )
 
