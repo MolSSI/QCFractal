@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from enum import Enum
-from typing import TYPE_CHECKING, Optional, List, Dict, Any, Tuple, Union, Sequence
+from typing import TYPE_CHECKING, Any
+
+from pydantic import BaseModel, field_validator, PrivateAttr, Field, ConfigDict
 
 from qcportal.all_inputs import AllInputTypes
 from qcportal.all_results import AllResultTypes
@@ -12,13 +15,6 @@ from qcportal.external_files import ExternalFile
 from qcportal.metadata_models import InsertCountsMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordAddBodyBase, record_from_dict, BaseRecord
 from qcportal.utils import make_list
-
-try:
-    import pydantic.v1 as pydantic
-    from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field
-except ImportError:
-    import pydantic
-    from pydantic import BaseModel, Extra, validator, PrivateAttr, Field, root_validator
 
 if TYPE_CHECKING:
     from qcportal.client import PortalClient
@@ -34,13 +30,13 @@ class ProjectAttachmentType(str, Enum):
 
 class ProjectAttachment(ExternalFile):
     attachment_type: ProjectAttachmentType
-    tags: List[str]
+    tags: list[str]
 
 
 class ProjectQueryModel(RestModelBase):
-    project_name: Optional[str] = None
-    include: Optional[List[str]] = None
-    exclude: Optional[List[str]] = None
+    project_name: str | None = None
+    include: list[str] | None = None
+    exclude: list[str] | None = None
 
 
 class ProjectDeleteParams(RestModelBase):
@@ -48,7 +44,8 @@ class ProjectDeleteParams(RestModelBase):
     delete_datasets: bool = False
     delete_dataset_records: bool = False
 
-    @validator("delete_records", "delete_datasets", "delete_dataset_records", pre=True)
+    @field_validator("delete_records", "delete_datasets", "delete_dataset_records", mode="before")
+    @classmethod
     def validate_lists(cls, v):
         return validate_list_to_single(v)
 
@@ -57,10 +54,10 @@ class ProjectAddBody(RestModelBase):
     name: str
     description: str
     tagline: str
-    tags: List[str]
+    tags: list[str]
     default_compute_tag: str
     default_compute_priority: PriorityEnum
-    extras: Dict[str, Any]
+    extras: dict[str, Any]
     existing_ok: bool = False
 
 
@@ -72,24 +69,24 @@ class ProjectDatasetAddBody(RestModelBase):
     name: str
     description: str
     tagline: str
-    tags: List[str]
-    provenance: Dict[str, Any]
+    tags: list[str]
+    provenance: dict[str, Any]
     default_compute_tag: str
     default_compute_priority: PriorityEnum
-    extras: Dict[str, Any]
+    extras: dict[str, Any]
     existing_ok: bool = False
 
 
 class ProjectLinkDatasetBody(RestModelBase):
     dataset_id: int
-    name: Optional[str]
-    description: Optional[str]
-    tagline: Optional[str]
-    tags: Optional[List]
+    name: str | None
+    description: str | None
+    tagline: str | None
+    tags: list[str] | None
 
 
 class ProjectUnlinkDatasetsBody(RestModelBase):
-    dataset_ids: List[int]
+    dataset_ids: list[int]
     delete_datasets: bool
     delete_dataset_records: bool
 
@@ -98,25 +95,25 @@ class ProjectRecordAddBody(RecordAddBodyBase):
     record_input: AllInputTypes
     name: str
     description: str
-    tags: List[str]
+    tags: list[str]
 
 
 class ProjectRecordImportBody(RestModelBase):
     record_data: AllResultTypes
     name: str
     description: str
-    tags: List[str]
+    tags: list[str]
 
 
 class ProjectLinkRecordBody(RestModelBase):
     record_id: int
     name: str
     description: str
-    tags: List[str]
+    tags: list[str]
 
 
 class ProjectUnlinkRecordsBody(RestModelBase):
-    record_ids: List[int]
+    record_ids: list[int]
     delete_records: bool
 
 
@@ -124,7 +121,7 @@ class ProjectRecordMetadata(BaseModel):
     record_id: int
     name: str
     description: str
-    tags: List[str]
+    tags: list[str]
 
     record_type: str
     status: RecordStatusEnum
@@ -136,38 +133,36 @@ class ProjectDatasetMetadata(BaseModel):
     name: str
     description: str
     tagline: str
-    tags: List[str]
+    tags: list[str]
 
 
 class Project(BaseModel):
-    class Config:
-        extra = Extra.forbid
-        allow_mutation = True
-        validate_assignment = True
+
+    model_config = ConfigDict(extra="forbid", validate_assignment=True, frozen=False)
 
     id: int
     name: str
     description: str
     tagline: str
-    tags: List[str]
+    tags: list[str]
 
     default_compute_tag: str
     default_compute_priority: PriorityEnum
 
-    owner_user: Optional[str]
+    owner_user: str | None
 
-    extras: Dict[str, Any]
+    extras: dict[str, Any]
 
     ########################################
     # Caches of information
     ########################################
-    _record_metadata: List[ProjectRecordMetadata] = PrivateAttr([])
-    _dataset_metadata: List[ProjectDatasetMetadata] = PrivateAttr([])
+    _record_metadata: list[ProjectRecordMetadata] = PrivateAttr([])
+    _dataset_metadata: list[ProjectDatasetMetadata] = PrivateAttr([])
 
     ######################################################
     # Fields not always included when fetching the dataset
     ######################################################
-    attachments_: Optional[List[ProjectAttachment]] = Field(None, alias="attachments")
+    attachments_: list[ProjectAttachment] | None = Field(None, alias="attachments")
 
     #############################
     # Private non-pydantic fields
@@ -182,7 +177,7 @@ class Project(BaseModel):
         if self.offline:
             raise RuntimeError("Project is not connected to a QCFractal server")
 
-    def __init__(self, client: Optional[PortalClient] = None, **kwargs):
+    def __init__(self, client: PortalClient | None = None, **kwargs):
         BaseModel.__init__(self, **kwargs)
 
         # Calls derived class propagate_client
@@ -201,24 +196,24 @@ class Project(BaseModel):
     # General info
     #############################
     @property
-    def dataset_metadata(self) -> List[ProjectDatasetMetadata]:
+    def dataset_metadata(self) -> list[ProjectDatasetMetadata]:
         self.assert_online()
         if len(self._dataset_metadata) == 0:
             self.fetch_dataset_metadata()
         return self._dataset_metadata
 
     @property
-    def record_metadata(self) -> List[ProjectRecordMetadata]:
+    def record_metadata(self) -> list[ProjectRecordMetadata]:
         self.assert_online()
         if len(self._record_metadata) == 0:
             self.fetch_record_metadata()
         return self._record_metadata
 
-    def status(self) -> Dict[str, Dict[RecordStatusEnum, int]]:
+    def status(self) -> dict[str, dict[RecordStatusEnum, int]]:
         self.assert_online()
 
         return self._client.make_request(
-            "get", f"api/v1/projects/{self.id}/status", Dict[str, Dict[RecordStatusEnum, int]]
+            "get", f"api/v1/projects/{self.id}/status", dict[str, dict[RecordStatusEnum, int]]
         )
 
     #############################
@@ -235,7 +230,7 @@ class Project(BaseModel):
         self.assert_online()
 
         self._record_metadata = self._client.make_request(
-            "get", f"api/v1/projects/{self.id}/record_metadata", List[ProjectRecordMetadata]
+            "get", f"api/v1/projects/{self.id}/record_metadata", list[ProjectRecordMetadata]
         )
 
     def add_record(
@@ -243,10 +238,10 @@ class Project(BaseModel):
         name: str,
         record_input: AllInputTypes,
         *,
-        description: Optional[str] = None,
-        tags: List[str] = None,
-        compute_tag: Optional[str] = None,
-        compute_priority: Optional[PriorityEnum] = None,
+        description: str | None = None,
+        tags: list[str] = None,
+        compute_tag: str | None = None,
+        compute_priority: PriorityEnum | None = None,
         find_existing: bool = True,
     ) -> BaseRecord:
 
@@ -272,7 +267,7 @@ class Project(BaseModel):
         )
 
         meta, record_id = self._client.make_request(
-            "post", f"api/v1/projects/{self.id}/records", Tuple[InsertCountsMetadata, int], body=body_data
+            "post", f"api/v1/projects/{self.id}/records", tuple[InsertCountsMetadata, int], body=body_data
         )
 
         if not meta.success:
@@ -298,8 +293,8 @@ class Project(BaseModel):
         name: str,
         record: AllResultTypes,
         *,
-        description: Optional[str] = None,
-        tags: List[str] = None,
+        description: str | None = None,
+        tags: list[str] = None,
     ) -> BaseRecord:
         """
         Imports a computation record into this project
@@ -349,7 +344,7 @@ class Project(BaseModel):
         record_id: int,
         name: str,
         description: str,
-        tags: List[str],
+        tags: list[str],
     ) -> BaseRecord:
 
         body = ProjectLinkRecordBody(record_id=record_id, name=name, description=description, tags=tags)
@@ -370,7 +365,7 @@ class Project(BaseModel):
 
         return rec
 
-    def unlink_records(self, record_ids: Union[int, str, List[Union[int, str]]], delete_records: bool = False):
+    def unlink_records(self, record_ids: int | str | list[int | str], delete_records: bool = False):
         record_ids = make_list(record_ids)
         record_ids = [self._lookup_record_id(rid) if isinstance(rid, str) else rid for rid in record_ids]
         body = ProjectUnlinkRecordsBody(record_ids=record_ids, delete_records=delete_records)
@@ -380,8 +375,8 @@ class Project(BaseModel):
 
     def get_record(
         self,
-        record_id: Union[int, str],
-        include: Optional[Sequence[str]] = None,
+        record_id: int | str,
+        include: Sequence[str] | None = None,
     ) -> BaseRecord:
 
         if isinstance(record_id, str):
@@ -390,7 +385,7 @@ class Project(BaseModel):
         url_params = ProjURLParameters(include=include)
 
         r_dict = self._client.make_request(
-            "get", f"api/v1/projects/{self.id}/records/{record_id}", Dict[str, Any], url_params=url_params
+            "get", f"api/v1/projects/{self.id}/records/{record_id}", dict[str, Any], url_params=url_params
         )
 
         # set prefix to be the main prefix of the server. We will fetch all the records/datasets
@@ -413,20 +408,20 @@ class Project(BaseModel):
         self._dataset_metadata = self._client.make_request(
             "get",
             f"api/v1/projects/{self.id}/dataset_metadata",
-            List[ProjectDatasetMetadata],
+            list[ProjectDatasetMetadata],
         )
 
     def add_dataset(
         self,
         dataset_type: str,
         name: str,
-        description: Optional[str] = None,
-        tagline: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        provenance: Optional[Dict[str, Any]] = None,
-        default_compute_tag: Optional[str] = None,
-        default_compute_priority: Optional[PriorityEnum] = None,
-        extras: Optional[Dict[str, Any]] = None,
+        description: str | None = None,
+        tagline: str | None = None,
+        tags: list[str] | None = None,
+        provenance: dict[str, Any] | None = None,
+        default_compute_tag: str | None = None,
+        default_compute_priority: PriorityEnum | None = None,
+        extras: dict[str, Any] | None = None,
         existing_ok: bool = False,
     ) -> BaseDataset:
 
@@ -480,10 +475,10 @@ class Project(BaseModel):
     def link_dataset(
         self,
         dataset_id: int,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-        tagline: Optional[str] = None,
-        tags: Optional[List] = None,
+        name: str | None = None,
+        description: str | None = None,
+        tagline: str | None = None,
+        tags: list[str] | None = None,
     ) -> BaseDataset:
 
         body = ProjectLinkDatasetBody(
@@ -507,7 +502,7 @@ class Project(BaseModel):
 
     def unlink_datasets(
         self,
-        dataset_ids: Union[int, str, List[Union[int, str]]],
+        dataset_ids: int | str | list[int | str],
         delete_datasets: bool = False,
         delete_dataset_records: bool = False,
     ):
@@ -520,11 +515,11 @@ class Project(BaseModel):
         self._client.make_request("post", f"api/v1/projects/{self.id}/datasets/unlink", None, body=body)
         self._dataset_metadata = [d for d in self._dataset_metadata if d.dataset_id not in dataset_ids]
 
-    def get_dataset(self, dataset_id: Union[int, str]) -> BaseDataset:
+    def get_dataset(self, dataset_id: int | str) -> BaseDataset:
         if isinstance(dataset_id, str):
             dataset_id = self._lookup_dataset_id(dataset_id)
 
-        ds_dict = self._client.make_request("get", f"api/v1/projects/{self.id}/datasets/{dataset_id}", Dict[str, Any])
+        ds_dict = self._client.make_request("get", f"api/v1/projects/{self.id}/datasets/{dataset_id}", dict[str, Any])
 
         # set prefix to be the main prefix of the server. We will fetch all the records/datasets
         # directly via the regular (non-project) endpoints
