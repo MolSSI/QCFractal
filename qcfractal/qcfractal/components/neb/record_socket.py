@@ -8,12 +8,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import sqlalchemy.orm.attributes
 import tabulate
-
-try:
-    from pydantic.v1 import BaseModel, Extra
-except ImportError:
-    from pydantic import BaseModel, Extra
-
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
 from sqlalchemy.orm import lazyload, joinedload, selectinload, defer, undefer
@@ -68,10 +63,7 @@ class NEBServiceState(BaseModel):
     This represents the current state of a NEB service
     """
 
-    class Config:
-        extra = Extra.forbid
-        allow_mutation = True
-        validate_assignment = True
+    model_config = ConfigDict(extra="forbid", frozen=False, validate_assignment=True)
 
     # These are stored as JSON (ie, dict encoded into a string)
     # This makes for faster loads and makes them somewhat tamper-proof
@@ -107,22 +99,22 @@ class NEBRecordSocket(BaseRecordSocket):
         neb_orm: NEBRecordORM = service_orm.record
         output = "\n\nCreated NEB calculation\n"
         spec: NEBSpecification = neb_orm.specification.to_model(NEBSpecification)
-        keywords = spec.keywords.dict()
+        keywords = spec.keywords.model_dump()
         table_rows = sorted(keywords.items())
         output += tabulate.tabulate(table_rows, headers=["NEB keywords", "value"])
         output += "\n\n"
-        table_rows = sorted(spec.singlepoint_specification.dict().items())
+        table_rows = sorted(spec.singlepoint_specification.model_dump().items())
         output += tabulate.tabulate(table_rows, headers=["NEB QC keywords", "value"])
         output += "\n\n"
         if bool(spec.optimization_specification):
-            table_rows = sorted(spec.optimization_specification.qc_specification.dict().items())
+            table_rows = sorted(spec.optimization_specification.qc_specification.model_dump().items())
             output += tabulate.tabulate(table_rows, headers=["OPT QC keywords", "value"])
         output += "\n\n"
 
         initial_chain: List[Dict[str, Any]] = [x.molecule.model_dict() for x in neb_orm.initial_chain]
         output += f"{keywords.get('images', 11)} images will be used to guess a transition state structure.\n"
         output += f"Molecular formula = {Molecule(**initial_chain[0]).get_molecular_formula()}\n"
-        molecule_template = Molecule(**initial_chain[0]).dict(encoding="json")
+        molecule_template = Molecule(**initial_chain[0]).model_dump(exclude_unset=True, mode="json")
 
         molecule_template.pop("geometry", None)
         molecule_template.pop("identifiers", None)
@@ -146,7 +138,7 @@ class NEBRecordSocket(BaseRecordSocket):
             molecule_template=molecule_template_str,
         )
 
-        service_orm.service_state = service_state.dict()
+        service_orm.service_state = service_state.model_dump()
         sqlalchemy.orm.attributes.flag_modified(service_orm, "service_state")
 
     def iterate_service(
@@ -165,7 +157,7 @@ class NEBRecordSocket(BaseRecordSocket):
         }
         # Load the state from the service_state column
         spec: NEBSpecification = neb_orm.specification.to_model(NEBSpecification)
-        params = spec.keywords.dict()
+        params = spec.keywords.model_dump()
         service_state = NEBServiceState(**service_orm.service_state)
         molecule_template = json.loads(service_state.molecule_template)
 
@@ -302,7 +294,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 output += "\nNEB calculation is completed with %i iterations" % service_state.iteration
 
         append_output(session, neb_orm, OutputTypeEnum.stdout, output)
-        service_orm.service_state = service_state.dict()
+        service_orm.service_state = service_state.model_dump()
         sqlalchemy.orm.attributes.flag_modified(service_orm, "service_state")
         return finished
 
@@ -549,7 +541,7 @@ class NEBRecordSocket(BaseRecordSocket):
         to_add = []
 
         for neb_spec in neb_specs:
-            kw_dict = neb_spec.keywords.dict()
+            kw_dict = neb_spec.keywords.model_dump()
 
             neb_spec_dict = {"program": neb_spec.program, "keywords": kw_dict, "protocols": {}}
             neb_spec_hash = hash_dict(neb_spec_dict)

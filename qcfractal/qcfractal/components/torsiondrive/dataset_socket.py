@@ -85,7 +85,7 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
 
         for spec in spec_orm:
             td_spec_obj = spec.specification.to_model(TorsiondriveSpecification)
-            td_spec_input_dict = td_spec_obj.dict()
+            td_spec_input_dict = td_spec_obj.model_dump()
 
             for entry in entry_orm:
                 if (entry.name, spec.name) in existing_records:

@@ -238,10 +238,10 @@ class OptimizationRecord(BaseRecord):
                     ),
                     keywords=self.specification.qc_specification.keywords,
                 ),
-                protocols=self.specification.protocols,
+                protocols=self.specification.protocols.model_dump(),
                 extras=extras,
                 stdout=self.stdout,
-                provenance=self.provenance,
+                provenance=self.provenance.model_dump(),
                 success=True,  # Status has been checked above
             )
         except NoClientError:

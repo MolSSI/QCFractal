@@ -4,7 +4,6 @@ import logging
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
-from qcelemental.models import FailedOperation
 from sqlalchemy import select, delete, update, or_, text
 from sqlalchemy.orm import (
     joinedload,
@@ -31,6 +30,7 @@ from qcportal.all_results import AllSchemaV1ResultTypes, AllQCPortalRecordTypes,
 from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.managers.models import ManagerStatusEnum
 from qcportal.metadata_models import DeleteMetadata, UpdateMetadata
+from qcportal.qcschema_v1 import FailedOperation, ComputeError
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import chunk_iterable, now_at_utc, is_included
 from .base_record_socket import BaseRecordSocket
@@ -60,7 +60,7 @@ if TYPE_CHECKING:
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable, Type, Union
 
 
-_default_error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
+_default_error = ComputeError(error_type="not_supplied", error_message="No error message found on task.")
 
 
 class RecordSocket:
@@ -556,7 +556,7 @@ class RecordSocket:
         if error is None:
             error = _default_error
 
-        error_out_orm = create_output_orm(OutputTypeEnum.error, error.dict())
+        error_out_orm = create_output_orm(OutputTypeEnum.error, error.model_dump())
         all_outputs = {OutputTypeEnum.error: error_out_orm}
 
         # Get the rest of the outputs
@@ -623,7 +623,7 @@ class RecordSocket:
         qcp_results: List[Tuple[int, AllQCPortalRecordTypes]] = []
 
         for idx, result in enumerate(results):
-            is_qcptype = isinstance(result, AllQCPortalRecordTypes)
+            is_qcptype = hasattr(result, "record_type")
             is_schemav1type = isinstance(result, AllSchemaV1ResultTypes)
 
             if isinstance(result, FailedOperation) or (is_schemav1type and not result.success):
@@ -1258,7 +1258,7 @@ class RecordSocket:
             meta = delete_general(session, BaseRecordORM, BaseRecordORM.id, del_id_1)
             ch_meta = delete_general(session, BaseRecordORM, BaseRecordORM.id, del_id_2)
 
-            meta_dict = meta.dict()
+            meta_dict = meta.model_dump()
             meta_dict["n_children_deleted"] = ch_meta.n_deleted
             return DeleteMetadata(**meta_dict)
 

@@ -58,18 +58,18 @@ class ReactionRecordSocket(BaseRecordSocket):
 
         output += "-" * 80 + "\nManybody Keywords:\n\n"
         spec: ReactionSpecification = rxn_orm.specification.to_model(ReactionSpecification)
-        table_rows = sorted(spec.keywords.dict().items())
+        table_rows = sorted(spec.keywords.model_dump().items())
         output += tabulate.tabulate(table_rows, headers=["keyword", "value"])
 
         if spec.singlepoint_specification:
             output += "\n\n" + "-" * 80 + "\nQC Specification:\n\n"
-            table_rows = sorted(spec.singlepoint_specification.dict().items())
+            table_rows = sorted(spec.singlepoint_specification.model_dump().items())
             output += tabulate.tabulate(table_rows, headers=["keyword", "value"])
             output += "\n\n"
 
         if spec.optimization_specification:
             output += "\n\n" + "-" * 80 + "\nOptimization Specification:\n\n"
-            table_rows = sorted(spec.optimization_specification.dict().items())
+            table_rows = sorted(spec.optimization_specification.model_dump().items())
             output += tabulate.tabulate(table_rows, headers=["keyword", "value"])
             output += "\n\n"
 
@@ -374,7 +374,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         to_add = []
 
         for rxn_spec in rxn_specs:
-            kw_dict = rxn_spec.keywords.dict()
+            kw_dict = rxn_spec.keywords.model_dump()
 
             rxn_spec_dict = {"program": rxn_spec.program, "keywords": kw_dict, "protocols": {}}
             rxn_spec_hash = hash_dict(rxn_spec_dict)

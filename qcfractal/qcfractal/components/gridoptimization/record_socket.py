@@ -6,12 +6,9 @@ import logging
 from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Set, TYPE_CHECKING
 
 import numpy as np
+import pydantic
 import sqlalchemy.orm.attributes
-
-try:
-    from pydantic.v1 import BaseModel, Extra, parse_obj_as
-except ImportError:
-    from pydantic import BaseModel, Extra, parse_obj_as
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select, func
 from sqlalchemy.orm import lazyload, joinedload, selectinload, undefer, defer
 
@@ -113,7 +110,7 @@ def calculate_starting_grid(scans_dict: Sequence[Dict[str, Any]], molecule: Mole
         Indices of the starting optimization constraints
     """
 
-    scans = parse_obj_as(List[ScanDimension], scans_dict)
+    scans = pydantic.TypeAdapter(list[ScanDimension]).validate_python(scans_dict)
     starting_grid = []
     for scan in scans:
         # Find closest index
@@ -135,10 +132,7 @@ class GridoptimizationServiceState(BaseModel):
     This represents the current state of a gridoptimization service
     """
 
-    class Config:
-        extra = Extra.forbid
-        allow_mutation = True
-        validate_assignment = True
+    model_config = ConfigDict(extra="forbid", frozen=False, validate_assignment=True)
 
     iteration: int
     complete: List[Union[str, Tuple[int, ...]]]
@@ -198,7 +192,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             constraint_template=constraint_template_str,
         )
 
-        service_orm.service_state = service_state.dict()
+        service_orm.service_state = service_state.model_dump()
         sqlalchemy.orm.attributes.flag_modified(service_orm, "service_state")
 
     def iterate_service(
@@ -305,7 +299,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         # Set the new service state. We must then mark it as modified
         # so that SQLAlchemy can pick up changes. This is because SQLAlchemy
         # cannot track mutations in nested dicts
-        service_orm.service_state = service_state.dict()
+        service_orm.service_state = service_state.model_dump()
         sqlalchemy.orm.attributes.flag_modified(service_orm, "service_state")
 
         # Return True to indicate that this service has successfully completed
@@ -331,7 +325,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         opt_spec = go_orm.specification.optimization_specification.model_dict()
 
         # Convert to an input
-        opt_spec = OptimizationSpecification(**opt_spec).dict()
+        opt_spec = OptimizationSpecification(**opt_spec).model_dump()
 
         # Load the starting molecule (for absolute constraints)
         starting_molecule = None
@@ -498,7 +492,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         to_add = []
 
         for go_spec in go_specs:
-            go_kw_dict = go_spec.keywords.dict()
+            go_kw_dict = go_spec.keywords.model_dump()
 
             go_spec_dict = {"program": go_spec.program, "keywords": go_kw_dict, "protocols": {}}
             go_spec_hash = hash_dict(go_spec_dict)
