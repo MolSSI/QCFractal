@@ -1,9 +1,9 @@
 from typing import Optional, List, Dict
 
-from qcelemental.models import Molecule
 from qcelemental.models.molecule import Identifiers as MoleculeIdentifiers
 
 from ..base_models import QueryModelBase, RestModelBase, QueryIteratorBase
+from ..qcschema_v1 import Molecule
 
 
 class MoleculeQueryFilters(QueryModelBase):
