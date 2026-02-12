@@ -1,13 +1,8 @@
-from __future__ import annotations
-
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Any, Optional
+from typing import Any
 
-try:
-    from pydantic.v1 import BaseModel, Extra, validator, PrivateAttr, Field
-except ImportError:
-    from pydantic import BaseModel, Extra, validator, PrivateAttr, Field
+from pydantic import BaseModel, PrivateAttr
 
 
 class ExternalFileStatusEnum(str, Enum):
@@ -35,8 +30,8 @@ class ExternalFile(BaseModel):
     status: ExternalFileStatusEnum
 
     file_name: str
-    description: Optional[str]
-    provenance: Dict[str, Any]
+    description: str | None
+    provenance: dict[str, Any]
 
     sha256sum: str
     file_size: int
