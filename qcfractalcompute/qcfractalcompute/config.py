@@ -1,16 +1,17 @@
 import logging
 import os
-from typing import List, Optional, Union, Dict, Any
-from typing import Literal, Annotated
+from typing import Literal, Annotated, Any
 
 import yaml
-from pydantic import BaseModel, Field, field_validator, model_validator, BeforeValidator, ConfigDict
-from pydantic_settings import BaseSettings, SettingsConfigDict, PydanticBaseSettingsSource
+from pydantic import BaseModel, ConfigDict
+from pydantic import Field, field_validator, model_validator, BeforeValidator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import PydanticBaseSettingsSource
 
 from qcportal.utils import seconds_to_hms, duration_to_seconds, update_nested_dict
 
 
-def _make_abs_path(path: Optional[str], base_folder: str, default_filename: Optional[str]) -> Optional[str]:
+def _make_abs_path(path: str | None, base_folder: str, default_filename: str | None) -> str | None:
     # No path specified, no default
     if path is None and default_filename is None:
         return None
@@ -61,24 +62,24 @@ class PackageEnvironmentSettings(QCFComputeConfigBase):
         True,
         description="Use the environment that the manager is running in for computation. May be in addition to other environments",
     )
-    conda: List[str] = Field([], description="List of conda environments to query for installed packages")
-    apptainer: List[str] = Field(
+    conda: list[str] = Field([], description="List of conda environments to query for installed packages")
+    apptainer: list[str] = Field(
         [], description="List of paths to apptainer/singularity files to query for installed packages"
     )
 
 
 class ExecutorConfig(QCFComputeConfigBase):
     type: str
-    compute_tags: List[str]
-    worker_init: List[str] = []
+    compute_tags: list[str]
+    worker_init: list[str] = []
 
-    scratch_directory: Optional[str] = None
-    bind_address: Optional[str] = None
+    scratch_directory: str | None = None
+    bind_address: str | None = None
 
     cores_per_worker: int
     memory_per_worker: float
 
-    extra_executor_options: Dict[str, Any] = {}
+    extra_executor_options: dict[str, Any] = {}
 
     environments: PackageEnvironmentSettings = Field(default_factory=PackageEnvironmentSettings)
 
@@ -98,34 +99,34 @@ class SlurmExecutorConfig(ExecutorConfig):
 
     walltime: Annotated[str, BeforeValidator(_walltime_must_be_str)]
     exclusive: bool = True
-    partition: Optional[str] = None
-    account: Optional[str] = None
+    partition: str | None = None
+    account: str | None = None
 
     workers_per_node: int
     max_nodes: int
 
-    scheduler_options: List[str] = []
+    scheduler_options: list[str] = []
 
 
 class TorqueExecutorConfig(ExecutorConfig):
     type: Literal["torque"] = "torque"
 
     walltime: Annotated[str, BeforeValidator(_walltime_must_be_str)]
-    account: Optional[str] = None
-    queue: Optional[str] = None
+    account: str | None = None
+    queue: str | None = None
 
     workers_per_node: int
     max_nodes: int
 
-    scheduler_options: List[str] = []
+    scheduler_options: list[str] = []
 
 
 class LSFExecutorConfig(ExecutorConfig):
     type: Literal["lsf"] = "lsf"
 
     walltime: Annotated[str, BeforeValidator(_walltime_must_be_str)]
-    project: Optional[str] = None
-    queue: Optional[str] = None
+    project: str | None = None
+    queue: str | None = None
 
     workers_per_node: int
     max_nodes: int
@@ -133,17 +134,11 @@ class LSFExecutorConfig(ExecutorConfig):
     request_by_nodes: bool = True
     bsub_redirection: bool = True
 
-    scheduler_options: List[str] = []
+    scheduler_options: list[str] = []
 
 
 AllExecutorTypes = Annotated[
-    Union[
-        CustomExecutorConfig,
-        LocalExecutorConfig,
-        SlurmExecutorConfig,
-        TorqueExecutorConfig,
-        LSFExecutorConfig,
-    ],
+    CustomExecutorConfig | LocalExecutorConfig | SlurmExecutorConfig | TorqueExecutorConfig | LSFExecutorConfig,
     Field(discriminator="type"),
 ]
 
@@ -160,15 +155,15 @@ class FractalServerSettings(QCFComputeConfigBase):
     """
 
     fractal_uri: str = Field(..., description="Full URI to the Fractal Server you want to connect to")
-    username: Optional[str] = Field(
+    username: str | None = Field(
         None,
         description="Username to connect to the Fractal Server with. When not provided, a connection is attempted "
         "as a guest user, which in most default Servers will be unable to return results.",
     )
-    password: Optional[str] = Field(
+    password: str | None = Field(
         None, description="Password to authenticate to the Fractal Server with (alongside the `username`)"
     )
-    verify: Optional[bool] = Field(None, description="Use Server-side generated SSL certification or not.")
+    verify: bool | None = Field(None, description="Use Server-side generated SSL certification or not.")
 
 
 class FractalComputeConfig(BaseSettings):
@@ -183,7 +178,7 @@ class FractalComputeConfig(BaseSettings):
         "identify the manager resource and assists with debugging.",
     )
     loglevel: str = "INFO"
-    logfile: Optional[str] = Field(
+    logfile: str | None = Field(
         None,
         description="Full path to save a log file to, including the filename. If not provided, information will still "
         "be reported to terminal, but not saved. When set, logger information is sent to this file.",
@@ -205,7 +200,7 @@ class FractalComputeConfig(BaseSettings):
         ge=0,
     )
 
-    max_idle_time: Optional[int] = Field(
+    max_idle_time: int | None = Field(
         None,
         description="Maximum consecutive time in seconds that the manager "
         "should be allowed to run. If this is reached, the manager will shutdown.",
@@ -216,7 +211,7 @@ class FractalComputeConfig(BaseSettings):
 
     server: FractalServerSettings = Field(...)
     environments: PackageEnvironmentSettings = Field(default_factory=PackageEnvironmentSettings)
-    executors: Dict[str, AllExecutorTypes] = Field(...)
+    executors: dict[str, AllExecutorTypes] = Field(...)
 
     model_config = SettingsConfigDict(
         extra="forbid", case_sensitive=False, env_prefix="QCF_COMPUTE_", env_nested_delimiter="__"
@@ -250,9 +245,9 @@ class FractalComputeConfig(BaseSettings):
             return duration_to_seconds(v)
 
 
-def read_configuration(file_paths: List[str], extra_config: Optional[Dict[str, Any]] = None) -> FractalComputeConfig:
+def read_configuration(file_paths: list[str], extra_config: dict[str, Any] | None = None) -> FractalComputeConfig:
     logger = logging.getLogger(__name__)
-    config_data: Dict[str, Any] = {}
+    config_data: dict[str, Any] = {}
 
     # Read all the files, in order
     for path in file_paths:
