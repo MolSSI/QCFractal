@@ -1,21 +1,18 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from copy import deepcopy
 from enum import Enum
-from typing import Iterable
-from typing import Optional, Union, Any, List, Dict
+from typing import Literal, Any
 
-from pydantic.v1 import BaseModel, Field, constr, validator, Extra
-from qcelemental.models import Molecule
-from qcelemental.models.procedures import (
-    OptimizationResult,
-    QCInputSpecification,
-)
-from typing_extensions import Literal
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 from qcportal.base_models import RestModelBase
 from qcportal.cache import get_records_with_cache
+from qcportal.common_types import LowerStr
 from qcportal.exceptions import NoClientError
+from qcportal.molecules import Molecule
+from qcportal.qcschema_v1 import QCInputSpecification, OptimizationResult
 from qcportal.record_models import (
     BaseRecord,
     RecordAddBodyBase,
@@ -61,18 +58,18 @@ class OptimizationSpecification(BaseModel):
     This is the same as the input specification, with a few ids added
     """
 
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
-    program: constr(to_lower=True) = Field(..., description="The program to use for an optimization")
+    program: LowerStr = Field(..., description="The program to use for an optimization")
     qc_specification: QCSpecification
-    keywords: Dict[str, Any] = Field({})
-    protocols: OptimizationProtocols = Field(OptimizationProtocols())
+    keywords: dict[str, Any] = Field({})
+    protocols: OptimizationProtocols = Field(default_factory=OptimizationProtocols)
 
-    @validator("qc_specification", pre=True)
+    @field_validator("qc_specification", mode="before")
+    @classmethod
     def force_qcspec(cls, v):
         if isinstance(v, QCSpecification):
-            v = v.dict()
+            v = v.model_dump()
 
         v["driver"] = SinglepointDriver.deferred
         v["protocols"] = SinglepointProtocols()
@@ -83,21 +80,21 @@ class OptimizationRecord(BaseRecord):
     record_type: Literal["optimization"] = "optimization"
     specification: OptimizationSpecification
     initial_molecule_id: int
-    final_molecule_id: Optional[int]
-    energies: Optional[List[float]]
+    final_molecule_id: int | None
+    energies: list[float] | None
 
     ######################################################
     # Fields not always included when fetching the record
     ######################################################
-    initial_molecule_: Optional[Molecule] = Field(None, alias="initial_molecule")
-    final_molecule_: Optional[Molecule] = Field(None, alias="final_molecule")
-    trajectory_ids_: Optional[List[int]] = Field(None, alias="trajectory_ids")
+    initial_molecule_: Molecule | None = Field(None, alias="initial_molecule")
+    final_molecule_: Molecule | None = Field(None, alias="final_molecule")
+    trajectory_ids_: list[int] | None = Field(None, alias="trajectory_ids")
 
     ##############################################
     # Fields with child records
     # (generally not received from the server)
     ##############################################
-    trajectory_records_: Optional[List[SinglepointRecord]] = Field(None, alias="trajectory_records")
+    trajectory_records_: list[SinglepointRecord] | None = Field(None, alias="trajectory_records")
 
     @classmethod
     def _fetch_children_multi(
@@ -141,7 +138,7 @@ class OptimizationRecord(BaseRecord):
                     r.trajectory_records_ = [sp_map[x] for x in r.trajectory_ids_]
                 r.propagate_client(r._client, base_url_prefix)
 
-    def propagate_client(self, client, base_url_prefix: Optional[str]):
+    def propagate_client(self, client, base_url_prefix: str | None):
         BaseRecord.propagate_client(self, client, base_url_prefix)
 
         if self.trajectory_records_ is not None:
@@ -163,13 +160,13 @@ class OptimizationRecord(BaseRecord):
             self.trajectory_ids_ = self._client.make_request(
                 "get",
                 f"api/v1/records/optimization/{self.id}/trajectory",
-                List[int],
+                list[int],
             )
 
         self.fetch_children(["trajectory"])
 
-    def get_cache_dict(self, **kwargs) -> Dict[str, Any]:
-        return self.dict(exclude={"trajectory_records_"}, **kwargs)
+    def get_cache_dict(self, **kwargs) -> dict[str, Any]:
+        return self.model_dump(exclude={"trajectory_records_"}, **kwargs)
 
     @property
     def initial_molecule(self) -> Molecule:
@@ -178,13 +175,13 @@ class OptimizationRecord(BaseRecord):
         return self.initial_molecule_
 
     @property
-    def final_molecule(self) -> Optional[Molecule]:
+    def final_molecule(self) -> Molecule | None:
         if self.final_molecule_ is None:
             self._fetch_final_molecule()
         return self.final_molecule_
 
     @property
-    def trajectory(self) -> Optional[List[SinglepointRecord]]:
+    def trajectory(self) -> list[SinglepointRecord] | None:
         if self.trajectory_records_ is None:
             self._fetch_trajectory()
         return self.trajectory_records_
@@ -199,7 +196,7 @@ class OptimizationRecord(BaseRecord):
                 self.trajectory_ids_ = self._client.make_request(
                     "get",
                     f"api/v1/records/optimization/{self.id}/trajectory",
-                    List[int],
+                    list[int],
                 )
 
             if self.trajectory_ids_ is not None:
@@ -257,14 +254,15 @@ class OptimizationRecord(BaseRecord):
 
 
 class OptimizationQueryFilters(RecordQueryFilters):
-    program: Optional[List[str]] = None
-    qc_program: Optional[List[constr(to_lower=True)]] = None
-    qc_method: Optional[List[constr(to_lower=True)]] = None
-    qc_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
-    initial_molecule_id: Optional[List[int]] = None
-    final_molecule_id: Optional[List[int]] = None
+    program: list[str] | None = None
+    qc_program: list[LowerStr] | None = None
+    qc_method: list[LowerStr] | None = None
+    qc_basis: list[LowerStr | None] | None = None
+    initial_molecule_id: list[int] | None = None
+    final_molecule_id: list[int] | None = None
 
-    @validator("qc_basis")
+    @field_validator("qc_basis")
+    @classmethod
     def _convert_basis(cls, v):
         # Convert empty string to None
         # Lowercasing is handled by constr
@@ -277,12 +275,12 @@ class OptimizationQueryFilters(RecordQueryFilters):
 class OptimizationInput(RestModelBase):
     record_type: Literal["optimization"] = "optimization"
     specification: OptimizationSpecification
-    initial_molecule: Union[int, Molecule]
+    initial_molecule: int | Molecule
 
 
 class OptimizationMultiInput(RestModelBase):
     specification: OptimizationSpecification
-    initial_molecules: List[Union[int, Molecule]]
+    initial_molecules: list[int | Molecule]
 
 
 class OptimizationAddBody(RecordAddBodyBase, OptimizationMultiInput):
