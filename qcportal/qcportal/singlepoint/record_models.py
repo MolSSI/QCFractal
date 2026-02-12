@@ -2,20 +2,16 @@ from __future__ import annotations
 
 from copy import deepcopy
 from enum import Enum
-from typing import Optional, Union, Any, List, Dict, Tuple
+from typing import Literal, Any
 
-from pydantic.v1 import BaseModel, Field, constr, validator, Extra, PrivateAttr
-from qcelemental.models import Molecule
-from qcelemental.models.results import (
-    AtomicResult,
-    AtomicResultProperties,
-    WavefunctionProperties,
-)
-from typing_extensions import Literal
+from pydantic import BaseModel, Field, field_validator, ConfigDict, PrivateAttr
 
 from qcportal.base_models import RestModelBase
+from qcportal.common_types import LowerStr
 from qcportal.compression import CompressionEnum, decompress
 from qcportal.exceptions import NoClientError
+from qcportal.molecules import Molecule
+from qcportal.qcschema_v1 import WavefunctionProperties, AtomicResult, AtomicResultProperties
 from qcportal.record_models import (
     RecordStatusEnum,
     BaseRecord,
@@ -33,7 +29,7 @@ class Model(BaseModel):
         description="The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...). "
         "For MM, name of the force field.",
     )
-    basis: Optional[str] = Field(  # type: ignore
+    basis: str | None = Field(  # type: ignore
         None,
         description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for "
         "methods without basis sets. For molecular mechanics, name of the atom-typer.",
@@ -63,12 +59,12 @@ class WavefunctionProtocolEnum(str, Enum):
 
 
 class ErrorCorrectionProtocol(BaseModel):
-    r"""Configuration for how computationaal chemistry programs handle error correction"""
+    r"""Configuration for how computational chemistry programs handle error correction"""
 
     default_policy: bool = Field(
         True, description="Whether to allow error corrections to be used " "if not directly specified in `policies`"
     )
-    policies: Optional[Dict[str, bool]] = Field(
+    policies: dict[str, bool] | None = Field(
         None,
         description="Settings that define whether specific error corrections are allowed. "
         "Keys are the name of a known error and values are whether it is allowed to be used.",
@@ -105,30 +101,28 @@ class SinglepointProtocols(BaseModel):
 
 
 class QCSpecification(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
-    program: constr(to_lower=True) = Field(
+    program: LowerStr = Field(
         ...,
         description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs"
         " support all combinations of driver/method/basis.",
     )
     driver: SinglepointDriver = Field(...)
-    method: constr(to_lower=True) = Field(
-        ..., description="The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...)."
-    )
-    basis: Optional[constr(to_lower=True)] = Field(
+    method: LowerStr = Field(..., description="The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...).")
+    basis: LowerStr | None = Field(
         ...,
         description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for "
         "methods without basis sets.",
     )
-    keywords: Dict[str, Any] = Field({}, description="Program-specific keywords to use for the computation")
-    protocols: SinglepointProtocols = Field(SinglepointProtocols())
+    keywords: dict[str, Any] = Field({}, description="Program-specific keywords to use for the computation")
+    protocols: SinglepointProtocols = Field(default_factory=SinglepointProtocols)
 
-    @validator("basis", pre=True)
+    @field_validator("basis", mode="before")
+    @classmethod
     def _convert_basis(cls, v):
         # Convert empty string to None
-        # Lowercasing is handled by constr
+        # Lowercasing is handled by pydantic
         return None if v == "" else v
 
 
@@ -137,13 +131,12 @@ class Wavefunction(BaseModel):
     Storage of wavefunctions, with compression
     """
 
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     compression_type: CompressionEnum
-    data_: Optional[bytes] = Field(None, alias="data")
+    data_: bytes | None = Field(None, alias="data")
 
-    _data_url: Optional[str] = PrivateAttr(None)
+    _data_url: str | None = PrivateAttr(None)
     _client: Any = PrivateAttr(None)
 
     def propagate_client(self, client, record_base_url):
@@ -160,7 +153,7 @@ class Wavefunction(BaseModel):
         cdata, ctype = self._client.make_request(
             "get",
             self._data_url,
-            Tuple[bytes, CompressionEnum],
+            tuple[bytes, CompressionEnum],
         )
 
         assert self.compression_type == ctype
@@ -181,10 +174,10 @@ class SinglepointRecord(BaseRecord):
     ######################################################
     # Fields not always included when fetching the record
     ######################################################
-    molecule_: Optional[Molecule] = Field(None, alias="molecule")
-    wavefunction_: Optional[Wavefunction] = Field(None, alias="wavefunction")
+    molecule_: Molecule | None = Field(None, alias="molecule")
+    wavefunction_: Wavefunction | None = Field(None, alias="wavefunction")
 
-    def propagate_client(self, client, base_url_prefix: Optional[str]):
+    def propagate_client(self, client, base_url_prefix: str | None):
         BaseRecord.propagate_client(self, client, base_url_prefix)
 
         if self.wavefunction_ is not None:
@@ -200,7 +193,7 @@ class SinglepointRecord(BaseRecord):
         self.wavefunction_ = self._client.make_request(
             "get",
             f"api/v1/records/singlepoint/{self.id}/wavefunction",
-            Optional[Wavefunction],
+            Wavefunction | None,
         )
 
         self.propagate_client(self._client, self._base_url_prefix)
@@ -217,7 +210,7 @@ class SinglepointRecord(BaseRecord):
         return self.molecule_
 
     @property
-    def wavefunction(self) -> Optional[WavefunctionProperties]:
+    def wavefunction(self) -> WavefunctionProperties | None:
         # wavefunction may be None if it doesn't exist or hasn't been fetched yet
         if self.wavefunction_ is None and "wavefunction_" not in self.__fields_set__ and not self.offline:
             self._fetch_wavefunction()
@@ -237,7 +230,7 @@ class SinglepointRecord(BaseRecord):
 
             # QCArchive properties include more than AtomicResultProperties
             if self.properties:
-                prop_fields = AtomicResultProperties.__fields__.keys()
+                prop_fields = AtomicResultProperties.model_fields.keys()
                 new_properties = {k: v for k, v in self.properties.items() if k in prop_fields}
                 extras["extra_properties"] = {k: v for k, v in self.properties.items() if k not in prop_fields}
             else:
@@ -273,12 +266,12 @@ class SinglepointRecord(BaseRecord):
 class SinglepointInput(RestModelBase):
     record_type: Literal["singlepoint"] = "singlepoint"
     specification: QCSpecification
-    molecule: Union[int, Molecule]
+    molecule: int | Molecule
 
 
 class SinglepointMultiInput(RestModelBase):
     specification: QCSpecification
-    molecules: List[Union[int, Molecule]]
+    molecules: list[int | Molecule]
 
 
 class SinglepointAddBody(RecordAddBodyBase, SinglepointMultiInput):
@@ -286,17 +279,18 @@ class SinglepointAddBody(RecordAddBodyBase, SinglepointMultiInput):
 
 
 class SinglepointQueryFilters(RecordQueryFilters):
-    program: Optional[List[constr(to_lower=True)]] = None
-    driver: Optional[List[SinglepointDriver]] = None
-    method: Optional[List[constr(to_lower=True)]] = None
-    basis: Optional[List[Optional[constr(to_lower=True)]]] = None
-    molecule_id: Optional[List[int]] = None
-    keywords: Optional[List[Dict[str, Any]]] = None
+    program: list[LowerStr] | None = None
+    driver: list[SinglepointDriver] | None = None
+    method: list[LowerStr] | None = None
+    basis: list[LowerStr | None] | None = None
+    molecule_id: list[int] | None = None
+    keywords: list[dict[str, Any]] | None = None
 
-    @validator("basis")
+    @field_validator("basis")
+    @classmethod
     def _convert_basis(cls, v):
         # Convert empty string to None
-        # Lowercasing is handled by constr
+        # Lowercasing is handled by pydantic
         if v is not None:
             return ["" if x is None else x for x in v]
         else:
@@ -309,4 +303,4 @@ def compare_singlepoint_records(record_1: SinglepointRecord, record_2: Singlepoi
     assert record_1.molecule == record_2.molecule
     assert (record_1.wavefunction is not None) == (record_2.wavefunction is not None)
     if record_1.wavefunction is not None:
-        assert record_1.wavefunction.dict(encoding="json") == record_2.wavefunction.dict(encoding="json")
+        assert record_1.wavefunction.model_dump(mode="json") == record_2.wavefunction.model_dump(mode="json")
