@@ -94,7 +94,7 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
             <Tabs
               orientation="vertical"
               value={selectedKey || outputKeys[0] || false}
-              onChange={(_event,newValue) => setSelectedKey(newValue)}
+              onChange={(_event, newValue) => setSelectedKey(newValue)}
               sx={{ borderRight: 1, borderColor: "divider" }}
             >
               {outputKeys.map((key) => (

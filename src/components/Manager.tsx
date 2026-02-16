@@ -51,7 +51,7 @@ export default function Manager() {
 
       {!managerFetchedData.loading && managerData && (
         <Grid container spacing={2} width="100%">
-          <Grid  size={12}>
+          <Grid size={12}>
             <Stack>
               <Typography variant="h4" fontWeight="bold">
                 {managerData.name}
@@ -88,7 +88,7 @@ export default function Manager() {
               ))}
             </ul>
           </Grid>
-          <Grid  size={4}>
+          <Grid size={4}>
             <TableContainer component={Paper}>
               <Table size="small" aria-label="manager programs table">
                 <TableHead>

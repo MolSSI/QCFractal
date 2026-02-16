@@ -4,7 +4,7 @@ import { FetchedData } from "../PortalClientContext";
 import React, { useEffect, useState } from "react";
 import * as qcpTypes from "../PortalTypes";
 import { Chip, Grid, Stack, Typography } from "@mui/material";
-import { PieChart } from '@mui/x-charts/PieChart';
+import { PieChart } from "@mui/x-charts/PieChart";
 import { parseToDate } from "../Utils";
 
 export const ManagerFragment: React.FC<{ managerName: string }> = ({
@@ -32,12 +32,10 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
   const mCreatedOn = parseToDate(managerData?.created_on);
   const mLastUpdated = parseToDate(managerData?.modified_on);
 
-  const returned = managerData ? (
-    managerData.claimed - (
-      managerData.active_tasks +
-      managerData.successes +
-      managerData.failures
-    )) : 0
+  const returned = managerData
+    ? managerData.claimed -
+      (managerData.active_tasks + managerData.successes + managerData.failures)
+    : 0;
 
   return (
     <>
@@ -45,7 +43,7 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
 
       {!managerFetchedData.loading && managerData && (
         <Grid container spacing={2} width="100%">
-          <Grid  size={12}>
+          <Grid size={12}>
             <Stack>
               <Typography variant="h6" fontWeight="bold">
                 {managerData.name}
@@ -57,7 +55,7 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
               />
             </Stack>
           </Grid>
-          <Grid  size={6}>
+          <Grid size={6}>
             <Typography variant="body1">
               Manager version: {managerData.manager_version}
             </Typography>
@@ -68,7 +66,7 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
               Hostname: {managerData.hostname}
             </Typography>
           </Grid>
-          <Grid  size={6}>
+          <Grid size={6}>
             <Typography variant="body1">
               Created: {mCreatedOn?.toLocaleString()}
             </Typography>
@@ -76,7 +74,7 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
               Last seen: {mLastUpdated?.toLocaleString()}
             </Typography>
           </Grid>
-          <Grid  size={6}>
+          <Grid size={6}>
             <Typography variant="h6">Programs</Typography>
             <ul>
               {Object.entries(managerData.programs).map(([p]) => {
@@ -84,7 +82,7 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
               })}
             </ul>
           </Grid>
-          <Grid  size={6}>
+          <Grid size={6}>
             <Typography variant="h6">Tags</Typography>
             <ul>
               {managerData.tags.map((tag, index) => (
@@ -92,23 +90,43 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
               ))}
             </ul>
           </Grid>
-          <Grid  size={6}>
+          <Grid size={6}>
             <Stack>
-              <Typography variant="h6">Tasks ({managerData.claimed} total claimed)</Typography>
-              { managerData.claimed == 0 ? (
-                <Typography variant="body1">(no claimed tasks)</Typography>) : (
-            <PieChart
-              colors={['blue', 'green', 'red', 'orange']}
-              series={[
-              {
-                data: [
-                  { id: 0, value: managerData.active_tasks, label: `${managerData.active_tasks} active`},
-                  { id: 1, value: managerData.successes, label: `${managerData.successes} success`},
-                  { id: 2, value: managerData.failures, label: `${managerData.failures} failed`},
-                  { id: 4, value: returned, label: `${returned} returned`},
-                ]
-              }
-            ]} />
+              <Typography variant="h6">
+                Tasks ({managerData.claimed} total claimed)
+              </Typography>
+              {managerData.claimed == 0 ? (
+                <Typography variant="body1">(no claimed tasks)</Typography>
+              ) : (
+                <PieChart
+                  colors={["blue", "green", "red", "orange"]}
+                  series={[
+                    {
+                      data: [
+                        {
+                          id: 0,
+                          value: managerData.active_tasks,
+                          label: `${managerData.active_tasks} active`,
+                        },
+                        {
+                          id: 1,
+                          value: managerData.successes,
+                          label: `${managerData.successes} success`,
+                        },
+                        {
+                          id: 2,
+                          value: managerData.failures,
+                          label: `${managerData.failures} failed`,
+                        },
+                        {
+                          id: 4,
+                          value: returned,
+                          label: `${returned} returned`,
+                        },
+                      ],
+                    },
+                  ]}
+                />
               )}
             </Stack>
           </Grid>

@@ -28,7 +28,7 @@ const Drawer = styled(MuiDrawer)({
 
 export default function SideMenu() {
   const { mode, systemMode } = useColorScheme();
-  const resolvedMode = (systemMode || mode) as 'light' | 'dark';
+  const resolvedMode = (systemMode || mode) as "light" | "dark";
   const { connectionState, logout } = usePortalClientAuth();
   const navigate = useNavigate();
 
@@ -54,7 +54,7 @@ export default function SideMenu() {
         }}
       >
         <Avatar
-          src={resolvedMode == "dark" ? qcarchiveLogoInverted: qcarchiveLogo}
+          src={resolvedMode == "dark" ? qcarchiveLogoInverted : qcarchiveLogo}
           alt="QCArchive Logo"
           sx={{ width: 125, height: 100 }}
           variant="square"

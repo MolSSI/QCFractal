@@ -3,7 +3,14 @@ import { FetchedData } from "../PortalClientContext";
 import { useEffect, useState, useMemo } from "react";
 import { ManagerFragment } from "./ManagerFragment";
 import * as qcpTypes from "../PortalTypes";
-import { Box, Stack, Dialog, DialogContent, Grid, Typography } from "@mui/material";
+import {
+  Box,
+  Stack,
+  Dialog,
+  DialogContent,
+  Grid,
+  Typography,
+} from "@mui/material";
 
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { parseToDate } from "../Utils";
@@ -26,7 +33,7 @@ export default function ManagerList() {
       ],
       limit: 100,
     }),
-    []
+    [],
   );
 
   const { fetchData } = usePortalClientRequest(); // Get client instance here
@@ -99,30 +106,31 @@ export default function ManagerList() {
       headerName: "Claimed",
       width: 300,
       renderCell: (params) => {
-        const returned = params.row.claimed - (
-          params.row.active_tasks +
+        const returned =
+          params.row.claimed -
+          (params.row.active_tasks +
             params.row.successes +
-            params.row.failures
-        )
+            params.row.failures);
         return (
           <Stack direction="row" spacing={1}>
             <Typography variant="body1">{params.row.claimed}</Typography>
-          <PieChart
-            skipAnimation={true}
-            width={40}
-            height={40}
-            hideLegend={true}
-            colors={['blue', 'green', 'red', 'orange']}
-            series={[
-              {
-                data: [
-                  { id: 0, value: params.row.active_tasks, label: "active"},
-                  { id: 1, value: params.row.successes, label: "success"},
-                  { id: 2, value: params.row.failures, label: "failed"},
-                  { id: 3, value: returned, label: "returned"},
-                ]
-              }
-            ]} />
+            <PieChart
+              skipAnimation={true}
+              width={40}
+              height={40}
+              hideLegend={true}
+              colors={["blue", "green", "red", "orange"]}
+              series={[
+                {
+                  data: [
+                    { id: 0, value: params.row.active_tasks, label: "active" },
+                    { id: 1, value: params.row.successes, label: "success" },
+                    { id: 2, value: params.row.failures, label: "failed" },
+                    { id: 3, value: returned, label: "returned" },
+                  ],
+                },
+              ]}
+            />
           </Stack>
         );
       },

@@ -24,7 +24,7 @@ import {
 } from "@mui/material";
 import HelpOutline from "@mui/icons-material/HelpOutline";
 import { format } from "date-fns";
-import {MoleculeStageProvider, MoleculeViewer} from "./Molecule";
+import { MoleculeStageProvider, MoleculeViewer } from "./Molecule";
 import { getRecordReprMolecule } from "../Utils";
 
 function Record() {
@@ -64,7 +64,8 @@ function Record() {
     loading: false,
   });
 
-  const [taskServiceDialogOpen, setTaskServiceDialogOpen] = React.useState(false);
+  const [taskServiceDialogOpen, setTaskServiceDialogOpen] =
+    React.useState(false);
 
   useEffect(() => {
     setRecordFetchedData({ data: undefined, error: undefined, loading: true });
@@ -74,7 +75,7 @@ function Record() {
     fetchData<qcpTypes.RecordData>(
       setRecordFetchedData,
       "get",
-      `/api/v1/records/${recordId}`
+      `/api/v1/records/${recordId}`,
     );
   }, [fetchData, recordId]);
 
@@ -90,13 +91,13 @@ function Record() {
         fetchData<qcpTypes.Service>(
           setServiceFetchedData,
           "get",
-          `/api/v1/records/${type}/${recordId}/service`
+          `/api/v1/records/${type}/${recordId}/service`,
         );
       } else {
         fetchData<qcpTypes.Task>(
           setTaskFetchedData,
           "get",
-          `/api/v1/records/${type}/${recordId}/task`
+          `/api/v1/records/${type}/${recordId}/task`,
         );
       }
     }
@@ -121,7 +122,7 @@ function Record() {
         fetchData<qcpTypes.Molecule>(
           setMoleculeFetchedData,
           "get",
-          `api/v1/molecules/${moleculeId}`
+          `api/v1/molecules/${moleculeId}`,
         );
       }
     }
@@ -208,7 +209,7 @@ function Record() {
                 <strong>Modified On:</strong>{" "}
                 {format(
                   new Date(recordData.modified_on),
-                  "MMMM dd, yyyy HH:mm"
+                  "MMMM dd, yyyy HH:mm",
                 )}
               </Typography>
               <Typography variant="body2">
@@ -405,7 +406,7 @@ function Record() {
             </Grid>
 
             {/* Molecule Viewer */}
-            <Grid  size={{xs:12, md:8}}>
+            <Grid size={{ xs: 12, md: 8 }}>
               <Box sx={{ p: 2, height: "100%" }}>
                 <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
                   Molecule Viewer

@@ -76,13 +76,12 @@ export default function Project() {
     sessionStorage.setItem("projectTabValue", newValue.toString());
   };
 
-
   // Load project data, then dataset & record metadata
   useEffect(() => {
     fetchData<qcpTypes.Project>(
       setProjectFetchedData,
       "get",
-      `api/v1/projects/${projectId}`
+      `api/v1/projects/${projectId}`,
     );
   }, [fetchData, projectId]);
 
@@ -91,7 +90,7 @@ export default function Project() {
     fetchData<Array<qcpTypes.ProjectDatasetMetadata>>(
       setDatasetMetadataFetchedData,
       "get",
-      `api/v1/projects/${projectId}/dataset_metadata`
+      `api/v1/projects/${projectId}/dataset_metadata`,
     );
   }, [fetchData, projectId]);
 
@@ -100,7 +99,7 @@ export default function Project() {
     fetchData<Array<qcpTypes.ProjectRecordMetadata>>(
       setRecordMetadataFetchedData,
       "get",
-      `api/v1/projects/${projectId}/record_metadata`
+      `api/v1/projects/${projectId}/record_metadata`,
     );
   }, [fetchData, projectId]);
 

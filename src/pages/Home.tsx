@@ -31,7 +31,9 @@ const HomePage = () => {
 
   const [modalOpen, setModalOpen] = useState(false);
   // currentMolecule may hold a numeric id or an error string to display
-  const [currentMoleculeId, setCurrentMoleculeId] = useState<number | string | null>(null);
+  const [currentMoleculeId, setCurrentMoleculeId] = useState<
+    number | string | null
+  >(null);
 
   const handleAddMolecule = () => setModalOpen(true);
   const handleCloseModal = () => setModalOpen(false);
@@ -39,7 +41,11 @@ const HomePage = () => {
     setCurrentMoleculeId(idOrError);
     // If we have a numeric id, fetch the molecule to display
     if (typeof idOrError === "number") {
-      fetchData<qcpTypes.Molecule>(setMoleculeFetchedData, "get", `api/v1/molecules/${idOrError}`);
+      fetchData<qcpTypes.Molecule>(
+        setMoleculeFetchedData,
+        "get",
+        `api/v1/molecules/${idOrError}`,
+      );
     }
   };
 
@@ -67,7 +73,7 @@ const HomePage = () => {
       <button
         onClick={() =>
           navigate(
-            "/managers/LilacQM-lx03-f1598182-8306-4d1e-ae03-bc2693e22ed8"
+            "/managers/LilacQM-lx03-f1598182-8306-4d1e-ae03-bc2693e22ed8",
           )
         }
       >
