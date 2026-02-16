@@ -1,6 +1,6 @@
 import { usePortalClientRequest } from "../usePortalClient";
 import { FetchedData } from "../PortalClientContext";
-import  { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ManagerFragment } from "./ManagerFragment";
 import * as qcpTypes from "../PortalTypes";
 import { Box, Stack, Dialog, DialogContent, Grid, Typography } from "@mui/material";
@@ -10,8 +10,8 @@ import { parseToDate } from "../Utils";
 import { PieChart } from "@mui/x-charts/PieChart";
 
 export default function ManagerList() {
-  const [managerQueryBody] =
-    useState<qcpTypes.ManagerQueryFilters>({
+  const managerQueryBody = useMemo<qcpTypes.ManagerQueryFilters>(
+    () => ({
       status: ["active", "inactive"],
       include: [
         "cluster",
@@ -25,7 +25,9 @@ export default function ManagerList() {
         "rejected",
       ],
       limit: 100,
-    });
+    }),
+    []
+  );
 
   const { fetchData } = usePortalClientRequest(); // Get client instance here
 

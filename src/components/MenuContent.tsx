@@ -1,5 +1,3 @@
-import * as React from "react";
-import { useState } from "react";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -31,10 +29,8 @@ const secondaryListItems = [
 export default function MenuContent() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const handleClick = (index: number, path: string) => {
-    setSelectedIndex(index);
+  const handleClick = (path: string) => {
     navigate(path);
   };
 
@@ -45,7 +41,7 @@ export default function MenuContent() {
           <ListItem key={index} disablePadding sx={{ display: "block" }}>
             <ListItemButton
               selected={location.pathname === item.path}
-              onClick={() => handleClick(index, item.path)}
+              onClick={() => handleClick(item.path)}
               sx={{ cursor: "pointer" }}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>

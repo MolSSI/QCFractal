@@ -4,13 +4,12 @@ import { useEffect, useState } from "react";
 import { usePortalClientRequest } from "../usePortalClient";
 import * as qcpTypes from "../PortalTypes";
 import { FetchedData } from "../PortalClientContext";
-import { Typography, Box, Button, TextField } from "@mui/material";
+import { Typography, Box, Button } from "@mui/material";
 import AddMoleculeModal from "../components/AddMoleculeModal";
 
 const HomePage = () => {
   const navigate = useNavigate();
 
-  /* TESTING */
   const { fetchData } = usePortalClientRequest();
 
   const [moleculeFetchedData, setMoleculeFetchedData] = useState<

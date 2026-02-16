@@ -27,7 +27,7 @@ const Drawer = styled(MuiDrawer)({
 });
 
 export default function SideMenu() {
-  const { mode, systemMode, setMode } = useColorScheme();
+  const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
   const { connectionState, logout } = usePortalClientAuth();
   const navigate = useNavigate();

@@ -405,7 +405,7 @@ function Record() {
             </Grid>
 
             {/* Molecule Viewer */}
-            <Grid item xs={12} md={8}>
+            <Grid  size={{xs:12, md:8}}>
               <Box sx={{ p: 2, height: "100%" }}>
                 <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
                   Molecule Viewer

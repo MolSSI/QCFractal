@@ -71,7 +71,7 @@ export default function Project() {
     return location.state?.activeTab ?? (saved ? parseInt(saved) : 0);
   });
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
     sessionStorage.setItem("projectTabValue", newValue.toString());
   };
@@ -144,7 +144,7 @@ export default function Project() {
           </Grid>
 
           {/* Description & Metadata section */}
-          <Box size={12} sx={{ mx: "auto" }}>
+          <Grid size={12} sx={{ mx: "auto" }}>
             <Grid size={12} mb={3}>
               <Paper elevation={2}>
                 <Box
@@ -234,7 +234,7 @@ export default function Project() {
                 )}
               </Paper>
             </Grid>
-          </Box>
+          </Grid>
         </Grid>
       )}
     </>

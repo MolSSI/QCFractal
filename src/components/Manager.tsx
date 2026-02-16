@@ -51,7 +51,7 @@ export default function Manager() {
 
       {!managerFetchedData.loading && managerData && (
         <Grid container spacing={2} width="100%">
-          <Grid item size={12}>
+          <Grid  size={12}>
             <Stack>
               <Typography variant="h4" fontWeight="bold">
                 {managerData.name}
@@ -63,7 +63,7 @@ export default function Manager() {
               />
             </Stack>
           </Grid>
-          <Grid item size={6}>
+          <Grid size={6}>
             <Typography variant="body1">
               Manager version: {managerData.manager_version}
             </Typography>
@@ -80,7 +80,7 @@ export default function Manager() {
               Hostname: {managerData.hostname}
             </Typography>
           </Grid>
-          <Grid item size={6}>
+          <Grid size={6}>
             <Typography variant="h6">Tags</Typography>
             <ul>
               {managerData.tags.map((tag, index) => (
@@ -88,7 +88,7 @@ export default function Manager() {
               ))}
             </ul>
           </Grid>
-          <Grid item size={4}>
+          <Grid  size={4}>
             <TableContainer component={Paper}>
               <Table size="small" aria-label="manager programs table">
                 <TableHead>
