@@ -110,7 +110,7 @@ const AddMoleculeModal: React.FC<Props> = ({ open, onClose, onSubmit }) => {
       // append body_data first (order doesn't strictly matter)
       form.append("body_data", bodyDataBlob, "body_data");
 
-      const resp = await fetch(`${server_address}api/v1/molecules/fromFiles`, {
+      const resp = await fetch(`${server_address}/api/v1/molecules/fromFiles`, {
         method: "POST",
         body: form,
         credentials: "include",
