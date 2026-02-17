@@ -247,6 +247,33 @@ def test_user_client_modify_self(secure_snowflake: QCATestingSnowflake):
     assert uinfo3.groups == ["group2"]
 
 
+def test_user_client_modify_self_me(secure_snowflake: QCATestingSnowflake):
+    # Similar to above, but using the /me endpoint
+    client = secure_snowflake.client("read_user", test_users["read_user"]["pw"])
+    uinfo = client.get_user("read_user")
+
+    uinfo.fullname = "New Full Name"
+    uinfo.organization = "New Organization"
+    uinfo.email = "New Email"
+    uinfo.role = "submit"
+    uinfo.groups = ["group3"]
+    uinfo.enabled = False
+
+    uinfo2 = client.make_request("patch", f"api/v1/me", UserInfo, body=uinfo)
+    uinfo3 = client.get_user("read_user")
+    assert uinfo2 == uinfo3
+
+    # Only some fields changed
+    assert uinfo3.fullname == "New Full Name"
+    assert uinfo3.organization == "New Organization"
+    assert uinfo3.email == "New Email"
+
+    # Did not change
+    assert uinfo3.role == "read"
+    assert uinfo3.enabled is True
+    assert uinfo3.groups == ["group2"]
+
+
 def test_user_client_modify_badrole(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     uinfo = client.get_user("read_user")
@@ -301,3 +328,23 @@ def test_user_client_change_password_self(secure_snowflake: QCATestingSnowflake)
     # Reset password
     new_pw = client.change_user_password()
     secure_snowflake.client("read_user", new_pw)
+
+
+def test_user_client_change_password_self_me(secure_snowflake: QCATestingSnowflake):
+    # Similar to above, but using the /me endpoint
+    # we don't expose this in qcportal, so manually do make_request
+
+    client = secure_snowflake.client("read_user", test_users["read_user"]["pw"])
+
+    new_password = "a_new_password1234"
+    new_pw = client.make_request("put", f"api/v1/me/password", str, body_model=str, body=new_password)
+    assert new_pw == "a_new_password1234"
+
+    secure_snowflake.client("read_user", "a_new_password1234")
+
+    # Reset password
+    new_pw_2 = client.make_request("put", f"api/v1/me/password", str, body_model=Optional[str], body=None)
+    secure_snowflake.client("read_user", new_pw_2)
+
+    with pytest.raises(AuthenticationFailure, match="Incorrect username or password"):
+        secure_snowflake.client("read_user", new_pw)

@@ -13,7 +13,6 @@ from qcportal.exceptions import (
     AuthenticationFailure,
 )
 
-
 ###################################################################
 # We have two user endpoints
 # 1. /user/<username> is for admins. This allows for changing info
@@ -179,7 +178,7 @@ def modify_my_user_v1(body_data: UserInfo):
         raise UserManagementError("Cannot modify user: id or username is missing")
 
     if is_same_user(body_data.id) and is_same_user(body_data.username):
-        return storage_socket.users.modify(body_data)
+        return storage_socket.users.modify(body_data, as_admin=False)
 
     raise AuthorizationFailure("Cannot modify user: Forbidden")
 
