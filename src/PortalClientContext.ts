@@ -22,7 +22,7 @@ type ClientContextType = {
   makeRequest: <T>(
     method: string,
     endpoint: string,
-    body?: object,
+    body?: unknown,
     url_params?: Record<string, string>,
   ) => Promise<RequestReturnType<T>>;
 
@@ -30,7 +30,7 @@ type ClientContextType = {
     setDataFn: (value: FetchedData<T>) => void,
     method: string,
     endpoint: string,
-    body?: object,
+    body?: unknown,
     url_params?: Record<string, string>,
   ) => void;
 };
