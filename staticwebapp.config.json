@@ -1,0 +1,6 @@
+{
+  "navigationFallback": {
+    "rewrite": "/",
+    "exclude": ["assets/*"]
+  }
+}
