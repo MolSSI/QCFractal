@@ -1,8 +1,6 @@
-import {
-  FetchedData,
-  usePortalClient,
-} from "../PortalClient.tsx";
-import { useEffect, useMemo, useState } from "react";
+import { usePortalClient } from "../PortalClient.tsx";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import { ManagerFragment } from "./ManagerFragment";
 import * as qcpTypes from "../PortalTypes";
 import {
@@ -38,27 +36,21 @@ export default function ManagerList() {
     [],
   );
 
-  const { fetchData } = usePortalClient(); // Get client instance here
+  const { makeRequest } = usePortalClient();
 
-  const [managerFetchedData, setmanagerFetchedData] = useState<
-    FetchedData<Array<qcpTypes.Manager>>
-  >({
-    data: undefined,
-    error: undefined,
-    loading: true,
+  const {
+    status,
+    data: managerData,
+    error,
+  } = useQuery({
+    queryKey: ["listManagers"],
+    queryFn: () =>
+      makeRequest<qcpTypes.Manager[]>(
+        "POST",
+        "/api/v1/managers/query",
+        managerQueryBody,
+      ),
   });
-
-  // Load project data, then dataset & record metadata
-  useEffect(() => {
-    fetchData<Array<qcpTypes.Manager>>(
-      setmanagerFetchedData,
-      "post",
-      `api/v1/managers/query`,
-      managerQueryBody,
-    );
-  }, [fetchData, managerQueryBody]);
-
-  const managerData = managerFetchedData?.data;
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedManagerName, setSelectedManagerName] = useState("");
@@ -139,10 +131,16 @@ export default function ManagerList() {
     },
   ];
 
+  if (status == "pending") {
+    return <Typography>Loading...</Typography>;
+  }
+
+  if (status == "error") {
+    return <Typography color="error">{error.message}</Typography>;
+  }
+
   return (
     <>
-      {managerFetchedData.loading && <Typography>Loading...</Typography>}
-
       <Grid container spacing={2} width="100%">
         <Grid size={12}>
           <Typography variant="h4" marginBottom={3}>

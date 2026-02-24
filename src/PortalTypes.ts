@@ -24,12 +24,13 @@ export type WaitingReason = {
 };
 
 export type Project = {
-  id: number;
-  name: string;
+  id: string;
+  project_name: string;
   tagline: string;
-  description: string;
   tags: string[];
-  owner_user: string | null;
+  record_count: number;
+  dataset_count: number;
+  molecule_count: number;
 };
 
 export type ProjectDatasetMetadata = {

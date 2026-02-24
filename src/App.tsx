@@ -12,36 +12,41 @@ import Manager from "./components/Manager.tsx";
 import ManagerList from "./components/ManagerList.tsx";
 import { UserInfo } from "./components/UserInfo.tsx";
 import AddProjectRecord from "./components/AddProjectRecord.tsx";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <AuthProvider>
       <PortalClientProvider>
-        <Router>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route element={<ProtectedRoute />}>
-              <Route element={<MainLayout />}>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/me" element={<UserInfo />} />
-                <Route path="/users/:userName" element={<UserInfo />} />
-                <Route path="/projects" element={<ProjectList />} />
-                <Route path="/projects/:projectId" element={<Project />} />
-                <Route
-                  path="/projects/:projectId/records/:recordId"
-                  element={<Record />}
-                />
-                <Route path="/records/:recordId" element={<Record />} />
-                <Route
-                  path="/projects/:projectId/addRecord"
-                  element={<AddProjectRecord />}
-                />
-                <Route path="/managers" element={<ManagerList />} />
-                <Route path="/managers/:managerName" element={<Manager />} />
+        <QueryClientProvider client={queryClient}>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route element={<ProtectedRoute />}>
+                <Route element={<MainLayout />}>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/me" element={<UserInfo />} />
+                  <Route path="/users/:userName" element={<UserInfo />} />
+                  <Route path="/projects" element={<ProjectList />} />
+                  <Route path="/projects/:projectId" element={<Project />} />
+                  <Route
+                    path="/projects/:projectId/records/:recordId"
+                    element={<Record />}
+                  />
+                  <Route path="/records/:recordId" element={<Record />} />
+                  <Route
+                    path="/projects/:projectId/addRecord"
+                    element={<AddProjectRecord />}
+                  />
+                  <Route path="/managers" element={<ManagerList />} />
+                  <Route path="/managers/:managerName" element={<Manager />} />
+                </Route>
               </Route>
-            </Route>
-          </Routes>
-        </Router>
+            </Routes>
+          </Router>
+        </QueryClientProvider>
       </PortalClientProvider>
     </AuthProvider>
   );

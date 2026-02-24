@@ -20,7 +20,7 @@ type ClientContextType = {
     endpoint: string,
     body?: object,
     url_params?: Record<string, string>,
-  ) => Promise<RequestReturnType<T>>;
+  ) => Promise<T>;
 
   fetchData: <T>(
     setDataFn: (value: FetchedData<T>) => void,
@@ -44,7 +44,7 @@ export function PortalClientProvider({ children }: { children: ReactNode }) {
       endpoint: string,
       body?: object,
       url_params?: Record<string, string>,
-    ): Promise<RequestReturnType<T>> {
+    ): Promise<T> {
       try {
         const r = await requestHelpers.rawMakeRequest<T>(
           method,
@@ -52,13 +52,13 @@ export function PortalClientProvider({ children }: { children: ReactNode }) {
           body,
           url_params,
         );
-        return { data: r, error: undefined };
+        return r;
       } catch (err) {
         if (err instanceof AuthenticationError) {
           await ping();
         }
         const errmsg = `Failed to request data: ${err instanceof Error ? err.message : String(err)}`;
-        return { data: undefined, error: errmsg } as RequestReturnType<T>;
+        throw new Error(errmsg);
       }
     },
     [ping],

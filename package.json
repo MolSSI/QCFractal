@@ -21,6 +21,7 @@
     "@mui/x-data-grid": "^8.1.0",
     "@mui/x-data-grid-pro": "^8.1.0",
     "@mui/x-tree-view": "^8.1.0",
+    "@tanstack/react-query": "^5.90.21",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "ketcher-react": "^3.6.0",
