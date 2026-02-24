@@ -1,5 +1,6 @@
 import React from "react";
 import { Typography, List, ListItem, ListItemText, Box } from "@mui/material";
+import { RecordTask, RecordService } from "../PortalTypes.ts";
 
 function renderValue(value: any): React.ReactNode {
   if (Array.isArray(value)) {
@@ -31,7 +32,7 @@ function renderValue(value: any): React.ReactNode {
 }
 
 const TaskServiceFragment: React.FC<{
-  data: Record<string, any>;
+  data: RecordService | RecordTask | undefined;
   type: "task" | "service";
 }> = ({ data, type }) => {
   if (!data) {

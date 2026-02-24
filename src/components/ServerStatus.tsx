@@ -1,32 +1,30 @@
-import { usePortalClientAuth } from "../usePortalClient";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import { Typography } from "@mui/material";
+import { useAuth } from "../Auth.tsx";
 
 export default function ServerStatus() {
-  const { connectionState, serverInfo } = usePortalClientAuth();
-  const connected = connectionState && connectionState.connected;
-  const loading = !connectionState;
-  const error = !loading && !connected;
+  const { serverStatus, serverInfo } = useAuth();
+  const { authorized, userInfo } = useAuth();
 
   return (
     <Stack>
-      {loading && (
+      {serverStatus == "loading" && (
         <>
           <Chip color="info" label="Loading" />
         </>
       )}
-      {connected && (
+      {serverStatus == "connected" && (
         <>
           <Chip color="success" label="Connected" />
 
-          {connectionState!.authorized ? (
+          {authorized ? (
             <Chip color="success" label="Authorized" />
           ) : (
             <Chip color="warning" label="Not authorized" />
           )}
-          {connectionState!.userInfo ? (
-            <Chip color="success" label={connectionState?.userInfo?.username} />
+          {userInfo ? (
+            <Chip color="success" label={userInfo?.username} />
           ) : (
             <Chip color="warning" label="Anonymous" />
           )}
@@ -37,7 +35,7 @@ export default function ServerStatus() {
           </Stack>
         </>
       )}
-      {error && (
+      {serverStatus == "disconnected" && (
         <>
           <Chip color="error" label="Not Connected" />
         </>

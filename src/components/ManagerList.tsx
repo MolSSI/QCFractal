@@ -1,14 +1,16 @@
-import { usePortalClientRequest } from "../usePortalClient";
-import { FetchedData } from "../PortalClientContext";
-import { useEffect, useState, useMemo } from "react";
+import {
+  FetchedData,
+  usePortalClient,
+} from "../PortalClient.tsx";
+import { useEffect, useMemo, useState } from "react";
 import { ManagerFragment } from "./ManagerFragment";
 import * as qcpTypes from "../PortalTypes";
 import {
   Box,
-  Stack,
   Dialog,
   DialogContent,
   Grid,
+  Stack,
   Typography,
 } from "@mui/material";
 
@@ -36,7 +38,7 @@ export default function ManagerList() {
     [],
   );
 
-  const { fetchData } = usePortalClientRequest(); // Get client instance here
+  const { fetchData } = usePortalClient(); // Get client instance here
 
   const [managerFetchedData, setmanagerFetchedData] = useState<
     FetchedData<Array<qcpTypes.Manager>>

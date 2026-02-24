@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { PortalClientProvider } from "./PortalClientProvider";
+import { PortalClientProvider } from "./PortalClient.tsx";
+import { AuthProvider } from "./Auth.tsx";
 import HomePage from "./pages/Home.tsx";
 import LoginPage from "./pages/Login";
 import MainLayout from "./layouts/MainLayout";
@@ -14,33 +15,35 @@ import AddProjectRecord from "./components/AddProjectRecord.tsx";
 
 function App() {
   return (
-    <PortalClientProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route element={<ProtectedRoute />}>
-            <Route element={<MainLayout />}>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/me" element={<UserInfo />} />
-              <Route path="/users/:userName" element={<UserInfo />} />
-              <Route path="/projects" element={<ProjectList />} />
-              <Route path="/projects/:projectId" element={<Project />} />
-              <Route
-                path="/projects/:projectId/records/:recordId"
-                element={<Record />}
-              />
-              <Route path="/records/:recordId" element={<Record />} />
-              <Route
-                path="/projects/:projectId/addRecord"
-                element={<AddProjectRecord />}
-              />
-              <Route path="/managers" element={<ManagerList />} />
-              <Route path="/managers/:managerName" element={<Manager />} />
+    <AuthProvider>
+      <PortalClientProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route element={<ProtectedRoute />}>
+              <Route element={<MainLayout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/me" element={<UserInfo />} />
+                <Route path="/users/:userName" element={<UserInfo />} />
+                <Route path="/projects" element={<ProjectList />} />
+                <Route path="/projects/:projectId" element={<Project />} />
+                <Route
+                  path="/projects/:projectId/records/:recordId"
+                  element={<Record />}
+                />
+                <Route path="/records/:recordId" element={<Record />} />
+                <Route
+                  path="/projects/:projectId/addRecord"
+                  element={<AddProjectRecord />}
+                />
+                <Route path="/managers" element={<ManagerList />} />
+                <Route path="/managers/:managerName" element={<Manager />} />
+              </Route>
             </Route>
-          </Route>
-        </Routes>
-      </Router>
-    </PortalClientProvider>
+          </Routes>
+        </Router>
+      </PortalClientProvider>
+    </AuthProvider>
   );
 }
 

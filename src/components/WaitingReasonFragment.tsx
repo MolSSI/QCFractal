@@ -1,5 +1,7 @@
-import { usePortalClientRequest } from "../usePortalClient";
-import { FetchedData } from "../PortalClientContext";
+import {
+  FetchedData,
+  usePortalClient,
+} from "../PortalClient.tsx";
 import React, { useEffect, useState } from "react";
 import * as qcpTypes from "../PortalTypes";
 import { IconButton, Stack, Typography } from "@mui/material";
@@ -9,7 +11,7 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 export const WaitingReasonFragment: React.FC<{ recordId: number }> = ({
   recordId,
 }) => {
-  const { fetchData } = usePortalClientRequest(); // Get client instance here
+  const { fetchData } = usePortalClient(); // Get client instance here
 
   const [reasonFetchedData, setReasonFetchedData] = useState<
     FetchedData<qcpTypes.WaitingReason>

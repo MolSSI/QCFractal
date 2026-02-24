@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { usePortalClientRequest } from "../usePortalClient";
-import { FetchedData } from "../PortalClientContext";
 import {
-  Tabs,
-  Tab,
-  Typography,
+  FetchedData,
+  usePortalClient,
+} from "../PortalClient.tsx";
+import {
   Box,
   CircularProgress,
   Grid,
+  Tab,
+  Tabs,
+  Typography,
 } from "@mui/material";
 
 interface OutputFragmentProps {
@@ -21,7 +23,7 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
   recordId,
   computeHistoryId,
 }) => {
-  const { fetchData } = usePortalClientRequest();
+  const { fetchData } = usePortalClient();
 
   // State for fetched output keys
   const [outputKeysFetchedData, setOutputKeysFetchedData] = useState<

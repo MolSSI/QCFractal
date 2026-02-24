@@ -1,6 +1,7 @@
-// src/pages/Profile.tsx
-import { usePortalClientRequest } from "../usePortalClient";
-import { FetchedData } from "../PortalClientContext";
+import {
+  FetchedData,
+  usePortalClient,
+} from "../PortalClient.tsx";
 import React, { useEffect, useState } from "react";
 import * as qcpTypes from "../PortalTypes";
 import { Chip, Grid, Stack, Typography } from "@mui/material";
@@ -10,7 +11,7 @@ import { parseToDate } from "../Utils";
 export const ManagerFragment: React.FC<{ managerName: string }> = ({
   managerName,
 }) => {
-  const { fetchData } = usePortalClientRequest(); // Get client instance here
+  const { fetchData } = usePortalClient(); // Get client instance here
 
   const [managerFetchedData, setmanagerFetchedData] = useState<
     FetchedData<qcpTypes.Manager>

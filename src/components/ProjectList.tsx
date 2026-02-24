@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { usePortalClientRequest } from "../usePortalClient";
+import { usePortalClient } from "../PortalClient.tsx";
 import { useNavigate } from "react-router-dom";
 import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  TableContainer,
-  Typography,
-  Paper,
   Box,
   Chip,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
 } from "@mui/material";
 
 interface Project {
@@ -25,7 +25,7 @@ interface Project {
 }
 
 const ProjectList: React.FC = () => {
-  const { makeRequest } = usePortalClientRequest();
+  const { makeRequest } = usePortalClient();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");

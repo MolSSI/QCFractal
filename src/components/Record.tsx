@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
+import {
+  FetchedData,
+  usePortalClient,
+} from "../PortalClient.tsx";
 import { useParams } from "react-router-dom";
-import { usePortalClientRequest } from "../usePortalClient";
 import { WaitingReasonFragment } from "./WaitingReasonFragment";
 import { ManagerFragment } from "./ManagerFragment";
 import Comments from "./Comments";
@@ -8,19 +11,18 @@ import ComputeHistory from "./ComputeHistory";
 import Specification from "./Specification";
 import Properties from "./Properties";
 import * as qcpTypes from "../PortalTypes";
-import { FetchedData } from "../PortalClientContext";
 import TaskServiceFragment from "./TaskServiceFragment";
 import {
-  Typography,
-  Chip,
-  Grid,
-  Stack,
-  Paper,
   Box,
-  Divider,
-  Tooltip,
+  Chip,
   Dialog,
   DialogContent,
+  Divider,
+  Grid,
+  Paper,
+  Stack,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import HelpOutline from "@mui/icons-material/HelpOutline";
 import { format } from "date-fns";
@@ -29,7 +31,7 @@ import { getRecordReprMolecule } from "../Utils";
 
 function Record() {
   const { recordId } = useParams();
-  const { fetchData } = usePortalClientRequest();
+  const { fetchData } = usePortalClient();
   const [waitingReasonOpen, setWaitingReasonOpen] = React.useState(false);
   const [managerDialogOpen, setManagerDialogOpen] = useState(false);
 
@@ -42,14 +44,14 @@ function Record() {
   });
 
   const [serviceFetchedData, setServiceFetchedData] = React.useState<
-    FetchedData<qcpTypes.Service>
+    FetchedData<qcpTypes.RecordService>
   >({
     data: undefined,
     error: undefined,
     loading: true,
   });
   const [taskFetchedData, setTaskFetchedData] = React.useState<
-    FetchedData<qcpTypes.Task>
+    FetchedData<qcpTypes.RecordTask>
   >({
     data: undefined,
     error: undefined,
@@ -88,13 +90,13 @@ function Record() {
     ) {
       const type = recordFetchedData.data.record_type;
       if (recordFetchedData.data.is_service) {
-        fetchData<qcpTypes.Service>(
+        fetchData<qcpTypes.RecordService>(
           setServiceFetchedData,
           "get",
           `/api/v1/records/${type}/${recordId}/service`,
         );
       } else {
-        fetchData<qcpTypes.Task>(
+        fetchData<qcpTypes.RecordTask>(
           setTaskFetchedData,
           "get",
           `/api/v1/records/${type}/${recordId}/task`,

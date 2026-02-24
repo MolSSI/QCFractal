@@ -1,16 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { MoleculeStageProvider, MoleculeViewer } from "../components/Molecule";
 import { useEffect, useState } from "react";
-import { usePortalClientRequest } from "../usePortalClient";
+import {
+  FetchedData,
+  usePortalClient,
+} from "../PortalClient.tsx";
 import * as qcpTypes from "../PortalTypes";
-import { FetchedData } from "../PortalClientContext";
-import { Typography, Box, Button } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import AddMoleculeModal from "../components/AddMoleculeModal";
 
 const HomePage = () => {
   const navigate = useNavigate();
 
-  const { fetchData } = usePortalClientRequest();
+  const { fetchData } = usePortalClient();
 
   const [moleculeFetchedData, setMoleculeFetchedData] = useState<
     FetchedData<qcpTypes.Molecule>

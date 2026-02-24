@@ -9,14 +9,14 @@ import {
   Typography,
 } from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { usePortalClientAuth } from "../usePortalClient";
+import { useAuth } from "../Auth.tsx";
 import { alpha } from "@mui/material/styles";
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { login } = usePortalClientAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
