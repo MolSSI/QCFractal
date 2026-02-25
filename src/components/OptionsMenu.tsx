@@ -10,7 +10,7 @@ import ListItemIcon, { listItemIconClasses } from "@mui/material/ListItemIcon";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import MenuButton from "./MenuButton";
-import { usePortalClientAuth } from "../usePortalClient.ts";
+import { useAuth } from "../Auth.tsx";
 import { useNavigate } from "react-router-dom";
 
 const MenuItem = styled(MuiMenuItem)({
@@ -27,7 +27,7 @@ export default function OptionsMenu() {
     setAnchorEl(null);
   };
 
-  const { logout } = usePortalClientAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -84,7 +84,7 @@ export default function OptionsMenu() {
         >
           <ListItemText
             onClick={() => {
-              logout(false);
+              logout();
               navigate("/login");
             }}
           >

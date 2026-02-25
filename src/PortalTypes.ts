@@ -12,23 +12,10 @@ export type UserInfo = {
   enabled: boolean;
 };
 
-export type ConnectionState = {
-  connected: boolean;
-  authorized: boolean;
-  userInfo?: UserInfo;
-};
-
 export type PingResults = {
   success: boolean;
   authorized: boolean;
   user_info?: UserInfo;
-};
-
-export type ProjectsList = {
-  id: number;
-  name: string;
-  tagline: string;
-  tags: string[];
 };
 
 export type WaitingReason = {
@@ -37,12 +24,13 @@ export type WaitingReason = {
 };
 
 export type Project = {
-  id: number;
-  name: string;
+  id: string;
+  project_name: string;
   tagline: string;
-  description: string;
   tags: string[];
-  owner_user: string | null;
+  record_count: number;
+  dataset_count: number;
+  molecule_count: number;
 };
 
 export type ProjectDatasetMetadata = {
@@ -64,7 +52,7 @@ export type Manager = {
   cluster: string;
   hostname: string;
   username: string;
-  tags: Array<string>;
+  tags: string[];
   programs: Record<string, string>;
 
   status: string;
@@ -112,13 +100,44 @@ export type MoleculeIdentifiers = {
 export type Molecule = {
   id: number;
   name?: string;
-  symbols: Array<string>;
-  geometry: Array<number>;
+  symbols: string[];
+  geometry: number[];
   connectivity: Array<[number, number, number]>;
-  real: Array<boolean>;
+  real: boolean[];
 
   identifiers: MoleculeIdentifiers;
 };
+
+export type ServiceDependency = {
+  record_id: number;
+  extras: object;
+};
+
+export type RecordService = {
+  id: number;
+  record_id: string;
+
+  compute_tag: string;
+  compute_priority: number;
+  find_existing: boolean;
+
+  service_state: object | null;
+  dependencies: Array<ServiceDependency>;
+
+};
+
+
+export type RecordTask = {
+  id: number;
+  record_id: string;
+
+  function: string | null;
+
+  compute_tag: string;
+  compute_priority: number;
+  required_program: string[];
+};
+
 
 export type RecordData = {
   name?: string;
@@ -127,10 +146,10 @@ export type RecordData = {
   status: string;
   id: number;
   record_type: string;
-  tags: Array<string>;
+  tags: string[];
   is_service: boolean;
-  service: Record<string, any>;
-  task: Record<string, any>;
+  service: RecordService | null;
+  task: RecordTask | null;
   created_on: string;
   modified_on: string;
   owner_group: string | null;
@@ -139,29 +158,11 @@ export type RecordData = {
     basis: string;
     method: string;
     program: string;
-    keywords: Record<string, any>;
+    keywords: Record<string, unknown>;
   };
-  properties: Record<string, any>;
+  properties: Record<string, unknown>;
 };
 
-export type Task = {
-  record_id: number;
-  id: number;
-  function: string;
-  tag: string;
-  priority: number;
-  required_program: Array<string>;
-};
-
-export type Service = {
-  record_id: number;
-  find_existing: boolean;
-  id: number;
-  service_state: string | null;
-  dependencies: Array<any>;
-  tag: string;
-  priority: number;
-};
 
 export type ComputeHistory = {
   id: number;

@@ -8,7 +8,7 @@ import MenuContent from "./MenuContent";
 import OptionsMenu from "./OptionsMenu";
 import Button from "@mui/material/Button";
 import ServerStatus from "../components/ServerStatus";
-import { usePortalClientAuth } from "../usePortalClient";
+import { useAuth } from "../Auth.tsx";
 import { useNavigate } from "react-router-dom";
 import qcarchiveLogo from "../assets/qcarchive_logo.svg";
 import qcarchiveLogoInverted from "../assets/qcarchive_logo_inverted.svg";
@@ -29,7 +29,7 @@ const Drawer = styled(MuiDrawer)({
 export default function SideMenu() {
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as "light" | "dark";
-  const { connectionState, logout } = usePortalClientAuth();
+  const { userInfo, logout } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -81,11 +81,11 @@ export default function SideMenu() {
           borderColor: "divider",
         }}
       >
-        {connectionState?.userInfo ? (
+        {userInfo ? (
           <>
             <Avatar
               sizes="small"
-              alt={connectionState.userInfo.username}
+              alt={userInfo.username}
               sx={{ width: 36, height: 36 }}
             />
             <Box sx={{ mr: "auto" }}>
@@ -93,10 +93,10 @@ export default function SideMenu() {
                 variant="body2"
                 sx={{ fontWeight: 500, lineHeight: "16px" }}
               >
-                {connectionState.userInfo.username}
+                {userInfo.username}
               </Typography>
               <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {connectionState.userInfo.role}
+                {userInfo.role}
               </Typography>
             </Box>
             <OptionsMenu />
@@ -122,7 +122,7 @@ export default function SideMenu() {
                 color="primary"
                 size="small"
                 onClick={() => {
-                  logout(true);
+                  logout();
                   navigate(
                     `/login?redirect=${encodeURIComponent(location.pathname + location.search)}`,
                   );

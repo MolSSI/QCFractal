@@ -1,13 +1,13 @@
-// src/pages/Profile.tsx
-import { usePortalClientRequest } from "../usePortalClient";
-import { FetchedData } from "../PortalClientContext";
+import { FetchedData, usePortalClient } from "../PortalClient.tsx";
+import { useAuth } from "../Auth.tsx";
 import React, { useEffect, useState } from "react";
 import * as qcpTypes from "../PortalTypes";
 import { useParams } from "react-router-dom";
 import { Chip, Grid, Stack, Typography } from "@mui/material";
 
 const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
-  const { connectionState, fetchData } = usePortalClientRequest(); // Get client instance here
+  const { fetchData } = usePortalClient(); // Get client instance here
+  const { userInfo } = useAuth();
 
   const [userInfoFetchedData, setUserInfoFetchedData] = useState<
     FetchedData<qcpTypes.UserInfo>
@@ -32,9 +32,9 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
 
   const userData = userInfoFetchedData?.data;
 
-  const isAdmin = connectionState?.userInfo?.role == "admin";
+  const isAdmin = userInfo?.role == "admin";
   const isThisUser =
-    !userName || connectionState?.userInfo?.username == userName;
+    !userName || userInfo?.username == userName;
 
   return (
     <>
@@ -91,7 +91,4 @@ const UserInfo: React.FC = () => {
   return <BaseUserInfo userName={userName} />;
 };
 
-const MyUserInfo: React.FC = () => {
-  return <BaseUserInfo />;
-};
-export { MyUserInfo, UserInfo };
+export { UserInfo };

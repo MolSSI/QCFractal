@@ -1,9 +1,11 @@
 // src/pages/Profile.tsx
-import { usePortalClientRequest } from "../usePortalClient";
-import { FetchedData } from "../PortalClientContext";
+import {
+  FetchedData,
+  usePortalClient,
+} from "../PortalClient.tsx";
 import { useEffect, useState } from "react";
 import * as qcpTypes from "../PortalTypes";
-import { useParams, useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import {
   Box,
   Button,
@@ -39,7 +41,7 @@ function TabPanel(props: {
 export default function Project() {
   const { projectId } = useParams();
   const location = useLocation();
-  const { fetchData } = usePortalClientRequest(); // Get client instance here
+  const { fetchData } = usePortalClient(); // Get client instance here
 
   const [projectFetchedData, setProjectFetchedData] = useState<
     FetchedData<qcpTypes.Project>

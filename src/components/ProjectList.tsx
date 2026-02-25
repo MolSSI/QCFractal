@@ -1,62 +1,48 @@
-import React, { useEffect, useState } from "react";
-import { usePortalClientRequest } from "../usePortalClient";
+import React from "react";
+import * as qcpTypes from "../PortalTypes";
+import { usePortalClient } from "../PortalClient.tsx";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  TableContainer,
-  Typography,
-  Paper,
   Box,
   Chip,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
 } from "@mui/material";
 
-interface Project {
-  id: string;
-  project_name: string;
-  tagline: string;
-  tags: string[];
-  record_count: number;
-  dataset_count: number;
-  molecule_count: number;
-}
-
 const ProjectList: React.FC = () => {
-  const { makeRequest } = usePortalClientRequest();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
   const navigate = useNavigate();
-
-  useEffect(() => {
-    async function fetchProjects() {
-      setLoading(true);
-      const { data, error } = await makeRequest<Project[]>(
-        "GET",
-        "/api/v1/projects",
-      );
-      if (error) {
-        setError(error);
-      } else if (data) {
-        setProjects(data);
-      }
-      setLoading(false);
-    }
-    fetchProjects();
-  }, [makeRequest]);
+  const { makeRequest } = usePortalClient();
 
   const handleClick = (projectId: string) => {
     navigate(`/projects/${projectId}`);
   };
 
+  const {
+    status,
+    data: projects,
+    error,
+  } = useQuery({
+    queryKey: ["listProjects"],
+    queryFn: () => makeRequest<qcpTypes.Project[]>("GET", "/api/v1/projects"),
+  });
+
+  if (status == "pending") {
+    return <Typography>Loading...</Typography>;
+  }
+
+  if (status == "error") {
+    return <Typography color="error">{error.message}</Typography>;
+  }
+
   return (
     <>
-      {loading && <Typography>Loading...</Typography>}
-      {error && <Typography color="error">{error}</Typography>}
-
       {/* Title / Heading */}
       <Box sx={{ mt: 4, mb: 2 }}>
         <Typography variant="h4" gutterBottom>

@@ -1,23 +1,16 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { usePortalClientAuth } from "./usePortalClient";
+import { useAuth } from "./Auth.tsx";
 
 function ProtectedRoute() {
-  const { connectionState } = usePortalClientAuth(); // Get authentication status
-
-  const loading = !connectionState;
-  const not_connected = connectionState && !connectionState!.connected;
-  const not_authorized =
-    connectionState &&
-    connectionState!.connected &&
-    !connectionState!.authorized;
+  const { authorized, serverStatus } = useAuth(); // Get authentication status
 
   return (
     <>
-      {loading ? (
+      {serverStatus == "loading" ? (
         <p>Loading...</p>
-      ) : not_connected ? (
+      ) : serverStatus == "disconnected" ? (
         <p>Not connected...</p>
-      ) : not_authorized ? (
+      ) : !authorized ? (
         <Navigate
           to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}
         />

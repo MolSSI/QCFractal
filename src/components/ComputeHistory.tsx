@@ -1,24 +1,26 @@
 import React, { useEffect, useState } from "react";
 import {
-  Typography,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogContent,
+  IconButton,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Chip,
-  Box,
-  IconButton,
-  Button,
-  Dialog,
-  DialogContent,
+  Typography,
 } from "@mui/material";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
-import { usePortalClientRequest } from "../usePortalClient";
-import { FetchedData } from "../PortalClientContext";
+import {
+  FetchedData,
+  usePortalClient,
+} from "../PortalClient.tsx";
 import * as qcpTypes from "../PortalTypes";
 import { ManagerFragment } from "./ManagerFragment";
 import OutputFragment from "./OutputFragment";
@@ -45,7 +47,7 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
   const [selectedComputeHistoryId, setSelectedComputeHistoryId] = useState<
     number | null
   >(null);
-  const { fetchData } = usePortalClientRequest();
+  const { fetchData } = usePortalClient();
 
   // Status color mapping (updated to match Record component)
   const statusColors: Record<
