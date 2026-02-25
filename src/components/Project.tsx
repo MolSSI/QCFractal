@@ -1,9 +1,6 @@
 // src/pages/Profile.tsx
-import {
-  FetchedData,
-  usePortalClient,
-} from "../PortalClient.tsx";
-import { useEffect, useState } from "react";
+import { usePortalClient } from "../PortalClient.tsx";
+import { useState } from "react";
 import * as qcpTypes from "../PortalTypes";
 import { useLocation, useParams } from "react-router-dom";
 import {
@@ -18,6 +15,7 @@ import {
 } from "@mui/material";
 import DatasetTab from "./DatasetTab";
 import RecordTab from "./RecordTab";
+import { useQuery } from "@tanstack/react-query";
 
 function TabPanel(props: {
   children?: React.ReactNode;
@@ -41,31 +39,7 @@ function TabPanel(props: {
 export default function Project() {
   const { projectId } = useParams();
   const location = useLocation();
-  const { fetchData } = usePortalClient(); // Get client instance here
-
-  const [projectFetchedData, setProjectFetchedData] = useState<
-    FetchedData<qcpTypes.Project>
-  >({
-    data: undefined,
-    error: undefined,
-    loading: true,
-  });
-
-  const [datasetMetadataFetchedData, setDatasetMetadataFetchedData] = useState<
-    FetchedData<Array<qcpTypes.ProjectDatasetMetadata>>
-  >({
-    data: undefined,
-    error: undefined,
-    loading: true,
-  });
-
-  const [recordMetadataFetchedData, setRecordMetadataFetchedData] = useState<
-    FetchedData<Array<qcpTypes.ProjectRecordMetadata>>
-  >({
-    data: undefined,
-    error: undefined,
-    loading: true,
-  });
+  const { makeRequest } = usePortalClient();
 
   // Load from location state or sessionStorage or fallback to 0
   const [tabValue, setTabValue] = useState<number>(() => {
@@ -78,42 +52,53 @@ export default function Project() {
     sessionStorage.setItem("projectTabValue", newValue.toString());
   };
 
-  // Load project data, then dataset & record metadata
-  useEffect(() => {
-    fetchData<qcpTypes.Project>(
-      setProjectFetchedData,
-      "get",
-      `api/v1/projects/${projectId}`,
-    );
-  }, [fetchData, projectId]);
+  const {
+    status: projectStatus,
+    data: projectData,
+    error: projectError,
+  } = useQuery({
+    queryKey: ["project", projectId],
+    queryFn: () => makeRequest<qcpTypes.Project>("GET", `api/v1/projects/${projectId}`),
+    enabled: !!projectId,
+  });
 
-  // Fetch dataset metadata
-  useEffect(() => {
-    fetchData<Array<qcpTypes.ProjectDatasetMetadata>>(
-      setDatasetMetadataFetchedData,
-      "get",
-      `api/v1/projects/${projectId}/dataset_metadata`,
-    );
-  }, [fetchData, projectId]);
+  const {
+    status: datasetMetadataStatus,
+    data: datasetMetadata,
+  } = useQuery({
+    queryKey: ["projectDatasetMetadata", projectId],
+    queryFn: () =>
+      makeRequest<Array<qcpTypes.ProjectDatasetMetadata>>(
+        "GET",
+        `api/v1/projects/${projectId}/dataset_metadata`,
+      ),
+    enabled: !!projectId,
+  });
 
-  // Fetch record metadata
-  useEffect(() => {
-    fetchData<Array<qcpTypes.ProjectRecordMetadata>>(
-      setRecordMetadataFetchedData,
-      "get",
-      `api/v1/projects/${projectId}/record_metadata`,
-    );
-  }, [fetchData, projectId]);
+  const {
+    status: recordMetadataStatus,
+    data: recordMetadata,
+  } = useQuery({
+    queryKey: ["projectRecordMetadata", projectId],
+    queryFn: () =>
+      makeRequest<Array<qcpTypes.ProjectRecordMetadata>>(
+        "GET",
+        `api/v1/projects/${projectId}/record_metadata`,
+      ),
+    enabled: !!projectId,
+  });
 
-  const projectData = projectFetchedData?.data;
-  const datasetMetadata = datasetMetadataFetchedData?.data;
-  const recordMetadata = recordMetadataFetchedData?.data;
+  if (!projectId) {
+    return <Typography color="error">Missing project id</Typography>;
+  }
 
   return (
     <>
-      {projectFetchedData.loading && <Typography>Loading...</Typography>}
+      {projectStatus === "pending" && <Typography>Loading...</Typography>}
 
-      {!projectFetchedData.loading && projectData && (
+      {projectStatus === "error" && <Typography color="error">{projectError.message}</Typography>}
+
+      {projectStatus === "success" && projectData && (
         <Grid container spacing={2} width="100%">
           {/* Project name & tagline */}
           <Grid size={12}>
@@ -204,8 +189,8 @@ export default function Project() {
                 </Tabs>
 
                 {/* Tab 1: Datasets */}
-                {datasetMetadataFetchedData.loading && "Loading..."}
-                {!datasetMetadataFetchedData.loading && (
+                {datasetMetadataStatus === "pending" && "Loading..."}
+                {datasetMetadataStatus !== "pending" && (
                   <TabPanel value={tabValue} index={0}>
                     {datasetMetadata && datasetMetadata.length > 0 && (
                       <DatasetTab
@@ -219,8 +204,8 @@ export default function Project() {
                 )}
 
                 {/* Tab 2: Records */}
-                {recordMetadataFetchedData.loading && "Loading..."}
-                {!recordMetadataFetchedData.loading && (
+                {recordMetadataStatus === "pending" && "Loading..."}
+                {recordMetadataStatus !== "pending" && (
                   <TabPanel value={tabValue} index={1}>
                     {recordMetadata && recordMetadata.length > 0 && (
                       <RecordTab

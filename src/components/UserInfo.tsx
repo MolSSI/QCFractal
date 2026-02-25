@@ -1,36 +1,27 @@
-import { FetchedData, usePortalClient } from "../PortalClient.tsx";
+import { usePortalClient } from "../PortalClient.tsx";
 import { useAuth } from "../Auth.tsx";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import * as qcpTypes from "../PortalTypes";
 import { useParams } from "react-router-dom";
 import { Chip, Grid, Stack, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 
 const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
-  const { fetchData } = usePortalClient(); // Get client instance here
+  const { makeRequest } = usePortalClient();
   const { userInfo } = useAuth();
 
-  const [userInfoFetchedData, setUserInfoFetchedData] = useState<
-    FetchedData<qcpTypes.UserInfo>
-  >({
-    data: undefined,
-    error: undefined,
-    loading: true,
+  const {
+    status,
+    data: userData,
+    error,
+  } = useQuery({
+    queryKey: ["userInfo", userName ?? "me"],
+    queryFn: () =>
+      makeRequest<qcpTypes.UserInfo>(
+        "GET",
+        userName ? `api/v1/users/${userName}` : `api/v1/me`,
+      ),
   });
-
-  // Load project data, then dataset & record metadata
-  useEffect(() => {
-    if (!userName) {
-      fetchData<qcpTypes.UserInfo>(setUserInfoFetchedData, "get", `api/v1/me`);
-    } else {
-      fetchData<qcpTypes.UserInfo>(
-        setUserInfoFetchedData,
-        "get",
-        `api/v1/users/${userName}`,
-      );
-    }
-  }, [fetchData, userName]);
-
-  const userData = userInfoFetchedData?.data;
 
   const isAdmin = userInfo?.role == "admin";
   const isThisUser =
@@ -38,14 +29,14 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
 
   return (
     <>
-      {userInfoFetchedData.loading && <Typography>Loading...</Typography>}
-      {userInfoFetchedData.error && (
+      {status === "pending" && <Typography>Loading...</Typography>}
+      {status === "error" && (
         <Typography color="error">
-          Error loading user: {userInfoFetchedData.error}
+          Error loading user: {error.message}
         </Typography>
       )}
 
-      {!userInfoFetchedData.loading && userData && (
+      {status === "success" && userData && (
         <Grid container spacing={2} width="100%">
           <Grid size={12}>
             <Stack spacing={1}>

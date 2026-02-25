@@ -1,4 +1,11 @@
-import { createContext, ReactNode, useCallback, useContext } from "react";
+import {
+  createContext,
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  useCallback,
+  useContext,
+} from "react";
 import * as requestHelpers from "./RequestHelpers.ts";
 import { AuthenticationError } from "./Exceptions.ts";
 import { useAuth } from "./Auth.tsx";
@@ -23,7 +30,7 @@ type ClientContextType = {
   ) => Promise<T>;
 
   fetchData: <T>(
-    setDataFn: (value: FetchedData<T>) => void,
+    setDataFn: Dispatch<SetStateAction<FetchedData<T>>>,
     method: string,
     endpoint: string,
     body?: object,
@@ -66,7 +73,7 @@ export function PortalClientProvider({ children }: { children: ReactNode }) {
 
   const fetchData = useCallback(
     function <T>(
-      setDataFn: (value: FetchedData<T>) => void,
+      setDataFn: Dispatch<SetStateAction<FetchedData<T>>>,
       method: string,
       endpoint: string,
       body?: object,
@@ -78,15 +85,15 @@ export function PortalClientProvider({ children }: { children: ReactNode }) {
         .then((r) => {
           setDataFn((prevData) => ({
             ...prevData,
-            data: r.data,
-            error: r.error,
+            data: r,
+            error: undefined,
           }));
         })
         .catch((err) => {
           setDataFn((prevData) => ({
             ...prevData,
             data: undefined,
-            error: err,
+            error: err instanceof Error ? err.message : String(err),
           }));
         })
         .finally(() => {

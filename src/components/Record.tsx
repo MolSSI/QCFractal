@@ -1,8 +1,5 @@
-import React, { useEffect, useState } from "react";
-import {
-  FetchedData,
-  usePortalClient,
-} from "../PortalClient.tsx";
+import React, { useState } from "react";
+import { usePortalClient } from "../PortalClient.tsx";
 import { useParams } from "react-router-dom";
 import { WaitingReasonFragment } from "./WaitingReasonFragment";
 import { ManagerFragment } from "./ManagerFragment";
@@ -28,108 +25,77 @@ import HelpOutline from "@mui/icons-material/HelpOutline";
 import { format } from "date-fns";
 import { MoleculeStageProvider, MoleculeViewer } from "./Molecule";
 import { getRecordReprMolecule } from "../Utils";
+import { useQuery } from "@tanstack/react-query";
 
 function Record() {
   const { recordId } = useParams();
-  const { fetchData } = usePortalClient();
+  const { makeRequest } = usePortalClient();
   const [waitingReasonOpen, setWaitingReasonOpen] = React.useState(false);
   const [managerDialogOpen, setManagerDialogOpen] = useState(false);
-
-  const [recordFetchedData, setRecordFetchedData] = React.useState<
-    FetchedData<qcpTypes.RecordData>
-  >({
-    data: undefined,
-    error: undefined,
-    loading: true,
-  });
-
-  const [serviceFetchedData, setServiceFetchedData] = React.useState<
-    FetchedData<qcpTypes.RecordService>
-  >({
-    data: undefined,
-    error: undefined,
-    loading: true,
-  });
-  const [taskFetchedData, setTaskFetchedData] = React.useState<
-    FetchedData<qcpTypes.RecordTask>
-  >({
-    data: undefined,
-    error: undefined,
-    loading: true,
-  });
-
-  const [moleculeFetchedData, setMoleculeFetchedData] = useState<
-    FetchedData<qcpTypes.Molecule>
-  >({
-    data: undefined,
-    error: undefined,
-    loading: false,
-  });
 
   const [taskServiceDialogOpen, setTaskServiceDialogOpen] =
     React.useState(false);
 
-  useEffect(() => {
-    setRecordFetchedData({ data: undefined, error: undefined, loading: true });
-    setServiceFetchedData({ data: undefined, error: undefined, loading: true });
-    setTaskFetchedData({ data: undefined, error: undefined, loading: true });
+  const parsedRecordId = recordId ? Number(recordId) : NaN;
+  const validRecordId = Number.isFinite(parsedRecordId);
 
-    fetchData<qcpTypes.RecordData>(
-      setRecordFetchedData,
-      "get",
-      `/api/v1/records/${recordId}`,
-    );
-  }, [fetchData, recordId]);
+  const {
+    status: recordStatus,
+    data: recordData,
+    error: recordError,
+  } = useQuery({
+    queryKey: ["record", parsedRecordId],
+    queryFn: () =>
+      makeRequest<qcpTypes.RecordData>("GET", `/api/v1/records/${parsedRecordId}`),
+    enabled: validRecordId,
+  });
 
-  useEffect(() => {
-    // Only fetch when record data is loaded and record_type is available
-    if (
-      !recordFetchedData.loading &&
-      recordFetchedData.data?.record_type &&
-      recordFetchedData.data?.is_service !== undefined
-    ) {
-      const type = recordFetchedData.data.record_type;
-      if (recordFetchedData.data.is_service) {
-        fetchData<qcpTypes.RecordService>(
-          setServiceFetchedData,
-          "get",
-          `/api/v1/records/${type}/${recordId}/service`,
-        );
-      } else {
-        fetchData<qcpTypes.RecordTask>(
-          setTaskFetchedData,
-          "get",
-          `/api/v1/records/${type}/${recordId}/task`,
-        );
-      }
-    }
-  }, [
-    fetchData,
-    recordFetchedData.loading,
-    recordFetchedData.data?.record_type,
-    recordFetchedData.data?.is_service,
-    recordId,
-  ]);
+  const {
+    data: serviceData,
+  } = useQuery({
+    queryKey: [
+      "recordService",
+      recordData?.record_type,
+      parsedRecordId,
+    ],
+    queryFn: () =>
+      makeRequest<qcpTypes.RecordService>(
+        "GET",
+        `/api/v1/records/${recordData?.record_type}/${parsedRecordId}/service`,
+      ),
+    enabled: !!recordData?.record_type && !!recordData?.is_service,
+  });
 
-  // Fetch molecule info when recordData is available and moleculeId can be determined
-  useEffect(() => {
-    if (!recordFetchedData.loading && recordFetchedData?.data) {
-      const moleculeId = getRecordReprMolecule(recordFetchedData?.data);
-      if (moleculeId) {
-        setMoleculeFetchedData({
-          data: undefined,
-          error: undefined,
-          loading: true,
-        });
-        fetchData<qcpTypes.Molecule>(
-          setMoleculeFetchedData,
-          "get",
-          `api/v1/molecules/${moleculeId}`,
-        );
-      }
-    }
-  }, [fetchData, recordFetchedData.loading, recordFetchedData?.data]);
-  const recordData = recordFetchedData?.data;
+  const {
+    data: taskData,
+  } = useQuery({
+    queryKey: ["recordTask", recordData?.record_type, parsedRecordId],
+    queryFn: () =>
+      makeRequest<qcpTypes.RecordTask>(
+        "GET",
+        `/api/v1/records/${recordData?.record_type}/${parsedRecordId}/task`,
+      ),
+    enabled:
+      !!recordData?.record_type &&
+      recordData?.is_service !== undefined &&
+      !recordData.is_service,
+  });
+
+  const moleculeId = recordData ? getRecordReprMolecule(recordData) : undefined;
+
+  const {
+    status: moleculeStatus,
+    data: moleculeData,
+  } = useQuery({
+    queryKey: ["molecule", moleculeId],
+    queryFn: () =>
+      makeRequest<qcpTypes.Molecule>("GET", `api/v1/molecules/${moleculeId}`),
+    enabled: !!moleculeId,
+  });
+
+  if (!validRecordId) {
+    return <Typography color="error">Invalid record ID</Typography>;
+  }
 
   // Status color mapping
   const statusColors: Record<
@@ -153,8 +119,9 @@ function Record() {
 
   return (
     <>
-      {recordFetchedData.loading && <Typography>Loading...</Typography>}
-      {!recordFetchedData.loading && recordData && (
+      {recordStatus === "pending" && <Typography>Loading...</Typography>}
+      {recordStatus === "error" && <Typography color="error">{recordError.message}</Typography>}
+      {recordStatus === "success" && recordData && (
         <>
           <Grid
             container
@@ -252,7 +219,7 @@ function Record() {
                         onClose={() => setWaitingReasonOpen(false)}
                       >
                         <DialogContent>
-                          <WaitingReasonFragment recordId={Number(recordId)} />
+                          <WaitingReasonFragment recordId={parsedRecordId} />
                         </DialogContent>
                       </Dialog>
                     </>
@@ -331,30 +298,30 @@ function Record() {
             </Typography>
             {recordData.is_service ? (
               <button
-                disabled={!serviceFetchedData.data}
+                disabled={!serviceData}
                 onClick={() => setTaskServiceDialogOpen(true)}
                 style={{
                   padding: "8px 16px",
-                  backgroundColor: serviceFetchedData.data ? "#1976d2" : "#ccc",
+                  backgroundColor: serviceData ? "#1976d2" : "#ccc",
                   color: "#fff",
                   border: "none",
                   borderRadius: "4px",
-                  cursor: serviceFetchedData.data ? "pointer" : "not-allowed",
+                  cursor: serviceData ? "pointer" : "not-allowed",
                 }}
               >
                 View Service
               </button>
             ) : (
               <button
-                disabled={!taskFetchedData.data}
+                disabled={!taskData}
                 onClick={() => setTaskServiceDialogOpen(true)}
                 style={{
                   padding: "8px 16px",
-                  backgroundColor: taskFetchedData.data ? "#1976d2" : "#ccc",
+                  backgroundColor: taskData ? "#1976d2" : "#ccc",
                   color: "#fff",
                   border: "none",
                   borderRadius: "4px",
-                  cursor: taskFetchedData.data ? "pointer" : "not-allowed",
+                  cursor: taskData ? "pointer" : "not-allowed",
                 }}
               >
                 View Task
@@ -368,15 +335,9 @@ function Record() {
             >
               <DialogContent>
                 {recordData.is_service ? (
-                  <TaskServiceFragment
-                    data={serviceFetchedData.data}
-                    type="service"
-                  />
+                  <TaskServiceFragment data={serviceData} type="service" />
                 ) : (
-                  <TaskServiceFragment
-                    data={taskFetchedData.data}
-                    type="task"
-                  />
+                  <TaskServiceFragment data={taskData} type="task" />
                 )}
               </DialogContent>
             </Dialog>
@@ -399,8 +360,8 @@ function Record() {
                 <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
                   Specification
                 </Typography>
-                {recordFetchedData.data?.specification ? (
-                  <Specification data={recordFetchedData.data.specification} />
+                {recordData.specification ? (
+                  <Specification data={recordData.specification} />
                 ) : (
                   <Typography>None</Typography>
                 )}
@@ -422,12 +383,11 @@ function Record() {
                     position: "relative",
                   }}
                 >
-                  {moleculeFetchedData.loading ? (
+                  {moleculeStatus === "pending" ? (
                     <Typography sx={{ p: 2 }}>Loading molecule...</Typography>
-                  ) : moleculeFetchedData.data &&
-                    typeof moleculeFetchedData.data === "object" ? (
+                  ) : moleculeData && typeof moleculeData === "object" ? (
                     <MoleculeStageProvider width={400} height={280}>
-                      <MoleculeViewer moleculeData={moleculeFetchedData.data} />
+                      <MoleculeViewer moleculeData={moleculeData} />
                     </MoleculeStageProvider>
                   ) : (
                     <Typography

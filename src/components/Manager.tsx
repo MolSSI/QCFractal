@@ -1,8 +1,5 @@
-import {
-  FetchedData,
-  usePortalClient,
-} from "../PortalClient.tsx";
-import React, { useEffect, useState } from "react";
+import { usePortalClient } from "../PortalClient.tsx";
+import React from "react";
 import * as qcpTypes from "../PortalTypes";
 import { useParams } from "react-router-dom";
 import {
@@ -19,38 +16,38 @@ import {
   Typography,
 } from "@mui/material";
 import { parseToDate } from "../Utils";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Manager() {
   const { managerName } = useParams();
 
-  const { fetchData } = usePortalClient(); // Get client instance here
+  const { makeRequest } = usePortalClient();
 
-  const [managerFetchedData, setmanagerFetchedData] = useState<
-    FetchedData<qcpTypes.Manager>
-  >({
-    data: undefined,
-    error: undefined,
-    loading: true,
+  const {
+    status,
+    data: managerData,
+    error,
+  } = useQuery({
+    queryKey: ["managerInfo", managerName],
+    queryFn: () =>
+      makeRequest<qcpTypes.Manager>("GET", `api/v1/managers/${managerName}`),
+    enabled: !!managerName,
   });
 
-  // Load project data, then dataset & record metadata
-  useEffect(() => {
-    fetchData<qcpTypes.Manager>(
-      setmanagerFetchedData,
-      "get",
-      `api/v1/managers/${managerName}`,
-    );
-  }, [fetchData, managerName]);
+  if (!managerName) {
+    return <Typography color="error">Missing manager name</Typography>;
+  }
 
-  const managerData = managerFetchedData?.data;
   const mCreatedOn = parseToDate(managerData?.created_on);
   const mLastUpdated = parseToDate(managerData?.modified_on);
 
   return (
     <>
-      {managerFetchedData.loading && <Typography>Loading...</Typography>}
+      {status === "pending" && <Typography>Loading...</Typography>}
 
-      {!managerFetchedData.loading && managerData && (
+      {status === "error" && <Typography color="error">{error.message}</Typography>}
+
+      {status === "success" && managerData && (
         <Grid container spacing={2} width="100%">
           <Grid size={12}>
             <Stack>
