@@ -1,43 +1,38 @@
-import {
-  FetchedData,
-  usePortalClient,
-} from "../PortalClient.tsx";
-import React, { useEffect, useState } from "react";
+import { usePortalClient } from "../PortalClient.tsx";
+import React, { useState } from "react";
 import * as qcpTypes from "../PortalTypes";
 import { IconButton, Stack, Typography } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import { useQuery } from "@tanstack/react-query";
 
 export const WaitingReasonFragment: React.FC<{ recordId: number }> = ({
   recordId,
 }) => {
-  const { fetchData } = usePortalClient(); // Get client instance here
+  const { makeRequest } = usePortalClient();
 
-  const [reasonFetchedData, setReasonFetchedData] = useState<
-    FetchedData<qcpTypes.WaitingReason>
-  >({
-    data: undefined,
-    error: undefined,
-    loading: true,
+  const {
+    status,
+    data: waitingReason,
+    error,
+  } = useQuery({
+    queryKey: ["recordWaitingReason", recordId],
+    queryFn: () =>
+      makeRequest<qcpTypes.WaitingReason>(
+        "GET",
+        `api/v1/records/${recordId}/waiting_reason`,
+      ),
   });
-
-  useEffect(() => {
-    fetchData<qcpTypes.WaitingReason>(
-      setReasonFetchedData,
-      "get",
-      `api/v1/records/${recordId}/waiting_reason`,
-    );
-  }, [fetchData, recordId]);
-
-  const waitingReason = reasonFetchedData?.data;
 
   const [detailsExpanded, setDetailsExpanded] = useState(false);
 
   return (
     <>
-      {reasonFetchedData.loading && <Typography>Loading...</Typography>}
+      {status === "pending" && <Typography>Loading...</Typography>}
 
-      {!reasonFetchedData.loading && waitingReason && (
+      {status === "error" && <Typography color="error">{error.message}</Typography>}
+
+      {status === "success" && waitingReason && (
         <Stack>
           <Typography variant="h5">Reason</Typography>
           <Typography variant="body1">

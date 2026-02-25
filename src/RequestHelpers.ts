@@ -34,7 +34,16 @@ export async function rawRequest<T>(
   const is_json_response = content_type?.includes("application/json");
 
   if (response.ok) {
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
     if (!is_json_response) {
+      const content_length = response.headers.get("Content-Length");
+      if (content_length === "0") {
+        return undefined as T;
+      }
+
       throw new Error(
         `Received ok response but not JSON? - (${response.status}): ${response.statusText}`,
       );

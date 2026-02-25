@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  FetchedData,
-  usePortalClient,
-} from "../PortalClient.tsx";
+import { usePortalClient } from "../PortalClient.tsx";
 import {
   Box,
   CircularProgress,
@@ -11,6 +8,7 @@ import {
   Tabs,
   Typography,
 } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 
 interface OutputFragmentProps {
   recordType: string;
@@ -23,54 +21,47 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
   recordId,
   computeHistoryId,
 }) => {
-  const { fetchData } = usePortalClient();
-
-  // State for fetched output keys
-  const [outputKeysFetchedData, setOutputKeysFetchedData] = useState<
-    FetchedData<Record<string, any>>
-  >({
-    data: undefined,
-    error: undefined,
-    loading: true,
-  });
-
-  // State for fetched output content
-  const [outputContentFetchedData, setOutputContentFetchedData] = useState<
-    FetchedData<string>
-  >({
-    data: undefined,
-    error: undefined,
-    loading: true,
-  });
+  const { makeRequest } = usePortalClient();
 
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
-  // Fetch the keys (e.g., "stdout", "error") from the API
-  useEffect(() => {
-    fetchData<Record<string, any>>(
-      setOutputKeysFetchedData,
-      "get",
-      `/api/v1/records/${recordType}/${recordId}/compute_history/${computeHistoryId}/outputs`,
-    );
-  }, [recordType, recordId, computeHistoryId, fetchData]);
+  const {
+    status: outputKeysStatus,
+    data: outputKeysData,
+    error: outputKeysError,
+  } = useQuery({
+    queryKey: ["recordOutputs", recordType, recordId, computeHistoryId],
+    queryFn: () =>
+      makeRequest<Record<string, any>>(
+        "GET",
+        `/api/v1/records/${recordType}/${recordId}/compute_history/${computeHistoryId}/outputs`,
+      ),
+  });
 
-  // Fetch the content for the selected key
-  useEffect(() => {
-    if (selectedKey) {
-      fetchData<string>(
-        setOutputContentFetchedData,
-        "get",
+  const {
+    status: outputContentStatus,
+    data: outputContentData,
+    error: outputContentError,
+  } = useQuery({
+    queryKey: [
+      "recordOutputContent",
+      recordType,
+      recordId,
+      computeHistoryId,
+      selectedKey,
+    ],
+    queryFn: () =>
+      makeRequest<string>(
+        "GET",
         `/api/v1/records/${recordType}/${recordId}/compute_history/${computeHistoryId}/outputs/${selectedKey}/uncompressed_data`,
-      );
-    }
-  }, [selectedKey, recordType, recordId, computeHistoryId, fetchData]);
+      ),
+    enabled: !!selectedKey,
+  });
 
   // Extract keys from fetched data
   const outputKeys = React.useMemo(() => {
-    return outputKeysFetchedData.data
-      ? Object.keys(outputKeysFetchedData.data)
-      : [];
-  }, [outputKeysFetchedData.data]);
+    return outputKeysData ? Object.keys(outputKeysData) : [];
+  }, [outputKeysData]);
 
   // Automatically select the first key when keys are fetched
   useEffect(() => {
@@ -81,15 +72,15 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
 
   return (
     <>
-      {outputKeysFetchedData.loading && <Typography>Loading...</Typography>}
+      {outputKeysStatus === "pending" && <Typography>Loading...</Typography>}
 
-      {outputKeysFetchedData.error && (
+      {outputKeysStatus === "error" && (
         <Typography color="error">
-          Error: {outputKeysFetchedData.error}
+          Error: {outputKeysError.message}
         </Typography>
       )}
 
-      {!outputKeysFetchedData.loading && outputKeysFetchedData.data && (
+      {outputKeysStatus === "success" && outputKeysData && (
         <Grid container spacing={2} width="100%">
           {/* Tabs for output keys */}
           <Grid size={{ xs: 3 }}>
@@ -107,14 +98,13 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
 
           {/* Content for the selected key */}
           <Grid size={{ xs: 9 }}>
-            {outputContentFetchedData.loading && <CircularProgress />}
-            {outputContentFetchedData.error && (
+            {outputContentStatus === "pending" && <CircularProgress />}
+            {outputContentStatus === "error" && (
               <Typography color="error">
-                Error: {outputContentFetchedData.error}
+                Error: {outputContentError.message}
               </Typography>
             )}
-            {!outputContentFetchedData.loading &&
-              outputContentFetchedData.data && (
+            {outputContentStatus === "success" && outputContentData && (
                 <Box
                   sx={{
                     whiteSpace: "pre-wrap",
@@ -123,12 +113,12 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
                     maxHeight: "400px",
                   }}
                 >
-                  {typeof outputContentFetchedData.data === "string" ? (
-                    outputContentFetchedData.data
+                  {typeof outputContentData === "string" ? (
+                    outputContentData
                   ) : (
                     // Render object content if the data is not a string
                     <Box component="div">
-                      {Object.entries(outputContentFetchedData.data).map(
+                      {Object.entries(outputContentData).map(
                         ([key, value]) => (
                           <Typography
                             key={key}

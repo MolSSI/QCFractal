@@ -19,7 +19,7 @@ type AuthContextType = {
   authorized: boolean;
   userInfo?: qcpTypes.UserInfo;
 
-  ping: () => Promise<void>;
+  ping: () => Promise<qcpTypes.PingResults | undefined>;
   fetchServerInfo: () => Promise<void>;
   login: (username?: string, password?: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     undefined,
   );
 
-  const ping = useCallback(async () => {
+  const ping = useCallback(async (): Promise<qcpTypes.PingResults | undefined> => {
     try {
       const r = await rawMakeRequest<qcpTypes.PingResults>(
         "get",
@@ -51,10 +51,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setServerStatus("connected");
       setAuthorized(r.authorized);
       setUserInfo(r.user_info);
+      return r;
     } catch {
       setServerStatus("disconnected");
       setAuthorized(false);
       setUserInfo(undefined);
+      return undefined;
     }
   }, []);
 
@@ -77,8 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     const logout_url: string = `${server_address}/auth/v1/session_logout`;
 
-    if (!userInfo) return;
-
     const req_options: RequestInit = {
       method: "POST",
       headers: server_headers,
@@ -86,18 +86,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     try {
-      // TODO - better error handling
-      await rawRequest<void>(logout_url, req_options);
-      await ping();
-      setUserInfo(undefined);
+      if (userInfo) {
+        await rawRequest<void>(logout_url, req_options);
+      }
     } catch (err) {
       console.warn("Logout failed:", err);
+    } finally {
+      await ping();
+      setUserInfo(undefined);
     }
   }, [userInfo, ping]);
 
   const login = useCallback(
     async (username?: string, password?: string) => {
       setUserInfo(undefined);
+      setAuthorized(false);
 
       if ((username && !password) || (password && !username)) {
         throw new Error(
@@ -129,12 +132,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserInfo(userInfo);
       }
 
-      // else see if we can log in anonymously
-      // the below will throw an exception if not logged in and the server requires it
+      const pingResults = await ping();
+      if (!pingResults?.authorized) {
+        throw new Error("Login failed or not authorized");
+      }
+
       await fetchServerInfo();
-      setAuthorized(true);
     },
-    [fetchServerInfo],
+    [fetchServerInfo, ping],
   );
 
 

@@ -1,54 +1,38 @@
 import { useNavigate } from "react-router-dom";
 import { MoleculeStageProvider, MoleculeViewer } from "../components/Molecule";
-import { useEffect, useState } from "react";
-import {
-  FetchedData,
-  usePortalClient,
-} from "../PortalClient.tsx";
+import { useState } from "react";
+import { usePortalClient } from "../PortalClient.tsx";
 import * as qcpTypes from "../PortalTypes";
 import { Box, Button, Typography } from "@mui/material";
 import AddMoleculeModal from "../components/AddMoleculeModal";
+import { useQuery } from "@tanstack/react-query";
 
 const HomePage = () => {
   const navigate = useNavigate();
 
-  const { fetchData } = usePortalClient();
-
-  const [moleculeFetchedData, setMoleculeFetchedData] = useState<
-    FetchedData<qcpTypes.Molecule>
-  >({
-    data: undefined,
-    error: undefined,
-    loading: true,
-  });
+  const { makeRequest } = usePortalClient();
 
   const moleculeId = 105164121;
-  useEffect(() => {
-    fetchData<qcpTypes.Molecule>(
-      setMoleculeFetchedData,
-      "get",
-      `api/v1/molecules/${moleculeId}`,
-    );
-  }, [fetchData, moleculeId]);
 
   const [modalOpen, setModalOpen] = useState(false);
   // currentMolecule may hold a numeric id or an error string to display
   const [currentMoleculeId, setCurrentMoleculeId] = useState<
     number | string | null
-  >(null);
+  >(moleculeId);
+
+  const moleculeQueryId =
+    typeof currentMoleculeId === "number" ? currentMoleculeId : null;
+
+  const { data: moleculeData } = useQuery({
+    queryKey: ["molecule", moleculeQueryId],
+    queryFn: () => makeRequest<qcpTypes.Molecule>("GET", `api/v1/molecules/${moleculeQueryId}`),
+    enabled: moleculeQueryId !== null,
+  });
 
   const handleAddMolecule = () => setModalOpen(true);
   const handleCloseModal = () => setModalOpen(false);
   const handleSubmitMolecule = (idOrError: number | string) => {
     setCurrentMoleculeId(idOrError);
-    // If we have a numeric id, fetch the molecule to display
-    if (typeof idOrError === "number") {
-      fetchData<qcpTypes.Molecule>(
-        setMoleculeFetchedData,
-        "get",
-        `api/v1/molecules/${idOrError}`,
-      );
-    }
   };
 
   return (
@@ -85,9 +69,7 @@ const HomePage = () => {
         Example record
       </button>
       <MoleculeStageProvider width={500} height={500}>
-        {moleculeFetchedData.data && (
-          <MoleculeViewer moleculeData={moleculeFetchedData?.data} />
-        )}
+        {moleculeData && <MoleculeViewer moleculeData={moleculeData} />}
       </MoleculeStageProvider>
 
       <AddMoleculeModal

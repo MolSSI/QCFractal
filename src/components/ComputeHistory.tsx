@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -17,13 +17,11 @@ import {
 } from "@mui/material";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
-import {
-  FetchedData,
-  usePortalClient,
-} from "../PortalClient.tsx";
+import { usePortalClient } from "../PortalClient.tsx";
 import * as qcpTypes from "../PortalTypes";
 import { ManagerFragment } from "./ManagerFragment";
 import OutputFragment from "./OutputFragment";
+import { useQuery } from "@tanstack/react-query";
 
 interface ComputeHistoryProps {
   recordType: string;
@@ -34,12 +32,6 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
   recordType,
   recordId,
 }) => {
-  const [computeHistoryFetchedData, setComputeHistoryFetchedData] =
-    React.useState<FetchedData<qcpTypes.ComputeHistory[]>>({
-      data: undefined,
-      error: undefined,
-      loading: true,
-    });
   const [isExpanded, setIsExpanded] = useState(false);
   const [managerDialogOpen, setManagerDialogOpen] = useState(false);
   const [selectedManager, setSelectedManager] = useState<string | null>(null);
@@ -47,7 +39,20 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
   const [selectedComputeHistoryId, setSelectedComputeHistoryId] = useState<
     number | null
   >(null);
-  const { fetchData } = usePortalClient();
+  const { makeRequest } = usePortalClient();
+
+  const {
+    status: computeHistoryStatus,
+    data: computeHistoryData,
+    error: computeHistoryError,
+  } = useQuery({
+    queryKey: ["recordComputeHistory", recordType, recordId],
+    queryFn: () =>
+      makeRequest<qcpTypes.ComputeHistory[]>(
+        "GET",
+        `/api/v1/records/${recordType}/${recordId}/compute_history`,
+      ),
+  });
 
   // Status color mapping (updated to match Record component)
   const statusColors: Record<
@@ -69,15 +74,7 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
     deleted: "secondary",
   };
 
-  useEffect(() => {
-    fetchData<qcpTypes.ComputeHistory[]>(
-      setComputeHistoryFetchedData,
-      "get",
-      `/api/v1/records/${recordType}/${recordId}/compute_history`,
-    );
-  }, [fetchData, recordType, recordId]);
-
-  const computeHistory = computeHistoryFetchedData?.data || [];
+  const computeHistory = computeHistoryData || [];
   return (
     <>
       {/* Title with toggle button and buttons */}
@@ -104,7 +101,7 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
             variant="outlined"
             size="small"
             disabled={
-              computeHistoryFetchedData.loading || computeHistory.length === 0
+              computeHistoryStatus === "pending" || computeHistory.length === 0
             }
             onClick={() => {
               if (computeHistory.length > 0) {
@@ -141,21 +138,19 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
       {/* Content */}
       {isExpanded && (
         <>
-          {computeHistoryFetchedData.loading && (
-            <Typography>Loading...</Typography>
-          )}
-          {computeHistoryFetchedData.error && (
+          {computeHistoryStatus === "pending" && <Typography>Loading...</Typography>}
+          {computeHistoryStatus === "error" && (
             <Typography color="error">
-              Error: {computeHistoryFetchedData.error}
+              Error: {computeHistoryError.message}
             </Typography>
           )}
-          {!computeHistoryFetchedData.loading &&
+          {computeHistoryStatus === "success" &&
             computeHistory.length === 0 && (
               <Typography>
                 There is no compute history for this record.
               </Typography>
             )}
-          {!computeHistoryFetchedData.loading && computeHistory.length > 0 && (
+          {computeHistoryStatus === "success" && computeHistory.length > 0 && (
             <TableContainer component={Paper} sx={{ boxShadow: "none" }}>
               <Table
                 size="small"

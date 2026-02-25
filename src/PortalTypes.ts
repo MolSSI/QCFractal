@@ -4,12 +4,16 @@ export type ServerInfo = {
 };
 
 export type UserInfo = {
-  user_id: number;
+  id?: number;
+  user_id?: number;
   username: string;
   groups: string[];
   role: string;
   auth_type: string;
   enabled: boolean;
+  fullname?: string;
+  organization?: string;
+  email?: string;
 };
 
 export type PingResults = {

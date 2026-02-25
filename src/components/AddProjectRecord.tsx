@@ -1,22 +1,12 @@
-import React, { useEffect } from "react";
+import React from "react";
 import * as qcpTypes from "../PortalTypes";
-import {
-  FetchedData,
-  usePortalClient,
-} from "../PortalClient.tsx";
+import { usePortalClient } from "../PortalClient.tsx";
 import { useDebounce } from "use-debounce";
 import { Grid, Stack, TextField, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 
 function AddProjectRecord() {
-  const { fetchData } = usePortalClient();
-
-  const [possibleManagers, setPossibleManagers] = React.useState<
-    FetchedData<string[]>
-  >({
-    data: undefined,
-    error: undefined,
-    loading: true,
-  });
+  const { makeRequest } = usePortalClient();
 
   const [activeManagerParams, setActiveManagerParams] =
     React.useState<qcpTypes.ActiveManagerQuery>({
@@ -25,26 +15,24 @@ function AddProjectRecord() {
     });
   const [dbActiveManagerParams] = useDebounce(activeManagerParams, 500);
 
-  useEffect(() => {
-    if (
-      dbActiveManagerParams.programs &&
-      Object.keys(dbActiveManagerParams.programs).length > 0 &&
-      dbActiveManagerParams.compute_tag.length > 0
-    ) {
-      fetchData<string[]>(
-        setPossibleManagers,
-        "post",
+  const hasActiveManagerFilters =
+    !!dbActiveManagerParams.programs &&
+    Object.keys(dbActiveManagerParams.programs).length > 0 &&
+    dbActiveManagerParams.compute_tag.length > 0;
+
+  const {
+    data: possibleManagers,
+    status: possibleManagersStatus,
+  } = useQuery({
+    queryKey: ["queryActiveManagers", dbActiveManagerParams],
+    queryFn: () =>
+      makeRequest<string[]>(
+        "POST",
         `/api/v1/managers/queryActive`,
         dbActiveManagerParams,
-      );
-    } else {
-      setPossibleManagers({
-        data: undefined,
-        error: undefined,
-        loading: true,
-      });
-    }
-  }, [fetchData, dbActiveManagerParams]);
+      ),
+    enabled: hasActiveManagerFilters,
+  });
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -106,8 +94,10 @@ function AddProjectRecord() {
                 }
               />
               <Typography variant="body2">
-                {possibleManagers.data
-                  ? `${possibleManagers.data?.length} active managers`
+                {possibleManagersStatus === "pending" && hasActiveManagerFilters
+                  ? "Loading active managers..."
+                  : possibleManagers
+                    ? `${possibleManagers.length} active managers`
                   : "(enter program and compute tag)"}
               </Typography>
             </Stack>
