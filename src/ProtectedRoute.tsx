@@ -6,11 +6,7 @@ function ProtectedRoute() {
 
   return (
     <>
-      {serverStatus == "loading" ? (
-        <p>Loading...</p>
-      ) : serverStatus == "disconnected" ? (
-        <p>Not connected...</p>
-      ) : !authorized ? (
+      {serverStatus == "connected" && !authorized ? (
         <Navigate
           to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}
         />

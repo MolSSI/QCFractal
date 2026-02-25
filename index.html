@@ -4,9 +4,77 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>QCArchive Web GUI</title>
+
+    <style>
+      #initial-loader {
+        margin-top: 5rem;
+      }
+
+      #loader-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+        text-align: center;
+      }
+
+      #loader-image {
+        width: 200px;
+        height: auto;
+      }
+
+      #loader-text {
+        font-size: 1.1rem;
+      }
+    </style>
+
+    <script>
+      // Get theme from localStorage or default to browser preference
+      const browserTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+      const savedTheme = localStorage.getItem('mui-mode') || browserTheme;
+      const themeMode = (savedTheme === 'system') ? browserTheme : savedTheme;
+
+      // Set the attribute that Material-UI looks for
+      document.documentElement.setAttribute('data-mui-color-scheme', themeMode);
+
+      // Set the background color of the body and the text color
+      document.documentElement.style.backgroundColor = themeMode === 'dark' ? 'rgb(5,7,10)' : 'rgb(252,252,252)';
+      document.documentElement.style.color = themeMode === 'dark' ? 'rgb(252,252,252)' : 'rgb(5,7,10)';
+
+      // Optional: Set a CSS class as well for additional styling
+      document.documentElement.className = themeMode;
+    </script>
+
+
+
   </head>
   <body>
+    <!-- the root for react -->
     <div id="root"></div>
+
+    <!-- loading page -->
+    <div id="initial-loader">
+      <div id="loader-content">
+        <div id="loader-image"><!-- to be populated by script --></div>
+        <div id="loader-text"><!-- to be populated by script --></div>
+      </div>
+    </div>
+
     <script type="module" src="/src/main.tsx"></script>
+
   </body>
+
+  <script>
+    setTimeout(() => {
+      // Set the proper logo
+      const loadImg = document.getElementById('loader-image');
+      const loadText = document.getElementById('loader-text');
+
+      loadText.innerHTML = 'Loading QCWebPortal...';
+
+      loadImg.innerHTML = (themeMode === 'dark'
+              ? '<img width="100%" src="src/assets/qcarchive_logo_inverted.svg" alt="QCArchive Logo" />'
+              : '<img width="100%" src="src/assets/qcarchive_logo.svg" alt="QCArchive Logo" />');
+    }, 300);
+  </script>
 </html>
