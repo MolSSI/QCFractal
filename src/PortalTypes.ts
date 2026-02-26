@@ -185,3 +185,5 @@ export type ComputeHistory = {
     wall_time: number;
   };
 };
+
+export type UserPreferences = Record<string, unknown>;
