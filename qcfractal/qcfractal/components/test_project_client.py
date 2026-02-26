@@ -55,6 +55,9 @@ def test_project_client_add_get(submitter_client: PortalClient):
     plist = submitter_client.list_projects()
     assert plist[0]["id"] == proj.id
     assert plist[0]["project_name"] == proj.name
+    assert plist[0]["tagline"] == proj.tagline
+    assert plist[0]["tags"] == proj.tags
+    assert plist[0]["owner_user"] == proj.owner_user
 
 
 def test_project_client_add_get_records_datasets(snowflake_client: PortalClient):
