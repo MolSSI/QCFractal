@@ -27,14 +27,25 @@ export type WaitingReason = {
   details: Record<string, string>;
 };
 
-export type Project = {
+export type ProjectListEntry = {
   id: string;
   project_name: string;
   tagline: string;
   tags: string[];
   record_count: number;
   dataset_count: number;
-  molecule_count: number;
+  owner_user: string;
+};
+
+export type Project = {
+  id: string;
+  name: string;
+  description: string;
+  tagline: string;
+  tags: string[];
+  record_count: number;
+  dataset_count: number;
+  owner_user: string;
 };
 
 export type ProjectDatasetMetadata = {
