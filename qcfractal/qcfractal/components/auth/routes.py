@@ -226,6 +226,9 @@ def delete_user_v1(username_or_id: Union[int, str]):
 @api_v1.route("/users/<username_or_id>/preferences", methods=["GET"])
 @wrap_global_route("users", "read", True)
 def get_user_preferences_v1(username_or_id: Union[int, str]):
+    assert_security_enabled()
+    assert_logged_in()
+
     if g.role == "admin" or is_same_user(username_or_id):
         return storage_socket.users.get_preferences(g.user_id)
     else:
@@ -235,6 +238,9 @@ def get_user_preferences_v1(username_or_id: Union[int, str]):
 @api_v1.route("/me/preferences", methods=["GET"])
 @wrap_global_route("me", "read", True)
 def get_my_preferences_v1():
+    assert_security_enabled()
+    assert_logged_in()
+
     return storage_socket.users.get_preferences(g.user_id)
 
 
@@ -250,11 +256,12 @@ def set_user_preferences_v1(username_or_id: Union[int, str], body_data: Dict[str
         raise AuthorizationFailure("Cannot set user preferences: Forbidden")
 
 
-@api_v1.route("/users/<username_or_id>/preferences", methods=["PUT"])
+@api_v1.route("/me/preferences", methods=["PUT"])
 @wrap_global_route("me", "modify", True)
 def set_my_preferences_v1(body_data: Dict[str, Any]):
     assert_security_enabled()
     assert_logged_in()
+
     return storage_socket.users.set_preferences(g.user_id, body_data)
 
 
