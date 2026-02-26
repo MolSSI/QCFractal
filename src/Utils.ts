@@ -23,3 +23,16 @@ export const getRecordReprMolecule = (record: RecordData): Molecule => {
 
   throw new Error(`Unknown or unhandled record type: ${record.record_type}`);
 };
+
+
+export const updateFavoritesList = (existing_favorites: number[] | undefined, proj_id: number): number[] => {
+  // adds or removes the new_id to/from the existing_favorites
+  // Also handles if existing favorites is undefined
+  if (!existing_favorites) return [proj_id];
+
+  // If the project is already in the list, remove it
+  if (existing_favorites.includes(proj_id)) {
+    return existing_favorites.filter((id) => id !== proj_id);
+  }
+  return [...existing_favorites, proj_id];
+};

@@ -3,19 +3,25 @@ import { usePortalClient } from "../PortalClient.tsx";
 import { useState } from "react";
 import * as qcpTypes from "../PortalTypes";
 import { useLocation, useParams } from "react-router-dom";
+import { useAuth } from "../Auth.tsx";
+import { usePreferences } from "../PreferencesProvider.tsx";
+import { Star, StarBorder } from "@mui/icons-material";
 import {
   Box,
   Button,
   Chip,
   Grid,
+  IconButton,
   Paper,
   Tab,
   Tabs,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import DatasetTab from "./DatasetTab";
 import RecordTab from "./RecordTab";
 import { useQuery } from "@tanstack/react-query";
+import { updateFavoritesList } from "../Utils";
 
 function TabPanel(props: {
   children?: React.ReactNode;
@@ -40,6 +46,17 @@ export default function Project() {
   const { projectId } = useParams();
   const location = useLocation();
   const { makeRequest } = usePortalClient();
+  const { loggedIn } = useAuth();
+  const { preferences, updatePreference } = usePreferences();
+
+  const favoriteProjects = (preferences?.favorite_projects as number[]) || [];
+
+  const handleToggleFavorite = async () => {
+    if (!projectId) return;
+    const projectIdNum = parseInt(projectId);
+    const newFavorites = updateFavoritesList(favoriteProjects, projectIdNum);
+    await updatePreference("favorite_projects", newFavorites);
+  };
 
   // Load from location state or sessionStorage or fallback to 0
   const [tabValue, setTabValue] = useState<number>(() => {
@@ -92,22 +109,51 @@ export default function Project() {
     return <Typography color="error">Missing project id</Typography>;
   }
 
+  const isFavorite = favoriteProjects.includes(parseInt(projectId));
+
   return (
     <>
       {projectStatus === "pending" && <Typography>Loading...</Typography>}
 
-      {projectStatus === "error" && <Typography color="error">{projectError.message}</Typography>}
+      {projectStatus === "error" && (
+        <Typography color="error">{projectError.message}</Typography>
+      )}
 
       {projectStatus === "success" && projectData && (
         <Grid container spacing={2} width="100%">
           {/* Project name & tagline */}
           <Grid size={12}>
-            <Typography variant="h4" fontWeight="bold">
-              {projectData.name}
-            </Typography>
-            <Typography variant="subtitle1" sx={{ color: "text.secondary" }}>
-              {projectData.tagline}
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              {loggedIn && (
+                <Tooltip title={isFavorite ? "Remove from favorites" : "Add to favorites"}>
+                  <IconButton
+                    size="large"
+                    onClick={handleToggleFavorite}
+                    sx={{ mr: 1, p: 1 }}
+                  >
+                    {isFavorite ? (
+                      <Star sx={{ color: "gold", fontSize: "1.5rem" }} />
+                    ) : (
+                      <StarBorder sx={{ fontSize: "1.5rem" }} />
+                    )}
+                  </IconButton>
+                </Tooltip>
+              )}
+              <Box>
+                <Typography variant="h4" fontWeight="bold">
+                  <Typography variant="h5" fontWeight="bold" component={"span"} pr={2}>
+                    [{projectData.id}]
+                  </Typography>
+                  {projectData.name}
+                </Typography>
+                <Typography
+                  variant="subtitle1"
+                  sx={{ color: "text.secondary" }}
+                >
+                  {projectData.tagline}
+                </Typography>
+              </Box>
+            </Box>
           </Grid>
           {/* Summary stats: for example, Records, Datasets */}
           <Grid size={2}>
