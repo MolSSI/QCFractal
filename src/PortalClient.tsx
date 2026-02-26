@@ -1,25 +1,7 @@
-import {
-  createContext,
-  Dispatch,
-  ReactNode,
-  SetStateAction,
-  useCallback,
-  useContext,
-} from "react";
+import { createContext, ReactNode, useCallback, useContext } from "react";
 import * as requestHelpers from "./RequestHelpers.ts";
 import { AuthenticationError } from "./Exceptions.ts";
 import { useAuth } from "./Auth.tsx";
-
-export type RequestReturnType<T> = {
-  data?: T;
-  error?: string;
-};
-
-export type FetchedData<T> = {
-  data?: T;
-  error?: string;
-  loading: boolean;
-};
 
 type ClientContextType = {
   makeRequest: <T>(
@@ -28,14 +10,6 @@ type ClientContextType = {
     body?: object,
     url_params?: Record<string, string>,
   ) => Promise<T>;
-
-  fetchData: <T>(
-    setDataFn: Dispatch<SetStateAction<FetchedData<T>>>,
-    method: string,
-    endpoint: string,
-    body?: object,
-    url_params?: Record<string, string>,
-  ) => void;
 };
 
 export const PortalClientContext = createContext<ClientContextType | undefined>(
@@ -71,43 +45,10 @@ export function PortalClientProvider({ children }: { children: ReactNode }) {
     [ping],
   );
 
-  const fetchData = useCallback(
-    function <T>(
-      setDataFn: Dispatch<SetStateAction<FetchedData<T>>>,
-      method: string,
-      endpoint: string,
-      body?: object,
-      url_params?: Record<string, string>,
-    ): void {
-      setDataFn({ data: undefined, error: undefined, loading: true });
-
-      wrappedMakeRequest<T>(method, endpoint, body, url_params)
-        .then((r) => {
-          setDataFn((prevData) => ({
-            ...prevData,
-            data: r,
-            error: undefined,
-          }));
-        })
-        .catch((err) => {
-          setDataFn((prevData) => ({
-            ...prevData,
-            data: undefined,
-            error: err instanceof Error ? err.message : String(err),
-          }));
-        })
-        .finally(() => {
-          setDataFn((prevData) => ({ ...prevData, loading: false }));
-        });
-    },
-    [wrappedMakeRequest],
-  );
-
   return (
     <PortalClientContext.Provider
       value={{
         makeRequest: wrappedMakeRequest,
-        fetchData: fetchData,
       }}
     >
       {children}
@@ -123,6 +64,6 @@ export function usePortalClient() {
     );
   }
 
-  const { makeRequest, fetchData } = context;
-  return { makeRequest, fetchData };
+  const { makeRequest } = context;
+  return { makeRequest };
 }
