@@ -1,12 +1,11 @@
-import { alpha } from "@mui/material/styles";
+import { alpha, Theme } from "@mui/material/styles";
 
-import { gray, brand } from "../../shared-theme/themePrimitives";
+import { brand, gray } from "../../shared-theme/themePrimitives";
 
-/* eslint-disable import/prefer-default-export */
 export const treeViewCustomizations = {
   MuiTreeItem2: {
     styleOverrides: {
-      root: ({ theme }) => ({
+      root: ({ theme }: { theme: Theme }) => ({
         position: "relative",
         boxSizing: "border-box",
         padding: theme.spacing(0, 1),
@@ -26,7 +25,7 @@ export const treeViewCustomizations = {
           },
         },
       }),
-      content: ({ theme }) => ({
+      content: ({ theme }: { theme: Theme }) => ({
         marginTop: theme.spacing(1),
         padding: theme.spacing(0.5, 1),
         overflow: "clip",

@@ -20,7 +20,7 @@ import {
   chartsCustomizations,
   dataGridCustomizations,
   treeViewCustomizations,
-} from "./theme/customizations/index.js";
+} from "./theme/customizations";
 
 const xThemeComponents = {
   ...chartsCustomizations,
