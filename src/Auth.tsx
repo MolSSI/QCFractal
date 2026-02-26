@@ -20,7 +20,7 @@ type AuthContextType = {
   userInfo?: qcpTypes.UserInfo;
 
   ping: () => Promise<qcpTypes.PingResults | undefined>;
-  fetchServerInfo: () => Promise<void>;
+  fetchServerInfo: () => Promise<qcpTypes.ServerInfo | undefined>;
   login: (username?: string, password?: string) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -42,7 +42,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     undefined,
   );
 
-  const ping = useCallback(async (): Promise<qcpTypes.PingResults | undefined> => {
+  const ping = useCallback(async (): Promise<
+    qcpTypes.PingResults | undefined
+  > => {
     try {
       const r = await rawMakeRequest<qcpTypes.PingResults>(
         "get",
@@ -60,21 +62,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const fetchServerInfo = useCallback(async () => {
-    try {
-      const sInfo = await rawMakeRequest<qcpTypes.ServerInfo>(
-        "get",
-        `api/v1/information`,
-      );
-      setServerInfo(sInfo);
-    } catch (e) {
-      setServerInfo({
-        name: "(unknown)",
-        version: "(unknown)",
-      } as qcpTypes.ServerInfo);
-      console.warn("Failed to fetch server info:", e);
-    }
-  }, []);
+  const fetchServerInfo: () => Promise<qcpTypes.ServerInfo | undefined> =
+    useCallback(async () => {
+      try {
+        const sInfo = await rawMakeRequest<qcpTypes.ServerInfo>(
+          "get",
+          `api/v1/information`,
+        );
+        setServerInfo(sInfo);
+        return sInfo;
+      } catch (e) {
+        setServerInfo({
+          name: "(unknown)",
+          version: "(unknown)",
+        } as qcpTypes.ServerInfo);
+        console.warn("Failed to fetch server info:", e);
+        return undefined;
+      }
+    }, []);
 
   const logout = useCallback(async () => {
     const logout_url: string = `${server_address}/auth/v1/session_logout`;
@@ -92,8 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.warn("Logout failed:", err);
     } finally {
-      await ping();
-      setUserInfo(undefined);
+      await ping(); // sets user info
     }
   }, [userInfo, ping]);
 
@@ -142,18 +146,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [fetchServerInfo, ping],
   );
 
-
   // Detect login status & server info on initial page load
   useEffect(() => {
     const f = async () => {
-      await ping();
+      const r = await ping();
 
-      if (authorized) {
+      if (r?.authorized) {
         await fetchServerInfo();
       }
     };
     f().catch(console.error);
-  }, [authorized, ping, fetchServerInfo]);
+  }, [ping, fetchServerInfo]);
 
   return (
     <AuthContext.Provider

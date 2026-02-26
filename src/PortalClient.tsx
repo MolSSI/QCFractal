@@ -27,15 +27,15 @@ export function PortalClientProvider({ children }: { children: ReactNode }) {
       url_params?: Record<string, string>,
     ): Promise<T> {
       try {
-        const r = await requestHelpers.rawMakeRequest<T>(
+        return await requestHelpers.rawMakeRequest<T>(
           method,
           endpoint,
           body,
           url_params,
         );
-        return r;
       } catch (err) {
         if (err instanceof AuthenticationError) {
+          // Ping the server to see if the user is still logged in and that it is still up
           await ping();
         }
         const errmsg = `Failed to request data: ${err instanceof Error ? err.message : String(err)}`;
