@@ -250,7 +250,7 @@ def set_user_preferences_v1(username_or_id: Union[int, str], body_data: Dict[str
         raise AuthorizationFailure("Cannot set user preferences: Forbidden")
 
 
-@api_v1.route("/users/<username_or_id>/preferences", methods=["PUT"])
+@api_v1.route("/me/preferences", methods=["PUT"])
 @wrap_global_route("me", "modify", True)
 def set_my_preferences_v1(body_data: Dict[str, Any]):
     assert_security_enabled()
