@@ -464,6 +464,17 @@ def test_auth_global_user_management(secure_snowflake_allow_read, username, role
         client.make_request("put", f"api/v1/users/{username}/password", Any, body="new_password")
         client.make_request("put", f"api/v1/users/{username}/password", Any, body_model=Optional[str], body=None)
 
+    # All can access or change own preferences, except if no user
+    if username is None:
+        with pytest.raises(PortalRequestError, match="Forbidden"):
+            client.make_request("get", f"api/v1/me/preferences", dict)
+        with pytest.raises(PortalRequestError, match="Forbidden"):
+            client.make_request("put", f"api/v1/me/preferences", None, body_model=dict, body={})
+    else:
+        client.make_request("get", f"api/v1/me/preferences", dict)
+        client.make_request("put", f"api/v1/me/preferences", None, body_model=dict, body={})
+        client.make_request("put", f"api/v1/users/{username}/preferences", None, body_model=dict, body={})
+
     if role != 'admin':
         # cannot access or modify other users
         with pytest.raises(PortalRequestError, match="Forbidden"):
@@ -474,11 +485,17 @@ def test_auth_global_user_management(secure_snowflake_allow_read, username, role
             client.make_request("put", f"api/v1/users/submit_user_2/password", Any, body="new_password")
         with pytest.raises(PortalRequestError, match="Forbidden"):
             client.make_request("put", f"api/v1/users/submit_user_2/password", str, body_model=Optional[str], body=None)
+        with pytest.raises(PortalRequestError, match="Forbidden"):
+            client.make_request("get", f"api/v1/users/submit_user_2/preferences", dict)
+        with pytest.raises(PortalRequestError, match="Forbidden"):
+            client.make_request("put", f"api/v1/users/submit_user_2/preferences", None, body_model=dict, body={})
     else:
         client.make_request("get", f"api/v1/users/submit_user_2", UserInfo)
         client.make_request("patch", f"api/v1/users", UserInfo, body=other_uinfo)
         client.make_request("put", f"api/v1/users/submit_user_2/password", Any, body="new_password")
         client.make_request("put", f"api/v1/users/submit_user_2/password", str, body_model=Optional[str], body=None)
+        client.make_request("get", f"api/v1/users/submit_user_2/preferences", dict)
+        client.make_request("put", f"api/v1/users/submit_user_2/preferences", None, body_model=dict, body={})
 
 @pytest.mark.parametrize("as_admin", [True, False])
 def test_auth_protected_endpoints(snowflake, as_admin):

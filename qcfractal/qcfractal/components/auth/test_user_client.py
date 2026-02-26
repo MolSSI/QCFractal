@@ -348,3 +348,61 @@ def test_user_client_change_password_self_me(secure_snowflake: QCATestingSnowfla
 
     with pytest.raises(AuthenticationFailure, match="Incorrect username or password"):
         secure_snowflake.client("read_user", new_pw)
+
+
+def test_user_client_get_set_preferences(secure_snowflake: QCATestingSnowflake):
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
+    user_id = client.get_user("read_user").id
+
+    prefs = {"favorites": [4, 5, 2], "mode": "dark"}
+
+    client.make_request("put", f"api/v1/users/{user_id}/preferences", None, body_model=dict, body=prefs)
+
+    server_prefs = client.make_request("get", f"api/v1/users/{user_id}/preferences", dict)
+    assert server_prefs == prefs
+
+    prefs["new_pref"] = "value"
+
+    client.make_request("put", f"api/v1/users/{user_id}/preferences", None, body_model=dict, body=prefs)
+
+    server_prefs = client.make_request("get", f"api/v1/users/{user_id}/preferences", dict)
+    assert server_prefs == prefs
+
+
+def test_user_client_set_preferences_self(secure_snowflake: QCATestingSnowflake):
+    client = secure_snowflake.client("read_user", test_users["read_user"]["pw"])
+    user_id = client.get_user("read_user").id
+
+    prefs = {"favorites": [4, 5, 2], "mode": "dark"}
+
+    client.make_request("put", f"api/v1/users/{user_id}/preferences", None, body_model=dict, body=prefs)
+
+    server_prefs = client.make_request("get", f"api/v1/users/{user_id}/preferences", dict)
+    assert server_prefs == prefs
+
+    prefs["new_pref"] = "value"
+
+    client.make_request("put", f"api/v1/users/{user_id}/preferences", None, body_model=dict, body=prefs)
+
+    server_prefs = client.make_request("get", f"api/v1/users/{user_id}/preferences", dict)
+    assert server_prefs == prefs
+
+
+def test_user_client_set_preferences_self_me(secure_snowflake: QCATestingSnowflake):
+    # Similar to above, but using the /me endpoint
+
+    client = secure_snowflake.client("read_user", test_users["read_user"]["pw"])
+
+    prefs = {"favorites": [4, 5, 2], "mode": "dark"}
+
+    client.make_request("put", f"api/v1/me/preferences", None, body_model=dict, body=prefs)
+
+    server_prefs = client.make_request("get", f"api/v1/me/preferences", dict)
+    assert server_prefs == prefs
+
+    prefs["new_pref"] = "value"
+
+    client.make_request("put", f"api/v1/me/preferences", None, body_model=dict, body=prefs)
+
+    server_prefs = client.make_request("get", f"api/v1/me/preferences", dict)
+    assert server_prefs == prefs
