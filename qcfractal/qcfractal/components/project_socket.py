@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from qcfractal.components.dataset_db_models import BaseDatasetORM
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
+from qcfractal.components.auth.db_models import UserORM
 from qcfractal.components.project_db_models import (
     ProjectORM,
     ProjectRecordORM,
@@ -178,9 +179,11 @@ class ProjectSocket:
                 ProjectORM.tags,
                 func.coalesce(record_count_cte.c.record_count, 0),
                 func.coalesce(dataset_count_cte.c.dataset_count, 0),
+                UserORM.username,
             )
             stmt = stmt.join(record_count_cte, ProjectORM.id == record_count_cte.c.project_id, isouter=True)
             stmt = stmt.join(dataset_count_cte, ProjectORM.id == dataset_count_cte.c.project_id, isouter=True)
+            stmt = stmt.join(UserORM, ProjectORM.owner_user_id == UserORM.id, isouter=True)
             stmt = stmt.order_by(ProjectORM.id.asc())
             r = session.execute(stmt).all()
 
@@ -192,6 +195,7 @@ class ProjectSocket:
                     "tags": x[3],
                     "record_count": x[4],
                     "dataset_count": x[5],
+                    "owner_user": x[6],
                 }
                 for x in r
             ]
