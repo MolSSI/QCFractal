@@ -51,7 +51,6 @@ if TYPE_CHECKING:
 
 # Meaningless, but unique to gridoptimizations
 gridoptimization_insert_lock_id = 14300
-gridoptimization_spec_insert_lock_id = 14301
 
 
 def expand_ndimensional_grid(
@@ -538,8 +537,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     GridoptimizationSpecificationORM.optimization_specification_id,
                 ),
                 (GridoptimizationSpecificationORM.id,),
-                use_unique=False,
-                lock_id=gridoptimization_spec_insert_lock_id,
+                use_unique=True,
             )
 
             return meta, [x[0] for x in ids]

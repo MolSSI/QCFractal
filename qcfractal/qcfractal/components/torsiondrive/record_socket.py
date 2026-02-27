@@ -87,7 +87,6 @@ class TorsiondriveServiceState(BaseModel):
 
 # Meaningless, but unique to torsiondrives
 torsiondrive_insert_lock_id = 14200
-torsiondrive_spec_insert_lock_id = 14201
 
 
 class TorsiondriveRecordSocket(BaseRecordSocket):
@@ -449,8 +448,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                     TorsiondriveSpecificationORM.optimization_specification_id,
                 ),
                 (TorsiondriveSpecificationORM.id,),
-                use_unique=False,
-                lock_id=torsiondrive_spec_insert_lock_id,
+                use_unique=True,
             )
 
             return meta, [x[0] for x in ids]

@@ -38,7 +38,6 @@ if TYPE_CHECKING:
 
 # Meaningless, but unique to optimizations
 optimization_insert_lock_id = 14100
-optimization_spec_insert_lock_id = 14101
 
 
 class OptimizationRecordSocket(BaseRecordSocket):
@@ -348,8 +347,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
                 to_add,
                 (OptimizationSpecificationORM.specification_hash, OptimizationSpecificationORM.qc_specification_id),
                 (OptimizationSpecificationORM.id,),
-                use_unique=False,
-                lock_id=optimization_spec_insert_lock_id,
+                use_unique=True,
             )
 
             return meta, [x[0] for x in ids]
