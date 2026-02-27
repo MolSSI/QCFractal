@@ -348,7 +348,8 @@ class OptimizationRecordSocket(BaseRecordSocket):
                 to_add,
                 (OptimizationSpecificationORM.specification_hash, OptimizationSpecificationORM.qc_specification_id),
                 (OptimizationSpecificationORM.id,),
-                optimization_spec_insert_lock_id,
+                use_unique=False,
+                lock_id=optimization_spec_insert_lock_id,
             )
 
             return meta, [x[0] for x in ids]
@@ -535,6 +536,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
                     all_orm,
                     (OptimizationRecordORM.specification_id, OptimizationRecordORM.initial_molecule_id),
                     (OptimizationRecordORM.id,),
+                    use_unique=False,
                     lock_id=optimization_insert_lock_id,
                 )
                 return meta, [x[0] for x in ids]

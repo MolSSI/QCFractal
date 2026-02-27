@@ -643,6 +643,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
                     all_orm,
                     (ManybodyRecordORM.specification_id, ManybodyRecordORM.initial_molecule_id),
                     (ManybodyRecordORM.id,),
+                    use_unique=False,
                     lock_id=manybody_insert_lock_id,
                 )
                 return meta, [x[0] for x in ids]

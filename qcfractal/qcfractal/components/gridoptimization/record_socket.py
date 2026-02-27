@@ -538,7 +538,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     GridoptimizationSpecificationORM.optimization_specification_id,
                 ),
                 (GridoptimizationSpecificationORM.id,),
-                gridoptimization_spec_insert_lock_id,
+                use_unique=False,
+                lock_id=gridoptimization_spec_insert_lock_id,
             )
 
             return meta, [x[0] for x in ids]
@@ -720,6 +721,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     all_orm,
                     (GridoptimizationRecordORM.specification_id, GridoptimizationRecordORM.initial_molecule_id),
                     (GridoptimizationRecordORM.id,),
+                    use_unique=False,
                     lock_id=gridoptimization_insert_lock_id,
                 )
                 return meta, [x[0] for x in ids]

@@ -77,7 +77,12 @@ class MoleculeSocket:
         with self.root_socket.optional_session(session) as session:
             # lock id is basically random, but unique to molecules
             meta, added_ids = insert_general(
-                session, molecule_orm, (MoleculeORM.molecule_hash,), (MoleculeORM.id,), lock_id=molecule_insert_lock_id
+                session,
+                molecule_orm,
+                (MoleculeORM.molecule_hash,),
+                (MoleculeORM.id,),
+                use_unique=False,
+                lock_id=molecule_insert_lock_id,
             )
 
         # added_ids is a list of tuple, with each tuple only having one value. Flatten that out
@@ -178,6 +183,7 @@ class MoleculeSocket:
                 MoleculeORM.id,
                 (MoleculeORM.molecule_hash,),
                 (MoleculeORM.id,),
+                use_unique=False,
                 lock_id=molecule_insert_lock_id,
             )
 

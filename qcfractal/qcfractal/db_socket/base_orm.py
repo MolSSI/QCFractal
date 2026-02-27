@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from sqlalchemy import inspect
 from sqlalchemy.orm import as_declarative
 
 if TYPE_CHECKING:
@@ -86,3 +87,32 @@ class BaseORM:
         """
 
         return as_type(**self.model_dict())
+
+    def to_insert_dict(self) -> Dict[str, Any]:
+        """
+        Converts this model into a dictionary that can be inserted into the database
+
+        This is useful for using SQLAlchemy constructs that take dictionaries rather than ORM objects.
+
+        - Skips autoincrement PKs if None
+        - Skips computed / server-generated columns
+        """
+
+        state = inspect(self)
+        mapper = state.mapper
+        table = mapper.local_table
+
+        d = {}
+        for col in table.columns:
+            # Remove any autoincrement primary keys that are manually set to None. If set, then
+            # it will try to be inserted into the db, resulting in a not-null violation
+            if col.primary_key and col.autoincrement and getattr(self, col.name, None) is None:
+                continue
+
+            if col.computed:
+                continue
+
+            if hasattr(self, col.name):
+                d[col] = getattr(self, col.name)
+
+        return d

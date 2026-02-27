@@ -449,7 +449,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                     TorsiondriveSpecificationORM.optimization_specification_id,
                 ),
                 (TorsiondriveSpecificationORM.id,),
-                torsiondrive_spec_insert_lock_id,
+                use_unique=False,
+                lock_id=torsiondrive_spec_insert_lock_id,
             )
 
             return meta, [x[0] for x in ids]
