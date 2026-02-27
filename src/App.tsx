@@ -13,6 +13,7 @@ import ManagerList from "./components/ManagerList.tsx";
 import { UserInfo } from "./components/UserInfo.tsx";
 import AddProjectRecord from "./components/AddProjectRecord.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PreferencesProvider } from "./PreferencesProvider.tsx";
 import { CssBaseline } from "@mui/material";
 import AppTheme from "./shared-theme/AppTheme";
 
@@ -37,7 +38,8 @@ function App() {
       <AuthProvider>
         <PortalClientProvider>
           <QueryClientProvider client={queryClient}>
-            <Router>
+            <PreferencesProvider>
+              <Router>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route element={<ProtectedRoute />}>
@@ -65,6 +67,7 @@ function App() {
                 </Route>
               </Routes>
             </Router>
+            </PreferencesProvider>
           </QueryClientProvider>
         </PortalClientProvider>
       </AuthProvider>

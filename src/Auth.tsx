@@ -23,6 +23,7 @@ type AuthContextType = {
   fetchServerInfo: () => Promise<qcpTypes.ServerInfo | undefined>;
   login: (username?: string, password?: string) => Promise<void>;
   logout: () => Promise<void>;
+  loggedIn: boolean;
 };
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -146,6 +147,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [fetchServerInfo, ping],
   );
 
+  const loggedIn = !!userInfo;
+
   // Detect login status & server info on initial page load
   useEffect(() => {
     const f = async () => {
@@ -169,6 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userInfo,
         login,
         logout,
+        loggedIn,
       }}
     >
       {children}
@@ -191,6 +195,7 @@ export function useAuth() {
     userInfo,
     login,
     logout,
+    loggedIn,
   } = context;
 
   return {
@@ -202,5 +207,6 @@ export function useAuth() {
     userInfo,
     login,
     logout,
+    loggedIn,
   };
 }
