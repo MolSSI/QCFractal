@@ -21,6 +21,7 @@ from sqlalchemy.orm import lazyload, joinedload, selectinload, defer, undefer
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM, SinglepointRecordORM
+from qcfractal.db_socket.helpers import insert_general
 from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
@@ -60,7 +61,6 @@ if TYPE_CHECKING:
 
 # Meaningless, but unique to neb
 neb_insert_lock_id = 14600
-neb_spec_insert_lock_id = 14601
 
 
 class NEBServiceState(BaseModel):
@@ -583,7 +583,6 @@ class NEBRecordSocket(BaseRecordSocket):
             ]
 
             opt_specs_map = {}
-
             if opt_specs_lst:
                 opt_specs = [x[1] for x in opt_specs_lst]
                 meta, opt_spec_ids = self.root_socket.records.optimization.add_specifications(
@@ -600,45 +599,23 @@ class NEBRecordSocket(BaseRecordSocket):
 
                 opt_specs_map = {idx: opt_spec_id for (idx, _), opt_spec_id in zip(opt_specs_lst, opt_spec_ids)}
 
-            # Unfortunately, we have to go one at a time due to the possibility of NULL fields
-            # Lock for the rest of the transaction (since we have to query then add)
-            session.execute(select(func.pg_advisory_xact_lock(neb_spec_insert_lock_id))).scalar()
+            for idx, (neb_spec_orm, qc_spec_id) in enumerate(zip(to_add, qc_spec_ids)):
+                neb_spec_orm.singlepoint_specification_id = qc_spec_id
+                neb_spec_orm.optimization_specification_id = opt_specs_map.get(idx, None)
 
-            inserted_idx = []
-            existing_idx = []
-            neb_spec_ids = []
+            meta, ids = insert_general(
+                session,
+                to_add,
+                (
+                    NEBSpecificationORM.specification_hash,
+                    NEBSpecificationORM.singlepoint_specification_id,
+                    NEBSpecificationORM.optimization_specification_id,
+                ),
+                (NEBSpecificationORM.id,),
+                use_unique=True,
+            )
 
-            for idx, neb_spec_orm in enumerate(to_add):
-                opt_spec_id = opt_specs_map.get(idx, None)
-
-                # QC Spec is always there
-                neb_spec_orm.singlepoint_specification_id = qc_spec_ids[idx]
-                neb_spec_orm.optimization_specification_id = None
-
-                # Query first, due to behavior of NULL in postgres
-                stmt = select(NEBSpecificationORM.id).filter_by(
-                    specification_hash=neb_spec_orm.specification_hash,
-                    singlepoint_specification_id=neb_spec_orm.singlepoint_specification_id,
-                )
-
-                if opt_spec_id is not None:
-                    neb_spec_orm.optimization_specification_id = opt_spec_id
-                    stmt = stmt.filter(NEBSpecificationORM.optimization_specification_id == opt_spec_id)
-                else:
-                    stmt = stmt.filter(NEBSpecificationORM.optimization_specification_id.is_(None))
-
-                r = session.execute(stmt).scalar_one_or_none()
-
-                if r is not None:
-                    neb_spec_ids.append(r)
-                    existing_idx.append(idx)
-                else:
-                    session.add(neb_spec_orm)
-                    session.flush()
-                    neb_spec_ids.append(neb_spec_orm.id)
-                    inserted_idx.append(idx)
-
-            return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx), neb_spec_ids
+            return meta, [x[0] for x in ids]
 
     def add_specification(
         self, neb_spec: NEBSpecification, *, session: Optional[Session] = None

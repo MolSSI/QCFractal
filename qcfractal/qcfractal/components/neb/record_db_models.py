@@ -100,6 +100,7 @@ class NEBSpecificationORM(BaseORM):
             "singlepoint_specification_id",
             "optimization_specification_id",
             name="ux_neb_specification_keys",
+            postgresql_nulls_not_distinct=True,
         ),
         Index("ix_neb_specification_program", "program"),
         Index("ix_neb_specification_singlepoint_specification_id", "singlepoint_specification_id"),
@@ -192,13 +193,11 @@ class NEBRecordORM(BaseRecordORM):
 
 
 # Delete base record if this record is deleted
-_del_baserecord_trigger = DDL(
-    """
+_del_baserecord_trigger = DDL("""
     CREATE TRIGGER qca_neb_record_delete_base_tr
     AFTER DELETE ON neb_record
     FOR EACH ROW EXECUTE PROCEDURE qca_base_record_delete();
-    """
-)
+    """)
 
 event.listen(NEBRecordORM.__table__, "after_create", _del_baserecord_trigger.execute_if(dialect=("postgresql")))
 

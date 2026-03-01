@@ -12,6 +12,7 @@ from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.optimization.record_db_models import OptimizationSpecificationORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
+from qcfractal.db_socket.helpers import insert_general
 from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
@@ -34,7 +35,6 @@ if TYPE_CHECKING:
 
 # Meaningless, but unique to reaction
 reaction_insert_lock_id = 14400
-reaction_spec_insert_lock_id = 14401
 
 
 class ReactionRecordSocket(BaseRecordSocket):
@@ -402,8 +402,6 @@ class ReactionRecordSocket(BaseRecordSocket):
             ]
 
             qc_specs_map = {}
-            opt_specs_map = {}
-
             if qc_specs_lst:
                 qc_specs = [x[1] for x in qc_specs_lst]
                 meta, qc_spec_ids = self.root_socket.records.singlepoint.add_specifications(qc_specs, session=session)
@@ -418,6 +416,7 @@ class ReactionRecordSocket(BaseRecordSocket):
 
                 qc_specs_map = {idx: qc_spec_id for (idx, _), qc_spec_id in zip(qc_specs_lst, qc_spec_ids)}
 
+            opt_specs_map = {}
             if opt_specs_lst:
                 opt_specs = [x[1] for x in opt_specs_lst]
                 meta, opt_spec_ids = self.root_socket.records.optimization.add_specifications(
@@ -434,45 +433,23 @@ class ReactionRecordSocket(BaseRecordSocket):
 
                 opt_specs_map = {idx: opt_spec_id for (idx, _), opt_spec_id in zip(opt_specs_lst, opt_spec_ids)}
 
-            # Unfortunately, we have to go one at a time due to the possibility of NULL fields
-            # Lock for the rest of the transaction (since we have to query then add)
-            session.execute(select(func.pg_advisory_xact_lock(reaction_spec_insert_lock_id))).scalar()
-
-            inserted_idx = []
-            existing_idx = []
-            rxn_spec_ids = []
-
             for idx, rxn_spec_orm in enumerate(to_add):
-                qc_spec_id = qc_specs_map.get(idx, None)
-                opt_spec_id = opt_specs_map.get(idx, None)
+                rxn_spec_orm.singlepoint_specification_id = qc_specs_map.get(idx, None)
+                rxn_spec_orm.optimization_specification_id = opt_specs_map.get(idx, None)
 
-                rxn_spec_orm.singlepoint_specification_id = qc_spec_id
-                rxn_spec_orm.optimization_specification_id = opt_spec_id
+            meta, ids = insert_general(
+                session,
+                to_add,
+                (
+                    ReactionSpecificationORM.specification_hash,
+                    ReactionSpecificationORM.singlepoint_specification_id,
+                    ReactionSpecificationORM.optimization_specification_id,
+                ),
+                (ReactionSpecificationORM.id,),
+                use_unique=True,
+            )
 
-                # Query first, due to behavior of NULL in postgres
-                stmt = select(ReactionSpecificationORM.id).filter_by(specification_hash=rxn_spec_orm.specification_hash)
-
-                if qc_spec_id is not None:
-                    stmt = stmt.filter(ReactionSpecificationORM.singlepoint_specification_id == qc_spec_id)
-                else:
-                    stmt = stmt.filter(ReactionSpecificationORM.singlepoint_specification_id.is_(None))
-
-                if opt_spec_id is not None:
-                    stmt = stmt.filter(ReactionSpecificationORM.optimization_specification_id == opt_spec_id)
-                else:
-                    stmt = stmt.filter(ReactionSpecificationORM.optimization_specification_id.is_(None))
-
-                r = session.execute(stmt).scalar_one_or_none()
-                if r is not None:
-                    rxn_spec_ids.append(r)
-                    existing_idx.append(idx)
-                else:
-                    session.add(rxn_spec_orm)
-                    session.flush()
-                    rxn_spec_ids.append(rxn_spec_orm.id)
-                    inserted_idx.append(idx)
-
-            return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx), rxn_spec_ids
+            return meta, [x[0] for x in ids]
 
     def add_specification(
         self, rxn_spec: ReactionSpecification, *, session: Optional[Session] = None
