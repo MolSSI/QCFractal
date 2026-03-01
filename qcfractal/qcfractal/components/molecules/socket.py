@@ -43,27 +43,6 @@ class MoleculeSocket:
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
-    @staticmethod
-    def molecule_to_orm(molecule: Molecule) -> MoleculeORM:
-        """
-        Convert a pydantic (QCElemental) Molecule to an ORM
-        """
-
-        # Validate the molecule if it hasn't been validated already
-        if molecule.validated is False:
-            molecule = Molecule(**molecule.dict(), validate=True)
-
-        mol_dict = molecule.dict(exclude={"id", "validated", "fix_com", "fix_orientation"})
-
-        # Build these quantities fresh from what is actually stored
-        mol_dict["molecule_hash"] = molecule.get_hash()
-
-        mol_dict.setdefault("identifiers", dict())
-        mol_dict["identifiers"]["molecule_hash"] = mol_dict["molecule_hash"]
-        mol_dict["identifiers"]["molecular_formula"] = molecule.get_molecular_formula()
-
-        return MoleculeORM(**mol_dict)
-
     def add(
         self, molecules: Sequence[Molecule], *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, List[int]]:
@@ -93,7 +72,7 @@ class MoleculeSocket:
         # valid Molecule object should be insertable into the database
         ###############################################################################
 
-        molecule_orm = [self.molecule_to_orm(x) for x in molecules]
+        molecule_orm = [MoleculeORM.from_model(x) for x in molecules]
 
         with self.root_socket.optional_session(session) as session:
             # lock id is basically random, but unique to molecules
@@ -188,7 +167,7 @@ class MoleculeSocket:
         """
 
         molecule_orm: List[Union[int, MoleculeORM]] = [
-            x if isinstance(x, int) else self.molecule_to_orm(x) for x in molecule_data
+            x if isinstance(x, int) else MoleculeORM.from_model(x) for x in molecule_data
         ]
 
         with self.root_socket.optional_session(session) as session:
