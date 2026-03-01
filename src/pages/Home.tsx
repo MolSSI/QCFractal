@@ -6,6 +6,8 @@ import * as qcpTypes from "../PortalTypes";
 import { Box, Button, Typography } from "@mui/material";
 import AddMoleculeModal from "../components/AddMoleculeModal";
 import { useQuery } from "@tanstack/react-query";
+import LoadingIndicator from "../components/LoadingIndicator";
+import ErrorIndicator from "../components/ErrorIndicator";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ const HomePage = () => {
   const moleculeQueryId =
     typeof currentMoleculeId === "number" ? currentMoleculeId : null;
 
-  const { data: moleculeData } = useQuery({
+  const { status: moleculeStatus, data: moleculeData, error: moleculeError } = useQuery({
     queryKey: ["molecule", moleculeQueryId],
     queryFn: () => makeRequest<qcpTypes.Molecule>("GET", `api/v1/molecules/${moleculeQueryId}`),
     enabled: moleculeQueryId !== null,
@@ -68,9 +70,19 @@ const HomePage = () => {
       <button onClick={() => navigate("/projects/11/records/120382130")}>
         Example record
       </button>
-      <MoleculeStageProvider width={500} height={500}>
-        {moleculeData && <MoleculeViewer moleculeData={moleculeData} />}
-      </MoleculeStageProvider>
+      <Box sx={{ width: 500, height: 500, position: "relative" }}>
+        {moleculeQueryId === null ? (
+          <LoadingIndicator message="No molecule selected." />
+        ) : moleculeStatus === "pending" ? (
+          <LoadingIndicator message="Loading molecule..." />
+        ) : moleculeStatus === "error" ? (
+          <ErrorIndicator message={moleculeError?.message ?? "Failed to load molecule."} />
+        ) : (
+          <MoleculeStageProvider width={500} height={500}>
+            {moleculeData && <MoleculeViewer moleculeData={moleculeData} />}
+          </MoleculeStageProvider>
+        )}
+      </Box>
 
       <AddMoleculeModal
         open={modalOpen}

@@ -11,6 +11,8 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import LoadingIndicator from "./LoadingIndicator";
+import ErrorIndicator from "./ErrorIndicator";
 
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { parseToDate } from "../Utils";
@@ -132,11 +134,19 @@ export default function ManagerList() {
   ];
 
   if (status == "pending") {
-    return <Typography>Loading...</Typography>;
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
+        <LoadingIndicator />
+      </Box>
+    );
   }
 
   if (status == "error") {
-    return <Typography color="error">{error.message}</Typography>;
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
+        <ErrorIndicator message={error.message} />
+      </Box>
+    );
   }
 
   return (

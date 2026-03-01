@@ -22,6 +22,8 @@ import * as qcpTypes from "../PortalTypes";
 import { ManagerFragment } from "./ManagerFragment";
 import OutputFragment from "./OutputFragment";
 import { useQuery } from "@tanstack/react-query";
+import LoadingIndicator from "./LoadingIndicator";
+import ErrorIndicator from "./ErrorIndicator";
 
 interface ComputeHistoryProps {
   recordType: string;
@@ -138,11 +140,9 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
       {/* Content */}
       {isExpanded && (
         <>
-          {computeHistoryStatus === "pending" && <Typography>Loading...</Typography>}
+          {computeHistoryStatus === "pending" && <LoadingIndicator />}
           {computeHistoryStatus === "error" && (
-            <Typography color="error">
-              Error: {computeHistoryError.message}
-            </Typography>
+            <ErrorIndicator message={computeHistoryError.message} />
           )}
           {computeHistoryStatus === "success" &&
             computeHistory.length === 0 && (

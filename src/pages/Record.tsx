@@ -10,6 +10,7 @@ import Properties from "../components/Properties";
 import * as qcpTypes from "../PortalTypes";
 import TaskServiceFragment from "../components/TaskServiceFragment";
 import LoadingIndicator from "../components/LoadingIndicator";
+import ErrorIndicator from "../components/ErrorIndicator";
 import {
   Box,
   Chip,
@@ -95,7 +96,11 @@ function Record() {
   });
 
   if (!validRecordId) {
-    return <Typography color="error">Invalid record ID</Typography>;
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
+        <ErrorIndicator message="Invalid record ID" />
+      </Box>
+    );
   }
 
   // Status color mapping
@@ -133,7 +138,11 @@ function Record() {
           <LoadingIndicator />
         </Box>
       )}
-      {recordStatus === "error" && <Typography color="error">{recordError.message}</Typography>}
+      {recordStatus === "error" && (
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
+          <ErrorIndicator message={recordError.message} />
+        </Box>
+      )}
       {recordStatus === "success" && recordData && (
         <>
           <Grid
@@ -396,25 +405,26 @@ function Record() {
                     position: "relative",
                   }}
                 >
-                  {moleculeStatus === "pending" ? (
+                  {!moleculeId ? (
+                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+                      <Typography sx={{ color: "#856404", fontSize: "1.15rem", textAlign: "center", px: 2, fontWeight: 500 }}>
+                        No molecule available for this record.
+                      </Typography>
+                    </Box>
+                  ) : moleculeStatus === "pending" ? (
                     <LoadingIndicator message="Loading molecule..." />
+                  ) : moleculeStatus === "error" ? (
+                    <ErrorIndicator message="Failed to load molecule." />
                   ) : moleculeData && typeof moleculeData === "object" ? (
                     <MoleculeStageProvider width={400} height={280}>
                       <MoleculeViewer moleculeData={moleculeData} />
                     </MoleculeStageProvider>
                   ) : (
-                    <Typography
-                      sx={{
-                        color: "#856404",
-                        fontSize: "1.15rem",
-                        textAlign: "center",
-                        px: 2,
-                        width: "100%",
-                        fontWeight: 500,
-                      }}
-                    >
-                      No molecule available for this record.
-                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+                      <Typography sx={{ color: "#856404", fontSize: "1.15rem", textAlign: "center", px: 2, fontWeight: 500 }}>
+                        No molecule available for this record.
+                      </Typography>
+                    </Box>
                   )}
                 </Box>
               </Box>

@@ -3,6 +3,7 @@ import React from "react";
 import * as qcpTypes from "../PortalTypes";
 import { useParams } from "react-router-dom";
 import {
+  Box,
   Chip,
   Grid,
   Paper,
@@ -17,6 +18,8 @@ import {
 } from "@mui/material";
 import { parseToDate } from "../Utils";
 import { useQuery } from "@tanstack/react-query";
+import LoadingIndicator from "./LoadingIndicator";
+import ErrorIndicator from "./ErrorIndicator";
 
 export default function Manager() {
   const { managerName } = useParams();
@@ -35,7 +38,11 @@ export default function Manager() {
   });
 
   if (!managerName) {
-    return <Typography color="error">Missing manager name</Typography>;
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
+        <ErrorIndicator message="Missing manager name" />
+      </Box>
+    );
   }
 
   const mCreatedOn = parseToDate(managerData?.created_on);
@@ -43,9 +50,17 @@ export default function Manager() {
 
   return (
     <>
-      {status === "pending" && <Typography>Loading...</Typography>}
+      {status === "pending" && (
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
+          <LoadingIndicator />
+        </Box>
+      )}
 
-      {status === "error" && <Typography color="error">{error.message}</Typography>}
+      {status === "error" && (
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
+          <ErrorIndicator message={error.message} />
+        </Box>
+      )}
 
       {status === "success" && managerData && (
         <Grid container spacing={2} width="100%">
