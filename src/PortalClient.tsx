@@ -7,7 +7,7 @@ type ClientContextType = {
   makeRequest: <T>(
     method: string,
     endpoint: string,
-    body?: object,
+    body?: object | FormData,
     url_params?: Record<string, string>,
   ) => Promise<T>;
 };
@@ -23,7 +23,7 @@ export function PortalClientProvider({ children }: { children: ReactNode }) {
     async function <T>(
       method: string,
       endpoint: string,
-      body?: object,
+      body?: object | FormData,
       url_params?: Record<string, string>,
     ): Promise<T> {
       try {
