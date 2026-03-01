@@ -18,8 +18,8 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import DatasetTab from "./DatasetTab";
-import RecordTab from "./RecordTab";
+import DatasetTab from "../components/DatasetTab";
+import RecordTab from "../components/RecordTab";
 import { useQuery } from "@tanstack/react-query";
 import { updateFavoritesList } from "../Utils";
 

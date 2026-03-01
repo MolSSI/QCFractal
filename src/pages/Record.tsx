@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { usePortalClient } from "../PortalClient.tsx";
 import { useParams } from "react-router-dom";
-import { WaitingReasonFragment } from "./WaitingReasonFragment";
-import { ManagerFragment } from "./ManagerFragment";
-import Comments from "./Comments";
-import ComputeHistory from "./ComputeHistory";
-import Specification from "./Specification";
-import Properties from "./Properties";
+import { WaitingReasonFragment } from "../components/WaitingReasonFragment";
+import { ManagerFragment } from "../components/ManagerFragment";
+import Comments from "../components/Comments";
+import ComputeHistory from "../components/ComputeHistory";
+import Specification from "../components/Specification";
+import Properties from "../components/Properties";
 import * as qcpTypes from "../PortalTypes";
-import TaskServiceFragment from "./TaskServiceFragment";
-import LoadingIndicator from "./LoadingIndicator";
+import TaskServiceFragment from "../components/TaskServiceFragment";
+import LoadingIndicator from "../components/LoadingIndicator";
 import {
   Box,
   Chip,
@@ -24,7 +24,7 @@ import {
 } from "@mui/material";
 import HelpOutline from "@mui/icons-material/HelpOutline";
 import { format } from "date-fns";
-import { MoleculeStageProvider, MoleculeViewer } from "./Molecule";
+import { MoleculeStageProvider, MoleculeViewer } from "../components/Molecule";
 import { getRecordReprMolecule } from "../Utils";
 import { useQuery } from "@tanstack/react-query";
 
@@ -120,7 +120,19 @@ function Record() {
 
   return (
     <>
-      {recordStatus === "pending" && <LoadingIndicator />}
+      {recordStatus === "pending" && (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "70vh",
+            width: "100%",
+          }}
+        >
+          <LoadingIndicator />
+        </Box>
+      )}
       {recordStatus === "error" && <Typography color="error">{recordError.message}</Typography>}
       {recordStatus === "success" && recordData && (
         <>
