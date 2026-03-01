@@ -644,7 +644,7 @@ class DatasetSocket:
             )
 
     def add_entry_dicts(
-        self, dataset_id: int, entry_dicts: bytes, *, session: Optional[Session] = None
+        self, dataset_id: int, entry_dicts: list[dict], *, session: Optional[Session] = None
     ) -> InsertMetadata:
         """
         Add entries to a dataset, where entries are dictionaries
