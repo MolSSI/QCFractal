@@ -9,6 +9,7 @@ import Specification from "./Specification";
 import Properties from "./Properties";
 import * as qcpTypes from "../PortalTypes";
 import TaskServiceFragment from "./TaskServiceFragment";
+import LoadingIndicator from "./LoadingIndicator";
 import {
   Box,
   Chip,
@@ -119,7 +120,7 @@ function Record() {
 
   return (
     <>
-      {recordStatus === "pending" && <Typography>Loading...</Typography>}
+      {recordStatus === "pending" && <LoadingIndicator />}
       {recordStatus === "error" && <Typography color="error">{recordError.message}</Typography>}
       {recordStatus === "success" && recordData && (
         <>
@@ -384,7 +385,7 @@ function Record() {
                   }}
                 >
                   {moleculeStatus === "pending" ? (
-                    <Typography sx={{ p: 2 }}>Loading molecule...</Typography>
+                    <LoadingIndicator message="Loading molecule..." />
                   ) : moleculeData && typeof moleculeData === "object" ? (
                     <MoleculeStageProvider width={400} height={280}>
                       <MoleculeViewer moleculeData={moleculeData} />
