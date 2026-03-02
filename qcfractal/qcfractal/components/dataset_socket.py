@@ -15,6 +15,7 @@ from qcfractal.components.dataset_db_models import (
     ContributedValuesORM,
     DatasetAttachmentORM,
     DatasetInternalJobORM,
+    DatasetRecordCountORM,
 )
 from qcfractal.components.dataset_db_views import DatasetDirectRecordsView
 from qcfractal.components.dataset_processing import create_view_file
@@ -222,15 +223,6 @@ class DatasetSocket:
         Get a list of datasets in the database
         """
 
-        count_cte = (
-            select(
-                DatasetDirectRecordsView.c.dataset_id,
-                func.count(DatasetDirectRecordsView.c.record_id).label("record_count"),
-            )
-            .group_by(DatasetDirectRecordsView.c.dataset_id)
-            .cte()
-        )
-
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(
                 BaseDatasetORM.id,
@@ -238,9 +230,9 @@ class DatasetSocket:
                 BaseDatasetORM.name,
                 BaseDatasetORM.tagline,
                 BaseDatasetORM.description,
-                func.coalesce(count_cte.c.record_count, 0),
+                func.coalesce(DatasetRecordCountORM.record_count, 0),
             )
-            stmt = stmt.join(count_cte, count_cte.c.dataset_id == BaseDatasetORM.id, isouter=True)
+            stmt = stmt.join(DatasetRecordCountORM, DatasetRecordCountORM.dataset_id == BaseDatasetORM.id, isouter=True)
             stmt = stmt.order_by(BaseDatasetORM.id.asc())
             r = session.execute(stmt).all()
 
@@ -644,7 +636,7 @@ class DatasetSocket:
             )
 
     def add_entry_dicts(
-        self, dataset_id: int, entry_dicts: bytes, *, session: Optional[Session] = None
+        self, dataset_id: int, entry_dicts: list[dict], *, session: Optional[Session] = None
     ) -> InsertMetadata:
         """
         Add entries to a dataset, where entries are dictionaries

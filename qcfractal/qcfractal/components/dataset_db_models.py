@@ -133,6 +133,15 @@ class DatasetInternalJobORM(BaseORM):
     dataset_id = Column(Integer, ForeignKey("base_dataset.id", ondelete="cascade"), primary_key=True)
 
 
+class DatasetRecordCountORM(BaseORM):
+    # We don't include this table as a relationship in the DatasetORM. We only
+    # use it when we list datasets
+    __tablename__ = "dataset_record_count"
+
+    dataset_id = Column(Integer, ForeignKey("base_dataset.id", ondelete="cascade"), primary_key=True)
+    record_count = Column(Integer, nullable=False, default=0)
+
+
 class DatasetAttachmentORM(ExternalFileORM):
     __tablename__ = "dataset_attachment"
 

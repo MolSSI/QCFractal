@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, lazyload, joinedload, load_only, noload
 from sqlalchemy.orm.attributes import flag_modified
 
-from qcfractal.components.dataset_db_models import BaseDatasetORM, DatasetInternalJobORM
+from qcfractal.components.dataset_db_models import BaseDatasetORM, DatasetInternalJobORM, DatasetRecordCountORM
 from qcfractal.components.internal_jobs.status import JobProgress
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.services.db_models import ServiceQueueORM
@@ -342,8 +342,7 @@ class BaseDatasetSocket:
         """
 
         # Easier to do raw SQL I think
-        stmt = text(
-            f"""
+        stmt = text(f"""
              WITH cte AS (
                  SELECT DISTINCT ON (dr.specification_name) dr.specification_name, br.id
                  FROM base_record br
@@ -352,8 +351,7 @@ class BaseDatasetSocket:
              )
              SELECT cte.specification_name, ARRAY(SELECT jsonb_object_keys(br.properties))
              FROM cte INNER JOIN base_record br ON br.id = cte.id;
-        """
-        )
+        """)
 
         stmt = stmt.bindparams(dataset_id=dataset_id)
 
@@ -420,6 +418,45 @@ class BaseDatasetSocket:
             session.add(ds_orm)
             session.commit()
             return ds_orm.id
+
+    def update_record_count(self, dataset_id: int, change: Optional[int], *, session: Optional[Session] = None):
+        """
+        Updates the number of records that this dataset has
+
+        This information is used when listing datasets, since dynamically determining
+        the number of records is too expensive for large qcfractal instances.
+
+        If change is None, the total number of records will be calculated based on what is in the database
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        change
+            Change (+/-) to apply to the existing number of records
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            stmt = select(DatasetRecordCountORM).where(DatasetRecordCountORM.dataset_id == dataset_id).with_for_update()
+            rcount_orm = session.execute(stmt).scalar_one_or_none()
+
+            if rcount_orm is None:
+                rcount_orm = DatasetRecordCountORM(dataset_id=dataset_id, record_count=0)
+
+            if change is not None:
+                rcount_orm.record_count += change
+            else:
+                stmt = (
+                    select(func.count(self.record_item_orm.dataset_id))
+                    .where(self.record_item_orm.dataset_id == dataset_id)
+                    .group_by(self.record_item_orm.dataset_id)
+                )
+                rcount_orm.record_count = session.execute(stmt).scalar_one()
+
+            session.add(rcount_orm)
 
     def update_metadata(
         self, dataset_id: int, new_metadata: DatasetModifyMetadata, *, session: Optional[Session] = None
@@ -1172,10 +1209,12 @@ class BaseDatasetSocket:
             stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
             stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
             stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
-            session.execute(stmt)
+            r = session.execute(stmt)
 
             if delete_records:
                 self.root_socket.records.delete(record_ids, soft_delete=False, delete_children=True, session=session)
+
+            self.update_record_count(dataset_id, -r.rowcount, session=session)
 
     def delete_dataset(
         self,
@@ -1394,6 +1433,12 @@ class BaseDatasetSocket:
                     missing_entries = set(entry_names) - set(found_entries)
                     if missing_entries:
                         raise MissingDataError(f"Could not find all entries. Missing: {missing_entries}")
+
+            # Update the record count
+            # n_inserted and n_existing represent records inserted/existing in the database, NOT this dataset
+            # What was already existing in the dataset is not in these values. So the total change
+            # of what was linked to this dataset is n_inserted + n_existing
+            self.update_record_count(dataset_id, n_inserted + n_existing, session=session)
 
         return InsertCountsMetadata(n_inserted=n_inserted, n_existing=n_existing)
 
