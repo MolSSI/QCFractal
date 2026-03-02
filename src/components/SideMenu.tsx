@@ -26,22 +26,19 @@ const Drawer = styled(MuiDrawer)({
   },
 });
 
-export default function SideMenu() {
+interface SideMenuProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+function DrawerContents({ onNavigate }: { onNavigate?: () => void }) {
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as "light" | "dark";
   const { userInfo, logout } = useAuth();
   const navigate = useNavigate();
 
   return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        display: { xs: "none", md: "block" },
-        [`& .${drawerClasses.paper}`]: {
-          backgroundColor: "background.paper",
-        },
-      }}
-    >
+    <>
       {/* Logo Section */}
       <Box
         sx={{
@@ -68,7 +65,7 @@ export default function SideMenu() {
           flexDirection: "column",
         }}
       >
-        <MenuContent />
+        <MenuContent onNavigate={onNavigate} />
         <ServerStatus />
       </Box>
       <Stack
@@ -134,6 +131,43 @@ export default function SideMenu() {
           </>
         )}
       </Stack>
-    </Drawer>
+    </>
+  );
+}
+
+export default function SideMenu({ mobileOpen = false, onMobileClose }: SideMenuProps) {
+  return (
+    <>
+      {/* Mobile: temporary drawer, toggled by hamburger button */}
+      <MuiDrawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={onMobileClose}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: "block", md: "none" },
+          [`& .${drawerClasses.paper}`]: {
+            width: drawerWidth,
+            boxSizing: "border-box",
+            backgroundColor: "background.paper",
+          },
+        }}
+      >
+        <DrawerContents onNavigate={onMobileClose} />
+      </MuiDrawer>
+
+      {/* Desktop: permanent drawer */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: "none", md: "block" },
+          [`& .${drawerClasses.paper}`]: {
+            backgroundColor: "background.paper",
+          },
+        }}
+      >
+        <DrawerContents />
+      </Drawer>
+    </>
   );
 }
