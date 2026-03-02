@@ -287,10 +287,10 @@ class SQLAlchemySocket:
         finally:
             session.close()
 
-    def optional_session(
-        self, existing_session: Optional[Session], read_only: bool = False
-    ) -> Generator[Session, Any, Any]:
-        """
+    @contextmanager
+    def optional_session(self, existing_session: Optional[Session], read_only: bool = False):
+        """Provide a session as a context manager
+
         Use the existing session if available, otherwise use a new session
 
         If an existing session is used, it is automatically flushed at the end, but not committed
@@ -310,23 +310,15 @@ class SQLAlchemySocket:
             An optional, existing sqlalchemy session
         """
 
-        @contextmanager
-        def autoflushing_scope(session: Session, read_only: bool):
-            """
-            Wraps an existing session to flush at the end
-            """
-            try:
-                yield session
-
-                if not read_only:
-                    session.flush()
-            except:
-                raise
-
         if existing_session is not None:
-            return autoflushing_scope(existing_session, read_only)
+            yield existing_session
+
+            if not read_only:
+                existing_session.flush()
+
         else:
-            return self.session_scope(read_only)
+            with self.session_scope(read_only) as session:
+                yield session
 
     def set_finished_watch(self, finished_queue):
         """

@@ -5,6 +5,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from sqlalchemy import tuple_, and_, or_, func, select, inspect
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only, lazyload, defer
 
@@ -15,6 +16,7 @@ from qcportal.utils import chunk_iterable
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.attributes import InstrumentedAttribute
+    from sqlalchemy.schema import Table
     import sqlalchemy.orm.session
     from typing import (
         Sequence,
@@ -252,7 +254,7 @@ def map_duplicates(lst: Sequence[_T]) -> Dict[_T, Tuple[int, ...]]:
     return {el: find_all_indices(lst, el) for el in set(lst)}
 
 
-def form_query_filter(cols: Sequence[InstrumentedAttribute], values: Sequence[Tuple[Any, ...]]) -> Any:
+def form_query_filter(cols: Sequence[InstrumentedAttribute], values: Iterable[Tuple[Any, ...]]) -> Any:
     """
     Creates an sqlalchemy filter for use in a query
 
@@ -317,7 +319,9 @@ def insert_general(
     data: Sequence[_ORM_T],
     search_cols: Sequence[InstrumentedAttribute],
     returning: Sequence[InstrumentedAttribute],
-    lock_id: int,
+    *,
+    use_unique: bool,
+    lock_id: int | None = None,
 ) -> Tuple[InsertMetadata, List[Tuple]]:
     """
     Perform a general insert, taking into account existing data
@@ -326,7 +330,7 @@ def insert_general(
     add it to the database. If the row does exist, data from the existing record will be returned.
     The columns passed to search_cols will be used to determine if the data/row already exists.
 
-    If the row does not exist, but the input record has an auto-incremented primary key set, then
+    If the row does not exist, but the input data has an auto-incremented primary key set, then
     that is considered an error, and an exception is thrown. This kind of case should be handled before calling
     this function.
 
@@ -339,10 +343,10 @@ def insert_general(
     The ``lock_id`` parameter is used to block other inserts into the table for the duration of this insert.
     This is used to prevent duplicate entries.
 
-    .. note::
-        This function is used for various fields, such as records. Since records are not unique, we don't
-        have a unique constraint and therefore cannot use the ``on_conflict_do_nothing`` clause. Hence the need
-        for manual advisory locking
+    If ``use_unique`` is true, this function will use ON CONFLICT statements, which require a unique constraint
+    on the search columns. Otherwise, this function can used for various fields, such as records.
+    Since records are not unique, we don't have a unique constraint and therefore cannot use the
+    ``on_conflict_do_nothing`` clause, and you should pass in a lock id for advisory locking
 
     WARNING: This does not commit the additions to the database, but does flush them.
 
@@ -357,19 +361,25 @@ def insert_general(
         of [TableORM.id, TableORM.col2], etc
     returning
         What columns to return. This is usually in the form of [TableORM.id, TableORM.col2, etc]
+    use_unique
+        If true, this function will use ON CONFLICT statements, which require a unique constraint
+        on the search columns.
     lock_id
         Unique ID for locking. The ID should be the same for a given table or type of record inserted,
-        but different from IDs for other tables or record types.
+        but different from IDs for other tables or record types. Generally not required if
+        use_unique is true.
 
     Returns
     -------
     :
         Metadata showing what was added/updated, and a list of returned results. The results list
-        will contain tuples with whatever data was requested in the returning parameter.
+        will contain tuples with whatever data was requested in the returning parameter. This will
+        be in the same order as the input data.
     """
 
     # Lock for the entire transaction. Even if the caller does more after this
-    session.execute(select(func.pg_advisory_xact_lock(lock_id))).scalar()
+    if lock_id is not None:
+        session.execute(select(func.pg_advisory_xact_lock(lock_id))).scalar()
 
     n_data = len(data)
 
@@ -382,7 +392,13 @@ def insert_general(
     all_ret = []
 
     for start in range(0, n_data, batchsize):
-        ins, ext, ret = _insert_general_batch(session, data[start : start + batchsize], search_cols, returning)
+        if use_unique:
+            ins, ext, ret = _insert_general_unique_batch(
+                session, data[start : start + batchsize], search_cols, returning
+            )
+        else:
+            ins, ext, ret = _insert_general_batch(session, data[start : start + batchsize], search_cols, returning)
+
         inserted_idx.extend([start + x for x in ins])
         existing_idx.extend([start + x for x in ext])
         all_ret.extend(ret)
@@ -397,7 +413,9 @@ def insert_mixed_general(
     id_col: InstrumentedAttribute,
     search_cols: Sequence[InstrumentedAttribute],
     returning: Sequence[InstrumentedAttribute],
-    lock_id: int,
+    *,
+    use_unique: bool,
+    lock_id: int | None = None,
 ) -> Tuple[InsertMetadata, List[Optional[Tuple]]]:
     """
     Insert mixed input (ids or orm objects) taking into account existing data.
@@ -426,19 +444,25 @@ def insert_mixed_general(
         of [TableORM.id, TableORM.col2], etc
     returning
         What columns to return. This is usually in the form of [TableORM.id, TableORM.col2, etc]
+    use_unique
+        If true, this function will use ON CONFLICT statements, which require a unique constraint
+        on the search columns.
     lock_id
         Unique ID for locking. The ID should be the same for a given table or type of record inserted,
-        but different from IDs for other tables or record types.
+        but different from IDs for other tables or record types. Generally not required if
+        use_unique is true.
 
     Returns
     -------
     :
         Metadata showing what was added/updated, and a list of returned results. The results list
-        will contain tuples with whatever data was requested in the returning parameter.
+        will contain tuples with whatever data was requested in the returning parameter. This will
+        be in the same order as the input data.
     """
 
     # Lock for the entire transaction. Even if the caller does more after this
-    session.execute(select(func.pg_advisory_xact_lock(lock_id))).scalar()
+    if lock_id is not None:
+        session.execute(select(func.pg_advisory_xact_lock(lock_id))).scalar()
 
     n_data = len(data)
 
@@ -453,7 +477,7 @@ def insert_mixed_general(
 
     for start in range(0, n_data, batchsize):
         ins, ext, err, ret = _insert_mixed_general_batch(
-            session, orm_type, data[start : start + batchsize], id_col, search_cols, returning
+            session, orm_type, data[start : start + batchsize], id_col, search_cols, returning, use_unique=use_unique
         )
         inserted_idx.extend([start + x for x in ins])
         existing_idx.extend([start + x for x in ext])
@@ -701,6 +725,94 @@ def _insert_general_batch(
     return inserted_idx, existing_idx, ret
 
 
+def _insert_general_unique_batch(
+    session: sqlalchemy.orm.session.Session,
+    data: Sequence[_ORM_T],
+    search_cols: Sequence[InstrumentedAttribute],
+    returning: Sequence[InstrumentedAttribute],
+) -> Tuple[List[int], List[int], List[Tuple]]:
+    """
+    Inserts a batch of data to the session. See documentation for insert_general
+
+    Not meant for general use - should only be called from insert_general_unique
+
+    This returns the raw inserted idx and existing idx, rather than InsertMetadata. This is then
+    collated in insert_general_unique into that model
+    """
+
+    # Return early if the size of this batch is zero
+    if len(data) == 0:
+        return [], [], []
+
+    table: Table = type(data[0]).__table__
+
+    # The values we are searching for
+    # A list of tuples (each element of the list can be values from multiple columns)
+    search_values = [get_values(r, search_cols) for r in data]
+
+    # Find and partition all duplicates in the list
+    # Dictionary. Keys are tuples (values of multiple search columns). Values are position in the search_values list
+    search_values_unique_map = map_duplicates(search_values)
+
+    data_dicts = []
+    for dlist in search_values_unique_map.values():
+        # Only need one. The rest are equivalent according to search key
+        d = data[dlist[0]]
+        data_dicts.append(d.to_insert_dict())
+
+    # Bulk insert with ON CONFLICT DO NOTHING
+    # Return the search columns along with what we want returned so we can know which of those was inserted
+    ins_stmt = insert(table).values(data_dicts).returning(*search_cols, *returning).on_conflict_do_nothing()
+    inserted_rows = session.execute(ins_stmt).all()
+
+    # Partition each result into two tuples
+    # The first tuple is the value of the search columns
+    # The second tuple is the data to return (as requested in the function parameters)
+    n_search_cols = len(search_cols)
+    inserted_results = [(x[:n_search_cols], x[n_search_cols:]) for x in inserted_rows]
+
+    # Now what wasn't inserted?
+    inserted_search_values = [x[0] for x in inserted_results]
+    to_search = [x for x in search_values_unique_map.keys() if x not in inserted_search_values]
+
+    # Set up a query for what wasn't inserted and presumably exist
+    # We query for both the return values and what we are searching for
+    query = session.query(*search_cols, *returning)
+    query_filter = form_query_filter(search_cols, to_search)
+    query = query.filter(query_filter)
+    query_results = query.all()
+
+    # Partition similar to above
+    existing_results = [(x[:n_search_cols], x[n_search_cols:]) for x in query_results]
+
+    # At this point both inserted_results and existing_results are lists of tuples
+    # The first element of the tuple is a tuple representing the values of the search columns
+    # The second element of the tuple is a tuple representing the data to return (as requested in the function parameters)
+
+    # We need to map these back to indices of the data passed in
+    # We can do that with the search_values_unique_map
+
+    # So below, x[0] is the tuple representing the values of the search columns. The lookup in
+    # search_values_unique_map will return the indices of the data passed in that match the values of the search columns
+    existing_idx: List[int] = unpack([search_values_unique_map[x[0]] for x in existing_results])
+
+    # If duplicates were passed in, we only inserted the first. The rest are considered existing
+    inserted_idx: List[int] = [search_values_unique_map[x[0]][0] for x in inserted_results]
+    existing_idx.extend(unpack([search_values_unique_map[x[0]][1:] for x in inserted_results]))
+
+    # Form the return from the fields we got from the queries above
+    ret = []
+    for s, r in existing_results + inserted_results:
+        idxs = search_values_unique_map[s]
+        for idx in idxs:
+            ret.append((idx, r))
+
+    # Sort based on index in the data list passed in
+    ret = [x[1] for x in sorted(ret)]
+
+    return sorted(inserted_idx), sorted(existing_idx), ret
+
+
 def _insert_mixed_general_batch(
     session: sqlalchemy.orm.session.Session,
     orm_type: Type[_ORM_T],
@@ -708,6 +820,7 @@ def _insert_mixed_general_batch(
     id_col: InstrumentedAttribute,
     search_cols: Sequence[InstrumentedAttribute],
     returning: Sequence[InstrumentedAttribute],
+    use_unique: bool,
 ) -> Tuple[List[int], List[int], List[Tuple[int, str]], List[Optional[Tuple]]]:
     """
     Insert a batched of mixed input (ids or orm objects) taking into account existing data.
@@ -734,11 +847,18 @@ def _insert_mixed_general_batch(
         elif isinstance(m, orm_type):
             input_orm.append((idx, m))
         else:
-            errors.append((idx, f"Data type for insert_mixed not understood: {type(m)}"))
+            errors.append((idx, f"Data type for insert_mixed_general not understood: {type(m)}"))
 
     # Add all the data that are ORM objects
     orm_to_add = [x[1] for x in input_orm]
-    inserted_idx_tmp, existing_idx_tmp, added_data = _insert_general_batch(session, orm_to_add, search_cols, returning)
+    if use_unique:
+        inserted_idx_tmp, existing_idx_tmp, added_data = _insert_general_unique_batch(
+            session, orm_to_add, search_cols, returning
+        )
+    else:
+        inserted_idx_tmp, existing_idx_tmp, added_data = _insert_general_batch(
+            session, orm_to_add, search_cols, returning
+        )
 
     # All the returned info is in the same order as in the input list (input_orm/orm_to_add in this case)
     # Look up the original indices

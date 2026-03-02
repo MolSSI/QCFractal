@@ -8,6 +8,7 @@ from sqlalchemy.orm import column_property
 
 from qcfractal.db_socket.base_orm import BaseORM
 from qcfractal.db_socket.column_types import MsgpackExt
+from qcportal.molecules import Molecule
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable
@@ -76,3 +77,32 @@ class MoleculeORM(BaseORM):
 
         # TODO - this is because the pydantic models are goofy
         return {k: v for k, v in d.items() if v is not None}
+
+    @classmethod
+    def from_model(cls, model_data: dict | Molecule):
+        """
+        Convert a pydantic (QCElemental) Molecule to an ORM
+        """
+
+        # Validate the molecule if it hasn't been validated already
+        if isinstance(model_data, dict):
+            if not model_data["validated"]:
+                molecule = Molecule(**model_data, validate=True)
+            else:
+                molecule = Molecule(**model_data)
+        else:
+            if not model_data.validated:
+                molecule = Molecule(**model_data.dict())
+            else:
+                molecule = model_data
+
+        mol_dict = molecule.dict(exclude={"id", "validated", "fix_com", "fix_orientation"})
+
+        # Build these quantities fresh from what is actually stored
+        mol_dict["molecule_hash"] = model_data.get_hash()
+
+        mol_dict.setdefault("identifiers", dict())
+        mol_dict["identifiers"]["molecule_hash"] = mol_dict["molecule_hash"]
+        mol_dict["identifiers"]["molecular_formula"] = molecule.get_molecular_formula()
+
+        return cls(**mol_dict)

@@ -33,7 +33,6 @@ if TYPE_CHECKING:
 
 # Meaningless, but unique to singlepoints
 singlepoint_insert_lock_id = 14000
-singlepoint_spec_insert_lock_id = 14001
 
 
 class SinglepointRecordSocket(BaseRecordSocket):
@@ -268,7 +267,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                 to_add,
                 (QCSpecificationORM.specification_hash,),
                 (QCSpecificationORM.id,),
-                singlepoint_spec_insert_lock_id,
+                use_unique=True,
             )
 
             return meta, [x[0] for x in ids]
@@ -447,6 +446,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                     all_orm,
                     (SinglepointRecordORM.specification_id, SinglepointRecordORM.molecule_id),
                     (SinglepointRecordORM.id,),
+                    use_unique=False,
                     lock_id=singlepoint_insert_lock_id,
                 )
                 return meta, [x[0] for x in ids]
