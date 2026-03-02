@@ -21,6 +21,8 @@ import {
   Typography,
 } from "@mui/material";
 import { updateFavoritesList } from "../Utils.ts";
+import LoadingIndicator from "../components/LoadingIndicator";
+import ErrorIndicator from "../components/ErrorIndicator";
 
 const ProjectList: React.FC = () => {
   const navigate = useNavigate();
@@ -54,11 +56,11 @@ const ProjectList: React.FC = () => {
   });
 
   if (status == "pending") {
-    return <Typography>Loading...</Typography>;
+    return <LoadingIndicator fullPage />;
   }
 
   if (status == "error") {
-    return <Typography color="error">{error.message}</Typography>;
+    return <ErrorIndicator fullPage message={error.message} />;
   }
 
   return (

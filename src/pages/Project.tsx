@@ -18,8 +18,10 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import DatasetTab from "./DatasetTab";
-import RecordTab from "./RecordTab";
+import DatasetTab from "../components/DatasetTab";
+import LoadingIndicator from "../components/LoadingIndicator";
+import ErrorIndicator from "../components/ErrorIndicator";
+import RecordTab from "../components/RecordTab";
 import { useQuery } from "@tanstack/react-query";
 import { updateFavoritesList } from "../Utils";
 
@@ -106,17 +108,17 @@ export default function Project() {
   });
 
   if (!projectId) {
-    return <Typography color="error">Missing project id</Typography>;
+    return <ErrorIndicator fullPage message="Missing project ID" />;
   }
 
   const isFavorite = favoriteProjects.includes(parseInt(projectId));
 
   return (
     <>
-      {projectStatus === "pending" && <Typography>Loading...</Typography>}
+      {projectStatus === "pending" && <LoadingIndicator fullPage />}
 
       {projectStatus === "error" && (
-        <Typography color="error">{projectError.message}</Typography>
+        <ErrorIndicator fullPage message={projectError.message} />
       )}
 
       {projectStatus === "success" && projectData && (
@@ -235,7 +237,7 @@ export default function Project() {
                 </Tabs>
 
                 {/* Tab 1: Datasets */}
-                {datasetMetadataStatus === "pending" && "Loading..."}
+                {datasetMetadataStatus === "pending" && <LoadingIndicator />}
                 {datasetMetadataStatus !== "pending" && (
                   <TabPanel value={tabValue} index={0}>
                     {datasetMetadata && datasetMetadata.length > 0 && (
@@ -250,7 +252,7 @@ export default function Project() {
                 )}
 
                 {/* Tab 2: Records */}
-                {recordMetadataStatus === "pending" && "Loading..."}
+                {recordMetadataStatus === "pending" && <LoadingIndicator />}
                 {recordMetadataStatus !== "pending" && (
                   <TabPanel value={tabValue} index={1}>
                     {recordMetadata && recordMetadata.length > 0 && (

@@ -80,14 +80,17 @@ export async function rawRequest<T>(
 export async function rawMakeRequest<T>(
   method: string,
   endpoint: string,
-  body?: object,
+  body?: object | FormData,
   url_params?: Record<string, string>,
 ): Promise<T> {
+  const isFormData = body instanceof FormData;
   const req_options: RequestInit = {
     method,
-    headers: server_headers,
+    // For FormData, omit Content-Type so the browser sets it with the
+    // multipart boundary. Keep Accept so we still expect a JSON response.
+    headers: isFormData ? { Accept: "application/json" } : server_headers,
     credentials: "include",
-    body: body ? JSON.stringify(body) : undefined,
+    body: isFormData ? body : body ? JSON.stringify(body) : undefined,
   };
 
   // Put URL params at the end of the url

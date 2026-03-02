@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 import { usePortalClient } from "../PortalClient.tsx";
 import {
   Box,
-  CircularProgress,
   Grid,
   Tab,
   Tabs,
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import LoadingIndicator from "./LoadingIndicator";
+import ErrorIndicator from "./ErrorIndicator";
 
 interface OutputFragmentProps {
   recordType: string;
@@ -72,12 +73,10 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
 
   return (
     <>
-      {outputKeysStatus === "pending" && <Typography>Loading...</Typography>}
+      {outputKeysStatus === "pending" && <LoadingIndicator />}
 
       {outputKeysStatus === "error" && (
-        <Typography color="error">
-          Error: {outputKeysError.message}
-        </Typography>
+        <ErrorIndicator message={outputKeysError.message} />
       )}
 
       {outputKeysStatus === "success" && outputKeysData && (
@@ -98,11 +97,9 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
 
           {/* Content for the selected key */}
           <Grid size={{ xs: 9 }}>
-            {outputContentStatus === "pending" && <CircularProgress />}
+            {outputContentStatus === "pending" && <LoadingIndicator />}
             {outputContentStatus === "error" && (
-              <Typography color="error">
-                Error: {outputContentError.message}
-              </Typography>
+              <ErrorIndicator message={outputContentError.message} />
             )}
             {outputContentStatus === "success" && outputContentData && (
                 <Box

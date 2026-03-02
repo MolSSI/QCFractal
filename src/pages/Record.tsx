@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { usePortalClient } from "../PortalClient.tsx";
 import { useParams } from "react-router-dom";
-import { WaitingReasonFragment } from "./WaitingReasonFragment";
-import { ManagerFragment } from "./ManagerFragment";
-import Comments from "./Comments";
-import ComputeHistory from "./ComputeHistory";
-import Specification from "./Specification";
-import Properties from "./Properties";
+import { WaitingReasonFragment } from "../components/WaitingReasonFragment";
+import { ManagerFragment } from "../components/ManagerFragment";
+import Comments from "../components/Comments";
+import ComputeHistory from "../components/ComputeHistory";
+import Specification from "../components/Specification";
+import Properties from "../components/Properties";
 import * as qcpTypes from "../PortalTypes";
-import TaskServiceFragment from "./TaskServiceFragment";
+import TaskServiceFragment from "../components/TaskServiceFragment";
+import LoadingIndicator from "../components/LoadingIndicator";
+import ErrorIndicator from "../components/ErrorIndicator";
 import {
   Box,
   Chip,
@@ -23,7 +25,7 @@ import {
 } from "@mui/material";
 import HelpOutline from "@mui/icons-material/HelpOutline";
 import { format } from "date-fns";
-import { MoleculeStageProvider, MoleculeViewer } from "./Molecule";
+import { MoleculeStageProvider, MoleculeViewer } from "../components/Molecule";
 import { getRecordReprMolecule } from "../Utils";
 import { useQuery } from "@tanstack/react-query";
 
@@ -94,7 +96,7 @@ function Record() {
   });
 
   if (!validRecordId) {
-    return <Typography color="error">Invalid record ID</Typography>;
+    return <ErrorIndicator fullPage message="Invalid record ID" />;
   }
 
   // Status color mapping
@@ -119,8 +121,10 @@ function Record() {
 
   return (
     <>
-      {recordStatus === "pending" && <Typography>Loading...</Typography>}
-      {recordStatus === "error" && <Typography color="error">{recordError.message}</Typography>}
+      {recordStatus === "pending" && <LoadingIndicator fullPage />}
+      {recordStatus === "error" && (
+        <ErrorIndicator fullPage message={recordError.message} />
+      )}
       {recordStatus === "success" && recordData && (
         <>
           <Grid
@@ -383,25 +387,26 @@ function Record() {
                     position: "relative",
                   }}
                 >
-                  {moleculeStatus === "pending" ? (
-                    <Typography sx={{ p: 2 }}>Loading molecule...</Typography>
+                  {!moleculeId ? (
+                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+                      <Typography sx={{ color: "#856404", fontSize: "1.15rem", textAlign: "center", px: 2, fontWeight: 500 }}>
+                        No molecule available for this record.
+                      </Typography>
+                    </Box>
+                  ) : moleculeStatus === "pending" ? (
+                    <LoadingIndicator message="Loading molecule..." />
+                  ) : moleculeStatus === "error" ? (
+                    <ErrorIndicator message="Failed to load molecule." />
                   ) : moleculeData && typeof moleculeData === "object" ? (
                     <MoleculeStageProvider width={400} height={280}>
                       <MoleculeViewer moleculeData={moleculeData} />
                     </MoleculeStageProvider>
                   ) : (
-                    <Typography
-                      sx={{
-                        color: "#856404",
-                        fontSize: "1.15rem",
-                        textAlign: "center",
-                        px: 2,
-                        width: "100%",
-                        fontWeight: 500,
-                      }}
-                    >
-                      No molecule available for this record.
-                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+                      <Typography sx={{ color: "#856404", fontSize: "1.15rem", textAlign: "center", px: 2, fontWeight: 500 }}>
+                        No molecule available for this record.
+                      </Typography>
+                    </Box>
                   )}
                 </Box>
               </Box>

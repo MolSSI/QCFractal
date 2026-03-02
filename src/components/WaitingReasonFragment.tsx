@@ -5,6 +5,8 @@ import { IconButton, Stack, Typography } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { useQuery } from "@tanstack/react-query";
+import LoadingIndicator from "./LoadingIndicator";
+import ErrorIndicator from "./ErrorIndicator";
 
 export const WaitingReasonFragment: React.FC<{ recordId: number }> = ({
   recordId,
@@ -28,9 +30,9 @@ export const WaitingReasonFragment: React.FC<{ recordId: number }> = ({
 
   return (
     <>
-      {status === "pending" && <Typography>Loading...</Typography>}
+      {status === "pending" && <LoadingIndicator />}
 
-      {status === "error" && <Typography color="error">{error.message}</Typography>}
+      {status === "error" && <ErrorIndicator message={error.message} />}
 
       {status === "success" && waitingReason && (
         <Stack>

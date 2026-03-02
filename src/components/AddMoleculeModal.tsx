@@ -15,7 +15,8 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
-import { server_address } from "../request_config";
+import { useMutation } from "@tanstack/react-query";
+import { usePortalClient } from "../PortalClient";
 
 type Props = {
   open: boolean;
@@ -32,100 +33,14 @@ const AddMoleculeModal: React.FC<Props> = ({ open, onClose, onSubmit }) => {
   const [pastedFilename, setPastedFilename] =
     useState<string>("pastedMolecule");
   const [pastedFormat, setPastedFormat] = useState<string>("xyz");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
-  // compact reusable styling for the multiline text area
-  const textFieldSx = {
-    bgcolor: "transparent",
-    borderRadius: 1,
-    width: "100%",
-    height: 200,
-    "& .MuiOutlinedInput-root": {
-      height: "100%",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "stretch",
-      paddingTop: 1,
-      paddingBottom: 1,
-      background: "transparent",
-      boxShadow: "none",
-    },
-    // target the multiline textarea class so styles apply when `multiline` is used
-    "& .MuiInputBase-inputMultiline": {
-      boxSizing: "border-box",
-      whiteSpace: "pre",
-      flex: 1,
-      color: "#fff",
-      outline: "none",
-      maxHeight: "100%",
-      overflow: "auto",
-    },
-  } as const;
+  const { makeRequest } = usePortalClient();
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-    setTabIndex(newValue);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files && e.target.files[0];
-    setSelectedFile(f ?? null);
-    setUploadedName(f ? f.name : null);
-  };
-
-  const handleSubmit = async () => {
-    setErrorMessage(null);
-    setLoading(true);
-
-    try {
-      const form = new FormData();
-
-      if (tabIndex === 0) {
-        // Use filename and selected format from inputs
-        const pasteFilename = `${pastedFilename}.${pastedFormat}`;
-        const mime =
-          pastedFormat === "json" ? "application/json" : "chemical/x-xyz";
-        const blob = new Blob([pasteText || ""], { type: mime });
-        form.append("files", blob, pasteFilename);
-        // include filename field for backends that expect it
-        form.append("filename", pasteFilename);
-      } else if (tabIndex === 1) {
-        if (!selectedFile) {
-          setErrorMessage("No file selected");
-          setLoading(false);
-          return;
-        }
-        form.append("files", selectedFile, selectedFile.name);
-      } else {
-        // draw tab - not implemented
-        setErrorMessage("Draw option not implemented");
-        setLoading(false);
-        return;
-      }
-
-      const bodyDataObj = {};
-      const bodyDataBlob = new Blob([JSON.stringify(bodyDataObj)], {
-        type: "application/json",
-      });
-      // append body_data first (order doesn't strictly matter)
-      form.append("body_data", bodyDataBlob, "body_data");
-
-      const resp = await fetch(`${server_address}/api/v1/molecules/fromFiles`, {
-        method: "POST",
-        body: form,
-        credentials: "include",
-      });
-
-      if (!resp.ok) {
-        const text = await resp.text();
-        setErrorMessage(
-          `Upload failed: ${resp.status} ${resp.statusText} ${text}`,
-        );
-        setLoading(false);
-        return;
-      }
-
-      const json = await resp.json().catch(() => null);
+  const mutation = useMutation({
+    mutationFn: (form: FormData) =>
+      makeRequest<unknown>("POST", "api/v1/molecules/fromFiles", form),
+    onSuccess: (json) => {
       // Log full server response for debugging/inspection
       console.debug("molecules/fromFiles response:", json);
 
@@ -141,10 +56,17 @@ const AddMoleculeModal: React.FC<Props> = ({ open, onClose, onSubmit }) => {
           const keys = Object.keys(first);
           if (keys.length > 0) {
             const arr = first[keys[0]] as unknown;
-            if (Array.isArray(arr) && arr.length > 0 && Array.isArray(arr[0])) {
+            if (
+              Array.isArray(arr) &&
+              arr.length > 0 &&
+              Array.isArray(arr[0])
+            ) {
               const firstTuple = arr[0] as unknown[];
               // tuple expected [name, id]
-              if (firstTuple.length >= 2 && typeof firstTuple[1] === "number") {
+              if (
+                firstTuple.length >= 2 &&
+                typeof firstTuple[1] === "number"
+              ) {
                 extractedId = firstTuple[1] as number;
               }
             }
@@ -185,19 +107,94 @@ const AddMoleculeModal: React.FC<Props> = ({ open, onClose, onSubmit }) => {
         }
         onSubmit(errMsg);
       }
+
       // reset
       setPasteText("");
       setUploadedName(null);
       setSelectedFile(null);
       onClose();
-    } catch (err: unknown) {
-      // safer handling for unknown error type
-      const msg = err instanceof Error ? err.message : String(err);
-      setErrorMessage(msg);
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  // compact reusable styling for the multiline text area
+  const textFieldSx = {
+    bgcolor: "transparent",
+    borderRadius: 1,
+    width: "100%",
+    height: 200,
+    "& .MuiOutlinedInput-root": {
+      height: "100%",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "stretch",
+      paddingTop: 1,
+      paddingBottom: 1,
+      background: "transparent",
+      boxShadow: "none",
+    },
+    // target the multiline textarea class so styles apply when `multiline` is used
+    "& .MuiInputBase-inputMultiline": {
+      boxSizing: "border-box",
+      whiteSpace: "pre",
+      flex: 1,
+      color: "#fff",
+      outline: "none",
+      maxHeight: "100%",
+      overflow: "auto",
+    },
+  } as const;
+
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
+    setTabIndex(newValue);
   };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files && e.target.files[0];
+    setSelectedFile(f ?? null);
+    setUploadedName(f ? f.name : null);
+  };
+
+  const handleSubmit = () => {
+    setValidationError(null);
+
+    const form = new FormData();
+
+    if (tabIndex === 0) {
+      // Use filename and selected format from inputs
+      const pasteFilename = `${pastedFilename}.${pastedFormat}`;
+      const mime =
+        pastedFormat === "json" ? "application/json" : "chemical/x-xyz";
+      const blob = new Blob([pasteText || ""], { type: mime });
+      form.append("files", blob, pasteFilename);
+      // include filename field for backends that expect it
+      form.append("filename", pasteFilename);
+    } else if (tabIndex === 1) {
+      if (!selectedFile) {
+        setValidationError("No file selected");
+        return;
+      }
+      form.append("files", selectedFile, selectedFile.name);
+    } else {
+      // draw tab - not implemented
+      setValidationError("Draw option not implemented");
+      return;
+    }
+
+    const bodyDataBlob = new Blob([JSON.stringify({})], {
+      type: "application/json",
+    });
+    // append body_data first (order doesn't strictly matter)
+    form.append("body_data", bodyDataBlob, "body_data");
+
+    mutation.mutate(form);
+  };
+
+  const errorMessage =
+    validationError ??
+    (mutation.isError
+      ? (mutation.error as Error)?.message ?? "Upload failed"
+      : null);
+  const loading = mutation.isPending;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>

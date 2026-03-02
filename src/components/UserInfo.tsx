@@ -3,8 +3,10 @@ import { useAuth } from "../Auth.tsx";
 import React from "react";
 import * as qcpTypes from "../PortalTypes";
 import { useParams } from "react-router-dom";
-import { Chip, Grid, Stack, Typography } from "@mui/material";
+import { Box, Chip, Grid, Stack, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import LoadingIndicator from "./LoadingIndicator";
+import ErrorIndicator from "./ErrorIndicator";
 
 const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
   const { makeRequest } = usePortalClient();
@@ -29,11 +31,15 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
 
   return (
     <>
-      {status === "pending" && <Typography>Loading...</Typography>}
+      {status === "pending" && (
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
+          <LoadingIndicator />
+        </Box>
+      )}
       {status === "error" && (
-        <Typography color="error">
-          Error loading user: {error.message}
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
+          <ErrorIndicator message={error.message} />
+        </Box>
       )}
 
       {status === "success" && userData && (

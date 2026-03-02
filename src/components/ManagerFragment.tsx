@@ -5,6 +5,8 @@ import { Chip, Grid, Stack, Typography } from "@mui/material";
 import { PieChart } from "@mui/x-charts/PieChart";
 import { parseToDate } from "../Utils";
 import { useQuery } from "@tanstack/react-query";
+import LoadingIndicator from "./LoadingIndicator";
+import ErrorIndicator from "./ErrorIndicator";
 
 export const ManagerFragment: React.FC<{ managerName: string }> = ({
   managerName,
@@ -22,11 +24,11 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
   });
 
   if (status == "pending") {
-    return <Typography>Loading...</Typography>;
+    return <LoadingIndicator />;
   }
 
   if (status == "error") {
-    return <Typography color="error">{error.message}</Typography>;
+    return <ErrorIndicator message={error.message} />;
   }
 
   const mCreatedOn = parseToDate(managerData.created_on);
