@@ -96,11 +96,7 @@ function Record() {
   });
 
   if (!validRecordId) {
-    return (
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
-        <ErrorIndicator message="Invalid record ID" />
-      </Box>
-    );
+    return <ErrorIndicator fullPage message="Invalid record ID" />;
   }
 
   // Status color mapping
@@ -125,23 +121,9 @@ function Record() {
 
   return (
     <>
-      {recordStatus === "pending" && (
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "70vh",
-            width: "100%",
-          }}
-        >
-          <LoadingIndicator />
-        </Box>
-      )}
+      {recordStatus === "pending" && <LoadingIndicator fullPage />}
       {recordStatus === "error" && (
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
-          <ErrorIndicator message={recordError.message} />
-        </Box>
+        <ErrorIndicator fullPage message={recordError.message} />
       )}
       {recordStatus === "success" && recordData && (
         <>

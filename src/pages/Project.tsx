@@ -108,27 +108,17 @@ export default function Project() {
   });
 
   if (!projectId) {
-    return (
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
-        <ErrorIndicator message="Missing project ID" />
-      </Box>
-    );
+    return <ErrorIndicator fullPage message="Missing project ID" />;
   }
 
   const isFavorite = favoriteProjects.includes(parseInt(projectId));
 
   return (
     <>
-      {projectStatus === "pending" && (
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
-          <LoadingIndicator />
-        </Box>
-      )}
+      {projectStatus === "pending" && <LoadingIndicator fullPage />}
 
       {projectStatus === "error" && (
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
-          <ErrorIndicator message={projectError.message} />
-        </Box>
+        <ErrorIndicator fullPage message={projectError.message} />
       )}
 
       {projectStatus === "success" && projectData && (

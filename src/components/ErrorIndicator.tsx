@@ -3,10 +3,11 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 interface ErrorIndicatorProps {
   message?: string;
+  fullPage?: boolean;
 }
 
-function ErrorIndicator({ message = "An error occurred." }: ErrorIndicatorProps) {
-  return (
+function ErrorIndicator({ message = "An error occurred.", fullPage = false }: ErrorIndicatorProps) {
+  const content = (
     <Box
       display="flex"
       flexDirection="column"
@@ -21,6 +22,21 @@ function ErrorIndicator({ message = "An error occurred." }: ErrorIndicatorProps)
       </Typography>
     </Box>
   );
+
+  if (fullPage) {
+    return (
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        sx={{ minHeight: "70vh", width: "100%" }}
+      >
+        {content}
+      </Box>
+    );
+  }
+
+  return content;
 }
 
 export default ErrorIndicator;

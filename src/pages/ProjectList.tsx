@@ -56,19 +56,11 @@ const ProjectList: React.FC = () => {
   });
 
   if (status == "pending") {
-    return (
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
-        <LoadingIndicator />
-      </Box>
-    );
+    return <LoadingIndicator fullPage />;
   }
 
   if (status == "error") {
-    return (
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
-        <ErrorIndicator message={error.message} />
-      </Box>
-    );
+    return <ErrorIndicator fullPage message={error.message} />;
   }
 
   return (

@@ -2,10 +2,11 @@ import { Box, CircularProgress, Typography } from "@mui/material";
 
 interface LoadingIndicatorProps {
   message?: string;
+  fullPage?: boolean;
 }
 
-function LoadingIndicator({ message = "Loading..." }: LoadingIndicatorProps) {
-  return (
+function LoadingIndicator({ message = "Loading...", fullPage = false }: LoadingIndicatorProps) {
+  const content = (
     <Box
       display="flex"
       flexDirection="column"
@@ -20,6 +21,21 @@ function LoadingIndicator({ message = "Loading..." }: LoadingIndicatorProps) {
       </Typography>
     </Box>
   );
+
+  if (fullPage) {
+    return (
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        sx={{ minHeight: "70vh", width: "100%" }}
+      >
+        {content}
+      </Box>
+    );
+  }
+
+  return content;
 }
 
 export default LoadingIndicator;
