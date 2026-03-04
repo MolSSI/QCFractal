@@ -1,7 +1,7 @@
 Release Notes
 =============
 
-0.64 / 2026-03-03
+0.64 / 2026-03-04
 -----------------
 
 Some cleanup and some small bug fixes. Some old code and migrations were removed and some
