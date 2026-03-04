@@ -1,6 +1,36 @@
 Release Notes
 =============
 
+0.64 / 2026-03-04
+-----------------
+
+Some cleanup and some small bug fixes. Some old code and migrations were removed and some
+incorrect endpoints were fixed.
+
+One bigger change is the improved use of upserts (ON CONFLICT DO NOTHING) in postgres, particularly
+for the molecule table but also on specification tables. This should eliminate some deadlocks
+that were happening due to the use of advisory locks.
+
+Some bugs found during the development of the web app were fixed. These related to the "/me" endpoint which
+is not used by the PortalClient, but will be used by the web app. Also, we improved the performance
+of dataset listing, which was getting slow on our large instances.
+
+This release also introduces pydantic v2 in a few isolated areas (configuration files), with more
+coming the next version.
+
+Notable PRs:
+
+- (:pr:`977`) Adding & cleaning documentation
+- (:pr:`978`) Update server and compute config to use pydantic v2
+- (:pr:`980`) Remove pre-v0.50 database migrations
+- (:pr:`985`) Making dataset views should always include required record fields
+- (:pr:`988`) Improve errors for exporting to qcschema with missing data
+- (:pr:`991`, :pr:`992`) Fix /me endpoints and add tests
+- (:pr:`993`) Add owner/user to project listing
+- (:pr:`994`) Rework database locking to use upserts when possible
+- (:pr:`995`) Faster record count in dataset list
+
+
 0.63 / 2025-09-26
 -----------------
 
