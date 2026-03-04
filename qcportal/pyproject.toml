@@ -13,7 +13,7 @@ description = "A distributed compute and database platform for quantum chemistry
 readme = "README.md"
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.14"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Development Status :: 4 - Beta",
@@ -26,12 +26,11 @@ dependencies = [
     "msgpack",
     "requests",
     "pyyaml",
-    "pydantic>2.10",
+    "pydantic>=2.11",
     "pydantic-settings",
     "zstandard",
     "apsw>=3.42",
-    "qcelemental<0.70a0",
-    "pint", # Required for qcelemental. Doesn't install with py3.13. REMOVE EVENTUALLY
+    "qcelemental>=0.30,<0.70a0",
     "tabulate",
     "tqdm",
     "pandas",
