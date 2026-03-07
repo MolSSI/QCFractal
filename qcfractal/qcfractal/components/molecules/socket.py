@@ -338,13 +338,13 @@ class MoleculeSocket:
                 }
 
                 # Changing identifiers is a bit sensitive, so validate again
-                identifiers = identifiers.copy(update=update_dict)
+                identifiers = identifiers.model_copy(update=update_dict)
 
                 if overwrite_identifiers:
                     # Always keep hash & formula
-                    mol.identifiers = identifiers.dict(exclude_unset=True, exclude_defaults=True, exclude_none=True)
+                    mol.identifiers = identifiers.model_dump(exclude_unset=True, exclude_defaults=True, exclude_none=True)
                 else:
-                    id_dict = identifiers.dict(exclude_unset=True, exclude_defaults=True)
+                    id_dict = identifiers.model_dump(exclude_unset=True, exclude_defaults=True)
                     mol.identifiers.update(id_dict)
 
                     # sqlalchemy cannot track changes in json

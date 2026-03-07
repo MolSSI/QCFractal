@@ -162,7 +162,7 @@ class UserSocket:
         hashed_pw = _hash_password(password)
 
         # Groups are not directly a part of the ORM
-        user_dict = user_info.dict(exclude={"groups"})
+        user_dict = user_info.model_dump(exclude={"groups"})
 
         try:
             with self.root_socket.optional_session(session) as session:

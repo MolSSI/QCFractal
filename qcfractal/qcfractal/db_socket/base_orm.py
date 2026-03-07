@@ -32,7 +32,7 @@ class BaseORM:
         if isinstance(model_data, dict):
             return cls(**model_data)
         else:
-            return cls(**model_data.dict())
+            return cls(**model_data.model_dump())
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         """
