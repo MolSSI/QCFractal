@@ -5,11 +5,7 @@ import traceback
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
-try:
-    import pydantic.v1 as pydantic
-except ImportError:
-    import pydantic
-from qcelemental.models import FailedOperation
+import pydantic
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import array
 from sqlalchemy.orm import selectinload, load_only, lazyload, undefer
@@ -22,6 +18,7 @@ from qcportal.compression import decompress
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerStatusEnum
 from qcportal.metadata_models import TaskReturnMetadata
+from qcportal.qcschema_v1 import FailedOperation
 from qcportal.record_models import RecordStatusEnum
 from qcportal.utils import calculate_limit, now_at_utc
 from .db_models import TaskQueueORM
@@ -136,7 +133,7 @@ class TaskSocket:
                     continue
 
                 result_dict = decompress(result_compressed, CompressionEnum.zstd)
-                result = pydantic.parse_obj_as(AllResultTypes, result_dict)
+                result = pydantic.TypeAdapter(AllResultTypes).validate_python(result_dict)
 
                 notify_status = None
 
