@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import Tuple, Dict, Any
 
 from qcportal.compression import CompressionEnum, compress, decompress
 from qcportal.exceptions import MissingDataError
 from qcportal.record_models import RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import now_at_utc
+
 from .outputstore.utils import create_output_orm
 from .record_db_models import (
     RecordComputeHistoryORM,
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 def build_extras_properties(result: AllResultTypes) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     # Gets rid of numpy arrays
     # Include any of these fields - not all may exist, but pydantic is lenient
-    result_dict = result.dict(include={"return_result", "properties", "extras"}, encoding="json")
+    result_dict = result.model_dump(include={"return_result", "properties", "extras"}, mode="json")
 
     new_prop = {}
 
@@ -109,7 +109,7 @@ def compute_history_orms_from_qcportal_record(result: AllQCPortalRecordTypes) ->
         history_orm.modified_on = ch.modified_on
 
         if ch.provenance is not None:
-            history_orm.provenance = ch.provenance.dict()
+            history_orm.provenance = ch.provenance.model_dump()
         else:
             history_orm.provenance = None
 
@@ -138,7 +138,7 @@ def compute_history_orm_from_schema_v1(result: AllSchemaV1ResultTypes) -> Record
     """
     history_orm = RecordComputeHistoryORM()
     history_orm.status = RecordStatusEnum.complete if result.success else RecordStatusEnum.error
-    history_orm.provenance = result.provenance.dict()
+    history_orm.provenance = result.provenance.model_dump()
     history_orm.modified_on = now_at_utc()
 
     # Get the compressed outputs if they exist
@@ -163,7 +163,7 @@ def compute_history_orm_from_schema_v1(result: AllSchemaV1ResultTypes) -> Record
             stderr_orm = create_output_orm(OutputTypeEnum.stderr, result.stderr)
             history_orm.outputs["stderr"] = stderr_orm
         if result.error is not None:
-            error_orm = create_output_orm(OutputTypeEnum.error, result.error.dict())
+            error_orm = create_output_orm(OutputTypeEnum.error, result.error.model_dump())
             history_orm.outputs["error"] = error_orm
 
     return history_orm
@@ -211,7 +211,7 @@ def native_files_orms_from_schema_v1(result: AllSchemaV1ResultTypes) -> Dict[str
             native_files[name] = nf_orm
 
         return native_files
-    elif "native_files" in result.__fields__:  # Not compressed, but part of result
+    elif "native_files" in type(result).model_fields:  # Not compressed, but part of result
         native_files = {}
         for name, nf_data in result.native_files.items():
 
