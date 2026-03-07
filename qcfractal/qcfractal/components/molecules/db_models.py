@@ -92,11 +92,11 @@ class MoleculeORM(BaseORM):
                 molecule = Molecule(**model_data)
         else:
             if not model_data.validated:
-                molecule = Molecule(**model_data.dict())
+                molecule = Molecule(**model_data.model_dump())
             else:
                 molecule = model_data
 
-        mol_dict = molecule.dict(exclude={"id", "validated", "fix_com", "fix_orientation"})
+        mol_dict = molecule.model_dump(exclude={"id", "validated", "fix_com", "fix_orientation"}, exclude_none=True)
 
         # Build these quantities fresh from what is actually stored
         mol_dict["molecule_hash"] = model_data.get_hash()
