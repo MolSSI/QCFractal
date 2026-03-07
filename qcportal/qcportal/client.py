@@ -739,8 +739,7 @@ class PortalClient(PortalClientBase):
         if record_type is None:
             endpoint = f"{base_url_prefix}/records/bulkGet"
         else:
-            # A little hacky
-            record_type_str = record_type.__fields__["record_type"].default
+            record_type_str = record_type.model_fields["record_type"].default
             endpoint = f"{base_url_prefix}/records/{record_type_str}/bulkGet"
 
         max_batch_size = self.api_limits["get_records"]

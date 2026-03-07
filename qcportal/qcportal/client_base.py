@@ -514,7 +514,7 @@ class PortalClientBase:
         self,
         method: str,
         endpoint: str,
-        response_model: Type[_V],
+        response_model: Type[_V] | None,
         *,
         body_model: Optional[Type[_T]] = None,
         url_params_model: Optional[Type[_U]] = None,
@@ -523,7 +523,7 @@ class PortalClientBase:
         upload_files: Optional[Iterable[Tuple[str, str]]] = None,
         allow_retries: bool = True,
         additional_headers: Optional[Dict[str, Any]] = None,
-    ) -> _V:
+    ) -> _V | None:
         # If body_model or url_params_model are None, then use the type given
         if body_model is None and body is not None:
             body_model = type(body)
