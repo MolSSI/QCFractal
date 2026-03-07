@@ -2,27 +2,16 @@
 Additional column types for SQLAlchemy
 """
 
-try:
-    from pydantic.v1 import BaseModel
-    from pydantic.v1.json import pydantic_encoder
-except ImportError:
-    from pydantic import BaseModel
-    from pydantic.json import pydantic_encoder
-
 from typing import Any
 
 import msgpack
 import numpy as np
+from pydantic_core import to_jsonable_python
 from sqlalchemy import TypeDecorator
 from sqlalchemy.dialects.postgresql import BYTEA
 
 
 def _msgpackext_encode(obj: Any) -> Any:
-    # First try pydantic base objects
-    try:
-        return pydantic_encoder(obj)
-    except TypeError:
-        pass
 
     if isinstance(obj, np.ndarray):
         if obj.shape:
@@ -35,7 +24,7 @@ def _msgpackext_encode(obj: Any) -> Any:
             # Converts np.array(5) -> 5
             return obj.tolist()
 
-    return obj
+    return to_jsonable_python(obj)
 
 
 def _msgpackext_decode(obj: Any) -> Any:
