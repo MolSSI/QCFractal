@@ -42,7 +42,7 @@ def to_json(ds, filename="scaffold.json", indent=4, compress=False):
         "extras",
         "owner_group",
     ]  # Inputs for client.add_dataset(
-    metadata = {key: value for key, value in ds.dict().items() if key in inputs}
+    metadata = {key: value for key, value in ds.model_dump().items() if key in inputs}
     d = {
         "metadata": metadata,
         "entries": {entry.name: entry for entry in ds.iterate_entries()},
