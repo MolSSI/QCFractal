@@ -140,8 +140,8 @@ def test_torsiondrive_socket_add_specification_diff_1(spec_test_runner):
         optimization_specification=common_opt_spec,
     )
 
-    td_kw = spec1.keywords.copy(update={"energy_upper_limit": 0.051})
-    spec2 = spec1.copy(update={"keywords": td_kw})
+    td_kw = spec1.keywords.model_copy(update={"energy_upper_limit": 0.051})
+    spec2 = spec1.model_copy(update={"keywords": td_kw})
     spec_test_runner("torsiondrive", spec1, spec2, False)
 
 
@@ -159,8 +159,8 @@ def test_torsiondrive_socket_add_specification_diff_2(spec_test_runner):
         optimization_specification=common_opt_spec,
     )
 
-    td_kw = spec1.keywords.copy(update={"dihedrals": [(8, 11, 13, 15)]})
-    spec2 = spec1.copy(update={"keywords": td_kw})
+    td_kw = spec1.keywords.model_copy(update={"dihedrals": [(8, 11, 13, 15)]})
+    spec2 = spec1.model_copy(update={"keywords": td_kw})
     spec_test_runner("torsiondrive", spec1, spec2, False)
 
 
@@ -178,8 +178,8 @@ def test_torsiondrive_socket_add_specification_diff_3(spec_test_runner):
         optimization_specification=common_opt_spec,
     )
 
-    td_kw = spec1.keywords.copy(update={"grid_spacing": [30]})
-    spec2 = spec1.copy(update={"keywords": td_kw})
+    td_kw = spec1.keywords.model_copy(update={"grid_spacing": [30]})
+    spec2 = spec1.model_copy(update={"keywords": td_kw})
     spec_test_runner("torsiondrive", spec1, spec2, False)
 
 
@@ -197,8 +197,8 @@ def test_torsiondrive_socket_add_specification_diff_4(spec_test_runner):
         optimization_specification=common_opt_spec,
     )
 
-    td_kw = spec1.keywords.copy(update={"energy_decrease_thresh": 0.051})
-    spec2 = spec1.copy(update={"keywords": td_kw})
+    td_kw = spec1.keywords.model_copy(update={"energy_decrease_thresh": 0.051})
+    spec2 = spec1.model_copy(update={"keywords": td_kw})
     spec_test_runner("torsiondrive", spec1, spec2, False)
 
 
@@ -216,8 +216,8 @@ def test_torsiondrive_socket_add_specification_diff_5(spec_test_runner):
         optimization_specification=common_opt_spec,
     )
 
-    td_kw = spec1.keywords.copy(update={"energy_upper_limit": 0.051})
-    spec2 = spec1.copy(update={"keywords": td_kw})
+    td_kw = spec1.keywords.model_copy(update={"energy_upper_limit": 0.051})
+    spec2 = spec1.model_copy(update={"keywords": td_kw})
     spec_test_runner("torsiondrive", spec1, spec2, False)
 
 
@@ -235,8 +235,8 @@ def test_torsiondrive_socket_add_specification_diff_6(spec_test_runner):
         optimization_specification=common_opt_spec,
     )
 
-    opt_spec = spec1.optimization_specification.copy(update={"keywords": {"a": 1.0}})
-    spec2 = spec1.copy(update={"optimization_specification": opt_spec})
+    opt_spec = spec1.optimization_specification.model_copy(update={"keywords": {"a": 1.0}})
+    spec2 = spec1.model_copy(update={"optimization_specification": opt_spec})
     spec_test_runner("torsiondrive", spec1, spec2, False)
 
 
@@ -254,9 +254,9 @@ def test_torsiondrive_socket_add_specification_diff_7(spec_test_runner):
         optimization_specification=common_opt_spec,
     )
 
-    qc_spec = spec1.optimization_specification.qc_specification.copy(update={"basis": "def2-qzvp"})
-    opt_spec = spec1.optimization_specification.copy(update={"qc_specification": qc_spec})
-    spec2 = spec1.copy(update={"optimization_specification": opt_spec})
+    qc_spec = spec1.optimization_specification.qc_specification.model_copy(update={"basis": "def2-qzvp"})
+    opt_spec = spec1.optimization_specification.model_copy(update={"qc_specification": qc_spec})
+    spec2 = spec1.model_copy(update={"optimization_specification": opt_spec})
     spec_test_runner("torsiondrive", spec1, spec2, False)
 
 
@@ -274,7 +274,7 @@ def test_torsiondrive_socket_add_specification_diff_8(spec_test_runner):
         optimization_specification=common_opt_spec,
     )
 
-    qc_spec = spec1.optimization_specification.qc_specification.copy(update={"keywords": {"z": 1.0 - 10}})
-    opt_spec = spec1.optimization_specification.copy(update={"qc_specification": qc_spec})
-    spec2 = spec1.copy(update={"optimization_specification": opt_spec})
+    qc_spec = spec1.optimization_specification.qc_specification.model_copy(update={"keywords": {"z": 1.0 - 10}})
+    opt_spec = spec1.optimization_specification.model_copy(update={"qc_specification": qc_spec})
+    spec2 = spec1.model_copy(update={"optimization_specification": opt_spec})
     spec_test_runner("torsiondrive", spec1, spec2, False)

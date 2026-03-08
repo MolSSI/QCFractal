@@ -3,10 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-
 from qcarchivetesting import load_molecule_data, test_users
 from qcfractal.components.neb.record_db_models import NEBRecordORM
-from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service
 from qcportal.auth import UserInfo
 from qcportal.neb import (
@@ -20,6 +18,7 @@ from qcportal.singlepoint import (
     SinglepointProtocols,
 )
 from qcportal.utils import now_at_utc
+
 from .testing_helpers import compare_neb_specs, test_specs, load_procedure_data, generate_task_key, load_record_data
 
 if TYPE_CHECKING:
@@ -296,7 +295,7 @@ def test_neb_socket_insert_full_qcportal_record(secure_snowflake: QCATestingSnow
 
     for test_name in test_names:
         initial_record = load_record_data(test_name)
-        initial_record_copy = initial_record.copy(deep=True)
+        initial_record_copy = initial_record.model_copy(deep=True)
 
         # Need a full copy of results - they can get mutated
         with storage_socket.session_scope() as session:

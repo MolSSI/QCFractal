@@ -4,7 +4,6 @@ import os
 from typing import TYPE_CHECKING
 
 import pytest
-
 from qcarchivetesting import load_molecule_data
 from qcportal import PortalRequestError
 from qcportal.molecules import Molecule, MoleculeIdentifiers
@@ -67,7 +66,7 @@ def test_molecules_client_add_with_id(snowflake_client: PortalClient):
 
     bad_id = 99998888
     water = load_molecule_data("water_dimer_minima")
-    water = water.copy(update={"id": bad_id})
+    water = water.model_copy(update={"id": bad_id})
 
     meta, ids = snowflake_client.add_molecules([water])
     assert meta.success
