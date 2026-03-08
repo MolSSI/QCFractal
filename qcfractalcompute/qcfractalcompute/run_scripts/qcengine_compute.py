@@ -60,4 +60,5 @@ if __name__ == "__main__":
             # Replace any names with underscores (and other modifications)
             ret.extras["qcvars"] = {_qcvar_transitions.get(k, k): v for k, v in ret.extras["qcvars"].items()}
 
-    print(json.dumps(ret.model_dump(mode="json")))
+    # Still the one place that uses pydantic v1 models
+    print(json.dumps(ret.model_dump(encoding="json")))
