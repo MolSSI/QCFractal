@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-
 from qcportal.auth.models import UserInfo, GroupInfo, is_valid_password
 from qcportal.exceptions import (
     UserManagementError,
@@ -96,8 +95,8 @@ def test_user_socket_list(storage_socket: SQLAlchemySocket):
     all_users = sorted(all_users, key=lambda x: x.username)
     user_lst_model = sorted(user_lst_model, key=lambda x: x.username)
 
-    d1 = [x.dict(exclude={"id"}) for x in all_users]
-    d2 = [x.dict(exclude={"id"}) for x in user_lst_model]
+    d1 = [x.model_dump(exclude={"id"}) for x in all_users]
+    d2 = [x.model_dump(exclude={"id"}) for x in user_lst_model]
     assert d1 == d2
 
 
@@ -283,7 +282,7 @@ def test_user_socket_modify(storage_socket: SQLAlchemySocket, as_admin: bool):
     uinfo3 = storage_socket.users.modify(uinfo2, as_admin=as_admin)
     uinfo4 = storage_socket.users.get("george")
 
-    assert uinfo3 == UserInfo(**uinfo4)
+    assert uinfo3 == uinfo4
 
     if as_admin is True:
         assert uinfo2 == UserInfo(**uinfo3)
@@ -302,7 +301,7 @@ def test_user_socket_use_invalid_username(storage_socket: SQLAlchemySocket):
     for username in invalid_usernames:
         # Normally, UserInfo prevents bad usernames. But the socket also checks, as a last resort
         # So we have to bypass the UserInfo check with construct()
-        uinfo = UserInfo.construct(
+        uinfo = UserInfo.model_construct(
             username=username,
             role="read",
             enabled=True,
@@ -327,7 +326,7 @@ def test_user_socket_use_invalid_username(storage_socket: SQLAlchemySocket):
             storage_socket.users.delete(username)
 
     # Numeric usernames not allowed for some operations
-    uinfo2 = UserInfo.construct(
+    uinfo2 = UserInfo.model_construct(
         username="123456789",
         role="read",
         enabled=True,
@@ -344,7 +343,7 @@ def test_user_socket_use_invalid_password(storage_socket: SQLAlchemySocket):
     for idx, password in enumerate(invalid_passwords):
         username = f"george_{idx}"
 
-        uinfo = UserInfo.construct(
+        uinfo = UserInfo.model_construct(
             username=username,
             role="read",
             enabled=True,

@@ -7,7 +7,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.optimization.testing_helpers import load_procedure_data as load_opt_procedure_data
@@ -84,7 +83,7 @@ def test_task_socket_update_manager_time(storage_socket: SQLAlchemySocket, sessi
     rmeta = storage_socket.tasks.update_finished(
         mname1.fullname,
         {
-            tasks[0]["id"]: compress_result(result_data_1.dict()),
+            tasks[0]["id"]: compress_result(result_data_1.model_dump()),
         },
     )
     t1 = now_at_utc()

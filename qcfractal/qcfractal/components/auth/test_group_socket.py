@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-
 from qcportal.auth.models import GroupInfo
 from qcportal.exceptions import (
     UserManagementError,
@@ -77,8 +76,8 @@ def test_group_socket_list(storage_socket: SQLAlchemySocket):
     all_groups = sorted(all_groups, key=lambda x: x.groupname)
     group_lst_model = sorted(group_lst_model, key=lambda x: x.groupname)
 
-    d1 = [x.dict(exclude={"id"}) for x in all_groups]
-    d2 = [x.dict(exclude={"id"}) for x in group_lst_model]
+    d1 = [x.model_dump(exclude={"id"}) for x in all_groups]
+    d2 = [x.model_dump(exclude={"id"}) for x in group_lst_model]
     assert d1 == d2
 
 
@@ -117,7 +116,7 @@ def test_group_socket_use_invalid_groupname(storage_socket: SQLAlchemySocket):
     for groupname in invalid_groupnames:
         # Normally, GroupInfo prevents bad usernames. But the socket also checks, as a last resort
         # So we have to bypass the GroupInfo check with construct()
-        ginfo = GroupInfo.construct(
+        ginfo = GroupInfo.model_construct(
             groupname=groupname,
             description="Test group 1",
         )
@@ -132,7 +131,7 @@ def test_group_socket_use_invalid_groupname(storage_socket: SQLAlchemySocket):
             storage_socket.groups.delete(groupname)
 
     # numeric groupnames are not allowed for some actions
-    ginfo2 = GroupInfo.construct(
+    ginfo2 = GroupInfo.model_construct(
         groupname="123456789",
         description="Test group 1",
     )

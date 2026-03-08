@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-
 import qcportal.dataset_testing_helpers as ds_helpers
 from qcarchivetesting import load_molecule_data
 from qcportal.dataset_testing_helpers import dataset_submit_test_client
@@ -97,7 +96,7 @@ def record_compare(rec, ent, spec):
     stoich_2 = set((x[0], x[1].get_hash()) for x in ent.stoichiometries)
     assert stoich_1 == stoich_2
 
-    merged_spec = spec.dict()
+    merged_spec = spec.model_dump()
     merged_spec["keywords"].update(ent.additional_keywords)
     assert rec.specification == ReactionSpecification(**merged_spec)
 

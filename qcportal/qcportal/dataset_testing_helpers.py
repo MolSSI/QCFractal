@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-
 from qcarchivetesting.helpers import test_users
 from qcportal import PortalRequestError
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
@@ -68,7 +67,7 @@ def run_dataset_model_add_entry_duplicate(snowflake_client, ds, test_entries, en
     ent1 = test_entries[0]
 
     # Same name, different molecule
-    ent2 = test_entries[1].copy(update={"name": ent1.name})
+    ent2 = test_entries[1].model_copy(update={"name": ent1.name})
 
     meta = ds.add_entries([ent1])
     assert meta.success

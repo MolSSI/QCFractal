@@ -137,7 +137,7 @@ def test_optimization_socket_add_specification_diff_1(spec_test_runner):
         qc_specification=common_qc_spec,
     )
 
-    spec2 = spec1.copy(update={"keywords": {"k2": "value2"}})
+    spec2 = spec1.model_copy(update={"keywords": {"k2": "value2"}})
 
     spec_test_runner("optimization", spec1, spec2, False)
 
@@ -150,7 +150,7 @@ def test_optimization_socket_add_specification_diff_2(spec_test_runner):
         qc_specification=common_qc_spec,
     )
 
-    spec2 = spec1.copy(update={"keywords": {"k2": "value2"}})
+    spec2 = spec1.model_copy(update={"keywords": {"k2": "value2"}})
 
     spec_test_runner("optimization", spec1, spec2, False)
 
@@ -164,7 +164,7 @@ def test_optimization_socket_add_specification_diff_3(spec_test_runner):
         qc_specification=common_qc_spec,
     )
 
-    spec2 = spec1.copy(update={"keywords": {"k": 1.0e-9}})
+    spec2 = spec1.model_copy(update={"keywords": {"k": 1.0e-9}})
 
     spec_test_runner("optimization", spec1, spec2, False)
 
@@ -178,8 +178,8 @@ def test_optimization_socket_add_specification_diff_4(spec_test_runner):
         qc_specification=common_qc_spec,
     )
 
-    qc_spec = common_qc_spec.copy(update={"keywords": {"a": 1}})
-    spec2 = spec1.copy(update={"qc_specification": qc_spec})
+    qc_spec = common_qc_spec.model_copy(update={"keywords": {"a": 1}})
+    spec2 = spec1.model_copy(update={"qc_specification": qc_spec})
 
     spec_test_runner("optimization", spec1, spec2, False)
 
@@ -193,8 +193,8 @@ def test_optimization_socket_add_specification_diff_5(spec_test_runner):
         qc_specification=common_qc_spec,
     )
 
-    qc_spec = common_qc_spec.copy(update={"protocols": SinglepointProtocols(stdout=False)})
-    spec2 = spec1.copy(update={"qc_specification": qc_spec})
+    qc_spec = common_qc_spec.model_copy(update={"protocols": SinglepointProtocols(stdout=False)})
+    spec2 = spec1.model_copy(update={"qc_specification": qc_spec})
 
     spec_test_runner("optimization", spec1, spec2, False)
 

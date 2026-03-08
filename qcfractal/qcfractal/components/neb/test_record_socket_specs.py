@@ -19,7 +19,7 @@ common_opt_spec = OptimizationSpecification(
     program="optprog2",
     keywords={"k": "value"},
     protocols=OptimizationProtocols(trajectory="none"),
-    qc_specification=common_sp_spec.copy(),
+    qc_specification=common_sp_spec.model_copy(),
 )
 
 
@@ -102,7 +102,7 @@ def test_neb_socket_add_specification_diff_1(spec_test_runner):
         singlepoint_specification=common_sp_spec,
     )
 
-    spec2 = spec1.copy(update={"optimization_specification": common_opt_spec})
+    spec2 = spec1.model_copy(update={"optimization_specification": common_opt_spec})
     spec_test_runner("neb", spec1, spec2, False)
 
 
@@ -119,8 +119,8 @@ def test_neb_socket_add_specification_diff_2(spec_test_runner):
         singlepoint_specification=common_sp_spec,
     )
 
-    neb_kw = spec1.keywords.copy(update={"images": 31})
-    spec2 = spec1.copy(update={"keywords": neb_kw})
+    neb_kw = spec1.keywords.model_copy(update={"images": 31})
+    spec2 = spec1.model_copy(update={"keywords": neb_kw})
     spec_test_runner("neb", spec1, spec2, False)
 
 
@@ -137,8 +137,8 @@ def test_neb_socket_add_specification_diff_3(spec_test_runner):
         singlepoint_specification=common_sp_spec,
     )
 
-    neb_kw = spec1.keywords.copy(update={"spring_constant": 1.51})
-    spec2 = spec1.copy(update={"keywords": neb_kw})
+    neb_kw = spec1.keywords.model_copy(update={"spring_constant": 1.51})
+    spec2 = spec1.model_copy(update={"keywords": neb_kw})
     spec_test_runner("neb", spec1, spec2, False)
 
 
@@ -155,8 +155,8 @@ def test_neb_socket_add_specification_diff_4(spec_test_runner):
         singlepoint_specification=common_sp_spec,
     )
 
-    neb_kw = spec1.keywords.copy(update={"optimize_endpoints": True})
-    spec2 = spec1.copy(update={"keywords": neb_kw})
+    neb_kw = spec1.keywords.model_copy(update={"optimize_endpoints": True})
+    spec2 = spec1.model_copy(update={"keywords": neb_kw})
     spec_test_runner("neb", spec1, spec2, False)
 
 
@@ -173,8 +173,8 @@ def test_neb_socket_add_specification_diff_5(spec_test_runner):
         singlepoint_specification=common_sp_spec,
     )
 
-    neb_kw = spec1.keywords.copy(update={"maximum_force": 0.051})
-    spec2 = spec1.copy(update={"keywords": neb_kw})
+    neb_kw = spec1.keywords.model_copy(update={"maximum_force": 0.051})
+    spec2 = spec1.model_copy(update={"keywords": neb_kw})
     spec_test_runner("neb", spec1, spec2, False)
 
 
@@ -191,8 +191,8 @@ def test_neb_socket_add_specification_diff_6(spec_test_runner):
         singlepoint_specification=common_sp_spec,
     )
 
-    neb_kw = spec1.keywords.copy(update={"align": False})
-    spec2 = spec1.copy(update={"keywords": neb_kw})
+    neb_kw = spec1.keywords.model_copy(update={"align": False})
+    spec2 = spec1.model_copy(update={"keywords": neb_kw})
     spec_test_runner("neb", spec1, spec2, False)
 
 
@@ -210,8 +210,8 @@ def test_neb_socket_add_specification_diff_7(spec_test_runner):
         optimization_specification=common_opt_spec,
     )
 
-    sp_spec = spec1.singlepoint_specification.copy(update={"basis": "def2-qzvp"})
-    spec2 = spec1.copy(update={"singlepoint_specification": sp_spec})
+    sp_spec = spec1.singlepoint_specification.model_copy(update={"basis": "def2-qzvp"})
+    spec2 = spec1.model_copy(update={"singlepoint_specification": sp_spec})
     spec_test_runner("neb", spec1, spec2, False)
 
 
@@ -229,6 +229,8 @@ def test_neb_socket_add_specification_diff_8(spec_test_runner):
         optimization_specification=common_opt_spec,
     )
 
-    opt_spec = spec1.optimization_specification.copy(update={"protocols": OptimizationProtocols(trajectory="all")})
-    spec2 = spec1.copy(update={"optimization_specification": opt_spec})
+    opt_spec = spec1.optimization_specification.model_copy(
+        update={"protocols": OptimizationProtocols(trajectory="all")}
+    )
+    spec2 = spec1.model_copy(update={"optimization_specification": opt_spec})
     spec_test_runner("neb", spec1, spec2, False)

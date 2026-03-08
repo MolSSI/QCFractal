@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-
 import qcportal.dataset_testing_helpers as ds_helpers
 from qcportal.dataset_testing_helpers import dataset_submit_test_client
 from qcportal.molecules import Molecule
@@ -52,7 +51,7 @@ def entry_extra_compare(ent1, ent2):
 def record_compare(rec, ent, spec):
     assert rec.molecule == ent.molecule
 
-    merged_spec = spec.dict()
+    merged_spec = spec.model_dump()
     merged_spec["keywords"].update(ent.additional_keywords)
     assert rec.specification == QCSpecification(**merged_spec)
 

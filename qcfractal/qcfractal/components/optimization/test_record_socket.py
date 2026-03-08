@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-
 from qcarchivetesting import load_molecule_data, test_users
 from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
 from qcfractal.components.optimization.testing_helpers import (
@@ -13,7 +12,6 @@ from qcfractal.components.optimization.testing_helpers import (
     load_record_data,
 )
 from qcfractal.components.testing_helpers import convert_to_plain_qcschema_result
-from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.optimization import (
@@ -27,6 +25,7 @@ from qcportal.singlepoint import (
     SinglepointProtocols,
 )
 from qcportal.utils import now_at_utc
+
 from ..record_utils import build_extras_properties
 
 if TYPE_CHECKING:
@@ -52,7 +51,7 @@ def _compare_record_with_schema(record_orm, result_schema):
 
     assert len(record_orm.compute_history) == 1
     assert record_orm.compute_history[0].status == RecordStatusEnum.complete
-    assert record_orm.compute_history[0].provenance == result_schema.provenance
+    assert record_orm.compute_history[0].provenance == result_schema.provenance.model_dump()
 
     # Test the trajectory
     assert len(record_orm.trajectory) == len(result_schema.trajectory)
@@ -62,7 +61,7 @@ def _compare_record_with_schema(record_orm, result_schema):
         assert db_traj.singlepoint_record.molecule.identifiers["molecule_hash"] == res_traj.molecule.get_hash()
 
     # Use plain schema, where compressed stuff is removed
-    new_extras, new_properties = build_extras_properties(result_schema.copy(deep=True))
+    new_extras, new_properties = build_extras_properties(result_schema.model_copy(deep=True))
     assert record_orm.properties == new_properties
     assert record_orm.extras == new_extras
 
@@ -108,7 +107,7 @@ def test_optimization_socket_task_spec(
 
         task_input = t.function_kwargs["input_data"]
         assert task_input["keywords"] == kw_with_prog
-        assert task_input["protocols"] == spec.protocols.dict(exclude_defaults=True, exclude_unset=True)
+        assert task_input["protocols"] == spec.protocols.model_dump(exclude_defaults=True, exclude_unset=True)
 
         # Forced to gradient in the qcschema input
         assert task_input["input_specification"]["driver"] == SinglepointDriver.gradient
@@ -316,8 +315,12 @@ def test_optimization_socket_insert_full_schema_v1(secure_snowflake: QCATestingS
 
         # Need a full copy of results - they can get mutated
         with storage_socket.session_scope() as session2:
-            ins_ids_1 = storage_socket.records.insert_full_schema_v1(session2, [result_schema.copy(deep=True)], user_id)
-            ins_ids_2 = storage_socket.records.insert_full_schema_v1(session2, [plain_schema.copy(deep=True)], user_id)
+            ins_ids_1 = storage_socket.records.insert_full_schema_v1(
+                session2, [result_schema.model_copy(deep=True)], user_id
+            )
+            ins_ids_2 = storage_socket.records.insert_full_schema_v1(
+                session2, [plain_schema.model_copy(deep=True)], user_id
+            )
 
         ins_id_1 = ins_ids_1[0]
         ins_id_2 = ins_ids_2[0]
@@ -354,7 +357,7 @@ def test_optimization_socket_insert_full_qcportal_record(secure_snowflake: QCATe
 
     for test_name in test_names:
         initial_record = load_record_data(test_name)
-        initial_record_copy = initial_record.copy(deep=True)
+        initial_record_copy = initial_record.model_copy(deep=True)
 
         # Need a full copy of results - they can get mutated
         with storage_socket.session_scope() as session:
