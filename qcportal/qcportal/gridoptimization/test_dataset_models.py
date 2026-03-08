@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-
 import qcportal.dataset_testing_helpers as ds_helpers
 from qcportal.dataset_testing_helpers import dataset_submit_test_client
 from qcportal.gridoptimization import (
@@ -107,7 +106,7 @@ def record_compare(rec, ent, spec):
     assert ent.initial_molecule == rec.initial_molecule
 
     # Merge optimization keywords
-    merged_spec = spec.dict()
+    merged_spec = spec.model_dump()
     merged_spec["optimization_specification"]["keywords"].update(ent.additional_optimization_keywords)
     merged_spec["keywords"].update(ent.additional_keywords)
 

@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, List
 
 import pytest
-
 from qcfractal.components.singlepoint.testing_helpers import run_procedure_data, load_procedure_data
 from qcportal.record_models import RecordStatusEnum
+
 from .record_models import QCSpecification, SinglepointDriver
 
 if TYPE_CHECKING:
@@ -74,8 +74,8 @@ def test_singlepoint_record_model(snowflake: QCATestingSnowflake, includes: Opti
     assert record.record_type == "singlepoint"
     assert record.specification == input_spec
 
-    result_dict = result.dict(
-        include={"return_result": True, "extras": {"qcvars"}, "properties": True}, encoding="json"
+    result_dict = result.model_dump(
+        include={"return_result": True, "extras": {"qcvars"}, "properties": True}, mode="json"
     )
     assert record.return_result == result_dict["return_result"]
 
@@ -85,7 +85,7 @@ def test_singlepoint_record_model(snowflake: QCATestingSnowflake, includes: Opti
     all_properties["return_result"] = result_dict["return_result"]
     assert record.properties == all_properties
 
-    assert record.wavefunction.dict(encoding="json") == result.wavefunction.dict(encoding="json")
+    assert record.wavefunction.model_dump(mode="json") == result.wavefunction.model_dump(mode="json")
 
 
 def test_singlepoint_record_to_qcschema(snowflake: QCATestingSnowflake):

@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-
 from qcarchivetesting import load_molecule_data, test_users
 from qcfractal.components.testing_helpers import convert_to_plain_qcschema_result
 from qcportal.managers import ManagerName
@@ -11,6 +10,7 @@ from qcportal.molecules import Molecule
 from qcportal.record_models import RecordStatusEnum, PriorityEnum, RecordTask
 from qcportal.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols, compare_singlepoint_records
 from qcportal.utils import now_at_utc
+
 from .record_db_models import SinglepointRecordORM
 from .testing_helpers import test_specs, load_procedure_data, load_record_data, run_procedure_data
 from ..record_utils import build_extras_properties
@@ -39,20 +39,22 @@ def _compare_record_with_schema(record_orm, result_schema):
     assert coalesce(record_orm.specification.basis) == coalesce(result_schema.model.basis)
 
     assert record_orm.specification.keywords == result_schema.keywords
-    assert record_orm.specification.protocols == result_schema.protocols
+    assert record_orm.specification.protocols == result_schema.protocols.model_dump(
+        exclude_defaults=True, exclude_unset=True
+    )
 
     assert len(record_orm.compute_history) == 1
     assert record_orm.compute_history[0].status == RecordStatusEnum.complete
 
-    assert record_orm.compute_history[0].provenance == result_schema.provenance
+    assert record_orm.compute_history[0].provenance == result_schema.provenance.model_dump()
 
     # Use plain schema, where compressed stuff is removed
-    new_extras, new_properties = build_extras_properties(result_schema.copy(deep=True))
+    new_extras, new_properties = build_extras_properties(result_schema.model_copy(deep=True))
     assert record_orm.properties == new_properties
     assert record_orm.extras == new_extras
 
     # do some common properties themselves
-    result_dict = result_schema.dict(include={"return_result"}, encoding="json")
+    result_dict = result_schema.model_dump(include={"return_result"}, mode="json")
     assert record_orm.properties.get("nuclear_repulsion_energy") == result_schema.properties.nuclear_repulsion_energy
     assert record_orm.properties.get("return_energy") == result_schema.properties.return_energy
     assert record_orm.properties.get("scf_iterations") == result_schema.properties.scf_iterations
@@ -60,9 +62,9 @@ def _compare_record_with_schema(record_orm, result_schema):
     assert record_orm.properties.get("return_result") == result_dict["return_result"]
 
     if result_schema.wavefunction is not None:
-        wfn_1 = record_orm.wavefunction.get_wavefunction().dict(encoding="json")
-        wfn_2 = record_orm.wavefunction.get_wavefunction().dict(encoding="json")
-        wfn_ref = result_schema.wavefunction.dict(encoding="json")
+        wfn_1 = record_orm.wavefunction.get_wavefunction().model_dump(mode="json")
+        wfn_2 = record_orm.wavefunction.get_wavefunction().model_dump(mode="json")
+        wfn_ref = result_schema.wavefunction.model_dump(mode="json")
         assert wfn_1 == wfn_2 == wfn_ref
     else:
         assert record_orm.wavefunction is None
@@ -108,7 +110,7 @@ def test_singlepoint_socket_task_spec(
     for t in tasks:
         function_kwargs = t.function_kwargs
         assert function_kwargs["input_data"]["model"] == {"method": spec.method, "basis": spec.basis}
-        assert function_kwargs["input_data"]["protocols"] == spec.protocols.dict(
+        assert function_kwargs["input_data"]["protocols"] == spec.protocols.model_dump(
             exclude_defaults=True, exclude_unset=True
         )
         assert function_kwargs["input_data"]["keywords"] == spec.keywords
@@ -323,8 +325,12 @@ def test_singlepoint_socket_insert_full_schema_v1(secure_snowflake: QCATestingSn
 
         # Need a full copy of results - they can get mutated
         with storage_socket.session_scope() as session2:
-            ins_ids_1 = storage_socket.records.insert_full_schema_v1(session2, [result_schema.copy(deep=True)], user_id)
-            ins_ids_2 = storage_socket.records.insert_full_schema_v1(session2, [plain_schema.copy(deep=True)], user_id)
+            ins_ids_1 = storage_socket.records.insert_full_schema_v1(
+                session2, [result_schema.model_copy(deep=True)], user_id
+            )
+            ins_ids_2 = storage_socket.records.insert_full_schema_v1(
+                session2, [plain_schema.model_copy(deep=True)], user_id
+            )
 
         ins_id_1 = ins_ids_1[0]
         ins_id_2 = ins_ids_2[0]
@@ -362,7 +368,7 @@ def test_singlepoint_socket_insert_full_qcportal_record(secure_snowflake: QCATes
 
     for test_name in test_names:
         initial_record = load_record_data(test_name)
-        initial_record_copy = initial_record.copy(deep=True)
+        initial_record_copy = initial_record.model_copy(deep=True)
 
         # Need a full copy of results - they can get mutated
         with storage_socket.session_scope() as session:
