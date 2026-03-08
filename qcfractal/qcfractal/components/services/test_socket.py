@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qcelemental.models import FailedOperation
-
 from qcfractal.components.gridoptimization.testing_helpers import (
     submit_procedure_data as submit_go_procedure_data,
 )
@@ -13,9 +11,9 @@ from qcfractal.components.torsiondrive.testing_helpers import (
     submit_procedure_data as submit_td_procedure_data,
     generate_task_key as generate_td_task_key,
 )
-from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service
 from qcportal.managers import ManagerName
+from qcportal.qcschema_v1 import FailedOperation
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.utils import now_at_utc
 

@@ -3,12 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-
-try:
-    from pydantic.v1 import ValidationError
-except ImportError:
-    from pydantic import ValidationError
-
+from pydantic import ValidationError
 from qcfractal.components.singlepoint.testing_helpers import submit_procedure_data
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName, ManagerStatusEnum

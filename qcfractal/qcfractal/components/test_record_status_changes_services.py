@@ -3,8 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from qcelemental.models import FailedOperation, ComputeError
-
 from qcfractal.components.gridoptimization.testing_helpers import (
     submit_procedure_data as submit_go_procedure_data,
     generate_task_key as generate_go_task_key,
@@ -15,6 +13,7 @@ from qcfractal.components.torsiondrive.testing_helpers import (
     generate_task_key as generate_td_task_key,
 )
 from qcfractal.testing_helpers import run_service
+from qcportal.qcschema_v1 import FailedOperation, ComputeError
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:

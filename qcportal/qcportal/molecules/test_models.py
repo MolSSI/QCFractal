@@ -6,8 +6,8 @@ import json
 
 import numpy as np
 import pytest
-
 from qcarchivetesting import load_molecule_data
+
 from .models import Molecule
 
 bohr_to_ang = 0.52917721067
@@ -24,7 +24,7 @@ def test_molecule_constructors():
     assert water_psi.get_molecular_formula() == "H4O2"
 
     # Check the JSON construct/deconstruct
-    water_from_json = Molecule(**water_psi.dict())
+    water_from_json = Molecule(**water_psi.model_dump())
     assert water_psi == water_from_json
 
     ### Neon Tetramer
@@ -36,7 +36,7 @@ def test_molecule_constructors():
     assert neon_from_psi == neon_from_np
 
     # Check the JSON construct/deconstruct
-    neon_from_json = Molecule(**neon_from_psi.dict())
+    neon_from_json = Molecule(**neon_from_psi.model_dump())
     assert neon_from_psi == neon_from_json
     assert neon_from_json.get_molecular_formula() == "Ne4"
 
@@ -135,7 +135,7 @@ def test_water_orient():
 def test_molecule_errors():
     mol = load_molecule_data("water_dimer_stretch")
 
-    data = mol.dict()
+    data = mol.model_dump()
     data["whatever"] = 5
     with pytest.raises(ValueError):
         Molecule(**data)
@@ -165,10 +165,10 @@ def test_molecule_repeated_hashing():
     h1 = mol.get_hash()
     assert mol.get_molecular_formula() == "H2O2"
 
-    mol2 = Molecule(**json.loads(mol.json()), orient=False)
+    mol2 = Molecule(**json.loads(mol.model_dump_json()), orient=False)
     assert h1 == mol2.get_hash()
 
-    mol3 = Molecule(**json.loads(mol2.json()), orient=False)
+    mol3 = Molecule(**json.loads(mol2.model_dump_json()), orient=False)
     assert h1 == mol3.get_hash()
 
 

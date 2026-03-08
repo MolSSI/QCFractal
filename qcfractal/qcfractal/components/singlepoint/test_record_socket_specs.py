@@ -197,7 +197,7 @@ def test_singlepoint_socket_add_specification_diff_1(spec_test_runner):
         basis="sto-3g",
     )
 
-    spec2 = spec1.copy(update={"program": "prog2"})
+    spec2 = spec1.model_copy(update={"program": "prog2"})
 
     spec_test_runner("singlepoint", spec1, spec2, False)
 
@@ -211,7 +211,7 @@ def test_singlepoint_socket_add_specification_diff_2(spec_test_runner):
         basis=None,
     )
 
-    spec2 = spec1.copy(update={"driver": SinglepointDriver.energy})
+    spec2 = spec1.model_copy(update={"driver": SinglepointDriver.energy})
 
     spec_test_runner("singlepoint", spec1, spec2, False)
 
@@ -225,7 +225,7 @@ def test_singlepoint_socket_add_specification_diff_3(spec_test_runner):
         basis=None,
     )
 
-    spec2 = spec1.copy(update={"keywords": {"k": "value"}})
+    spec2 = spec1.model_copy(update={"keywords": {"k": "value"}})
 
     spec_test_runner("singlepoint", spec1, spec2, False)
 
@@ -240,7 +240,7 @@ def test_singlepoint_socket_add_specification_diff_4(spec_test_runner):
         keywords={"k": 1.0e-8},
     )
 
-    spec2 = spec1.copy(update={"keywords": {"k": 1.0e-9}})
+    spec2 = spec1.model_copy(update={"keywords": {"k": 1.0e-9}})
 
     spec_test_runner("singlepoint", spec1, spec2, False)
 
@@ -255,7 +255,7 @@ def test_singlepoint_socket_add_specification_diff_5(spec_test_runner):
         keywords={"k": "value"},
     )
 
-    spec2 = spec1.copy(update={"keywords": {"k": "value", "k2": "value2"}})
+    spec2 = spec1.model_copy(update={"keywords": {"k": "value", "k2": "value2"}})
 
     spec_test_runner("singlepoint", spec1, spec2, False)
 
@@ -270,7 +270,7 @@ def test_singlepoint_socket_add_specification_diff_6(spec_test_runner):
         protocols=SinglepointProtocols(),
     )
 
-    spec2 = spec1.copy(update={"protocols": SinglepointProtocols(stdout=False)})
+    spec2 = spec1.model_copy(update={"protocols": SinglepointProtocols(stdout=False)})
 
     spec_test_runner("singlepoint", spec1, spec2, False)
 
@@ -285,6 +285,6 @@ def test_singlepoint_socket_add_specification_diff_7(spec_test_runner):
         protocols=SinglepointProtocols(),
     )
 
-    spec2 = spec1.copy(update={"protocols": SinglepointProtocols(wavefunction="orbitals_and_eigenvalues")})
+    spec2 = spec1.model_copy(update={"protocols": SinglepointProtocols(wavefunction="orbitals_and_eigenvalues")})
 
     spec_test_runner("singlepoint", spec1, spec2, False)

@@ -6,12 +6,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qcelemental.models import ComputeError, FailedOperation
-
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import load_procedure_data, submit_procedure_data
 from qcfractalcompute.compress import compress_result
+from qcportal.qcschema_v1 import ComputeError, FailedOperation
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import now_at_utc
 
@@ -51,8 +50,8 @@ def test_task_socket_fullworkflow_success(snowflake: QCATestingSnowflake):
         rmeta = storage_socket.tasks.update_finished(
             mname.fullname,
             {
-                tasks[0]["id"]: compress_result(result_map[tasks[0]["record_id"]].dict()),
-                tasks[1]["id"]: compress_result(result_map[tasks[1]["record_id"]].dict()),
+                tasks[0]["id"]: compress_result(result_map[tasks[0]["record_id"]].model_dump()),
+                tasks[1]["id"]: compress_result(result_map[tasks[1]["record_id"]].model_dump()),
             },
         )
 
@@ -106,7 +105,7 @@ def test_task_socket_fullworkflow_error(snowflake: QCATestingSnowflake):
 
     rmeta = storage_socket.tasks.update_finished(
         mname.fullname,
-        {tasks[0]["id"]: compress_result(fop.dict()), tasks[1]["id"]: compress_result(fop.dict())},
+        {tasks[0]["id"]: compress_result(fop.model_dump()), tasks[1]["id"]: compress_result(fop.model_dump())},
     )
 
     assert rmeta.n_accepted == 2
@@ -150,14 +149,14 @@ def test_task_socket_fullworkflow_error_retry(snowflake: QCATestingSnowflake):
     activated_manager_programs = snowflake.activated_manager_programs()
 
     input_spec1, molecule1, result_data1 = load_procedure_data("sp_psi4_benzene_energy_1")
-    result_data1_compressed = compress_result(result_data1.dict())
+    result_data1_compressed = compress_result(result_data1.model_dump())
 
     meta1, id1 = storage_socket.records.singlepoint.add(
         [molecule1], input_spec1, "tag1", PriorityEnum.normal, None, True
     )
 
     fop = FailedOperation(error=ComputeError(error_type="test_error", error_message="this is a test error"))
-    fop_compressed = compress_result(fop.dict())
+    fop_compressed = compress_result(fop.model_dump())
 
     # Sends back an error. Do it a few times
     time_0 = now_at_utc()
@@ -230,9 +229,9 @@ def test_task_socket_fullworkflow_error_autoreset(snowflake: QCATestingSnowflake
     )
 
     fop_u = FailedOperation(error=ComputeError(error_type="unknown_error", error_message="this is a test error"))
-    fop_u_compressed = compress_result(fop_u.dict())
+    fop_u_compressed = compress_result(fop_u.model_dump())
     fop_r = FailedOperation(error=ComputeError(error_type="random_error", error_message="this is a test error"))
-    fop_r_compressed = compress_result(fop_r.dict())
+    fop_r_compressed = compress_result(fop_r.model_dump())
 
     # Sends back an error
     with storage_socket.session_scope() as session:
