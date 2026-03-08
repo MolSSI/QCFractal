@@ -1,9 +1,7 @@
 import logging
-import logging
 import sys
 
-from qcarchivetesting.data_generator import DataGeneratorComputeThread
-from qcarchivetesting.data_generator import read_input, write_outputs
+from qcarchivetesting.data_generator import DataGeneratorComputeThread, read_input, write_outputs
 from qcfractal.components.neb.testing_helpers import generate_task_key
 from qcfractal.snowflake import FractalSnowflake
 from qcportal.molecules import Molecule
