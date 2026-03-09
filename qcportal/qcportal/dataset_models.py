@@ -20,7 +20,7 @@ from tqdm import tqdm
 
 from qcportal.base_models import RestModelBase, validate_list_to_single, CommonBulkGetBody
 from qcportal.cache import DatasetCache, read_dataset_metadata, get_records_with_cache
-from qcportal.common_types import LowerStr, PydanticNDArray
+from qcportal.common_types import LowerStr
 from qcportal.external_files import ExternalFile
 from qcportal.internal_jobs import InternalJob, InternalJobStatusEnum
 from qcportal.metadata_models import DeleteMetadata, InsertMetadata, InsertCountsMetadata
@@ -66,7 +66,7 @@ class ContributedValues(BaseModel):
 
     name: str
     values: Any
-    index: PydanticNDArray
+    index: Any
     values_structure: dict[str, Any] = {}
 
     theory_level: str | dict[str, str]

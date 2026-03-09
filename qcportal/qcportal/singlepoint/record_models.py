@@ -7,7 +7,7 @@ from typing import Literal, Any
 from pydantic import BaseModel, Field, field_validator, ConfigDict, PrivateAttr
 
 from qcportal.base_models import RestModelBase
-from qcportal.common_types import LowerStr
+from qcportal.common_types import LowerStr, QCPortalBytes
 from qcportal.compression import CompressionEnum, decompress
 from qcportal.exceptions import NoClientError
 from qcportal.molecules import Molecule
@@ -134,7 +134,7 @@ class Wavefunction(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     compression_type: CompressionEnum
-    data_: bytes | None = Field(None, alias="data")
+    data_: QCPortalBytes | None = Field(None, alias="data")
 
     _data_url: str | None = PrivateAttr(None)
     _client: Any = PrivateAttr(None)
@@ -153,7 +153,7 @@ class Wavefunction(BaseModel):
         cdata, ctype = self._client.make_request(
             "get",
             self._data_url,
-            tuple[bytes, CompressionEnum],
+            tuple[QCPortalBytes, CompressionEnum],
         )
 
         assert self.compression_type == ctype
