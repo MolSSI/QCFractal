@@ -1,7 +1,7 @@
 from pydantic import Field, model_validator, field_validator
 
 from qcportal.base_models import RestModelBase
-from qcportal.common_types import LowerStr
+from qcportal.common_types import LowerStr, QCPortalBytes
 from qcportal.managers import ManagerName
 
 
@@ -41,4 +41,4 @@ class TaskClaimBody(RestModelBase):
 
 class TaskReturnBody(RestModelBase):
     name_data: ManagerName = Field(..., description="Name information about this manager")
-    results_compressed: dict[int, bytes]
+    results_compressed: dict[int, QCPortalBytes]

@@ -16,7 +16,7 @@ from qcportal.base_models import (
     QueryIteratorBase,
 )
 from qcportal.cache import RecordCache, get_records_with_cache
-from qcportal.common_types import LowerStr
+from qcportal.common_types import LowerStr, QCPortalBytes
 from qcportal.compression import CompressionEnum, decompress, get_compressed_ext
 from qcportal.exceptions import NoClientError
 
@@ -119,7 +119,7 @@ class OutputStore(BaseModel):
 
     output_type: OutputTypeEnum = Field(..., description="The type of output this is (stdout, error, etc)")
     compression_type: CompressionEnum = Field(CompressionEnum.none, description="Compression method (such as lzma)")
-    data_: bytes | None = Field(None, alias="data")
+    data_: QCPortalBytes | None = Field(None, alias="data")
 
     _data_url: str | None = PrivateAttr(None)
     _client: Any = PrivateAttr(None)
@@ -138,7 +138,7 @@ class OutputStore(BaseModel):
         cdata, ctype = self._client.make_request(
             "get",
             self._data_url,
-            tuple[bytes, CompressionEnum],
+            tuple[QCPortalBytes, CompressionEnum],
         )
 
         assert self.compression_type == ctype
@@ -228,7 +228,7 @@ class NativeFile(BaseModel):
 
     name: str = Field(..., description="Name of the file")
     compression_type: CompressionEnum = Field(..., description="Compression method (such as lzma)")
-    data_: bytes | None = Field(None, alias="data")
+    data_: QCPortalBytes | None = Field(None, alias="data")
 
     _data_url: str | None = PrivateAttr(None)
     _client: Any = PrivateAttr(None)
@@ -250,7 +250,7 @@ class NativeFile(BaseModel):
         cdata, ctype = self._client.make_request(
             "get",
             self._data_url,
-            tuple[bytes, CompressionEnum],
+            tuple[QCPortalBytes, CompressionEnum],
         )
 
         assert self.compression_type == ctype
@@ -314,7 +314,7 @@ class RecordTask(BaseModel):
     record_id: int
 
     function: str | None
-    function_kwargs_compressed: bytes | None
+    function_kwargs_compressed: QCPortalBytes | None
 
     compute_tag: str
     compute_priority: PriorityEnum
