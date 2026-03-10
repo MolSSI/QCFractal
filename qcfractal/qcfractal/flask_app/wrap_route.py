@@ -3,9 +3,7 @@ import tempfile
 from collections.abc import Callable, Iterable
 from functools import wraps
 
-import pydantic
-from flask import current_app
-from flask import request, g, Response
+from flask import current_app, request, g, Response
 from werkzeug.exceptions import BadRequest
 
 from qcfractal.flask_app import storage_socket
@@ -118,8 +116,7 @@ def wrap_global_route(
                     raise BadRequest("Expected body, but it is empty")
 
                 try:
-                    deserialized_data = deserialize(body_data, content_type)
-                    kwargs["body_data"] = pydantic.TypeAdapter(body_model).validate_python(deserialized_data)
+                    kwargs["body_data"] = deserialize(body_data, content_type, body_model)
                 except Exception as e:
                     raise BadRequest("Invalid body: " + str(e))
 

@@ -1,27 +1,29 @@
 import base64
 import json
-from typing import Any
+from typing import Any, Type, TypeVar
 
 import msgpack
 import numpy as np
-from pydantic import BaseModel
-from pydantic_core import to_jsonable_python
+import pydantic
+import pydantic_core
+
+_V = TypeVar("_V")
 
 
 def _msgpack_encode(obj: Any) -> Any:
-    if isinstance(obj, BaseModel):
-        return obj.model_dump(exclude_unset=True, by_alias=True)
+    # msgpack can encode bytes natively. So don't dump to json-compatible
+    # types here. But if we do that, we still need to handle numpy arrays
 
+    # Flatten numpy arrays
+    # This is mostly for Molecule class
+    # TODO - remove once all data in the database in converted. This is probably only called serverside (with dicts)
     if isinstance(obj, np.ndarray):
         if obj.shape:
             return obj.ravel().tolist()
         else:
             return obj.tolist()
 
-    return to_jsonable_python(obj)
-
-def _msgpack_decode(obj: Any) -> Any:
-    return obj
+    return pydantic_core.to_jsonable_python(obj)
 
 
 class _JSONEncoder(json.JSONEncoder):
@@ -31,43 +33,27 @@ class _JSONEncoder(json.JSONEncoder):
         if isinstance(obj, bytes):
             return {"_bytes_base64_": base64.b64encode(obj).decode("ascii")}
 
-        # Now do anything with pydantic
-        # Include unset fields - discriminators might be there!
-        # Also always use aliases when serializing
-        if isinstance(obj, BaseModel):
-            return obj.model_dump(by_alias=True)
-
         # Flatten numpy arrays
         # This is mostly for Molecule class
-        # TODO - remove once all data in the database in converted
+        # TODO - remove once all data in the database in converted. This is probably only called serverside (with dicts)
         if isinstance(obj, np.ndarray):
             if obj.shape:
                 return obj.ravel().tolist()
             else:
                 return obj.tolist()
 
-        return to_jsonable_python(obj)
+        return pydantic_core.to_jsonable_python(obj)
 
 
-def _json_decode(obj):
-    # Handle byte arrays
-    if "_bytes_base64_" in obj:
-        return base64.b64decode(obj["_bytes_base64_"].encode("ascii"))
-
-    return obj
-
-
-def deserialize(data: bytes | str, content_type: str):
+def deserialize(data: bytes | str, content_type: str, model: Type[_V]) -> _V:
     if content_type.startswith("application/"):
         content_type = content_type[12:]
 
     if content_type == "msgpack":
-        return msgpack.loads(data, object_hook=_msgpack_decode, raw=False, strict_map_key=False)
+        d = msgpack.loads(data, raw=False, strict_map_key=False)
+        return pydantic.TypeAdapter(model).validate_python(d)
     elif content_type == "json":
-        # JSON stored as bytes? Decode into a string for json to load
-        if isinstance(data, bytes):
-            data = data.decode("utf-8")
-        return json.loads(data, object_hook=_json_decode)
+        return pydantic.TypeAdapter(model).validate_json(data)
     else:
         raise RuntimeError(f"Unknown content type for deserialization: {content_type}")
 
