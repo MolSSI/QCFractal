@@ -12,7 +12,6 @@ from urllib.parse import urlparse
 
 import apsw
 import msgpack
-import pydantic
 import zstandard
 from pydantic import BaseModel
 
@@ -48,8 +47,7 @@ def compress_for_cache(data: Any) -> bytes:
 
 def decompress_from_cache(data: bytes, value_type) -> Any:
     decompressed_data = zstandard.decompress(data)
-    deserialized_data = deserialize(decompressed_data, "msgpack")
-    return pydantic.TypeAdapter(value_type).validate_python(deserialized_data)
+    return deserialize(decompressed_data, "msgpack", value_type)
 
 
 class RecordCache:
@@ -240,7 +238,7 @@ class DatasetCache(RecordCache):
     def get_metadata(self, key) -> Any:
         stmt = "SELECT value FROM metadata WHERE key = ?"
         r = self._conn.execute(stmt, (key,)).fetchone()
-        return deserialize(r[0], "msgpack")
+        return deserialize(r[0], "msgpack", Any)
 
     def entry_exists(self, name: str) -> bool:
         stmt = "SELECT 1 FROM dataset_entries WHERE name=?"
@@ -591,7 +589,7 @@ def read_dataset_metadata(file_path: str):
     if r is None:
         raise RuntimeError(f"Cannot find appropriate metadata in cache file {file_path}")
 
-    d = deserialize(r.fetchone()[0], "msgpack")
+    d = deserialize(r.fetchone()[0], "msgpack", Any)
     conn.close()
     return d
 
