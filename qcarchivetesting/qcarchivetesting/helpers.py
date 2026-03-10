@@ -4,6 +4,7 @@ Contains testing infrastructure for QCFractal.
 
 from __future__ import annotations
 
+import base64
 import glob
 import json
 import lzma
@@ -12,7 +13,6 @@ from contextlib import contextmanager
 
 from qcfractal.components.serverinfo.socket import geoip2_found
 from qcportal.molecules import Molecule
-from qcportal.serialization import _json_decode
 
 # Valid client encodings
 valid_encodings = ["application/json", "application/msgpack"]
@@ -126,6 +126,15 @@ def _read_data(directory: str, name: str):
     :
         A dictionary with all the data in the file
     """
+
+    def _json_decode(obj):
+        # Handle byte arrays. These can occur in extras fields that which aren't completely
+        # typed in pydantic models
+        # Managers normally return msgpack+compressed data, but we dumped plain json for testing
+        if "_bytes_base64_" in obj:
+            return base64.b64decode(obj["_bytes_base64_"].encode("ascii"))
+
+        return obj
 
     data_path = os.path.join(_my_path, directory)
     file_path = os.path.join(data_path, name + ".json.xz")
