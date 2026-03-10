@@ -23,7 +23,7 @@ from qcportal.cache import DatasetCache, read_dataset_metadata, get_records_with
 from qcportal.common_types import LowerStr
 from qcportal.external_files import ExternalFile
 from qcportal.internal_jobs import InternalJob, InternalJobStatusEnum
-from qcportal.metadata_models import DeleteMetadata, InsertMetadata, InsertCountsMetadata
+from qcportal.metadata_models import DeleteMetadata, InsertMetadata, InsertCountsMetadata, UpdateMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, BaseRecord
 from qcportal.utils import make_list, chunk_iterable
 
@@ -1791,7 +1791,7 @@ class BaseDataset(BaseModel):
                 status=new_status,
             )
 
-            self._client.make_request("patch", f"{self._base_url}/records", None, body=body)
+            self._client.make_request("patch", f"{self._base_url}/records", UpdateMetadata, body=body)
 
         else:
             for entry_names_batch in chunk_iterable(entry_names, 200):
@@ -1804,7 +1804,7 @@ class BaseDataset(BaseModel):
                     status=new_status,
                 )
 
-                self._client.make_request("patch", f"{self._base_url}/records", None, body=body)
+                self._client.make_request("patch", f"{self._base_url}/records", UpdateMetadata, body=body)
 
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
@@ -1830,7 +1830,7 @@ class BaseDataset(BaseModel):
                 revert_status=revert_status,
             )
 
-            self._client.make_request("post", f"{self._base_url}/records/revert", None, body=body)
+            self._client.make_request("post", f"{self._base_url}/records/revert", UpdateMetadata, body=body)
         else:
             for entry_names_batch in chunk_iterable(entry_names, 200):
                 body = DatasetRecordRevertBody(
@@ -1839,7 +1839,7 @@ class BaseDataset(BaseModel):
                     revert_status=revert_status,
                 )
 
-                self._client.make_request("post", f"{self._base_url}/records/revert", None, body=body)
+                self._client.make_request("post", f"{self._base_url}/records/revert", UpdateMetadata, body=body)
 
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
