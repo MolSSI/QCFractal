@@ -70,7 +70,7 @@ class ManagerClient(PortalClientBase):
         manager_version: str,
         programs: Dict[str, List[str]],
         compute_tags: List[str],
-    ) -> None:
+    ) -> int:
         """Registers/Activates a manager for use on the server
 
         If an error occurs, an exception is raised.
@@ -87,7 +87,7 @@ class ManagerClient(PortalClientBase):
         return self.make_request(
             "post",
             "compute/v1/managers",
-            None,
+            int,
             body=manager_info,
         )
 
