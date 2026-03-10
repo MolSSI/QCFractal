@@ -24,53 +24,6 @@ def _msgpack_decode(obj: Any) -> Any:
     return obj
 
 
-def encode_to_json(obj: Any) -> Any:
-    """
-    Takes an object and turns it into plain python that can be encoded to JSON.
-
-    This does not actually turn the object into JSON (string), just prepares it to be done.
-    This is useful for turning various objects into something that can be put into a JSON(B) column
-    in the database
-    """
-
-    # Basic types directly json serializable
-    if isinstance(obj, (str, int, float, bool, type(None))):
-        return obj
-
-    # JSON does not handle byte arrays
-    # So convert to base64
-    if isinstance(obj, bytes):
-        return {"_bytes_base64_": base64.b64encode(obj).decode("ascii")}
-
-    # Basic types that JSON supports, but we need to convert elements
-    if isinstance(obj, dict):
-        return {k: encode_to_json(v) for k, v in obj.items()}
-    if isinstance(obj, (list, tuple, set)):
-        return [encode_to_json(v) for v in obj]
-
-    # Now do anything with pydantic, excluding unset fields
-    # Also always use aliases when serializing
-    if isinstance(obj, BaseModel):
-        return encode_to_json(obj.model_dump(mode="json", exclude_unset=True, by_alias=True))
-
-    # Let pydantic handle other things
-    try:
-        return to_jsonable_python(obj)
-    except TypeError:
-        pass
-
-    # Flatten numpy arrays
-    # This is mostly for Molecule class
-    # TODO - remove once all data in the database in converted
-    if isinstance(obj, np.ndarray):
-        if obj.shape:
-            return obj.ravel().tolist()
-        else:
-            return obj.tolist()
-
-    return obj
-
-
 class _JSONEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Any:
         # JSON does not handle byte arrays

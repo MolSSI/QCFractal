@@ -8,11 +8,11 @@ This module will allow users to write and read a json file that can be reformed 
 | Date: March 13 2025
 """
 
-import json
 import bz2
+import json
 import warnings
 
-from ..serialization import encode_to_json
+import pydantic_core
 
 
 def to_json(ds, filename="scaffold.json", indent=4, compress=False):
@@ -42,13 +42,13 @@ def to_json(ds, filename="scaffold.json", indent=4, compress=False):
         "extras",
         "owner_group",
     ]  # Inputs for client.add_dataset(
-    metadata = {key: value for key, value in ds.model_dump().items() if key in inputs}
+    metadata = ds.model_dump(include=inputs)
     d = {
         "metadata": metadata,
         "entries": {entry.name: entry for entry in ds.iterate_entries()},
         "specifications": ds.specifications,
     }
-    d_serializable = encode_to_json(d)
+    d_serializable = pydantic_core.to_jsonable_python(d)
 
     if compress:
         with bz2.open(filename + ".bz2", "wt", encoding="utf-8") as f:
