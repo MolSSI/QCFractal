@@ -5,16 +5,7 @@ import logging
 import os
 import random
 import time
-from typing import (
-    Any,
-    Dict,
-    Optional,
-    Union,
-    TypeVar,
-    Type,
-    overload,
-)
-from typing import Tuple, Iterable
+from typing import Any, Dict, Optional, Union, TypeVar, Type, overload, Tuple, Iterable
 
 import jwt
 import pydantic
@@ -566,12 +557,8 @@ class PortalClientBase:
             allow_retries=allow_retries,
             additional_headers=additional_headers,
         )
-        d = deserialize(r.content, r.headers["Content-Type"])
 
-        if response_model is None:
-            return None
-        else:
-            return pydantic.TypeAdapter(response_model).validate_python(d)
+        return deserialize(r.content, r.headers["Content-Type"], response_model)
 
     def download_file(
         self,

@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from pydantic import TypeAdapter
+
+from qcportal.common_types import QCPortalBytes
 from qcportal.compression import CompressionEnum, compress, decompress
 from qcportal.exceptions import MissingDataError
 from qcportal.record_models import RecordStatusEnum, OutputTypeEnum
 from qcportal.utils import now_at_utc
-
 from .outputstore.utils import create_output_orm
 from .record_db_models import (
     RecordComputeHistoryORM,
@@ -146,11 +148,13 @@ def compute_history_orm_from_schema_v1(result: AllSchemaV1ResultTypes) -> Record
 
     if compressed_output is not None:
         for output_type, data_dict in compressed_output.items():
+            # Handle various ways we send raw bytes over the wire
+            output_bytes = TypeAdapter(QCPortalBytes).validate_python(data_dict["data"])
             out_orm = OutputStoreORM(
                 output_type=output_type,
                 compression_type=data_dict["compression_type"],
                 compression_level=data_dict["compression_level"],
-                data=data_dict["data"],
+                data=output_bytes,
             )
 
             history_orm.outputs[output_type] = out_orm
@@ -202,11 +206,13 @@ def native_files_orms_from_schema_v1(result: AllSchemaV1ResultTypes) -> Dict[str
         native_files = {}
         for name, nf_data in compressed_nf.items():
             # nf_data is a dictionary with keys 'data', 'compression_type', "compression_level"
+            # Handle various ways we send raw bytes over the wire
+            nf_bytes = TypeAdapter(QCPortalBytes).validate_python(nf_data["data"])
             nf_orm = NativeFileORM(
                 name=name,
                 compression_type=nf_data["compression_type"],
                 compression_level=nf_data["compression_level"],
-                data=nf_data["data"],
+                data=nf_bytes,
             )
             native_files[name] = nf_orm
 
