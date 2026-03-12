@@ -163,7 +163,8 @@ class ManybodyRecordSocket(BaseRecordSocket):
         table_rows = []
 
         for mol_batch in chunk_iterable(qcm.iterate_molecules(), 400):
-            to_add = [x[2] for x in mol_batch]
+            # TODO - remove after v2 manybody
+            to_add = [Molecule(**x[2].model_dump()) for x in mol_batch]
             meta, mol_ids = self.root_socket.molecules.add(to_add, session=session)
             if not meta.success:
                 raise RuntimeError("Unable to add molecules to the database: " + meta.error_string)
