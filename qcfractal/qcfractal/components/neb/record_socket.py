@@ -1,4 +1,5 @@
 from __future__ import annotations
+import geometric.nifty
 
 import importlib
 import json
@@ -31,7 +32,7 @@ from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnum
 from qcportal.serialization import convert_numpy_recursive
 from qcportal.singlepoint import QCSpecification
-from qcportal.utils import capture_all_output, hash_dict, is_included
+from qcportal.utils import capture_all_output, hash_dict, is_included, reshape_molecule
 from .record_db_models import (
     NEBOptimizationsORM,
     NEBSpecificationORM,
@@ -231,7 +232,7 @@ class NEBRecordSocket(BaseRecordSocket):
                         mol_data = self.root_socket.molecules.get(
                             molecule_id=[sp_record.molecule_id], include=["geometry"], session=session
                         )
-                        geometries.append(mol_data[0]["geometry"])
+                        geometries.append(reshape_molecule(mol_data[0]["geometry"]))
                         energies.append(sp_record.properties["return_energy"])
                         gradients.append(convert_numpy_recursive(sp_record.properties["return_result"], flatten=True))
                     service_state.nebinfo["geometry"] = convert_numpy_recursive(geometries, flatten=False)
@@ -383,6 +384,8 @@ class NEBRecordSocket(BaseRecordSocket):
                 qc_spec = opt_spec["qc_specification"]
             qc_spec["driver"] = "hessian"
 
+        # TODO - remove after geometric converted to v2
+        chain = [Molecule(**x.model_dump()) for x in chain]
         meta, sp_ids = self.root_socket.records.singlepoint.add(
             chain,
             QCSpecification(**qc_spec),
