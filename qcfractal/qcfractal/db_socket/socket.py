@@ -19,7 +19,7 @@ from sqlalchemy.pool import NullPool
 import qcfractal
 
 if TYPE_CHECKING:
-    from typing import List, Optional, Generator, Any
+    from typing import List, Optional
     from sqlalchemy.orm.session import Session
     from ..config import FractalConfig, DatabaseConfig
 

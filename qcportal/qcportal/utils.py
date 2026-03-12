@@ -376,6 +376,17 @@ def hash_dict(d: Dict[str, Any]) -> str:
     return sha256(j).hexdigest()
 
 
+def reshape_molecule(a: list) -> list[list[float]]:
+    """
+    Converts a flattened list with length N to a nested list of dimensions (N,3)
+    """
+
+    if len(a) % 3 != 0:
+        raise ValueError(f"Length of input list must be divisible by 3, got {len(a)}")
+
+    return [a[i : i + 3] for i in range(0, len(a), 3)]
+
+
 @contextmanager
 def capture_all_output(top_logger: str):
     """Captures all output, including stdout, stderr, and logging"""

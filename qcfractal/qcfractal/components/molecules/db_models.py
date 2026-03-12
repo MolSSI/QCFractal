@@ -72,12 +72,6 @@ class MoleculeORM(BaseORM):
 
     _qcportal_model_excludes = ["molecule_hash"]
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        d = BaseORM.model_dict(self, exclude)
-
-        # TODO - this is because the pydantic models are goofy
-        return {k: v for k, v in d.items() if v is not None}
-
     @classmethod
     def from_model(cls, model_data: dict | Molecule):
         """
@@ -96,7 +90,13 @@ class MoleculeORM(BaseORM):
             else:
                 molecule = model_data
 
-        mol_dict = molecule.model_dump(exclude={"id", "validated", "fix_com", "fix_orientation"}, exclude_none=True)
+        # mode="json" will flatten numpy arrays, etc
+        mol_dict = molecule.model_dump(
+            mode="json",
+            exclude={"id", "validated", "fix_com", "fix_orientation"},
+            exclude_none=True,
+            exclude_unset=True,
+        )
 
         # Build these quantities fresh from what is actually stored
         mol_dict["molecule_hash"] = model_data.get_hash()

@@ -33,7 +33,8 @@ def _msgpackext_decode(obj: Any) -> Any:
         if b"shape" in obj:
             arr.shape = obj[b"shape"]
 
-        return arr
+        # Convert to plain python lists (flattened)
+        return arr.ravel().tolist()
 
     return obj
 
