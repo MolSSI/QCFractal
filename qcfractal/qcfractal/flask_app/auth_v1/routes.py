@@ -7,6 +7,7 @@ from flask_jwt_extended import (
 )
 
 from qcfractal.flask_app import storage_socket
+from qcfractal.flask_app.decorators import no_permission_required
 from qcfractal.flask_app.auth_v1.blueprint import auth_v1
 from qcfractal.flask_app.helpers import (
     get_all_endpoints,
@@ -18,12 +19,14 @@ from qcfractal.flask_app.helpers import (
 
 
 @auth_v1.route("/login", methods=["POST"])
+@no_permission_required()
 def login():
     access_token, refresh_token = login_and_get_jwt(get_refresh_token=True)
     return jsonify(msg="Login succeeded!", access_token=access_token, refresh_token=refresh_token), 200
 
 
 @auth_v1.route("/session_login", methods=["POST"])
+@no_permission_required()
 def user_session_login():
     user_info = login_user_session()
     response = jsonify(
@@ -37,6 +40,7 @@ def user_session_login():
 
 
 @auth_v1.route("/session_logout", methods=["POST"])
+@no_permission_required()
 def user_session_logout():
     logout_user_session()
     response = jsonify(msg="Logout successful!")
@@ -44,6 +48,7 @@ def user_session_logout():
 
 
 @auth_v1.route("/refresh", methods=["POST"])
+@no_permission_required()
 @jwt_required(refresh=True)
 def refresh():
     user_id = get_jwt_identity()
@@ -59,6 +64,7 @@ def refresh():
 
 
 @auth_v1.route("/allowed", methods=["GET"])
+@no_permission_required()
 def get_allowed_actions():
     all_endpoints = get_all_endpoints()
     all_actions = {"READ", "WRITE", "DELETE"}
