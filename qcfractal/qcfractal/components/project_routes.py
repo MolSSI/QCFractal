@@ -2,7 +2,7 @@ from flask import g
 
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
-from qcfractal.flask_app.wrap_route import wrap_global_route
+from qcfractal.flask_app.decorators import check_permissions, serialization
 from qcportal.base_models import ProjURLParameters
 from qcportal.project_models import (
     ProjectAddBody,
@@ -19,19 +19,22 @@ from qcportal.project_models import (
 
 
 @api_v1.route("/projects", methods=["GET"])
-@wrap_global_route("projects", "read")
+@check_permissions("projects", "read")
+@serialization()
 def list_project_v1():
     return storage_socket.projects.list()
 
 
 @api_v1.route("/projects/<int:project_id>", methods=["GET"])
-@wrap_global_route("projects", "read")
+@check_permissions("projects", "read")
+@serialization()
 def get_project_v1(project_id: int, url_params: ProjURLParameters):
     return storage_socket.projects.get(project_id, url_params.include, url_params.exclude)
 
 
 @api_v1.route("/projects/query", methods=["POST"])
-@wrap_global_route("projects", "read")
+@check_permissions("projects", "read")
+@serialization()
 def query_general_project_v1(body_data: ProjectQueryModel):
     with storage_socket.session_scope(True) as session:
         project_id = storage_socket.projects.lookup_id(body_data.project_name, session=session)
@@ -39,7 +42,8 @@ def query_general_project_v1(body_data: ProjectQueryModel):
 
 
 @api_v1.route("/projects/<int:project_id>", methods=["DELETE"])
-@wrap_global_route("projects", "delete")
+@check_permissions("projects", "delete")
+@serialization()
 def delete_project_v1(project_id: int, url_params: ProjectDeleteParams):
     return storage_socket.projects.delete_project(
         project_id,
@@ -53,7 +57,8 @@ def delete_project_v1(project_id: int, url_params: ProjectDeleteParams):
 # Adding a project
 ########################
 @api_v1.route("/projects", methods=["POST"])
-@wrap_global_route("projects", "add")
+@check_permissions("projects", "add")
+@serialization()
 def add_project_v1(body_data: ProjectAddBody):
     return storage_socket.projects.add(
         name=body_data.name,
@@ -72,19 +77,22 @@ def add_project_v1(body_data: ProjectAddBody):
 # Getting info
 #########################
 @api_v1.route("/projects/<int:project_id>/status", methods=["GET"])
-@wrap_global_route("projects", "read")
+@check_permissions("projects", "read")
+@serialization()
 def get_project_status_v1(project_id: int):
     return storage_socket.projects.status(project_id)
 
 
 @api_v1.route("/projects/<int:project_id>/record_metadata", methods=["GET"])
-@wrap_global_route("projects", "read")
+@check_permissions("projects", "read")
+@serialization()
 def get_project_record_metadata_v1(project_id: int):
     return storage_socket.projects.get_record_metadata(project_id)
 
 
 @api_v1.route("/projects/<int:project_id>/dataset_metadata", methods=["GET"])
-@wrap_global_route("projects", "read")
+@check_permissions("projects", "read")
+@serialization()
 def get_project_dataset_metadata_v1(project_id: int):
     return storage_socket.projects.get_dataset_metadata(project_id)
 
@@ -93,7 +101,8 @@ def get_project_dataset_metadata_v1(project_id: int):
 # Datasets
 #########################
 @api_v1.route("/projects/<int:project_id>/datasets", methods=["POST"])
-@wrap_global_route("projects", "modify")
+@check_permissions("projects", "modify")
+@serialization()
 def add_project_dataset_v1(project_id: int, body_data: ProjectDatasetAddBody):
     return storage_socket.projects.add_dataset(
         project_id=project_id,
@@ -112,7 +121,8 @@ def add_project_dataset_v1(project_id: int, body_data: ProjectDatasetAddBody):
 
 
 @api_v1.route("/projects/<int:project_id>/datasets/link", methods=["POST"])
-@wrap_global_route("projects", "modify")
+@check_permissions("projects", "modify")
+@serialization()
 def project_link_dataset_v1(project_id: int, body_data: ProjectLinkDatasetBody):
     return storage_socket.projects.link_dataset(
         project_id=project_id,
@@ -125,7 +135,8 @@ def project_link_dataset_v1(project_id: int, body_data: ProjectLinkDatasetBody):
 
 
 @api_v1.route("/projects/<int:project_id>/datasets/unlink", methods=["POST"])
-@wrap_global_route("projects", "modify")
+@check_permissions("projects", "modify")
+@serialization()
 def project_unlink_datasets_v1(project_id: int, body_data: ProjectUnlinkDatasetsBody):
     return storage_socket.projects.unlink_datasets(
         project_id=project_id,
@@ -136,7 +147,8 @@ def project_unlink_datasets_v1(project_id: int, body_data: ProjectUnlinkDatasets
 
 
 @api_v1.route("/projects/<int:project_id>/datasets/<int:dataset_id>", methods=["GET"])
-@wrap_global_route("projects", "read")
+@check_permissions("projects", "read")
+@serialization()
 def get_project_dataset_v1(project_id: int, dataset_id: int):
     return storage_socket.projects.get_dataset(project_id, dataset_id)
 
@@ -145,7 +157,8 @@ def get_project_dataset_v1(project_id: int, dataset_id: int):
 # Records
 #########################
 @api_v1.route("/projects/<int:project_id>/records", methods=["POST"])
-@wrap_global_route("projects", "modify")
+@check_permissions("projects", "modify")
+@serialization()
 def add_project_record_v1(project_id: int, body_data: ProjectRecordAddBody):
     return storage_socket.projects.add_record(
         project_id,
@@ -161,7 +174,8 @@ def add_project_record_v1(project_id: int, body_data: ProjectRecordAddBody):
 
 
 @api_v1.route("/projects/<int:project_id>/records/import", methods=["POST"])
-@wrap_global_route("projects", "modify")
+@check_permissions("projects", "modify")
+@serialization()
 def import_project_record_v1(project_id: int, body_data: ProjectRecordImportBody):
     return storage_socket.projects.import_record(
         project_id,
@@ -174,7 +188,8 @@ def import_project_record_v1(project_id: int, body_data: ProjectRecordImportBody
 
 
 @api_v1.route("/projects/<int:project_id>/records/link", methods=["POST"])
-@wrap_global_route("projects", "modify")
+@check_permissions("projects", "modify")
+@serialization()
 def project_link_record_v1(project_id: int, body_data: ProjectLinkRecordBody):
     return storage_socket.projects.link_record(
         project_id=project_id,
@@ -186,7 +201,8 @@ def project_link_record_v1(project_id: int, body_data: ProjectLinkRecordBody):
 
 
 @api_v1.route("/projects/<int:project_id>/records/unlink", methods=["POST"])
-@wrap_global_route("projects", "modify")
+@check_permissions("projects", "modify")
+@serialization()
 def project_unlink_records_v1(project_id: int, body_data: ProjectUnlinkRecordsBody):
     return storage_socket.projects.unlink_records(
         project_id=project_id,
@@ -196,7 +212,8 @@ def project_unlink_records_v1(project_id: int, body_data: ProjectUnlinkRecordsBo
 
 
 @api_v1.route("/projects/<int:project_id>/records/<int:record_id>", methods=["GET"])
-@wrap_global_route("projects", "read")
+@check_permissions("projects", "read")
+@serialization()
 def get_project_record_v1(project_id: int, record_id: int, url_params: ProjURLParameters):
     return storage_socket.projects.get_record(
         project_id, record_id, include=url_params.include, exclude=url_params.exclude
@@ -207,7 +224,8 @@ def get_project_record_v1(project_id: int, record_id: int, url_params: ProjURLPa
 # Modifying metadata
 #########################
 # @api_v1.route("/projects/<string:project_type>/<int:project_id>", methods=["PATCH"])
-# @wrap_global_route("projects", "modify")
+# @check_permissions("projects", "modify")
+@serialization()
 # def modify_project_metadata_v1(project_type: str, project_id: int, body_data: DatasetModifyMetadata):
 #    ds_socket = storage_socket.projects.get_socket(project_type)
 #    return ds_socket.update_metadata(project_id, new_metadata=body_data)
@@ -217,12 +235,14 @@ def get_project_record_v1(project_id: int, record_id: int, url_params: ProjURLPa
 # Attachments
 #################################
 @api_v1.route("/projects/<int:project_id>/attachments", methods=["GET"])
-@wrap_global_route("projects", "read")
+@check_permissions("projects", "read")
+@serialization()
 def fetch_project_attachments_v1(project_id: int):
     return storage_socket.projects.get_attachments(project_id)
 
 
 @api_v1.route("/projects/<int:project_id>/attachments/<int:attachment_id>", methods=["DELETE"])
-@wrap_global_route("projects", "modify")
+@check_permissions("projects", "modify")
+@serialization()
 def delete_project_attachment_v1(project_id: int, attachment_id: int):
     return storage_socket.projects.delete_attachment(project_id, attachment_id)

@@ -3,7 +3,7 @@ from flask import current_app
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
 from qcfractal.flask_app.compute_v1.blueprint import compute_v1
-from qcfractal.flask_app.wrap_route import wrap_global_route
+from qcfractal.flask_app.decorators import check_permissions, serialization
 from qcportal.base_models import CommonBulkGetNamesBody
 from qcportal.exceptions import LimitExceededError
 from qcportal.managers import (
@@ -22,7 +22,8 @@ from qcportal.utils import calculate_limit
 
 
 @compute_v1.route("/managers", methods=["POST"])
-@wrap_global_route("managers", "add")
+@check_permissions("managers", "add")
+@serialization()
 def activate_manager_v1(body_data: ManagerActivationBody):
     return storage_socket.managers.activate(
         name_data=body_data.name_data,
@@ -34,7 +35,8 @@ def activate_manager_v1(body_data: ManagerActivationBody):
 
 
 @compute_v1.route("/managers/<string:name>", methods=["PATCH"])
-@wrap_global_route("managers", "modify")
+@check_permissions("managers", "modify")
+@serialization()
 def update_manager_v1(name: str, body_data: ManagerUpdateBody):
     # This endpoint is used for heartbeats and deactivation
 
@@ -58,13 +60,15 @@ def update_manager_v1(name: str, body_data: ManagerUpdateBody):
 
 
 @api_v1.route("/managers/<string:name>", methods=["GET"])
-@wrap_global_route("managers", "read")
+@check_permissions("managers", "read")
+@serialization()
 def get_managers_v1(name: str):
     return storage_socket.managers.get([name])[0]
 
 
 @api_v1.route("/managers/bulkGet", methods=["POST"])
-@wrap_global_route("managers", "read")
+@check_permissions("managers", "read")
+@serialization()
 def bulk_get_managers_v1(body_data: CommonBulkGetNamesBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_managers
     if len(body_data.names) > limit:
@@ -74,13 +78,15 @@ def bulk_get_managers_v1(body_data: CommonBulkGetNamesBody):
 
 
 @api_v1.route("/managers/<string:name>/log", methods=["GET"])
-@wrap_global_route("managers", "read")
+@check_permissions("managers", "read")
+@serialization()
 def get_manager_log_v1(name: str):
     return storage_socket.managers.get_log(name)
 
 
 @api_v1.route("/managers/query", methods=["POST"])
-@wrap_global_route("managers", "read")
+@check_permissions("managers", "read")
+@serialization()
 def query_managers_v1(body_data: ManagerQueryFilters):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_managers
     body_data.limit = calculate_limit(max_limit, body_data.limit)
@@ -89,6 +95,7 @@ def query_managers_v1(body_data: ManagerQueryFilters):
 
 
 @api_v1.route("/managers/queryActive", methods=["POST"])
-@wrap_global_route("managers", "read")
+@check_permissions("managers", "read")
+@serialization()
 def query_active_managers_v1(body_data: ManagerQueryAvailableFilters):
     return storage_socket.managers.query_active(body_data.compute_tag, body_data.programs)
