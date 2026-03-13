@@ -11,6 +11,7 @@ from qcportal.exceptions import AuthenticationFailure, AuthorizationFailure
 from qcportal.utils import now_at_utc
 from .db_models import UserORM, UserSessionORM
 from .permission_evaluation import evaluate_global_permissions
+from .role_permissions import AuthorizedEnum
 
 if TYPE_CHECKING:
     import datetime
@@ -67,13 +68,15 @@ class AuthSocket:
             user_info = user_orm.to_model(UserInfo)
             return user_info
 
-    def assert_global_permission(self, role: Optional[str], resource: str, action: str, require_security: bool):
+    def check_global_permission(
+        self, role: Optional[str], resource: str, action: str, require_security: bool
+    ) -> AuthorizedEnum:
         # Some endpoints require security to be enabled
         if not self.security_enabled:
             if require_security:
                 raise AuthorizationFailure(f"Cannot access '{resource}' with security disabled")
             else:
-                return
+                return AuthorizedEnum.Allow
 
         # Use anonymous role if no role is given
         if role is None:
@@ -83,12 +86,7 @@ class AuthSocket:
         if role == "anonymous" and not self.allow_unauthenticated_read:
             raise AuthenticationFailure("Server requires login")
 
-        allowed = evaluate_global_permissions(role, resource, action)
-
-        if not allowed:
-            raise AuthorizationFailure(
-                f"Role '{role}' is not authorized to use action '{action}' on resource '{resource}'"
-            )
+        return evaluate_global_permissions(role, resource, action)
 
     def allowed_actions(self, subject: Any, resources: Any, actions: Any, policies: Any) -> List[Tuple[str, str]]:
         raise NotImplementedError("TODO")
