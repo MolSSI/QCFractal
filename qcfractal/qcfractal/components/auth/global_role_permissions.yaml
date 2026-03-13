@@ -1,0 +1,122 @@
+admin:
+  "*":
+    "*": Allow
+maintain:
+  information:
+    read: Allow
+    modify: Allow
+  me:
+    read: Allow
+    modify: Allow
+  users:
+    read: Allow
+    modify: Allow
+  groups:
+    "*": Allow
+  access_log:
+    "*": Allow
+  server_errors:
+    "*": Allow
+  internal_jobs:
+    "*": Allow
+  managers:
+    read: Allow
+  records:
+    "*": Allow
+  datasets:
+    "*": Allow
+  projects:
+    "*": Allow
+monitor:
+  information:
+    read: Allow
+  me:
+    read: Allow
+    modify: Allow
+  users: # TODO DEPRECATE
+    read: Allow
+    modify: Allow
+  managers:
+    read: Allow
+  records:
+    read: Allow
+  datasets:
+    read: Allow
+  projects:
+    read: Allow
+  access_log:
+    read: Allow
+  server_errors:
+    read: Allow
+  internal_jobs:
+    read: Allow
+submit:
+  information:
+    read: Allow
+  me:
+    read: Allow
+    modify: Allow
+  users: # TODO DEPRECATE
+    read: Allow
+    modify: Allow
+  managers:
+    read: Allow
+  records:
+    read: Allow
+    add: Allow
+    modify: Allow
+    delete: Allow
+  datasets:
+    read: Allow
+    add: Allow
+    modify: Allow
+    delete: Allow
+    create_view: Allow
+  projects:
+    read: Allow
+    add: Allow
+    modify: Allow
+    delete: Allow
+read:
+  information:
+    read: Allow
+  me:
+    read: Allow
+    modify: Allow
+  users: # TODO DEPRECATE
+    read: Allow
+    modify: Allow
+  managers:
+    read: Allow
+  records:
+    read: Allow
+  datasets:
+    read: Allow
+  projects:
+    read: Allow
+anonymous:
+  information:
+    read: Allow
+  managers:
+    read: Allow
+  records:
+    read: Allow
+  datasets:
+    read: Allow
+  projects:
+    read: Allow
+compute:
+  information:
+    read: Allow
+  me:
+    read: Allow
+    modify: Allow
+  managers:
+    add: Allow
+    modify: Allow
+  tasks:
+    claim: Allow
+    return: Allow
+  users: # TODO DEPRECATE
+    read: Allow
+    modify: Allow
