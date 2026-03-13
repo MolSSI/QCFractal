@@ -2,7 +2,7 @@ from flask import current_app
 
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.compute_v1.blueprint import compute_v1
-from qcfractal.flask_app.wrap_route import wrap_global_route
+from qcfractal.flask_app.decorators import check_permissions, serialization
 from qcportal.exceptions import LimitExceededError
 from qcportal.tasks import TaskClaimBody, TaskReturnBody
 from qcportal.utils import calculate_limit
@@ -11,7 +11,8 @@ from qcportal.utils import calculate_limit
 # WRITE action is not a mistake. Claim does some changes to the DB, so require
 # a bit more than read
 @compute_v1.route("/tasks/claim", methods=["POST"])
-@wrap_global_route("tasks", "claim")
+@check_permissions("tasks", "claim")
+@serialization()
 def claim_tasks_v1(body_data: TaskClaimBody):
     """Claims tasks from the task queue"""
 
@@ -27,7 +28,8 @@ def claim_tasks_v1(body_data: TaskClaimBody):
 
 
 @compute_v1.route("/tasks/return", methods=["POST"])
-@wrap_global_route("tasks", "return")
+@check_permissions("tasks", "return")
+@serialization()
 def return_tasks_v1(body_data: TaskReturnBody):
     """Return finished tasks"""
 
