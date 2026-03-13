@@ -6,8 +6,11 @@ from functools import wraps
 from flask import current_app, request, g, Response
 from werkzeug.exceptions import BadRequest
 
+from qcfractal.components.auth import AuthorizedEnum
+from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.flask_app import storage_socket
 from qcportal.serialization import deserialize, serialize
+from qcportal.exceptions import AuthorizationFailure
 
 
 def get_file_extension(filename, allowed_extensions):
@@ -67,7 +70,18 @@ def wrap_global_route(
     def decorate(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
-            storage_socket.auth.assert_global_permission(g.role, requested_resource, requested_action, require_security)
+            allowed = storage_socket.auth.check_global_permission(
+                g.role, requested_resource, requested_action, require_security
+            )
+
+            if allowed not in (AuthorizedEnum.Allow, AuthorizedEnum.Conditional):
+                raise AuthorizationFailure(
+                    f"Role '{g.role}' is not authorized to use action '{requested_action}' "
+                    " on resource '{requested_resource}'"
+                )
+
+            # Store whether this is allowed or conditionally allowed (additional checks required)
+            g.permission_level = allowed
 
             ##################################################################
             # If we got here, then the user is allowed access to this endpoint
@@ -149,7 +163,15 @@ def wrap_global_route(
 
             # Now call the function, and validate the output
             try:
-                ret = fn(*args, **kwargs)
+                # If the function contains a "session" or "ro_session" argument, supply that
+                if annotations.get("session", None) == SQLAlchemySocket:
+                    with storage_socket.session_scope() as session:
+                        ret = fn(*args, **kwargs, session=session)
+                elif annotations.get("ro_session", None) == SQLAlchemySocket:
+                    with storage_socket.session_scope(read_only=True) as session:
+                        ret = fn(*args, **kwargs, ro_session=session)
+                else:
+                    ret = fn(*args, **kwargs)
             finally:
                 if temp_dir is not None:
                     shutil.rmtree(temp_dir)
