@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import importlib
 import logging
 import queue
 from typing import TYPE_CHECKING
@@ -13,7 +12,6 @@ from werkzeug.routing import IntegerConverter
 
 from .flask_session import QCFFlaskSessionInterface
 from .flask_socket import FlaskStorageSocket
-from .home_v1 import home_v1
 from ..db_socket import SQLAlchemySocket
 
 if TYPE_CHECKING:
@@ -89,22 +87,30 @@ def create_flask_app(qcfractal_config: FractalConfig, finished_queue: Optional[q
     app.session_interface = QCFFlaskSessionInterface(app)
 
     # Registers the various error and before/after request handlers
-    importlib.import_module("qcfractal.flask_app.handlers")
+    from . import handlers
 
     # Register all the routes in the other files.
     # Must be done before registering the blueprint
-    importlib.import_module("qcfractal.flask_app.api_v1.routes")
-    importlib.import_module("qcfractal.flask_app.auth_v1.routes")
-    importlib.import_module("qcfractal.flask_app.compute_v1.routes")
-    importlib.import_module("qcfractal.components.register_all")
+    from .api_v1 import routes
+    from .auth_v1 import routes
+    from .compute_v1 import routes
+    from ..components import register_all
 
-    from .auth_v1.blueprint import auth_v1
+    from .home_v1 import home_v1
     from .api_v1.blueprint import api_v1
+    from .auth_v1.blueprint import auth_v1
     from .compute_v1.blueprint import compute_v1
 
     app.register_blueprint(home_v1)
     app.register_blueprint(api_v1)
     app.register_blueprint(auth_v1)
     app.register_blueprint(compute_v1)
+
+    # Check through all registered routes to ensure they have permission checks
+    for endpoint, view in app.view_functions.items():
+        if endpoint == "static":
+            continue
+        if not hasattr(view, '_has_permission_check'):
+            raise RuntimeError(f"Route {endpoint} does not have permission check")
 
     return app
