@@ -441,7 +441,7 @@ class ProjectSocket:
             r = session.execute(stmt).scalar_one_or_none()
 
             if r is None:
-                raise ValueError(f"Dataset {dataset_id} already linked to project {project_id}")
+                raise AlreadyExistsError(f"Dataset {dataset_id} already linked to project {project_id}")
 
     def unlink_datasets(
         self,
@@ -633,7 +633,7 @@ class ProjectSocket:
             r = session.execute(stmt).scalar_one_or_none()
 
             if r is None:
-                raise ValueError(f"Record {record_id} already linked to project {project_id}")
+                raise AlreadyExistsError(f"Record {record_id} already linked to project {project_id}")
 
     def unlink_records(
         self, project_id: int, record_ids: Iterable[int], delete_records: bool, *, session: Optional[Session] = None
