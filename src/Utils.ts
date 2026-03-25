@@ -10,15 +10,15 @@ export const parseToDate = (isoString?: string): Date | undefined => {
   return new Date(trimmed);
 };
 
-export const getRecordReprMolecule = (record: RecordData): Molecule => {
+export const getRecordReprMolecule = (record: RecordData): Molecule | undefined => {
   if (record.record_type == "singlepoint") return record.molecule_id;
   if (record.record_type == "optimization") return record.initial_molecule_id;
   if (record.record_type == "torsiondrive")
-    return record.initial_molecules_id[0];
+    return record.initial_molecules_id![0];
   if (record.record_type == "gridoptimization")
     return record.initial_molecule_id;
   if (record.record_type == "manybody") return record.initial_molecule_id;
-  if (record.record_type == "neb") return record.initial_chain[0];
+  if (record.record_type == "neb") return record.initial_chain![0];
   if (record.record_type === "reaction") return undefined;
 
   throw new Error(`Unknown or unhandled record type: ${record.record_type}`);
