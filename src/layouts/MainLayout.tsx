@@ -23,7 +23,7 @@ function MainLayout() {
           <IconButton
             color="inherit"
             edge="start"
-            onClick={() => setMobileOpen(true)}
+            onClick={() => setMobileOpen((prev) => !prev)}
             aria-label="open navigation menu"
           >
             <MenuIcon />
