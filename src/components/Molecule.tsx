@@ -24,30 +24,27 @@ function MoleculeStageProvider({
   children,
 }: MoleculeStageProviderProps) {
   const stageElementRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<Stage | null>(null);
-  const [isReady, setIsReady] = useState(false);
+  const [stage, setStage] = useState<Stage | null>(null);
 
   useEffect(() => {
-    if (stageElementRef.current && !stageRef.current) {
-      stageRef.current = new Stage(stageElementRef.current, {
-        backgroundColor: "white",
-      });
-      setIsReady(true);
+    const newStage = new Stage(stageElementRef.current!, {
+      backgroundColor: "white",
+    });
+    setStage(newStage);
 
-      const handleResize = () => stageRef.current!.handleResize();
-      window.addEventListener("resize", handleResize);
-      return () => {
-        window.removeEventListener("resize", handleResize);
-        stageRef.current!.dispose();
-      };
-    }
+    const handleResize = () => newStage.handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      newStage.dispose();
+    };
   }, []);
 
   return (
     <>
       <div ref={stageElementRef} style={{ width, height }} />
-      {isReady && (
-        <StageContext.Provider value={stageRef.current!}>
+      {stage && (
+        <StageContext.Provider value={stage}>
           {children}
         </StageContext.Provider>
       )}

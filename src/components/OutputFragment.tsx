@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { usePortalClient } from "../PortalClient.tsx";
 import {
   Box,
@@ -39,6 +39,14 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
       ),
   });
 
+  // Extract keys from fetched data
+  const outputKeys = React.useMemo(() => {
+    return outputKeysData ? Object.keys(outputKeysData) : [];
+  }, [outputKeysData]);
+
+  // Derive effective key: user selection or first available key
+  const effectiveKey = selectedKey ?? outputKeys[0] ?? null;
+
   const {
     status: outputContentStatus,
     data: outputContentData,
@@ -49,27 +57,15 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
       recordType,
       recordId,
       computeHistoryId,
-      selectedKey,
+      effectiveKey,
     ],
     queryFn: () =>
       makeRequest<string>(
         "GET",
-        `/api/v1/records/${recordType}/${recordId}/compute_history/${computeHistoryId}/outputs/${selectedKey}/uncompressed_data`,
+        `/api/v1/records/${recordType}/${recordId}/compute_history/${computeHistoryId}/outputs/${effectiveKey}/uncompressed_data`,
       ),
-    enabled: !!selectedKey,
+    enabled: !!effectiveKey,
   });
-
-  // Extract keys from fetched data
-  const outputKeys = React.useMemo(() => {
-    return outputKeysData ? Object.keys(outputKeysData) : [];
-  }, [outputKeysData]);
-
-  // Automatically select the first key when keys are fetched
-  useEffect(() => {
-    if (outputKeys.length > 0 && selectedKey === null) {
-      setSelectedKey(outputKeys[0]);
-    }
-  }, [outputKeys, selectedKey]);
 
   return (
     <>
@@ -85,7 +81,7 @@ const OutputFragment: React.FC<OutputFragmentProps> = ({
           <Grid size={{ xs: 3 }}>
             <Tabs
               orientation="vertical"
-              value={selectedKey || outputKeys[0] || false}
+              value={effectiveKey || false}
               onChange={(_event, newValue) => setSelectedKey(newValue)}
               sx={{ borderRight: 1, borderColor: "divider" }}
             >
