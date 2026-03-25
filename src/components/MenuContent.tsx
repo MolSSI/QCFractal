@@ -26,12 +26,17 @@ const secondaryListItems = [
   { text: "Feedback", icon: <HelpRoundedIcon /> },
 ];
 
-export default function MenuContent() {
+interface MenuContentProps {
+  onNavigate?: () => void;
+}
+
+export default function MenuContent({ onNavigate }: MenuContentProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleClick = (path: string) => {
     navigate(path);
+    onNavigate?.();
   };
 
   return (

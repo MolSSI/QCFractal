@@ -1,13 +1,41 @@
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { alpha } from "@mui/material/styles";
 import SideMenu from "../components/SideMenu";
-import { Box, Stack } from "@mui/material";
+import { AppBar, Box, IconButton, Stack, Toolbar } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 import Header from "../components/Header";
 
 function MainLayout() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
     <Box sx={{ display: "flex", height: "100vh" }}>
-      <SideMenu />
+      {/* Mobile top AppBar with hamburger button */}
+      <AppBar
+        position="fixed"
+        sx={{
+          display: { xs: "flex", md: "none" },
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+        }}
+      >
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            edge="start"
+            onClick={() => setMobileOpen((prev) => !prev)}
+            aria-label="open navigation menu"
+          >
+            <MenuIcon />
+          </IconButton>
+        </Toolbar>
+      </AppBar>
+
+      <SideMenu
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
+
       <Box
         component="main"
         sx={(theme) => ({
