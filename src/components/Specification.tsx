@@ -5,7 +5,7 @@ const isEmpty = (value: any) =>
   (typeof value === "object" && Object.keys(value).length === 0);
 
 const Specification = ({ data }: { data: Record<string, any> }) => {
-  const renderList = (obj: any): JSX.Element => {
+  const renderList = (obj: any) => {
     if (typeof obj !== "object" || obj === null) {
       return <>{String(obj)}</>;
     }

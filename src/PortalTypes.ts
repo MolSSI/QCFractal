@@ -176,6 +176,11 @@ export type RecordData = {
     keywords: Record<string, unknown>;
   };
   properties: Record<string, unknown>;
+  // Record-type-specific molecule fields
+  molecule_id?: Molecule;
+  initial_molecule_id?: Molecule;
+  initial_molecules_id?: Molecule[];
+  initial_chain?: Molecule[];
 };
 
 
