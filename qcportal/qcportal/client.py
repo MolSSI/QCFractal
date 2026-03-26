@@ -3090,15 +3090,22 @@ class PortalClient(PortalClientBase):
         """
 
         if username_or_id is None:
+            if self.username is None:
+                raise RuntimeError("Cannot get user - not logged in?")
             username_or_id = self.username
 
         if isinstance(username_or_id, str):
             is_valid_username(username_or_id)
 
-        if username_or_id is None:
-            raise RuntimeError("Cannot get user - not logged in?")
+        if isinstance(username_or_id, int):
+            is_me = username_or_id == self.user_id
+        else:
+            is_me = username_or_id == self.username
 
-        return self.make_request("get", f"api/v1/users/{username_or_id}", UserInfo)
+        if is_me:
+            return self.make_request("get", f"api/v1/me", UserInfo)
+        else:
+            return self.make_request("get", f"api/v1/users/{username_or_id}", UserInfo)
 
     def add_user(self, user_info: UserInfo, password: Optional[str] = None) -> str:
         """
@@ -3147,7 +3154,12 @@ class PortalClient(PortalClientBase):
             The updated user information as it appears on the server
         """
 
-        return self.make_request("patch", f"api/v1/users", UserInfo, body=user_info)
+        is_me = (user_info.id == self.user_id and user_info.username == self.username)
+
+        if is_me:
+            return self.make_request("patch", f"api/v1/me", UserInfo, body=user_info)
+        else:
+            return self.make_request("patch", f"api/v1/users", UserInfo, body=user_info)
 
     def change_user_password(
         self, username_or_id: Optional[Union[int, str]] = None, new_password: Optional[str] = None
@@ -3173,20 +3185,30 @@ class PortalClient(PortalClientBase):
         """
 
         if username_or_id is None:
+            if self.username is None:
+                raise RuntimeError("Cannot get user - not logged in?")
             username_or_id = self.username
 
-        if username_or_id is None:
-            raise RuntimeError("Cannot change user - not logged in?")
 
-        if not isinstance(username_or_id, int):
+        if isinstance(username_or_id, str):
             is_valid_username(username_or_id)
 
         if new_password is not None:
             is_valid_password(new_password)
 
-        return self.make_request(
-            "put", f"api/v1/users/{username_or_id}/password", str, body_model=Optional[str], body=new_password
+        if isinstance(username_or_id, int):
+            is_me = username_or_id == self.user_id
+        else:
+            is_me = username_or_id == self.username
+
+        if is_me:
+            return self.make_request(
+            "put", f"api/v1/me/password", str, body_model=Optional[str], body=new_password
         )
+        else:
+            return self.make_request(
+                "put", f"api/v1/users/{username_or_id}/password", str, body_model=Optional[str], body=new_password
+            )
 
     def delete_user(self, username_or_id: Union[int, str]) -> None:
         """
