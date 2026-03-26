@@ -182,8 +182,30 @@ class QCATestingSnowflake(FractalSnowflake):
             storage.groups.add(GroupInfo(groupname=g))
 
         for k, v in test_users.items():
-            uinfo = UserInfo(username=k, enabled=True, **v["info"])
+            uinfo = UserInfo(username=k, **v["info"])
             storage.users.add(uinfo, password=v["pw"])
+
+    @staticmethod
+    def get_test_usernames():
+        return list(test_users.keys())
+
+    @staticmethod
+    def get_test_user_info(username: str) -> UserInfo:
+        return UserInfo(username=username, **test_users[username]["info"])
+
+    @staticmethod
+    def get_test_user_password(username: str):
+        return test_users[username]["pw"]
+
+    @staticmethod
+    def get_test_user_by_role(role: str) -> UserInfo:
+        for k, v in test_users.items():
+            if v["info"]["role"] == role:
+                return UserInfo(username=k, **v["info"])
+        raise ValueError(f"No test user with role '{role}' found")
+
+    def user_client(self, username: str):
+        return self.client(username=username, password=self.get_test_user_password(username))
 
     def reset(self):
         self._stop_job_runner()
