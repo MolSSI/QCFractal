@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from qcarchivetesting.helpers import test_users
+
 from qcportal import PortalRequestError
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
@@ -11,7 +11,7 @@ from qcportal.utils import now_at_utc
 @pytest.fixture(scope="function")
 def dataset_submit_test_client(secure_snowflake):
     secure_snowflake.start_job_runner()
-    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    client = secure_snowflake.user_client("submit_user")
     yield client
 
 

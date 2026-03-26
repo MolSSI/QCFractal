@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import pytest
 
-from qcarchivetesting import test_users
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.components.optimization.testing_helpers import (
     run_procedure_data as run_opt_procedure_data,
@@ -106,7 +105,7 @@ def test_record_client_query_parents_children(snowflake: QCATestingSnowflake):
 def test_record_client_add_comment(secure_snowflake: QCATestingSnowflake):
     storage_socket = secure_snowflake.get_storage_socket()
 
-    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
+    client = secure_snowflake.user_client("admin_user")
 
     id1, _ = submit_sp_procedure_data(storage_socket, "sp_psi4_benzene_energy_1")
     id2, _ = submit_sp_procedure_data(storage_socket, "sp_psi4_benzene_energy_2")
@@ -299,8 +298,8 @@ def test_record_client_modify_service(snowflake: QCATestingSnowflake):
 
 
 def test_record_client_query_owner(secure_snowflake: QCATestingSnowflake):
-    submit_client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
-    admin_client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
+    submit_client = secure_snowflake.user_client("submit_user")
+    admin_client = secure_snowflake.user_client("admin_user")
 
     submit_uid = submit_client.get_user().id
 
