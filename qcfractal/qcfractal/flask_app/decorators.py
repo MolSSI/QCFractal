@@ -100,7 +100,7 @@ def check_permissions(
             if allowed not in (AuthorizedEnum.Allow, AuthorizedEnum.Conditional):
                 raise AuthorizationFailure(
                     f"Role '{g.role}' is not authorized to use action '{requested_action}' "
-                    " on resource '{requested_resource}'"
+                    f" on resource '{requested_resource}'"
                 )
 
             # Store whether this is allowed or conditionally allowed (additional checks required)
@@ -117,6 +117,7 @@ def check_permissions(
             return r
 
         wrapper._has_permission_check = True
+        wrapper._permissions_required = (requested_resource, requested_action)
         return wrapper
 
     return decorate
