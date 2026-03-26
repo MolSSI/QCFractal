@@ -110,7 +110,7 @@ def create_flask_app(qcfractal_config: FractalConfig, finished_queue: Optional[q
     for endpoint, view in app.view_functions.items():
         if endpoint == "static":
             continue
-        if not hasattr(view, '_has_permission_check'):
+        if not hasattr(view, "_has_permission_check"):
             raise RuntimeError(f"Route {endpoint} does not have permission check")
 
     return app
