@@ -324,7 +324,7 @@ def test_user_client_get_set_preferences(secure_snowflake: QCATestingSnowflake):
 def test_user_client_set_preferences_self_me(secure_snowflake: QCATestingSnowflake):
     # Similar to above, but using the /me endpoint
 
-    client = secure_snowflake.client("read_user", test_users["read_user"]["pw"])
+    client = secure_snowflake.user_client("read_user")
 
     prefs = {"favorites": [4, 5, 2], "mode": "dark"}
 

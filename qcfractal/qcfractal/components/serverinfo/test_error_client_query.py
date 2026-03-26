@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pytest
 
-from qcarchivetesting import test_users
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcportal import PortalClient
 
@@ -32,7 +31,7 @@ def queryable_error_client(postgres_server, pytestconfig):
                         }
                         storage_socket.serverinfo.save_error(error, session=session)
 
-        yield server.client("admin_user", test_users["admin_user"]["pw"])
+        yield server.user_client("admin_user")
 
 
 def test_serverinfo_client_query_error(queryable_error_client: PortalClient):
