@@ -3,7 +3,6 @@ import time
 import jwt
 import pytest
 
-from qcarchivetesting import test_users
 from qcarchivetesting.testing_classes import (
     QCATestingSnowflake,
 )
@@ -12,15 +11,15 @@ from qcportal.exceptions import AuthenticationFailure
 
 @pytest.mark.slow
 def test_jwt_refresh(secure_snowflake):
-    client = secure_snowflake.client("submit_user", password=test_users["submit_user"]["pw"])
+    client = secure_snowflake.user_client("submit_user")
     time.sleep(client._jwt_access_exp - time.time() + 1)
     client.list_datasets()
 
 
 @pytest.mark.slow
 def test_jwt_refresh_user_newrole(secure_snowflake):
-    admin_client = secure_snowflake.client("admin_user", password=test_users["admin_user"]["pw"])
-    client = secure_snowflake.client("submit_user", password=test_users["submit_user"]["pw"])
+    admin_client = secure_snowflake.user_client("admin_user")
+    client = secure_snowflake.user_client("submit_user")
 
     submit_info = client.get_user()
     assert submit_info.role == "submit"
@@ -40,8 +39,8 @@ def test_jwt_refresh_user_newrole(secure_snowflake):
 
 @pytest.mark.slow
 def test_jwt_refresh_user_disabled(secure_snowflake):
-    admin_client = secure_snowflake.client("admin_user", password=test_users["admin_user"]["pw"])
-    client = secure_snowflake.client("submit_user", password=test_users["submit_user"]["pw"])
+    admin_client = secure_snowflake.user_client("admin_user")
+    client = secure_snowflake.user_client("submit_user")
 
     uinfo = admin_client.get_user("submit_user")
     uinfo.enabled = False
@@ -68,8 +67,8 @@ def test_jwt_refresh_user_deleted(postgres_server, pytestconfig):
         allow_unauthenticated_read=False,
         log_access=False,
     ) as snowflake:
-        admin_client = snowflake.client("admin_user", password=test_users["admin_user"]["pw"])
-        client = snowflake.client("submit_user", password=test_users["submit_user"]["pw"])
+        admin_client = snowflake.user_client("admin_user")
+        client = snowflake.user_client("submit_user")
 
         admin_client.delete_user("submit_user")
         time.sleep(client._jwt_access_exp - time.time() + 1)

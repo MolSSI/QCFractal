@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcarchivetesting import test_users
 from qcfractal.components.internal_jobs.socket import InternalJobSocket
 from qcportal import PortalRequestError
 from qcportal.internal_jobs import InternalJobStatusEnum
@@ -165,7 +164,7 @@ def test_internal_jobs_client_delete_running(snowflake: QCATestingSnowflake):
 
 
 def test_internal_jobs_client_query(secure_snowflake: QCATestingSnowflake):
-    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
+    client = secure_snowflake.user_client("admin_user")
     storage_socket = secure_snowflake.get_storage_socket()
 
     read_id = client.get_user("read_user").id

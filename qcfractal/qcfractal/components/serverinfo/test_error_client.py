@@ -2,7 +2,6 @@ from __future__ import annotations, annotations
 
 from typing import TYPE_CHECKING
 
-from qcarchivetesting import test_users
 from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
@@ -10,7 +9,7 @@ if TYPE_CHECKING:
 
 
 def test_serverinfo_client_delete_error(secure_snowflake: QCATestingSnowflake):
-    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
+    client = secure_snowflake.user_client("admin_user")
     storage_socket = secure_snowflake.get_storage_socket()
 
     admin_id = client.get_user("admin_user").id

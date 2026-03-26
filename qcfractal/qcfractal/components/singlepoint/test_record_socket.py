@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from qcarchivetesting import load_molecule_data, test_users
+
+from qcarchivetesting import load_molecule_data
 from qcfractal.components.testing_helpers import convert_to_plain_qcschema_result
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.record_models import RecordStatusEnum, PriorityEnum, RecordTask
 from qcportal.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols, compare_singlepoint_records
 from qcportal.utils import now_at_utc
-
 from .record_db_models import SinglepointRecordORM
 from .testing_helpers import test_specs, load_procedure_data, load_record_data, run_procedure_data
 from ..record_utils import build_extras_properties
@@ -313,7 +313,7 @@ def test_singlepoint_socket_insert_full_schema_v1(secure_snowflake: QCATestingSn
     ]
 
     storage_socket = secure_snowflake.get_storage_socket()
-    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    client = secure_snowflake.user_client("submit_user")
     user_id = client.get_user().id
 
     all_ids = []
@@ -363,7 +363,7 @@ def test_singlepoint_socket_insert_full_qcportal_record(secure_snowflake: QCATes
     ]
 
     storage_socket = secure_snowflake.get_storage_socket()
-    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    client = secure_snowflake.user_client("submit_user")
     user_id = client.get_user().id
 
     for test_name in test_names:

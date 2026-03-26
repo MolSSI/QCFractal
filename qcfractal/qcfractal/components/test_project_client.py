@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcarchivetesting.helpers import test_users, read_record_data
+from qcarchivetesting.helpers import read_record_data
 from qcfractal.components.singlepoint.testing_helpers import load_procedure_data, run_procedure_data
 from qcportal import PortalRequestError
 from qcportal.compare_records import compare_records
@@ -291,7 +291,7 @@ def test_project_client_add_duplicates(snowflake_client: PortalClient):
 
 def test_project_client_import_records(secure_snowflake: QCATestingSnowflake):
 
-    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    client = secure_snowflake.user_client("submit_user")
     proj = client.add_project("test project")
 
     test_files = [
