@@ -113,6 +113,7 @@ class PortalClientBase:
 
         self.address = address
         self.username = username
+        self.user_id = None
         self._verify = verify
 
         # A persistent session
@@ -371,6 +372,7 @@ class PortalClientBase:
             )
             self._jwt_access_exp = decoded_access_token["exp"]
             self._jwt_refresh_exp = decoded_refresh_token["exp"]
+            self.user_id = int(decoded_access_token["sub"]) # "identity" "subject"
         else:
             try:
                 msg = ret.json()["msg"]
