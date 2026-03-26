@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qcarchivetesting import test_users
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcportal.utils import now_at_utc
 
@@ -12,7 +11,7 @@ if TYPE_CHECKING:
 
 def test_serverinfo_client_access_logged(secure_snowflake_allow_read: QCATestingSnowflake):
     time_0 = now_at_utc()
-    client = secure_snowflake_allow_read.client("admin_user", test_users["admin_user"]["pw"])
+    client = secure_snowflake_allow_read.user_client("admin_user")
     read_client = secure_snowflake_allow_read.client()
 
     client.query_access_log()

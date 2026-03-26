@@ -1,4 +1,5 @@
 import re
+from typing import Any
 
 import pytest
 
@@ -6,9 +7,8 @@ from qcarchivetesting import test_users
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.components.auth import GLOBAL_ROLE_PERMISSIONS, AuthorizedEnum
 from qcportal import PortalRequestError
-from qcportal.exceptions import AuthorizationFailure
 from qcportal.auth import UserInfo, GroupInfo
-from typing import Any
+from qcportal.exceptions import AuthorizationFailure
 
 
 def substitute_route_url(route) -> str:
@@ -20,7 +20,7 @@ def substitute_route_url(route) -> str:
 
 
 def test_global_permissions(secure_snowflake_allow_read: QCATestingSnowflake):
-    client = secure_snowflake_allow_read.client("admin_user", password=test_users["admin_user"]["pw"])
+    client = secure_snowflake_allow_read.user_client("admin_user")
     perms = client.make_request("get", "/api/v1/all_routes", dict[str, dict[str, str]])
 
     all_roles = set(GLOBAL_ROLE_PERMISSIONS.keys())
@@ -121,7 +121,7 @@ def test_auth_global_no_unauth_read(secure_snowflake):
     perms = client.make_request("get", "/api/v1/all_routes", dict[str, dict[str, str]])
 
     # Fake a client - constructing normally results in trying to get information
-    client = secure_snowflake.client("admin_user", password=test_users["admin_user"]["pw"])
+    client = secure_snowflake.user_client("admin_user")
     client.username = None
     client._password = None
     client._jwt_access_exp = None
