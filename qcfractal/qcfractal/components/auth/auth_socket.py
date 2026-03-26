@@ -7,7 +7,7 @@ from sqlalchemy import select, delete
 from sqlalchemy.dialects.postgresql import insert
 
 from qcportal.auth import UserInfo
-from qcportal.exceptions import AuthenticationFailure, AuthorizationFailure
+from qcportal.exceptions import AuthenticationFailure, SecurityNotEnabledError
 from qcportal.utils import now_at_utc
 from .db_models import UserORM, UserSessionORM
 from .permission_evaluation import evaluate_global_permissions
@@ -74,7 +74,7 @@ class AuthSocket:
         # Some endpoints require security to be enabled
         if not self.security_enabled:
             if require_security:
-                raise AuthorizationFailure(f"Cannot access '{resource}' with security disabled")
+                raise SecurityNotEnabledError(f"Cannot access '{resource}' with security disabled")
             else:
                 return AuthorizedEnum.Allow
 
