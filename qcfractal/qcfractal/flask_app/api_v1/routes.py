@@ -23,3 +23,44 @@ def ping():
         }
 
     return jsonify(ret)
+
+
+@api_v1.route("/all_routes", methods=["GET"])
+@no_permission_required()
+def get_all_routes_v1():
+    """
+    Returns a dictionary of all endpoints and their required permissions.
+
+    The return dictionary has keys as the endpoint name, and values representing
+    the required permissions (http method, target, resource, action)
+    """
+    permissions = {}
+
+    for rule in current_app.url_map.iter_rules():
+        endpoint = rule.endpoint
+        if endpoint == "static":
+            continue
+
+        view_func = current_app.view_functions[endpoint]
+        if not hasattr(view_func, "_has_permission_check"):
+            continue
+
+        if hasattr(view_func, "_permissions_required"):
+            resource, action = view_func._permissions_required
+        else:
+            resource, action = "none", "none"
+
+        # The required permissions
+        # http method, resource, action (read/write/modify/delete/etc)
+        for method in rule.methods:
+            if method.lower() in {"options", "head"}:
+                continue
+
+            permissions[str(rule)] = {
+                "endpoint": endpoint,
+                "method": method.lower(),
+                "resource": resource,
+                "action": action,
+            }
+
+    return jsonify(permissions)
