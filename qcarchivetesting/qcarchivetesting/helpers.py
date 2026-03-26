@@ -39,6 +39,7 @@ test_users = {
             "fullname": "Mrs. Admin User",
             "organization": "QCF Testing",
             "email": "admin@example.com",
+            "enabled": True,
         },
     },
     "maintain_user": {
@@ -49,6 +50,7 @@ test_users = {
             "fullname": "Mrs. Maintenance User",
             "organization": "QCF Testing",
             "email": "maintenance@example.com",
+            "enabled": True,
         },
     },
     "read_user": {
@@ -59,6 +61,7 @@ test_users = {
             "fullname": "Mr. Read User",
             "organization": "QCF Testing",
             "email": "read@example.com",
+            "enabled": True,
         },
     },
     "monitor_user": {
@@ -69,6 +72,7 @@ test_users = {
             "fullname": "Mr. Monitor User",
             "organization": "QCF Testing",
             "email": "monitor@example.com",
+            "enabled": True,
         },
     },
     "compute_user": {
@@ -79,6 +83,7 @@ test_users = {
             "fullname": "Mr. Compute User",
             "organization": "QCF Testing",
             "email": "compute@example.com",
+            "enabled": True,
         },
     },
     "submit_user": {
@@ -89,6 +94,7 @@ test_users = {
             "fullname": "Mrs. Submit User",
             "organization": "QCF Testing",
             "email": "submit@example.com",
+            "enabled": True,
         },
     },
     "submit_user_2": {
@@ -99,6 +105,7 @@ test_users = {
             "fullname": "Mrs. Submit User",
             "organization": "QCF Testing",
             "email": "submit@example.com",
+            "enabled": True,
         },
     },
 }
