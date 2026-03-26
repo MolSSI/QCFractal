@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from qcarchivetesting import load_molecule_data, test_users
+
+from qcarchivetesting import load_molecule_data
 from qcfractal.components.gridoptimization.record_db_models import GridoptimizationRecordORM
 from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
 from qcfractal.testing_helpers import run_service
@@ -17,7 +18,6 @@ from qcportal.optimization import OptimizationSpecification, OptimizationProtoco
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 from qcportal.utils import now_at_utc
-
 from .testing_helpers import (
     compare_gridoptimization_specs,
     test_specs,
@@ -265,7 +265,7 @@ def test_gridoptimization_socket_insert_full_qcportal_record(secure_snowflake: Q
     ]
 
     storage_socket = secure_snowflake.get_storage_socket()
-    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    client = secure_snowflake.user_client("submit_user")
     user_id = client.get_user().id
 
     for test_name in test_names:
