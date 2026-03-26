@@ -6,8 +6,7 @@ maintain:
     read: Allow
     modify: Allow
   me:
-    read: Allow
-    modify: Allow
+    "*": Allow
   users:
     read: Allow
     modify: Allow
@@ -31,11 +30,7 @@ monitor:
   information:
     read: Allow
   me:
-    read: Allow
-    modify: Allow
-  users: # TODO DEPRECATE
-    read: Allow
-    modify: Allow
+    "*": Allow
   managers:
     read: Allow
   records:
@@ -54,11 +49,7 @@ submit:
   information:
     read: Allow
   me:
-    read: Allow
-    modify: Allow
-  users: # TODO DEPRECATE
-    read: Allow
-    modify: Allow
+    "*": Allow
   managers:
     read: Allow
   records:
@@ -81,11 +72,7 @@ read:
   information:
     read: Allow
   me:
-    read: Allow
-    modify: Allow
-  users: # TODO DEPRECATE
-    read: Allow
-    modify: Allow
+    "*": Allow
   managers:
     read: Allow
   records:
@@ -109,14 +96,10 @@ compute:
   information:
     read: Allow
   me:
-    read: Allow
-    modify: Allow
+    "*": Allow
   managers:
     add: Allow
     modify: Allow
   tasks:
     claim: Allow
     return: Allow
-  users: # TODO DEPRECATE
-    read: Allow
-    modify: Allow
