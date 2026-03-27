@@ -36,15 +36,10 @@ dependencies = [
 
 [project.entry-points.pytest11]
 qcarchive_fixtures = "qcarchivetesting.testing_fixtures"
-qcarchive_conftest = "qcarchivetesting.pytest_config"
 
 
 [tool.setuptools.package-data]
 qcarchivetesting = ["*_data/**", "config_files/**"]
-
-
-[tool.black]
-line-length = 120
 
 
 [tool.versioningit]
