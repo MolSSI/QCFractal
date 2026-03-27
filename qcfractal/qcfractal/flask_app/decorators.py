@@ -1,6 +1,6 @@
 import tempfile
 from functools import wraps
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Optional
 
 import shutil
 from flask import g, request, current_app, Response
@@ -13,7 +13,7 @@ from qcportal.exceptions import AuthorizationFailure
 from qcportal.serialization import deserialize, serialize
 
 
-def _get_file_extension(filename, allowed_extensions):
+def _get_file_extension(filename, allowed_extensions = None):
     """Return a normalized extension (including leading period) for ``filename``.
 
     Matching is case-insensitive and supports multi-part extensions such as
@@ -24,7 +24,7 @@ def _get_file_extension(filename, allowed_extensions):
     filename
         Original user-provided file name.
     allowed_extensions
-        Iterable of allowed extensions *without* a leading period.
+        Iterable of allowed extensions *without* a leading period. If None, all extensions are allowed.
 
     Returns
     -------
@@ -37,6 +37,16 @@ def _get_file_extension(filename, allowed_extensions):
         If the filename does not end in one of the allowed extensions.
     """
     filename = filename.lower()
+
+    if allowed_extensions is None:
+        # Return the actual extension of the file, including the period
+        # This is largely for tmp files, so don't care about compound extensions like .tar.gz
+        if "." in filename:
+            return filename[filename.rfind("."):]
+        else:
+            raise BadRequest("No file extension found in filename. Uploaded files must have an extension, such as .gz")
+
+    # Otherwise, check the allowed extensions
     with_period = [f".{ext}" for ext in allowed_extensions]
 
     for ext in with_period:
@@ -132,7 +142,7 @@ def no_permission_required() -> Callable:
     return decorate
 
 
-def allow_uploads(allowed_file_extensions: Iterable[str]) -> Callable:
+def allow_uploads(allowed_file_extensions: Optional[Iterable[str]]) -> Callable:
     """
     Route decorator that stages uploaded files in a temporary directory.
 
