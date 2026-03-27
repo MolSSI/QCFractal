@@ -4,6 +4,7 @@ Pytest fixtures for QCArchive
 
 from __future__ import annotations
 
+import os
 import secrets
 from typing import Tuple
 
@@ -14,7 +15,7 @@ from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcportal import PortalClient
 from qcportal.managers import ManagerName
 from qcportal.utils import update_nested_dict
-from .helpers import geoip_path, geoip_filename, ip_tests_enabled
+from .helpers import geoip_path, geoip_filename, ip_tests_enabled, s3_tests_enabled
 from .testing_classes import QCATestingPostgresServer, QCATestingSnowflake, _activated_manager_programs
 
 
@@ -34,6 +35,17 @@ def _generate_default_config(pg_harness, extra_config=None) -> FractalConfig:
     if ip_tests_enabled:
         cfg_dict["geoip2_dir"] = geoip_path
         cfg_dict["geoip2_filename"] = geoip_filename
+
+    if s3_tests_enabled:
+        cfg_dict['s3'] = {
+            "enabled": True,
+            "verify": False,
+            "passthrough": False,
+            "endpoint_url": os.environ["QCFTEST_S3_ENDPOINT"],
+            "access_key_id": os.environ["QCFTEST_S3_ACCESS_KEY"],
+            "secret_access_key": os.environ["QCFTEST_S3_SECRET_KEY"],
+            "auto_create_buckets": True,
+        }
 
     cfg_dict["api"] = {"secret_key": secrets.token_urlsafe(32), "jwt_secret_key": secrets.token_urlsafe(32)}
 
