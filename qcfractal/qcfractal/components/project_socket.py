@@ -794,7 +794,9 @@ class ProjectSocket:
         attachment_type: ProjectAttachmentType,
         file_path: str,
         file_name: str,
-        description: Optional[str],
+        description: str,
+        tags: list[str],
+        provenance: dict[str, Any],
         *,
         job_progress: Optional[JobProgress] = None,
         session: Optional[Session] = None,
@@ -818,6 +820,10 @@ class ProjectSocket:
             recommended to the user by default.
         description
             An optional description of the file
+        tags
+            A list of tags to associate with the attachment.
+        provenance
+            An optional dictionary containing provenance information for the file.
         job_progress
             Object used to track progress if this function is being run in a background job
         session
@@ -840,6 +846,8 @@ class ProjectSocket:
                 attachment_type=attachment_type,
                 file_name=file_name,
                 description=description,
+                tags=tags,
+                provenance=provenance,
             )
 
             file_id = self.root_socket.external_files.add_file(
