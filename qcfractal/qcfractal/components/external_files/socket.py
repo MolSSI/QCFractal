@@ -59,15 +59,19 @@ class ExternalFileSocket:
 
         # Make sure the buckets we use exist
         self._bucket_map = self._s3_config.bucket_map
-        if self._bucket_map.dataset_attachment not in server_buckets:
-            raise RuntimeError(f"Bucket {self._bucket_map.dataset_attachment} (for dataset attachments)")
+        for k, v in self._bucket_map.model_dump().items():
+            if v not in server_buckets:
+                if self._s3_config.auto_create_buckets:
+                    self._s3_client.create_bucket(Bucket=v)
+                else:
+                    raise RuntimeError(f"Bucket {v} missing (bucket for key {k})")
 
     def _lookup_bucket(self, file_type: Union[ExternalFileTypeEnum, str]) -> str:
         # Can sometimes be a string from sqlalchemy (if set because of polymorphic identity)
-        if isinstance(file_type, str):
-            return getattr(self._bucket_map, file_type)
-        elif isinstance(file_type, ExternalFileTypeEnum):
+        if isinstance(file_type, ExternalFileTypeEnum):
             return getattr(self._bucket_map, file_type.value)
+        elif isinstance(file_type, str):
+            return getattr(self._bucket_map, file_type)
         else:
             raise ValueError("Unknown parameter type for lookup_bucket: ", type(file_type))
 
