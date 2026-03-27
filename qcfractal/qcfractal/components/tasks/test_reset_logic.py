@@ -11,7 +11,7 @@ import pytest
 from qcelemental.models import ComputeError, FailedOperation
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.components.record_db_models import BaseRecordORM
-from qcfractal.components.singlepoint.testing_helpers import load_test_data
+from qcfractal.components.singlepoint.testing_helpers import load_procedure_data
 from qcfractalcompute.compress import compress_result
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 
@@ -39,7 +39,7 @@ def test_reset_logic_dict_comprehension_bug(postgres_server, pytestconfig):
         activated_manager_programs = snowflake.activated_manager_programs()
         
         # Load test data and submit a singlepoint calculation
-        input_spec, molecule, result_data = load_test_data("sp_psi4_water_energy")
+        input_spec, molecule, result_data = load_procedure_data("sp_psi4_water_energy")
         meta, record_ids = storage_socket.records.singlepoint.add(
             [molecule], input_spec, "tag1", PriorityEnum.normal, None, True
         )
@@ -99,6 +99,6 @@ def test_reset_logic_dict_comprehension_bug(postgres_server, pytestconfig):
             assert len(rec.compute_history) == 3
             
             assert rec.status == RecordStatusEnum.error, (
-                "after 6 errors, the record should not be waiting."
+                f"After 3 errors (1 BadStateException + 2 TooManyJobFailuresError), record should be set to errored."
             )
 

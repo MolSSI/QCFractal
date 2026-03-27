@@ -53,14 +53,14 @@ def should_reset(record_orm: BaseRecordORM, config: AutoResetConfig) -> bool:
         logger.debug(f"    {k}: {v}")
 
     # Map to more general error categories
-    error_counts = {error_map.get(k, "unknown_error"): v for k, v in error_counts.items()}
+    # error_counts = {error_map.get(k, "unknown_error"): v for k, v in error_counts.items()}
 
-    # mapped_counts = {}
-    # for k, v in error_counts.items():
-    #     category = error_map.get(k, "unknown_error")
-    #     # add to dict instead of overwriting
-    #     mapped_counts[category] = mapped_counts.get(category, 0) + v
-    # error_counts = mapped_counts
+    mapped_counts = {}
+    for k, v in error_counts.items():
+        category = error_map.get(k, "unknown_error")
+        # add to dict instead of overwriting
+        mapped_counts[category] = mapped_counts.get(category, 0) + v
+    error_counts = mapped_counts
 
     # Are we beyond any of the max on any?
     for err, count in error_counts.items():
