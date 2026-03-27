@@ -681,7 +681,7 @@ class BaseDataset(BaseModel):
         Parameters
         ----------
         description
-            Optional string describing the view file
+            String describing the view file
         provenance
             Dictionary with any metadata or other information about the view. Information regarding
             the options used to create the view will be added.
@@ -2577,7 +2577,7 @@ class DatasetFetchRecordsBody(RestModelBase):
 
 
 class DatasetCreateViewBody(RestModelBase):
-    description: str | None
+    description: str
     provenance: dict[str, Any]
     status: list[RecordStatusEnum] | None = (None,)
     include: list[str] | None = (None,)
