@@ -7,11 +7,11 @@ import os
 import re
 import secrets
 import tempfile
-from typing import Any
+from typing import Any, Annotated
 
 import yaml
 from psycopg2.extensions import make_dsn, parse_dsn
-from pydantic import BaseModel, Field, field_validator, model_validator, ValidationError, ConfigDict
+from pydantic import BaseModel, Field, field_validator, model_validator, ValidationError, ConfigDict, StringConstraints
 from pydantic_settings import BaseSettings, SettingsConfigDict, PydanticBaseSettingsSource
 from sqlalchemy.engine.url import URL, make_url
 
@@ -284,8 +284,11 @@ class WebAPIConfig(QCFConfigBase):
         return duration_to_seconds(v)
 
 
+# S3 bucket names are all lowercase characters and numbers
+S3BucketName = Annotated[str, StringConstraints(min_length=3, max_length=63, pattern=r"^[a-z0-9\-]+[a-z0-9]$")]
+
 class S3BucketMap(QCFConfigBase):
-    dataset_attachment: str = Field("dataset_attachment", description="Bucket to hold dataset views")
+    dataset_attachment: S3BucketName = Field("dataset-attachments", description="Bucket to hold dataset views")
 
 
 class S3Config(QCFConfigBase):
@@ -299,6 +302,7 @@ class S3Config(QCFConfigBase):
     endpoint_url: str | None = Field(None, description="S3 endpoint URL")
     access_key_id: str | None = Field(None, description="AWS/S3 access key")
     secret_access_key: str | None = Field(None, description="AWS/S3 secret key")
+    auto_create_buckets: bool = False
 
     bucket_map: S3BucketMap = Field(
         default_factory=S3BucketMap, description="Configuration for where to store various files"
