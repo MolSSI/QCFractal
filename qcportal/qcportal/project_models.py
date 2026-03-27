@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from collections.abc import Sequence
 from enum import Enum
 from typing import TYPE_CHECKING, Any
@@ -11,7 +12,7 @@ from qcportal.all_results import AllResultTypes
 from qcportal.base_models import ProjURLParameters
 from qcportal.base_models import RestModelBase, validate_list_to_single
 from qcportal.dataset_models import BaseDataset, dataset_from_dict
-from qcportal.external_files import ExternalFile
+from qcportal.external_files.models import ExternalFile, ExternalFileUploadBase
 from qcportal.metadata_models import InsertCountsMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordAddBodyBase, record_from_dict, BaseRecord
 from qcportal.utils import make_list
@@ -117,6 +118,11 @@ class ProjectUnlinkRecordsBody(RestModelBase):
     delete_records: bool
 
 
+class ProjectAttachmentUploadBody(ExternalFileUploadBase):
+    attachment_type: ProjectAttachmentType
+    tags: list[str]
+
+
 class ProjectRecordMetadata(BaseModel):
     record_id: int
     name: str
@@ -160,7 +166,7 @@ class Project(BaseModel):
     _dataset_metadata: list[ProjectDatasetMetadata] = PrivateAttr([])
 
     ######################################################
-    # Fields not always included when fetching the dataset
+    # Fields not always included when fetching the project
     ######################################################
     attachments_: list[ProjectAttachment] | None = Field(None, alias="attachments")
 
@@ -524,3 +530,65 @@ class Project(BaseModel):
         # set prefix to be the main prefix of the server. We will fetch all the records/datasets
         # directly via the regular (non-project) endpoints
         return dataset_from_dict(ds_dict, client=self._client, base_url_prefix="api/v1")
+
+    #############################
+    # Attachments
+    #############################
+    def fetch_attachments(self):
+        self.assert_online()
+
+        self.attachments_ = self._client.make_request(
+            "get", f"api/v1/projects/{self.id}/attachments", list[ProjectAttachment]
+        )
+
+        for att in self.attachments_:
+            att.propagate_client(self._client)
+
+    @property
+    def attachments(self) -> list[ProjectAttachment]:
+        self.assert_online()
+        if self.attachments_ is None:
+            self.fetch_attachments()
+        return self.attachments_
+
+    def upload_attachment(
+        self,
+        file_path: str,
+        attachment_type: ProjectAttachmentType,
+        tags: list[str],
+        description: str | None = None,
+        provenance: dict[str, Any] | None = None,
+        new_file_name: str | None = None,
+    ) -> int:
+        self.assert_online()
+
+        if provenance is None:
+            provenance = {}
+
+        if description is None:
+            description = ""
+
+        file_name = os.path.basename(file_path) if new_file_name is None else new_file_name
+        file_info = [(file_name, file_path)]
+        body = ProjectAttachmentUploadBody(
+            file_name=file_name,
+            description=description,
+            provenance=provenance,
+            attachment_type=attachment_type,
+            tags=tags,
+        )
+
+        file_id = self._client.make_request(
+            "post", f"api/v1/projects/{self.id}/attachments", int, body=body, upload_files=file_info
+        )
+
+        # Force refetch next time
+        self.attachments_ = None
+        return file_id
+
+    def delete_attachment(self, file_id: int):
+        self.assert_online()
+        self._client.make_request("delete", f"api/v1/projects/{self.id}/attachments/{file_id}", None)
+
+        # Force refetch next time
+        self.attachments_ = None

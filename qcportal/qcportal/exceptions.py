@@ -77,3 +77,7 @@ class ComputeManagerError(UserReportableError):
 
 class InvalidArgumentsError(UserReportableError):
     pass
+
+
+class SingleFileRequiredError(UserReportableError):
+    pass
