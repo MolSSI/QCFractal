@@ -22,7 +22,6 @@ dependencies:
   - pandas
   - pyjwt>=2.10.0
   - packaging
-  - typing_extensions
   - python-dateutil
   - pytz
 

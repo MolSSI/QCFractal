@@ -64,19 +64,11 @@ qcfractal-server = "qcfractal.qcfractal_server_cli:main"
 qcfractal = ["alembic.ini", "alembic/script.py.mako"]
 
 
-[tool.black]
-line-length = 120
-
-
 [tool.versioningit]
 
 
 [tool.versioningit.vcs]
 default-tag = "0.0.99" # useful for CI/shallow clones
-
-
-[tool.pytest.ini_options]
-markers = ["slow"]
 
 
 [tool.coverage.run]

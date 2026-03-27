@@ -2,10 +2,6 @@
 Contains testing infrastructure for QCFractal.
 """
 
-# This file is normally named conftest.py, but doing so
-# runs into issues with pytest automatically finding this, but also
-# having it be found through the pyproject.toml entry point
-
 import pytest
 
 
@@ -24,11 +20,6 @@ def pytest_addoption(parser):
 
 
 def pytest_collection_modifyitems(config, items):
-    """
-    Handle test triggers based on the CLI flags
-    Use decorators:
-    @pytest.mark.slow
-    """
     runslow = config.getoption("--runslow")
 
     skip_slow = pytest.mark.skip(reason="need --runslow option to run")

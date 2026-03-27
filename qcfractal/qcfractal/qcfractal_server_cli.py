@@ -567,59 +567,6 @@ def server_upgrade_db(config):
         sys.exit(1)
 
 
-def server_upgrade_config(config_path):
-    import secrets
-    from qcfractal.old_config import OldFractalQCFConfig
-    from qcfractal.config import convert_old_configuration
-
-    logger = logging.getLogger(__name__)
-
-    logger.info(f"Reading configuration data from {config_path}")
-    with open(config_path, "r") as yf:
-        file_data = yaml.safe_load(yf)
-
-    # Is this really an old config?
-    if "fractal" not in file_data:
-        logger.info(f"Configuration appears to be up-to-date")
-        return
-
-    old_qcf_config = OldFractalQCFConfig(**file_data)
-    new_qcf_config = convert_old_configuration(old_qcf_config)
-
-    # Move the old file out of the way
-    base_backup_path = config_path + ".backup"
-    backup_path = base_backup_path
-
-    # Find a suitable backup name. If the path exists,
-    # add .1, .2, .3, etc, until it does
-    i = 1
-    while os.path.exists(backup_path):
-        backup_path = base_backup_path + f".{i}"
-        i += 1
-
-    logger.info(f"Moving original configuration to {backup_path}")
-    shutil.move(config_path, backup_path)
-
-    # We strip out some stuff from the configuration, including things that were
-    # set to the default
-    new_qcf_config_dict = new_qcf_config.dict(skip_defaults=True)
-    new_qcf_config_dict["database"].pop("base_folder")
-    new_qcf_config_dict.pop("base_folder")
-
-    # Generate secret keys for the user. They can always change it later
-    new_qcf_config_dict["api"]["secret_key"] = secrets.token_hex(24)
-    new_qcf_config_dict["api"]["jwt_secret_key"] = secrets.token_hex(24)
-
-    logger.info(f"Writing new configuration data to  {config_path}")
-    with open(config_path, "w") as yf:
-        yaml.dump(new_qcf_config_dict, yf)
-
-    logger.info("*" * 80)
-    logger.info("Your configuration file has been upgraded, but will most likely need some fine tuning.")
-    logger.info(f"Please edit {config_path} by hand. See the upgrade documentation for details.")
-    logger.info("*" * 80)
-
-
 def server_user(args: argparse.Namespace, config: FractalConfig):
     user_command = args.user_command
 
@@ -901,8 +848,7 @@ def main():
     if args.command == "upgrade-config":
         if args.config is None:
             raise RuntimeError("Configuration file path (--config) is required for upgrading configuration")
-        server_upgrade_config(args.config)
-        exit(0)
+        raise RuntimeError("Upgrade configuration is not yet supported")
 
     # Check for the config path on the command line. The command line
     # always overrides environment variables
