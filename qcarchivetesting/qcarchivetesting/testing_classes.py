@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import logging
+import os
 
-from qcarchivetesting import geoip_path, geoip_filename, ip_tests_enabled
+from qcarchivetesting import geoip_path, geoip_filename, ip_tests_enabled, s3_tests_enabled
 from qcfractal.config import DatabaseConfig
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.postgres_harness import PostgresHarness, create_snowflake_postgres
@@ -152,6 +153,17 @@ class QCATestingSnowflake(FractalSnowflake):
         if ip_tests_enabled:
             qcf_config["geoip2_dir"] = geoip_path
             qcf_config["geoip2_filename"] = geoip_filename
+
+        if s3_tests_enabled:
+            qcf_config['s3'] = {
+                "enabled": True,
+                "verify": False,
+                "passthrough": False,
+                "endpoint_url": os.environ["QCFTEST_S3_ENDPOINT"],
+                "access_key_id": os.environ["QCFTEST_S3_ACCESS_KEY"],
+                "secret_access_key": os.environ["QCFTEST_S3_SECRET_KEY"],
+                "auto_create_buckets": True,
+            }
 
         qcf_config["auto_reset"] = {"enabled": False}
 
