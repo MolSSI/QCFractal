@@ -192,8 +192,14 @@ class NEBRecordSocket(BaseRecordSocket):
                     initial_molecules[0] = complete_opts[0].record.final_molecule.to_model(Molecule)
                     initial_molecules[-1] = complete_opts[-1].record.final_molecule.to_model(Molecule)
 
+                chain_list = [[[mol.molecular_charge, mol.molecular_multiplicity], mol.symbols.tolist(), mol.geometry]
+                              for mol in initial_molecules]
+
                 with capture_all_output("geometric.nifty") as (rdout, _):
-                    respaced_chain = geometric.qcf_neb.arrange(initial_molecules, params.get("align"))
+                    chain_respaced = geometric.qcf_neb.arrange(chain_list, params.get("align"))
+
+                respaced_chain = [
+                    Molecule(**molecule_template, geometry=img[2]) for img in chain_respaced]
 
                 output += "\n" + rdout.getvalue()
 
@@ -248,15 +254,7 @@ class NEBRecordSocket(BaseRecordSocket):
                     service_state.nebinfo["params"] = params
 
                     with capture_all_output("geometric.nifty") as (rdout, _):
-                        if service_state.iteration == 1:
-                            newcoords, prev = geometric.qcf_neb.prepare(service_state.nebinfo)
-                            service_state.nebinfo = prev
-
-                            next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
-                            self.submit_singlepoints(session, service_state, service_orm, next_chain)
-                            service_state.iteration += 1
-                        else:
-                            self.submit_nextchain_subtask(session, service_state, service_orm)
+                        self.submit_nextchain_subtask(session, service_state, service_orm)
 
                     output += "\n" + rdout.getvalue()
 
