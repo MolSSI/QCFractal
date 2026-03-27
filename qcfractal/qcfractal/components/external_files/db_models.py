@@ -22,7 +22,7 @@ class ExternalFileORM(BaseORM):
     status = Column(Enum(ExternalFileStatusEnum), nullable=False)
 
     file_name = Column(String, nullable=False)
-    description = Column(String, nullable=True)
+    description = Column(String, nullable=False)
     provenance = Column(JSONB, nullable=False)
 
     sha256sum = Column(String, nullable=False)
