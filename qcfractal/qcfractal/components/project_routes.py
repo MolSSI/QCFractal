@@ -2,8 +2,9 @@ from flask import g
 
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
-from qcfractal.flask_app.decorators import check_permissions, serialization
+from qcfractal.flask_app.decorators import check_permissions, serialization, allow_uploads
 from qcportal.base_models import ProjURLParameters
+from qcportal.exceptions import SingleFileRequiredError
 from qcportal.project_models import (
     ProjectAddBody,
     ProjectQueryModel,
@@ -15,6 +16,7 @@ from qcportal.project_models import (
     ProjectUnlinkDatasetsBody,
     ProjectLinkRecordBody,
     ProjectUnlinkRecordsBody,
+    ProjectAttachmentUploadBody,
 )
 
 
@@ -246,3 +248,24 @@ def fetch_project_attachments_v1(project_id: int):
 @serialization()
 def delete_project_attachment_v1(project_id: int, attachment_id: int):
     return storage_socket.projects.delete_attachment(project_id, attachment_id)
+
+
+@api_v1.route("/projects/<int:project_id>/attachments", methods=["POST"])
+@check_permissions("projects", "modify")
+@serialization()
+@allow_uploads(allowed_file_extensions=None)
+def upload_project_attachment_v1(project_id: int, body_data: ProjectAttachmentUploadBody, files: list[tuple[str, str]]):
+    if len(files) != 1:
+        raise SingleFileRequiredError("Exactly one file must be uploaded for project attachments")
+
+    file_name, file_path = files[0]
+    return storage_socket.projects.attach_file(
+        project_id,
+        attachment_type=body_data.attachment_type,
+        file_path=file_path,
+        file_name=file_name,
+        description=body_data.description,
+        tags=body_data.tags,
+        provenance=body_data.provenance,
+    )
+

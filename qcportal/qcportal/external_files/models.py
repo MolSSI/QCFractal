@@ -20,6 +20,14 @@ class ExternalFileTypeEnum(str, Enum):
     """
 
     dataset_attachment = "dataset_attachment"
+    project_attachment = "project_attachment"
+
+
+class ExternalFileUploadBase(BaseModel):
+    file_name: str
+    description: str
+    provenance: dict[str, Any]
+
 
 
 class ExternalFile(BaseModel):

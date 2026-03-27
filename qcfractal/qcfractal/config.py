@@ -289,6 +289,7 @@ S3BucketName = Annotated[str, StringConstraints(min_length=3, max_length=63, pat
 
 class S3BucketMap(QCFConfigBase):
     dataset_attachment: S3BucketName = Field("dataset-attachments", description="Bucket to hold dataset views")
+    project_attachment: S3BucketName = Field("project-attachments", description="Bucket to hold project attachments")
 
 
 class S3Config(QCFConfigBase):
