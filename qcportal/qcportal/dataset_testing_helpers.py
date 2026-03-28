@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from qcportal import PortalRequestError
+from qcportal import PortalRequestError, load_dataset_view
+from qcportal.internal_jobs import InternalJobStatusEnum
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.utils import now_at_utc
@@ -839,3 +840,43 @@ def run_dataset_model_modify_records(ds, test_entries, test_spec):
         assert rec.task.compute_priority == PriorityEnum.low
 
     assert rec.comments[0].comment == "a new comment"
+
+
+def run_dataset_model_view(ds, test_entries, test_spec, entry_extra_compare, tmp_path_factory):
+    assert ds.record_count == 0
+    assert ds._client.list_datasets()[0]["record_count"] == 0
+
+    ds.add_specification("spec_1", test_spec)
+    ds.add_entries(test_entries[0])
+    meta = ds.submit()
+
+    assert meta.success
+    assert meta.n_inserted == 1
+    assert meta.n_existing == 0
+
+    ij = ds.create_view("test_view_1", provenance={"a": "b"})
+    ij.watch(interval=0.1, timeout=10)
+
+    assert ij.status == InternalJobStatusEnum.complete
+
+    ds = ds._client.get_dataset_by_id(ds.id)
+    assert len(ds.attachments) == 1
+    views = ds.list_views()
+    assert len(views) == 1
+
+    destfile = tmp_path_factory.mktemp("view") / "view.sqlite3"
+    ds.download_view(views[0].id, str(destfile))
+    assert destfile.exists()
+
+    dsv = load_dataset_view(destfile)
+    assert dsv.specifications == ds.specifications
+    assert dsv.entry_names == ds.entry_names
+
+    for e in ds.iterate_entries():
+        _compare_entries(e, dsv.get_entry(e.name), entry_extra_compare)
+
+    ds.delete_attachment(views[0].id)
+
+    ds = ds._client.get_dataset_by_id(ds.id)
+    assert len(ds.attachments) == 0
+    assert len(ds.list_views()) == 0

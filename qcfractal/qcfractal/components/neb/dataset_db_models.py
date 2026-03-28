@@ -73,7 +73,7 @@ class NEBDatasetEntryORM(BaseORM):
         Index("ix_neb_dataset_entry_name", "name"),
     )
 
-    _qcportal_model_excludes = ["dataset_id"]
+    _qcportal_model_excludes = ["dataset_id", "initial_chain_assoc"]
 
 
 class NEBDatasetSpecificationORM(BaseORM):

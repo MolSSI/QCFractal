@@ -3,7 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
+
 import qcportal.dataset_testing_helpers as ds_helpers
+from qcarchivetesting import s3_tests_enabled
 from qcportal.dataset_testing_helpers import dataset_submit_test_client
 from qcportal.molecules import Molecule
 from qcportal.optimization import OptimizationDatasetNewEntry
@@ -162,3 +164,8 @@ def test_optimization_dataset_model_iterate_updated(snowflake_client: PortalClie
 def test_optimization_dataset_model_modify_records(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("optimization", "Test dataset")
     ds_helpers.run_dataset_model_modify_records(ds, test_entries, test_specs[0])
+
+@pytest.mark.skipif(not s3_tests_enabled, reason="S3 tests not enabled")
+def test_optimization_dataset_model_create_view(dataset_submit_test_client: PortalClient, tmp_path_factory):
+    ds = dataset_submit_test_client.add_dataset("optimization", "Test dataset")
+    ds_helpers.run_dataset_model_view(ds, test_entries, test_specs[0], entry_extra_compare, tmp_path_factory)
