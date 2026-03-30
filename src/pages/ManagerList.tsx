@@ -1,8 +1,8 @@
 import { usePortalClient } from "../PortalClient.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { ManagerFragment } from "./ManagerFragment";
-import * as qcpTypes from "../PortalTypes";
+import { ManagerFragment } from "../components/ManagerFragment.tsx";
+import * as qcpTypes from "../PortalTypes.ts";
 import {
   Box,
   Dialog,
@@ -11,11 +11,11 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import LoadingIndicator from "./LoadingIndicator";
-import ErrorIndicator from "./ErrorIndicator";
+import LoadingIndicator from "../components/LoadingIndicator.tsx";
+import ErrorIndicator from "../components/ErrorIndicator.tsx";
 
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { parseToDate } from "../Utils";
+import { parseToDate } from "../Utils.ts";
 import { PieChart } from "@mui/x-charts/PieChart";
 
 export default function ManagerList() {

@@ -1,12 +1,12 @@
 import { usePortalClient } from "../PortalClient.tsx";
 import { useAuth } from "../Auth.tsx";
 import React from "react";
-import * as qcpTypes from "../PortalTypes";
+import * as qcpTypes from "../PortalTypes.ts";
 import { useParams } from "react-router-dom";
 import { Box, Chip, Grid, Stack, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import LoadingIndicator from "./LoadingIndicator";
-import ErrorIndicator from "./ErrorIndicator";
+import LoadingIndicator from "../components/LoadingIndicator.tsx";
+import ErrorIndicator from "../components/ErrorIndicator.tsx";
 
 const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
   const { makeRequest } = usePortalClient();
