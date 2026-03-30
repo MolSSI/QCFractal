@@ -8,9 +8,6 @@ import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import ComputerIcon from "@mui/icons-material/Computer";
-import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
-import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const mainListItems = [
@@ -18,12 +15,6 @@ const mainListItems = [
   { text: "Projects", icon: <FormatListBulletedIcon />, path: "/projects" },
   { text: "Clients", icon: <PeopleRoundedIcon />, path: "#" },
   { text: "Compute", icon: <ComputerIcon />, path: "/managers" },
-];
-
-const secondaryListItems = [
-  { text: "Settings", icon: <SettingsRoundedIcon /> },
-  { text: "About", icon: <InfoRoundedIcon /> },
-  { text: "Feedback", icon: <HelpRoundedIcon /> },
 ];
 
 interface MenuContentProps {
@@ -49,16 +40,6 @@ export default function MenuContent({ onNavigate }: MenuContentProps) {
               onClick={() => handleClick(item.path)}
               sx={{ cursor: "pointer" }}
             >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-      <List dense>
-        {secondaryListItems.map((item, index) => (
-          <ListItem key={index} disablePadding sx={{ display: "block" }}>
-            <ListItemButton>
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} />
             </ListItemButton>
