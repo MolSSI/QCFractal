@@ -1,6 +1,6 @@
 import { usePortalClient } from "../PortalClient.tsx";
 import React from "react";
-import * as qcpTypes from "../PortalTypes";
+import * as qcpTypes from "../PortalTypes.ts";
 import { useParams } from "react-router-dom";
 import {
   Box,
@@ -16,10 +16,10 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { parseToDate } from "../Utils";
+import { parseToDate } from "../Utils.ts";
 import { useQuery } from "@tanstack/react-query";
-import LoadingIndicator from "./LoadingIndicator";
-import ErrorIndicator from "./ErrorIndicator";
+import LoadingIndicator from "../components/LoadingIndicator.tsx";
+import ErrorIndicator from "../components/ErrorIndicator.tsx";
 
 export default function Manager() {
   const { managerName } = useParams();
