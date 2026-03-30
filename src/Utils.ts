@@ -11,17 +11,17 @@ export const parseToDate = (isoString?: string): Date | undefined => {
 };
 
 export const getRecordReprMolecule = (record: RecordData): Molecule | undefined => {
-  if (record.record_type == "singlepoint") return record.molecule_id;
-  if (record.record_type == "optimization") return record.initial_molecule_id;
+  if (record.record_type == "singlepoint") return record.molecule;
+  if (record.record_type == "optimization") return record.initial_molecule;
   if (record.record_type == "torsiondrive")
-    return record.initial_molecules_id![0];
+    return record.initial_molecules ? record.initial_molecules[0] : undefined;
   if (record.record_type == "gridoptimization")
-    return record.initial_molecule_id;
-  if (record.record_type == "manybody") return record.initial_molecule_id;
-  if (record.record_type == "neb") return record.initial_chain![0];
+    return record.initial_molecule;
+  if (record.record_type == "manybody") return record.initial_molecule;
+  if (record.record_type == "neb") return record.initial_chain ? record.initial_chain[0] : undefined;
   if (record.record_type === "reaction") return undefined;
 
-  throw new Error(`Unknown or unhandled record type: ${record.record_type}`);
+  throw new Error(`Unknown or unhandled record type`);
 };
 
 

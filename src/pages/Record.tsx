@@ -83,17 +83,19 @@ function Record() {
       !recordData.is_service,
   });
 
-  const moleculeId = recordData ? getRecordReprMolecule(recordData) : undefined;
+  const moleculeFromRecord = recordData ? getRecordReprMolecule(recordData) : undefined;
 
   const {
     status: moleculeStatus,
     data: moleculeData,
   } = useQuery({
-    queryKey: ["molecule", moleculeId],
+    queryKey: ["molecule", moleculeFromRecord?.id],
     queryFn: () =>
-      makeRequest<qcpTypes.Molecule>("GET", `api/v1/molecules/${moleculeId}`),
-    enabled: !!moleculeId,
+      makeRequest<qcpTypes.Molecule>("GET", `api/v1/molecules/${moleculeFromRecord?.id}`),
+    enabled: !!moleculeFromRecord?.id,
   });
+
+  const displayMolecule = moleculeFromRecord || moleculeData;
 
   if (!validRecordId) {
     return <ErrorIndicator fullPage message="Invalid record ID" />;
@@ -282,7 +284,7 @@ function Record() {
                 onClose={() => setManagerDialogOpen(false)}
               >
                 <DialogContent>
-                  <ManagerFragment managerName={recordData.manager_name} />
+                  <ManagerFragment managerName={recordData.manager_name!} />
                 </DialogContent>
               </Dialog>
             </Grid>
@@ -396,7 +398,7 @@ function Record() {
                     justifyContent: "center",
                   }}
                 >
-                  {!moleculeId ? (
+                  {!displayMolecule ? (
                     <Typography sx={{ color: "#856404", fontSize: "1rem", textAlign: "center", px: 2, fontWeight: 500 }}>
                       No molecule available for this record.
                     </Typography>
@@ -404,9 +406,9 @@ function Record() {
                     <LoadingIndicator message="Loading molecule..." />
                   ) : moleculeStatus === "error" ? (
                     <ErrorIndicator message="Failed to load molecule." />
-                  ) : moleculeData && typeof moleculeData === "object" ? (
+                  ) : displayMolecule && typeof displayMolecule === "object" ? (
                     <MoleculeStageProvider width="100%" height={280}>
-                      <MoleculeViewer moleculeData={moleculeData} />
+                      <MoleculeViewer moleculeData={displayMolecule} />
                     </MoleculeStageProvider>
                   ) : (
                     <Typography sx={{ color: "#856404", fontSize: "1rem", textAlign: "center", px: 2, fontWeight: 500 }}>
