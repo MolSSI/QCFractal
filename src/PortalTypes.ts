@@ -203,3 +203,22 @@ export type ComputeHistory = {
 };
 
 export type UserPreferences = Record<string, unknown>;
+
+export type Dataset = {
+  id: number;
+  dataset_type: string;
+  name: string;
+  description: string;
+  tagline: string;
+  tags: string[];
+  group: string;
+  visibility: boolean;
+  default_compute_tag: string;
+  default_compute_priority: number;
+  provenance: Record<string, unknown>;
+  extras: Record<string, unknown>;
+
+  // These might be present depending on the include/exclude
+  specifications?: Record<string, unknown>;
+  entries?: Record<string, unknown>;
+};
