@@ -188,20 +188,24 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
                       <TableRow key={index}>
                         <TableCell>{history.id || "N/A"}</TableCell>
                         <TableCell>
-                          <Typography
-                            variant="body2"
-                            color="primary"
-                            sx={{
-                              cursor: "pointer",
-                              textDecoration: "underline",
-                            }}
-                            onClick={() => {
-                              setSelectedManager(history.manager_name);
-                              setManagerDialogOpen(true);
-                            }}
-                          >
-                            {history.manager_name || "N/A"}
-                          </Typography>
+                          {history.manager_name ? (
+                            <Typography
+                              variant="body2"
+                              color="primary"
+                              sx={{
+                                cursor: "pointer",
+                                textDecoration: "underline",
+                              }}
+                              onClick={() => {
+                                setSelectedManager(history.manager_name);
+                                setManagerDialogOpen(true);
+                              }}
+                            >
+                              {history.manager_name}
+                            </Typography>
+                          ) : (
+                            <Typography variant="body2">N/A</Typography>
+                          )}
                         </TableCell>
                         <TableCell>
                           {new Date(history.modified_on).toLocaleString() ||

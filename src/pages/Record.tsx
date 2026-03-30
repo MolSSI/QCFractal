@@ -259,14 +259,20 @@ function Record() {
                 <Typography variant="body1" fontWeight="bold">
                   Last Manager:
                 </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ cursor: "pointer", textDecoration: "underline" }}
-                  onClick={() => setManagerDialogOpen(true)}
-                >
-                  {recordData.manager_name || "None"}
-                </Typography>
+                {recordData.manager_name ? (
+                  <Typography
+                    variant="body2"
+                    color="primary"
+                    sx={{ cursor: "pointer", textDecoration: "underline" }}
+                    onClick={() => setManagerDialogOpen(true)}
+                  >
+                    {recordData.manager_name}
+                  </Typography>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    None
+                  </Typography>
+                )}
               </Box>
 
               {/* Manager Dialog */}
