@@ -119,18 +119,14 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({
           <Button
             variant="outlined"
             size="small"
-            onClick={() => {
-              console.log("Native Files clicked");
-            }}
+            disabled
           >
             Native Files
           </Button>
           <Button
             variant="outlined"
             size="small"
-            onClick={() => {
-              console.log("Wave Functions clicked");
-            }}
+            disabled
           >
             Wave Functions
           </Button>

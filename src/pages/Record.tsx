@@ -352,7 +352,7 @@ function Record() {
               </DialogContent>
             </Dialog>
           </Grid>
-          {/* Specification and molecule viewer*/}
+          {/* Specification, Properties, and Molecule Viewer */}
           <Grid
             container
             spacing={2}
@@ -360,13 +360,8 @@ function Record() {
             alignItems="flex-start"
           >
             {/* Specification */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Box
-                sx={{
-                  p: 2,
-                  height: "100%",
-                }}
-              >
+            <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+              <Box sx={{ p: 2, height: "100%" }}>
                 <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
                   Specification
                 </Typography>
@@ -378,57 +373,48 @@ function Record() {
               </Box>
             </Grid>
 
+            {/* Properties */}
+            <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+              <Properties properties={recordData.properties} />
+            </Grid>
+
             {/* Molecule Viewer */}
-            <Grid size={{ xs: 12, md: 8 }}>
-              <Box sx={{ p: 2, height: "100%" }}>
-                <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+            <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+              <Box sx={{ p: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <Typography variant="h6" fontWeight="bold" sx={{ mb: 1, alignSelf: "flex-start" }}>
                   Molecule Viewer
                 </Typography>
                 <Box
                   sx={{
                     width: "100%",
-                    height: 300,
+                    height: 280,
                     backgroundColor: "#e0e0e0",
                     borderRadius: 2,
-                    position: "relative",
+                    overflow: "hidden",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
                   {!moleculeId ? (
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-                      <Typography sx={{ color: "#856404", fontSize: "1.15rem", textAlign: "center", px: 2, fontWeight: 500 }}>
-                        No molecule available for this record.
-                      </Typography>
-                    </Box>
+                    <Typography sx={{ color: "#856404", fontSize: "1rem", textAlign: "center", px: 2, fontWeight: 500 }}>
+                      No molecule available for this record.
+                    </Typography>
                   ) : moleculeStatus === "pending" ? (
                     <LoadingIndicator message="Loading molecule..." />
                   ) : moleculeStatus === "error" ? (
                     <ErrorIndicator message="Failed to load molecule." />
                   ) : moleculeData && typeof moleculeData === "object" ? (
-                    <MoleculeStageProvider width={400} height={280}>
+                    <MoleculeStageProvider width="100%" height={280}>
                       <MoleculeViewer moleculeData={moleculeData} />
                     </MoleculeStageProvider>
                   ) : (
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-                      <Typography sx={{ color: "#856404", fontSize: "1.15rem", textAlign: "center", px: 2, fontWeight: 500 }}>
-                        No molecule available for this record.
-                      </Typography>
-                    </Box>
+                    <Typography sx={{ color: "#856404", fontSize: "1rem", textAlign: "center", px: 2, fontWeight: 500 }}>
+                      No molecule available for this record.
+                    </Typography>
                   )}
                 </Box>
               </Box>
-            </Grid>
-          </Grid>
-
-          {/* Properties and (right column placeholder) */}
-          <Grid container spacing={2} sx={{ mt: 2, width: "100%" }}>
-            {/* Properties Column */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Properties properties={recordData.properties} />
-            </Grid>
-
-            {/* Right column placeholder */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              {/* You can add more content here if needed */}
             </Grid>
           </Grid>
         </>
