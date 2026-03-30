@@ -10,6 +10,7 @@ import ProjectList from "./pages/ProjectList.tsx";
 import Record from "./pages/Record.tsx";
 import Manager from "./pages/Manager.tsx";
 import ManagerList from "./pages/ManagerList.tsx";
+import Dataset from "./pages/Dataset.tsx";
 import { UserInfo } from "./pages/UserInfo.tsx";
 import AddProjectRecord from "./components/AddProjectRecord.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -63,6 +64,7 @@ function App() {
                       path="/managers/:managerName"
                       element={<Manager />}
                     />
+                    <Route path="/datasets/:datasetId" element={<Dataset />} />
                   </Route>
                 </Route>
               </Routes>

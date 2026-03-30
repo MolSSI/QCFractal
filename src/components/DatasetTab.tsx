@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Box,
   Button,
@@ -109,13 +110,10 @@ export default function DatasetTab({
                           variant="contained"
                           size="small"
                           sx={{ mr: 1 }}
+                          component={Link}
+                          to={`/datasets/${ds.dataset_id}`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Placeholder for view action (new page link later)
-                            console.log(
-                              "View details for dataset",
-                              ds.dataset_id,
-                            );
                           }}
                         >
                           View
