@@ -8,7 +8,7 @@ type ClientContextType = {
     method: string,
     endpoint: string,
     body?: object | FormData,
-    url_params?: Record<string, string>,
+    url_params?: Record<string, string | string[]>,
   ) => Promise<T>;
 };
 
@@ -24,7 +24,7 @@ export function PortalClientProvider({ children }: { children: ReactNode }) {
       method: string,
       endpoint: string,
       body?: object | FormData,
-      url_params?: Record<string, string>,
+      url_params?: Record<string, string | string[]>,
     ): Promise<T> {
       try {
         return await requestHelpers.rawMakeRequest<T>(

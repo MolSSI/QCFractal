@@ -1,3 +1,4 @@
+import { RecordType } from "./record_types";
 export type ServerInfo = {
   name: string;
   version: string;
@@ -50,7 +51,7 @@ export type Project = {
 
 export type ProjectDatasetMetadata = {
   dataset_id: number;
-  dataset_type: string;
+  dataset_type: RecordType;
   name: string;
 };
 
@@ -165,7 +166,7 @@ export type RecordStatus =
 
 export type BaseRecord = {
   id: number;
-  record_type: string;
+  record_type: RecordType;
   is_service: boolean;
   status: RecordStatus;
   created_on: string;
@@ -180,9 +181,9 @@ export type BaseRecord = {
   task?: RecordTask | null;
   service?: RecordService | null;
   comments?: RecordComment[];
-  native_files?: Record<string, unknown>;
-  extras: Record<string, unknown>;
-  properties: Record<string, unknown>;
+  native_files?: Record<string, any>;
+  extras: Record<string, any>;
+  properties: Record<string, any>;
 };
 
 export type RecordComment = {
@@ -198,8 +199,8 @@ export type QCSpecification = {
   driver: string;
   method: string;
   basis: string | null;
-  keywords: Record<string, unknown>;
-  protocols: Record<string, unknown>;
+  keywords: Record<string, any>;
+  protocols: Record<string, any>;
 };
 
 export type ComputeHistory = {
@@ -220,11 +221,11 @@ export type ComputeHistory = {
   };
 };
 
-export type UserPreferences = Record<string, unknown>;
+export type UserPreferences = Record<string, any>;
 
 export type Dataset = {
   id: number;
-  dataset_type: string;
+  dataset_type: RecordType;
   name: string;
   description: string;
   tagline: string;
@@ -233,10 +234,10 @@ export type Dataset = {
   visibility: boolean;
   default_compute_tag: string;
   default_compute_priority: number;
-  provenance: Record<string, unknown>;
-  extras: Record<string, unknown>;
+  provenance: Record<string, any>;
+  extras: Record<string, any>;
 
   // These might be present depending on the include/exclude
-  specifications?: Record<string, unknown>;
-  entries?: Record<string, unknown>;
+  specifications?: Record<string, any>;
+  entries?: Record<string, any>;
 };

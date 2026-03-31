@@ -1,5 +1,3 @@
-import { RecordData, Molecule } from "./PortalTypes";
-
 export const parseToDate = (isoString?: string): Date | undefined => {
   if (!isoString) {
     return undefined;
@@ -9,21 +7,6 @@ export const parseToDate = (isoString?: string): Date | undefined => {
   const trimmed = isoString.replace(/(\.\d{3})\d+/, "$1");
   return new Date(trimmed);
 };
-
-export const getRecordReprMolecule = (record: RecordData): Molecule | undefined => {
-  if (record.record_type == "singlepoint") return record.molecule;
-  if (record.record_type == "optimization") return record.initial_molecule;
-  if (record.record_type == "torsiondrive")
-    return record.initial_molecules ? record.initial_molecules[0] : undefined;
-  if (record.record_type == "gridoptimization")
-    return record.initial_molecule;
-  if (record.record_type == "manybody") return record.initial_molecule;
-  if (record.record_type == "neb") return record.initial_chain ? record.initial_chain[0] : undefined;
-  if (record.record_type === "reaction") return undefined;
-
-  throw new Error(`Unknown or unhandled record type`);
-};
-
 
 export const updateFavoritesList = (existing_favorites: number[] | undefined, proj_id: number): number[] => {
   // adds or removes the new_id to/from the existing_favorites

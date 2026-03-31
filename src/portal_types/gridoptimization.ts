@@ -16,3 +16,18 @@ export type GridoptimizationRecord = BaseRecord & {
   starting_molecule?: Molecule;
   optimizations?: Record<string, OptimizationRecord>;
 };
+
+export type GridoptimizationDatasetSpecification = {
+  name: string;
+  specification: GridoptimizationSpecification;
+  description?: string;
+};
+
+export type GridoptimizationDatasetEntry = {
+  name: string;
+  initial_molecule: Molecule;
+  additional_keywords: Record<string, unknown>;
+  additional_optimization_keywords: Record<string, unknown>;
+  attributes: Record<string, unknown>;
+  comment?: string;
+};
