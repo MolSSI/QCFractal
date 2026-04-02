@@ -81,7 +81,7 @@ export async function rawMakeRequest<T>(
   method: string,
   endpoint: string,
   body?: object | FormData,
-  url_params?: Record<string, string>,
+  url_params?: Record<string, string | string[]>,
 ): Promise<T> {
   const isFormData = body instanceof FormData;
   const req_options: RequestInit = {

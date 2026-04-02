@@ -4,27 +4,31 @@ import * as qcpTypes from "../PortalTypes";
 import { useParams } from "react-router-dom";
 import {
   Box,
-  Grid,
-  Paper,
-  Typography,
   Chip,
+  Collapse,
+  Grid,
+  IconButton,
+  Paper,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
-  TableRow,
   TablePagination,
-  Collapse,
-  IconButton,
+  TableRow,
   Tabs,
-  Tab,
+  Typography,
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
 import { useQuery } from "@tanstack/react-query";
+import {
+  getDatasetEntryComponent,
+  getSpecificationComponent,
+} from "../components/record_components/lookup.tsx";
 
 function TabPanel(props: {
   children?: React.ReactNode;
@@ -51,7 +55,7 @@ function EntryRow({
   datasetId,
 }: {
   entryName: string;
-  datasetType: string;
+  datasetType: qcpTypes.RecordType;
   datasetId: string;
 }) {
   const [expanded, setExpanded] = React.useState(false);
@@ -89,25 +93,17 @@ function EntryRow({
       <TableRow>
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={2}>
           <Collapse in={expanded} timeout="auto" unmountOnExit>
-            <Box
-              sx={{
-                margin: 1,
-                p: 2,
-                bgcolor: (theme) =>
-                  theme.palette.mode === "dark" ? "grey.900" : "grey.100",
-                color: "text.primary",
-                borderRadius: 1,
-              }}
-            >
+            <Box sx={{ p: 2 }}>
               {status === "pending" && <LoadingIndicator />}
               {status === "error" && (
                 <Typography color="error">Error fetching entry data</Typography>
               )}
-              {status === "success" && entryData && (
-                <pre style={{ margin: 0, overflow: "auto" }}>
-                  {JSON.stringify(entryData[entryName], null, 2)}
-                </pre>
-              )}
+              {status === "success" &&
+                entryData &&
+                (() => {
+                  const EntryComponent = getDatasetEntryComponent(datasetType);
+                  return <EntryComponent entry={entryData[entryName]} />;
+                })()}
             </Box>
           </Collapse>
         </TableCell>
@@ -141,31 +137,38 @@ export default function Dataset() {
     error: datasetError,
   } = useQuery({
     queryKey: ["dataset", datasetId],
-    queryFn: () => makeRequest<qcpTypes.Dataset>("GET", `api/v1/datasets/${datasetId}`),
+    queryFn: () =>
+      makeRequest<qcpTypes.Dataset>("GET", `api/v1/datasets/${datasetId}`),
     enabled: !!datasetId,
   });
 
-  const {
-    data: specificationsData,
-  } = useQuery({
+  const { data: specificationsData } = useQuery({
     queryKey: ["datasetSpecifications", datasetData?.dataset_type, datasetId],
-    queryFn: () => makeRequest<Record<string, unknown>>("GET", `api/v1/datasets/${datasetData?.dataset_type}/${datasetId}/specifications`),
+    queryFn: () =>
+      makeRequest<Record<string, any>>(
+        "GET",
+        `api/v1/datasets/${datasetData?.dataset_type}/${datasetId}/specifications`,
+      ),
     enabled: !!datasetId && !!datasetData?.dataset_type,
   });
 
-  const {
-    data: entryNamesData,
-  } = useQuery({
+  const { data: entryNamesData } = useQuery({
     queryKey: ["datasetEntryNames", datasetData?.dataset_type, datasetId],
-    queryFn: () => makeRequest<string[]>("GET", `api/v1/datasets/${datasetData?.dataset_type}/${datasetId}/entry_names`),
+    queryFn: () =>
+      makeRequest<string[]>(
+        "GET",
+        `api/v1/datasets/${datasetData?.dataset_type}/${datasetId}/entry_names`,
+      ),
     enabled: !!datasetId && !!datasetData?.dataset_type,
   });
 
-  const {
-    data: recordCountData,
-  } = useQuery({
+  const { data: recordCountData } = useQuery({
     queryKey: ["datasetRecordCount", datasetData?.dataset_type, datasetId],
-    queryFn: () => makeRequest<number>("GET", `api/v1/datasets/${datasetData?.dataset_type}/${datasetId}/record_count`),
+    queryFn: () =>
+      makeRequest<number>(
+        "GET",
+        `api/v1/datasets/${datasetData?.dataset_type}/${datasetId}/record_count`,
+      ),
     enabled: !!datasetId && !!datasetData?.dataset_type,
   });
 
@@ -400,30 +403,22 @@ export default function Dataset() {
                                       timeout="auto"
                                       unmountOnExit
                                     >
-                                      <Box
-                                        sx={{
-                                          margin: 1,
-                                          p: 2,
-                                          bgcolor: (theme) =>
-                                            theme.palette.mode === "dark"
-                                              ? "grey.900"
-                                              : "grey.100",
-                                          color: "text.primary",
-                                          borderRadius: 1,
-                                        }}
-                                      >
-                                        <pre
-                                          style={{
-                                            margin: 0,
-                                            overflow: "auto",
-                                          }}
-                                        >
-                                          {JSON.stringify(
-                                            specificationsData[specName],
-                                            null,
-                                            2,
-                                          )}
-                                        </pre>
+                                      <Box>
+                                        {(() => {
+                                          const SpecificationComponent =
+                                            getSpecificationComponent(
+                                              datasetData.dataset_type,
+                                            );
+                                          return (
+                                            <SpecificationComponent
+                                              specification={
+                                                specificationsData[
+                                                  specName
+                                                ].specification
+                                              }
+                                            />
+                                          );
+                                        })()}
                                       </Box>
                                     </Collapse>
                                   </TableCell>

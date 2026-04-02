@@ -14,3 +14,18 @@ export type TorsiondriveRecord = BaseRecord & {
   initial_molecules?: Molecule[];
   optimizations?: Record<string, OptimizationRecord[]>;
 };
+
+export type TorsiondriveDatasetSpecification = {
+  name: string;
+  specification: TorsiondriveSpecification;
+  description?: string;
+};
+
+export type TorsiondriveDatasetEntry = {
+  name: string;
+  initial_molecules: Molecule[];
+  additional_keywords: Record<string, unknown>;
+  additional_optimization_keywords: Record<string, unknown>;
+  attributes: Record<string, unknown>;
+  comment?: string;
+};

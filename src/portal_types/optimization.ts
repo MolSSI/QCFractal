@@ -18,3 +18,17 @@ export type OptimizationRecord = BaseRecord & {
   energies?: number[];
   trajectory?: SinglepointRecord[];
 };
+
+export type OptimizationDatasetSpecification = {
+  name: string;
+  specification: OptimizationSpecification;
+  description?: string;
+};
+
+export type OptimizationDatasetEntry = {
+  name: string;
+  initial_molecule: Molecule;
+  additional_keywords: Record<string, unknown>;
+  attributes: Record<string, unknown>;
+  comment?: string;
+};

@@ -1,19 +1,26 @@
 import {
   Accordion,
-  AccordionSummary,
   AccordionDetails,
-  Typography,
+  AccordionSummary,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
+  Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import * as qcpTypes from "../PortalTypes";
 
-export default function Comments() {
+interface CommentsProps {
+  comments?: qcpTypes.RecordComment[];
+}
+
+export default function Comments({ comments = [] }: CommentsProps) {
+  const nComments = comments.length;
+
   return (
     <Accordion>
       {/* Accordion Header */}
@@ -23,7 +30,7 @@ export default function Comments() {
         id="comments-header"
       >
         <Typography variant="h6" fontWeight="bold">
-          Comments
+          Comments ({nComments})
         </Typography>
       </AccordionSummary>
 
@@ -45,17 +52,23 @@ export default function Comments() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {/* Placeholder Rows */}
-              <TableRow>
-                <TableCell>2025-04-29 10:00</TableCell>
-                <TableCell>John Doe</TableCell>
-                <TableCell>This is a placeholder comment.</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>2025-04-28 15:30</TableCell>
-                <TableCell>Jane Smith</TableCell>
-                <TableCell>Another placeholder comment.</TableCell>
-              </TableRow>
+              {nComments > 0 ? (
+                comments.map((comment) => (
+                  <TableRow key={comment.id}>
+                    <TableCell>
+                      {new Date(comment.timestamp).toLocaleString()}
+                    </TableCell>
+                    <TableCell>{comment.username}</TableCell>
+                    <TableCell>{comment.comment}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3} align="center">
+                    No comments available.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </TableContainer>
