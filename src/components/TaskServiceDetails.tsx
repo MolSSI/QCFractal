@@ -4,50 +4,46 @@ import { Box, Button, Dialog, DialogContent, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { usePortalClient } from "../PortalClient.tsx";
 import { GenericDataList } from "./GenericDataList.tsx";
+import LoadingIndicator from "./LoadingIndicator";
+import ErrorIndicator from "./ErrorIndicator";
 
 interface TaskServiceDetailsProps {
   recordData: qcpTypes.RecordData;
 }
 
-export const TaskServiceDetailsButton: React.FC<TaskServiceDetailsProps> = ({
+export const TaskServiceDetails: React.FC<TaskServiceDetailsProps> = ({
   recordData,
 }) => {
   const { makeRequest } = usePortalClient();
   const [taskServiceDialogOpen, setTaskServiceDialogOpen] = useState(false);
 
   const endpoint = recordData.is_service ? "service" : "task";
+  const type = recordData.is_service ? "service" : "task";
 
-  const { data: taskData } = useQuery({
+  const {
+    status: taskStatus,
+    data: taskData,
+    error: taskError,
+  } = useQuery({
     queryKey: ["recordTask", recordData?.record_type, recordData?.id],
     queryFn: () =>
       makeRequest<qcpTypes.RecordTask>(
         "GET",
         `/api/v1/records/${recordData?.record_type}/${recordData?.id}/${endpoint}`,
       ),
-    enabled: !!recordData,
+    enabled: !!recordData && taskServiceDialogOpen,
   });
 
   const buttonText = recordData.is_service ? "View Service" : "View Task";
-  const type = recordData.is_service ? "service" : "task";
-
-  const keys = Object.keys(taskData || {}).filter(
-    (key) => key !== "function_kwargs_compressed",
-  );
 
   return (
     <>
       {/* Advance Section */}
       <Button
-        disabled={!taskData}
+        variant="outlined"
+        size="small"
+        disabled={!recordData || recordData?.status == "complete"}
         onClick={() => setTaskServiceDialogOpen(true)}
-        style={{
-          padding: "8px 16px",
-          backgroundColor: taskData ? "#1976d2" : "#ccc",
-          color: "#fff",
-          border: "none",
-          borderRadius: "4px",
-          cursor: taskData ? "pointer" : "not-allowed",
-        }}
       >
         {buttonText}
       </Button>
@@ -63,10 +59,24 @@ export const TaskServiceDetailsButton: React.FC<TaskServiceDetailsProps> = ({
             <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
               {type.charAt(0).toUpperCase() + type.slice(1)} Details
             </Typography>
-            <GenericDataList
-              data={taskData as Record<string, any>}
-              keys={keys}
-            />
+
+            {taskStatus === "pending" && <LoadingIndicator />}
+
+            {taskStatus === "error" && (
+              <ErrorIndicator message={taskError.message} />
+            )}
+
+            {taskStatus === "success" && taskData && (
+              <GenericDataList
+                data={taskData as Record<string, any>}
+                keys={Object.keys(taskData).filter(
+                  (key) => key !== "function_kwargs_compressed",
+                )}
+              />
+            )}
+            {taskStatus === "success" && !taskData && (
+              <Typography>No {type} data available for this record.</Typography>
+            )}
           </Box>
         </DialogContent>
       </Dialog>
@@ -74,4 +84,4 @@ export const TaskServiceDetailsButton: React.FC<TaskServiceDetailsProps> = ({
   );
 };
 
-export default TaskServiceDetailsButton;
+export default TaskServiceDetails;

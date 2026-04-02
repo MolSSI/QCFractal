@@ -23,6 +23,7 @@ import RecordType from "../components/RecordType.tsx";
 import Comments from "../components/Comments.tsx";
 import ComputeHistory from "../components/ComputeHistory.tsx";
 import { ViewOutput } from "../components/ViewOutput.tsx";
+import TaskServiceDetails from "../components/TaskServiceDetails.tsx";
 
 interface RecordHeaderProps {
   recordData: qcpTypes.RecordData;
@@ -134,6 +135,7 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
           <Button variant="outlined" size="small" disabled>
             Reset
           </Button>
+          <TaskServiceDetails recordData={recordData} />
         </Box>
 
         {/* Compute History Section */}
