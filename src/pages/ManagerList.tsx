@@ -21,7 +21,7 @@ import { PieChart } from "@mui/x-charts/PieChart";
 export default function ManagerList() {
   const managerQueryBody = useMemo<qcpTypes.ManagerQueryFilters>(
     () => ({
-      status: ["active", "inactive"],
+      status: ["active"],
       include: [
         "cluster",
         "name",
@@ -33,7 +33,7 @@ export default function ManagerList() {
         "failures",
         "rejected",
       ],
-      limit: 100,
+      limit: 200,
     }),
     [],
   );

@@ -207,4 +207,5 @@ const MultiMoleculeViewer: React.FC<MultiMoleculeViewerProps> = ({
   );
 };
 
+export default { MoleculeStageProvider, MoleculeViewer, MultiMoleculeViewer };
 export { MoleculeStageProvider, MoleculeViewer, MultiMoleculeViewer };

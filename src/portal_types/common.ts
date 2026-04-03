@@ -53,12 +53,18 @@ export type ProjectDatasetMetadata = {
   dataset_id: number;
   dataset_type: RecordType;
   name: string;
+  description: string;
+  tagline: string;
+  tags?: string[];
 };
 
 export type ProjectRecordMetadata = {
   record_id: number;
-  name: string;
+  record_type: RecordType;
   status: string;
+  name: string;
+  description: string;
+  tags?: string[];
 };
 
 export type Manager = {

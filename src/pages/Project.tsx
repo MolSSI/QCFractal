@@ -17,10 +17,10 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import DatasetTab from "../components/DatasetTab";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
-import RecordTab from "../components/RecordTab";
+import ProjectDatasetTable from "../components/project_components/ProjectDatasetTable";
+import ProjectRecordTable from "../components/project_components/ProjectRecordTable";
 import { useQuery } from "@tanstack/react-query";
 import { updateFavoritesList } from "../Utils";
 
@@ -47,9 +47,10 @@ export default function Project() {
   const { projectId } = useParams();
   const location = useLocation();
   const { makeRequest } = usePortalClient();
-  const { loggedIn } = useAuth();
+  const { has_permission } = useAuth();
   const { preferences, updatePreference } = usePreferences();
 
+  const canFavorite = has_permission("me", "modify");
   const favoriteProjects = (preferences?.favorite_projects as number[]) || [];
 
   const handleToggleFavorite = async () => {
@@ -125,7 +126,7 @@ export default function Project() {
           {/* Project name & tagline */}
           <Grid size={12}>
             <Box sx={{ display: "flex", alignItems: "center" }}>
-              {loggedIn && (
+              {canFavorite && (
                 <Tooltip title={isFavorite ? "Remove from favorites" : "Add to favorites"}>
                   <IconButton
                     size="large"
@@ -223,35 +224,31 @@ export default function Project() {
                 </Tabs>
 
                 {/* Tab 1: Datasets */}
-                {datasetMetadataStatus === "pending" && <LoadingIndicator />}
-                {datasetMetadataStatus !== "pending" && (
-                  <TabPanel value={tabValue} index={0}>
-                    {datasetMetadata && datasetMetadata.length > 0 && (
-                      <DatasetTab
-                        datasetMetadata={datasetMetadata}
-                        onDelete={(id) => {
-                          console.log("Deleting dataset ID:", id);
-                        }}
-                      />
-                    )}
-                  </TabPanel>
-                )}
+                <TabPanel value={tabValue} index={0}>
+                  {datasetMetadataStatus === "pending" && <LoadingIndicator />}
+                  {datasetMetadataStatus === "success" && datasetMetadata && (
+                    <ProjectDatasetTable
+                      datasetMetadata={datasetMetadata}
+                      onDelete={(id) => {
+                        console.log("Deleting dataset ID:", id);
+                      }}
+                    />
+                  )}
+                </TabPanel>
 
                 {/* Tab 2: Records */}
-                {recordMetadataStatus === "pending" && <LoadingIndicator />}
-                {recordMetadataStatus !== "pending" && (
-                  <TabPanel value={tabValue} index={1}>
-                    {recordMetadata && recordMetadata.length > 0 && (
-                      <RecordTab
-                        recordMetadata={recordMetadata}
-                        onDelete={(id) => {
-                          // Implement your delete logic here, e.g. calling an API endpoint
-                          console.log("Deleting dataset ID:", id);
-                        }}
-                      />
-                    )}
-                  </TabPanel>
-                )}
+                <TabPanel value={tabValue} index={1}>
+                  {recordMetadataStatus === "pending" && <LoadingIndicator />}
+                  {recordMetadataStatus === "success" && recordMetadata && (
+                    <ProjectRecordTable
+                      recordMetadata={recordMetadata}
+                      onDelete={(id) => {
+                        // Implement your delete logic here, e.g. calling an API endpoint
+                        console.log("Deleting dataset ID:", id);
+                      }}
+                    />
+                  )}
+                </TabPanel>
               </Paper>
             </Grid>
           </Grid>

@@ -16,7 +16,9 @@ import {
   TableCell,
   TableContainer,
   TableHead,
+  TablePagination,
   TableRow,
+  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -27,10 +29,31 @@ import ErrorIndicator from "../components/ErrorIndicator";
 const ProjectList: React.FC = () => {
   const navigate = useNavigate();
   const { makeRequest } = usePortalClient();
-  const { loggedIn } = useAuth();
+  const { has_permission } = useAuth();
   const { preferences, updatePreference } = usePreferences();
 
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(20);
+  const [filter, setFilter] = React.useState("");
+
   const favoriteProjects = (preferences?.favorite_projects as number[]) || [];
+
+  const {
+    status,
+    data: projects,
+    error,
+  } = useQuery({
+    queryKey: ["listProjects"],
+    queryFn: () =>
+      makeRequest<qcpTypes.ProjectListEntry[]>("GET", "/api/v1/projects"),
+  });
+
+  const filteredProjects = React.useMemo(() => {
+    if (!projects) return [];
+    return projects.filter((project) =>
+      project.project_name.toLowerCase().includes(filter.toLowerCase()),
+    );
+  }, [projects, filter]);
 
   const handleClick = (projectId: string) => {
     navigate(`/projects/${projectId}`);
@@ -46,14 +69,23 @@ const ProjectList: React.FC = () => {
     await updatePreference("favorite_projects", newFavorites);
   };
 
-  const {
-    status,
-    data: projects,
-    error,
-  } = useQuery({
-    queryKey: ["listProjects"],
-    queryFn: () => makeRequest<qcpTypes.ProjectListEntry[]>("GET", "/api/v1/projects"),
-  });
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFilter(event.target.value);
+    setPage(0);
+  };
+
+  const canFavorite = has_permission("me", "modify");
 
   if (status == "pending") {
     return <LoadingIndicator fullPage />;
@@ -66,82 +98,126 @@ const ProjectList: React.FC = () => {
   return (
     <>
       {/* Title / Heading */}
-      <Box sx={{ mt: 4, mb: 2 }}>
+      <Box sx={{ mt: 4, mb: 2, width: "100%" }}>
         <Typography variant="h4" gutterBottom>
           Projects
         </Typography>
       </Box>
 
       {/* Table wrapped in Paper for typical MUI look */}
-      <Paper sx={{ mb: 4 }}>
-        <TableContainer>
-          <Table>
+      <Box sx={{ width: "100%" }}>
+        <Box sx={{ mb: 2 }} width={"30%"}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            size="small"
+            label="Filter projects"
+            value={filter}
+            onChange={handleFilterChange}
+          />
+        </Box>
+        <TableContainer component={Paper} variant="outlined">
+          <Table size="medium">
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: "bold" }}>Project Name</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Content</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Tags</TableCell>
+                <TableCell width="55%">
+                  Project Name
+                </TableCell>
+                <TableCell width="15%">
+                  Owner
+                </TableCell>
+                <TableCell width="20%">
+                  Content
+                </TableCell>
+                <TableCell width="10%">
+                  Tags
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {projects.map((project) => (
-                <TableRow
-                  key={project.id}
-                  hover
-                  sx={{ cursor: "pointer" }}
-                  onClick={() => handleClick(project.id)}
-                >
-                  <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      {loggedIn && (
-                        <Tooltip title={favoriteProjects.includes(parseInt(project.id)) ? "Remove from favorites" : "Add to favorites"}>
-                          <IconButton
-                            size="small"
-                            onClick={(e) => handleToggleFavorite(e, project.id)}
-                            sx={{ mr: 1 }}
+              {filteredProjects
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((project) => (
+                  <TableRow
+                    key={project.id}
+                    hover
+                    sx={{ cursor: "pointer" }}
+                    onClick={() => handleClick(project.id)}
+                  >
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        {canFavorite && (
+                          <Tooltip
+                            title={
+                              favoriteProjects.includes(parseInt(project.id))
+                                ? "Remove from favorites"
+                                : "Add to favorites"
+                            }
                           >
-                            {favoriteProjects.includes(parseInt(project.id)) ? (
-                              <Star sx={{ color: "gold" }} />
-                            ) : (
-                              <StarBorder />
-                            )}
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                      <Box>
-                        <Typography variant="body1" fontWeight="bold">
-                          {project.project_name}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {project.tagline}
-                        </Typography>
+                            <IconButton
+                              size="small"
+                              onClick={(e) =>
+                                handleToggleFavorite(e, project.id)
+                              }
+                              sx={{ mr: 1 }}
+                            >
+                              {favoriteProjects.includes(
+                                parseInt(project.id),
+                              ) ? (
+                                <Star sx={{ color: "gold" }} />
+                              ) : (
+                                <StarBorder />
+                              )}
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        <Box>
+                          <Typography variant="body2" fontWeight="bold">
+                            [{project.id}] {project.project_name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {project.tagline}
+                          </Typography>
+                        </Box>
                       </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {project.record_count} records
-                    </Typography>
-                    <Typography variant="body2">
-                      {project.dataset_count} datasets
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    {project.tags.map((tag) => (
-                      <Chip
-                        key={tag}
-                        label={tag}
-                        size="small"
-                        sx={{ backgroundColor: "grey.300", mr: 1 }}
-                      />
-                    ))}
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>{project.owner_user}</TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {project.record_count} records
+                      </Typography>
+                      <Typography variant="body2">
+                        {project.dataset_count} datasets
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                        {project.tags.map((tag) => (
+                          <Chip
+                            key={tag}
+                            label={tag}
+                            size="small"
+                            variant="outlined"
+                          />
+                        ))}
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>
-      </Paper>
+        <TablePagination
+          rowsPerPageOptions={[10, 20, 50]}
+          component="div"
+          count={filteredProjects.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{ width: "100%" }}
+        />
+      </Box>
     </>
   );
 };

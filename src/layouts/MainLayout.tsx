@@ -51,7 +51,8 @@ function MainLayout() {
       >
         <Box
           sx={{
-            width: "80%", // Ensures all content takes 70% of the right side
+            width: "100%", // Takes full width of the main content area
+            maxWidth: "1400px", // Limits expansion on very large screens
             mx: "auto", // Centers horizontally
           }}
         >
