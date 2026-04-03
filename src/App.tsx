@@ -1,18 +1,19 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { PortalClientProvider } from "./PortalClient.tsx";
 import { AuthProvider } from "./Auth.tsx";
-import HomePage from "./pages/Home.tsx";
-import LoginPage from "./pages/Login";
-import MainLayout from "./layouts/MainLayout";
-import ProtectedRoute from "./ProtectedRoute";
-import Project from "./pages/Project.tsx";
-import ProjectList from "./pages/ProjectList.tsx";
-import Record from "./pages/Record.tsx";
-import Manager from "./pages/Manager.tsx";
-import ManagerList from "./pages/ManagerList.tsx";
-import Dataset from "./pages/Dataset.tsx";
-import { UserInfo } from "./pages/UserInfo.tsx";
-import AddProjectRecord from "./components/AddProjectRecord.tsx";
+const HomePage = lazy(() => import("./pages/Home.tsx"));
+const LoginPage = lazy(() => import("./pages/Login"));
+const MainLayout = lazy(() => import("./layouts/MainLayout"));
+const ProtectedRoute = lazy(() => import("./ProtectedRoute"));
+const Project = lazy(() => import("./pages/Project.tsx"));
+const ProjectList = lazy(() => import("./pages/ProjectList.tsx"));
+const Record = lazy(() => import("./pages/Record.tsx"));
+const Manager = lazy(() => import("./pages/Manager.tsx"));
+const ManagerList = lazy(() => import("./pages/ManagerList.tsx"));
+const Dataset = lazy(() => import("./pages/Dataset.tsx"));
+const UserInfo = lazy(() => import("./pages/UserInfo.tsx").then(m => ({ default: m.UserInfo })));
+const AddProjectRecord = lazy(() => import("./components/AddProjectRecord.tsx"));
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PreferencesProvider } from "./PreferencesProvider.tsx";
 import { CssBaseline } from "@mui/material";
@@ -41,34 +42,36 @@ function App() {
           <QueryClientProvider client={queryClient}>
             <PreferencesProvider>
               <Router>
-              <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route element={<ProtectedRoute />}>
-                  <Route element={<MainLayout />}>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/me" element={<UserInfo />} />
-                    <Route path="/users/:userName" element={<UserInfo />} />
-                    <Route path="/projects" element={<ProjectList />} />
-                    <Route path="/projects/:projectId" element={<Project />} />
-                    <Route
-                      path="/projects/:projectId/records/:recordId"
-                      element={<Record />}
-                    />
-                    <Route path="/records/:recordId" element={<Record />} />
-                    <Route
-                      path="/projects/:projectId/addRecord"
-                      element={<AddProjectRecord />}
-                    />
-                    <Route path="/managers" element={<ManagerList />} />
-                    <Route
-                      path="/managers/:managerName"
-                      element={<Manager />}
-                    />
-                    <Route path="/datasets/:datasetId" element={<Dataset />} />
-                  </Route>
-                </Route>
-              </Routes>
-            </Router>
+                <Suspense fallback={<div>Loading...</div>}>
+                  <Routes>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route element={<ProtectedRoute />}>
+                      <Route element={<MainLayout />}>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/me" element={<UserInfo />} />
+                        <Route path="/users/:userName" element={<UserInfo />} />
+                        <Route path="/projects" element={<ProjectList />} />
+                        <Route path="/projects/:projectId" element={<Project />} />
+                        <Route
+                          path="/projects/:projectId/records/:recordId"
+                          element={<Record />}
+                        />
+                        <Route path="/records/:recordId" element={<Record />} />
+                        <Route
+                          path="/projects/:projectId/addRecord"
+                          element={<AddProjectRecord />}
+                        />
+                        <Route path="/managers" element={<ManagerList />} />
+                        <Route
+                          path="/managers/:managerName"
+                          element={<Manager />}
+                        />
+                        <Route path="/datasets/:datasetId" element={<Dataset />} />
+                      </Route>
+                    </Route>
+                  </Routes>
+                </Suspense>
+              </Router>
             </PreferencesProvider>
           </QueryClientProvider>
         </PortalClientProvider>
