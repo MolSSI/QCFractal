@@ -11,6 +11,7 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  TextField,
   Typography,
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -19,7 +20,7 @@ import * as qcpTypes from "../../PortalTypes";
 import { getSpecificationComponent } from "../record_components/lookup.tsx";
 
 interface DatasetSpecificationTableProps {
-  specificationsData: Record<string, any>;
+  specificationsData: Record<string, { specification: qcpTypes.DatasetSpecificationData }>;
   datasetType: qcpTypes.RecordType;
 }
 
@@ -29,9 +30,16 @@ export default function DatasetSpecificationTable({
 }: DatasetSpecificationTableProps) {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [filter, setFilter] = React.useState("");
   const [expandedSpecName, setExpandedSpecName] = React.useState<string | null>(
     null,
   );
+
+  const specNames = React.useMemo(() => {
+    return Object.keys(specificationsData).filter((name) =>
+      name.toLowerCase().includes(filter.toLowerCase()),
+    );
+  }, [specificationsData, filter]);
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
@@ -44,14 +52,27 @@ export default function DatasetSpecificationTable({
     setPage(0);
   };
 
+  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFilter(event.target.value);
+    setPage(0);
+  };
+
   const toggleExpandSpec = (name: string) => {
     setExpandedSpecName((prev) => (prev === name ? null : name));
   };
 
-  const specNames = Object.keys(specificationsData);
-
   return (
     <>
+      <Box sx={{ mb: 2 }} width={"30%"}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          size="small"
+          label="Filter specifications"
+          value={filter}
+          onChange={handleFilterChange}
+        />
+      </Box>
       <TableContainer component={Paper} variant="outlined">
         <Table size="small">
           <TableHead>

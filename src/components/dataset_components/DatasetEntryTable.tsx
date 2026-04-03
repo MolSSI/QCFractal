@@ -11,6 +11,7 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  TextField,
   Typography,
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -97,6 +98,13 @@ export default function DatasetEntryTable({
 }: DatasetEntryTableProps) {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [filter, setFilter] = React.useState("");
+
+  const filteredEntryNames = React.useMemo(() => {
+    return entryNames.filter((name) =>
+      name.toLowerCase().includes(filter.toLowerCase()),
+    );
+  }, [entryNames, filter]);
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
@@ -109,8 +117,23 @@ export default function DatasetEntryTable({
     setPage(0);
   };
 
+  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFilter(event.target.value);
+    setPage(0);
+  };
+
   return (
     <>
+      <Box sx={{ mb: 2 }} width={"30%"}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          size="small"
+          label="Filter by name"
+          value={filter}
+          onChange={handleFilterChange}
+        />
+      </Box>
       <TableContainer component={Paper} variant="outlined">
         <Table size="small">
           <TableHead>
@@ -122,7 +145,7 @@ export default function DatasetEntryTable({
             </TableRow>
           </TableHead>
           <TableBody>
-            {entryNames
+            {filteredEntryNames
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((entryName) => (
                 <EntryRow
@@ -138,7 +161,7 @@ export default function DatasetEntryTable({
       <TablePagination
         rowsPerPageOptions={[10, 25, 50]}
         component="div"
-        count={entryNames.length}
+        count={filteredEntryNames.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}

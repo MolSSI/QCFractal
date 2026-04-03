@@ -15,6 +15,7 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  TextField,
   Typography,
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -141,6 +142,13 @@ export default function ProjectDatasetTable({
 }: ProjectDatasetTableProps) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [filter, setFilter] = useState("");
+
+  const filteredDatasets = React.useMemo(() => {
+    return datasetMetadata.filter((ds) =>
+      ds.name.toLowerCase().includes(filter.toLowerCase()),
+    );
+  }, [datasetMetadata, filter]);
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
@@ -153,8 +161,23 @@ export default function ProjectDatasetTable({
     setPage(0);
   };
 
+  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFilter(event.target.value);
+    setPage(0);
+  };
+
   return (
     <Box>
+      <Box sx={{ mb: 2 }} width={"30%"}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          size="small"
+          label="Filter datasets"
+          value={filter}
+          onChange={handleFilterChange}
+        />
+      </Box>
       <TableContainer component={Paper} variant="outlined">
         <Table size="small" aria-label="dataset table">
           <TableHead>
@@ -172,7 +195,7 @@ export default function ProjectDatasetTable({
             </TableRow>
           </TableHead>
           <TableBody>
-            {datasetMetadata
+            {filteredDatasets
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((ds) => (
                 <DatasetRow
@@ -187,7 +210,7 @@ export default function ProjectDatasetTable({
       <TablePagination
         rowsPerPageOptions={[10, 25, 50]}
         component="div"
-        count={datasetMetadata.length}
+        count={filteredDatasets.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}

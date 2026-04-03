@@ -18,6 +18,7 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -33,8 +34,26 @@ const ProjectList: React.FC = () => {
 
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(20);
+  const [filter, setFilter] = React.useState("");
 
   const favoriteProjects = (preferences?.favorite_projects as number[]) || [];
+
+  const {
+    status,
+    data: projects,
+    error,
+  } = useQuery({
+    queryKey: ["listProjects"],
+    queryFn: () =>
+      makeRequest<qcpTypes.ProjectListEntry[]>("GET", "/api/v1/projects"),
+  });
+
+  const filteredProjects = React.useMemo(() => {
+    if (!projects) return [];
+    return projects.filter((project) =>
+      project.project_name.toLowerCase().includes(filter.toLowerCase()),
+    );
+  }, [projects, filter]);
 
   const handleClick = (projectId: string) => {
     navigate(`/projects/${projectId}`);
@@ -61,15 +80,10 @@ const ProjectList: React.FC = () => {
     setPage(0);
   };
 
-  const {
-    status,
-    data: projects,
-    error,
-  } = useQuery({
-    queryKey: ["listProjects"],
-    queryFn: () =>
-      makeRequest<qcpTypes.ProjectListEntry[]>("GET", "/api/v1/projects"),
-  });
+  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFilter(event.target.value);
+    setPage(0);
+  };
 
   if (status == "pending") {
     return <LoadingIndicator fullPage />;
@@ -90,6 +104,16 @@ const ProjectList: React.FC = () => {
 
       {/* Table wrapped in Paper for typical MUI look */}
       <Box sx={{ width: "100%" }}>
+        <Box sx={{ mb: 2 }} width={"30%"}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            size="small"
+            label="Filter projects"
+            value={filter}
+            onChange={handleFilterChange}
+          />
+        </Box>
         <TableContainer component={Paper} variant="outlined">
           <Table size="medium">
             <TableHead>
@@ -106,7 +130,7 @@ const ProjectList: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {projects
+              {filteredProjects
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((project) => (
                   <TableRow
@@ -180,7 +204,7 @@ const ProjectList: React.FC = () => {
         <TablePagination
           rowsPerPageOptions={[10, 20, 50]}
           component="div"
-          count={projects.length}
+          count={filteredProjects.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}

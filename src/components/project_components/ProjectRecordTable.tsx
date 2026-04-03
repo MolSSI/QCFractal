@@ -13,6 +13,7 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  TextField,
   Typography,
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -148,6 +149,13 @@ export default function ProjectRecordTable({
   const { projectId } = useParams();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [filter, setFilter] = useState("");
+
+  const filteredRecords = React.useMemo(() => {
+    return recordMetadata.filter((record) =>
+      record.name.toLowerCase().includes(filter.toLowerCase()),
+    );
+  }, [recordMetadata, filter]);
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
@@ -160,8 +168,23 @@ export default function ProjectRecordTable({
     setPage(0);
   };
 
+  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFilter(event.target.value);
+    setPage(0);
+  };
+
   return (
     <Box>
+      <Box sx={{ mb: 2 }} width={"30%"}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          size="small"
+          label="Filter records"
+          value={filter}
+          onChange={handleFilterChange}
+        />
+      </Box>
       <TableContainer component={Paper} variant="outlined">
         <Table size="small" aria-label="record table">
           <TableHead>
@@ -182,7 +205,7 @@ export default function ProjectRecordTable({
             </TableRow>
           </TableHead>
           <TableBody>
-            {recordMetadata
+            {filteredRecords
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((record) => (
                 <RecordRow
@@ -198,7 +221,7 @@ export default function ProjectRecordTable({
       <TablePagination
         rowsPerPageOptions={[10, 25, 50]}
         component="div"
-        count={recordMetadata.length}
+        count={filteredRecords.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
