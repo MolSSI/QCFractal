@@ -47,9 +47,10 @@ export default function Project() {
   const { projectId } = useParams();
   const location = useLocation();
   const { makeRequest } = usePortalClient();
-  const { loggedIn } = useAuth();
+  const { has_permission } = useAuth();
   const { preferences, updatePreference } = usePreferences();
 
+  const canFavorite = has_permission("me", "modify");
   const favoriteProjects = (preferences?.favorite_projects as number[]) || [];
 
   const handleToggleFavorite = async () => {
@@ -125,7 +126,7 @@ export default function Project() {
           {/* Project name & tagline */}
           <Grid size={12}>
             <Box sx={{ display: "flex", alignItems: "center" }}>
-              {loggedIn && (
+              {canFavorite && (
                 <Tooltip title={isFavorite ? "Remove from favorites" : "Add to favorites"}>
                   <IconButton
                     size="large"

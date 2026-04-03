@@ -29,7 +29,7 @@ import ErrorIndicator from "../components/ErrorIndicator";
 const ProjectList: React.FC = () => {
   const navigate = useNavigate();
   const { makeRequest } = usePortalClient();
-  const { loggedIn } = useAuth();
+  const { has_permission } = useAuth();
   const { preferences, updatePreference } = usePreferences();
 
   const [page, setPage] = React.useState(0);
@@ -84,6 +84,8 @@ const ProjectList: React.FC = () => {
     setFilter(event.target.value);
     setPage(0);
   };
+
+  const canFavorite = has_permission("me", "modify");
 
   if (status == "pending") {
     return <LoadingIndicator fullPage />;
@@ -144,7 +146,7 @@ const ProjectList: React.FC = () => {
                   >
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center" }}>
-                        {loggedIn && (
+                        {canFavorite && (
                           <Tooltip
                             title={
                               favoriteProjects.includes(parseInt(project.id))

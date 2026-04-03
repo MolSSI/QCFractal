@@ -9,8 +9,46 @@ import {
 import * as qcpTypes from "./PortalTypes.ts";
 import { rawMakeRequest, rawRequest } from "./RequestHelpers.ts";
 import { server_address, server_headers } from "./request_config.ts";
+import global_role_permissions from "./global_role_permissions.json";
+
+const all_role_permissions = global_role_permissions as Record<string, any>;
 
 type ServerStatus = "loading" | "disconnected" | "connected";
+
+function evaluate_global_permissions(
+  role: string,
+  resource: string,
+  action: string,
+): boolean {
+  if (!(role in global_role_permissions)) {
+    return false;
+  }
+
+  const role_permissions = all_role_permissions[role];
+
+  // Check if there is an entry for this resource or if there is a wildcard entry for all resources.
+  // If not, deny by default.
+  let resource_permissions;
+  if (resource in role_permissions) {
+    resource_permissions = role_permissions[resource];
+  } else if ("*" in role_permissions) {
+    resource_permissions = role_permissions["*"];
+  } else {
+    return false;
+  }
+
+  // Now check the action (or wildcard) and return whatever is there
+  let permission;
+  if (action in resource_permissions) {
+    permission = resource_permissions[action];
+  } else if ("*" in resource_permissions) {
+    permission = resource_permissions["*"];
+  } else {
+    return false;
+  }
+
+  return permission === "Allow";
+}
 
 type AuthContextType = {
   serverStatus: ServerStatus;
@@ -24,6 +62,8 @@ type AuthContextType = {
   login: (username?: string, password?: string) => Promise<void>;
   logout: () => Promise<void>;
   loggedIn: boolean;
+
+  has_permission: (resource: string, action: string) => boolean;
 };
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -149,6 +189,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loggedIn = !!userInfo;
 
+  const has_permission = (resource: string, action: string): boolean => {
+    return evaluate_global_permissions(
+      userInfo?.role || "anonymous",
+      resource,
+      action,
+    );
+  };
+
   // Detect login status & server info on initial page load
   useEffect(() => {
     const f = async () => {
@@ -173,6 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         loggedIn,
+        has_permission,
       }}
     >
       {children}
@@ -196,6 +245,7 @@ export function useAuth() {
     login,
     logout,
     loggedIn,
+    has_permission,
   } = context;
 
   return {
@@ -208,5 +258,6 @@ export function useAuth() {
     login,
     logout,
     loggedIn,
+    has_permission,
   };
 }
