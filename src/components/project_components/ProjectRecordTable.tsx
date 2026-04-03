@@ -20,8 +20,8 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { useNavigate, useParams } from "react-router-dom";
 import * as qcpTypes from "../../PortalTypes";
-import { RecordType } from "../RecordType";
-import { Status } from "../Status";
+import { RecordTypeChip } from "../RecordTypeChip.tsx";
+import { StatusChip } from "../StatusChip.tsx";
 
 interface ProjectRecordTableProps {
   recordMetadata: qcpTypes.ProjectRecordMetadata[];
@@ -69,10 +69,10 @@ function RecordRow({
         </TableCell>
         <TableCell>{record.name}</TableCell>
         <TableCell>
-          <RecordType type={record.record_type} />
+          <RecordTypeChip type={record.record_type} />
         </TableCell>
         <TableCell>
-          <Status status={record.status} />
+          <StatusChip status={record.status} />
         </TableCell>
         <TableCell>
           <Button

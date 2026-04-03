@@ -7,7 +7,7 @@ import ErrorIndicator from "../components/ErrorIndicator";
 import { useQuery } from "@tanstack/react-query";
 
 import { getRecordDetailsComponent } from "../components/record_components/lookup";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Box,
   Button,
@@ -18,8 +18,8 @@ import {
   Typography,
 } from "@mui/material";
 import { format } from "date-fns";
-import Status from "../components/Status.tsx";
-import RecordType from "../components/RecordType.tsx";
+import StatusChip from "../components/StatusChip.tsx";
+import RecordTypeChip from "../components/RecordTypeChip.tsx";
 import Comments from "../components/Comments.tsx";
 import ComputeHistory from "../components/ComputeHistory.tsx";
 import { ViewOutput } from "../components/ViewOutput.tsx";
@@ -92,8 +92,8 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
           justifyContent="flex-start"
         >
           <Stack spacing={1} alignItems="flex-end">
-            <Status status={recordData.status} recordId={recordData.id} />
-            <RecordType type={recordData.record_type} />
+            <StatusChip status={recordData.status} recordId={recordData.id} />
+            <RecordTypeChip type={recordData.record_type} />
             {recordData.is_service && (
               <Chip
                 label="Service"
@@ -173,6 +173,16 @@ function Record() {
     enabled: validRecordId,
   });
 
+  useEffect(() => {
+    if (recordData) {
+      const recordName = recordData.name ? recordData.name.trim() : "";
+      document.title = `Record ${recordData.id}${recordName ? ": " + recordName : ""}`;
+    }
+    else {
+      document.title = `Record ${parsedRecordId}`;
+    }
+  }, [recordData, parsedRecordId]);
+
   if (!validRecordId) {
     return <ErrorIndicator fullPage message="Invalid record ID" />;
   }
@@ -186,6 +196,7 @@ function Record() {
   if (!recordData) {
     return <ErrorIndicator fullPage message="Record not found" />;
   }
+
 
   //const RecordComponent = getRecordDetailsComponent(recordData.record_type);
   const RecordComponent = getRecordDetailsComponent(recordData.record_type);

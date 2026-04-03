@@ -21,7 +21,7 @@ import {
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import * as qcpTypes from "../../PortalTypes";
-import { RecordType } from "../RecordType";
+import { RecordTypeChip } from "../RecordTypeChip.tsx";
 
 interface ProjectDatasetTableProps {
   datasetMetadata: qcpTypes.ProjectDatasetMetadata[];
@@ -68,7 +68,7 @@ function DatasetRow({
             </Typography>
           </Box>
         </TableCell>
-        <TableCell><RecordType type={ds.dataset_type} /></TableCell>
+        <TableCell><RecordTypeChip type={ds.dataset_type} /></TableCell>
         <TableCell>
           <Stack direction="row" spacing={1}>
             <Button
