@@ -118,13 +118,16 @@ const ProjectList: React.FC = () => {
           <Table size="medium">
             <TableHead>
               <TableRow>
-                <TableCell width="60%">
+                <TableCell width="55%">
                   <strong>Project Name</strong>
                 </TableCell>
                 <TableCell width="15%">
+                  <strong>Owner</strong>
+                </TableCell>
+                <TableCell width="20%">
                   <strong>Content</strong>
                 </TableCell>
-                <TableCell width="25%">
+                <TableCell width="10%">
                   <strong>Tags</strong>
                 </TableCell>
               </TableRow>
@@ -176,6 +179,7 @@ const ProjectList: React.FC = () => {
                         </Box>
                       </Box>
                     </TableCell>
+                    <TableCell>{project.owner_user}</TableCell>
                     <TableCell>
                       <Typography variant="body2">
                         {project.record_count} records
