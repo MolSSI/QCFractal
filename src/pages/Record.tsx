@@ -7,7 +7,7 @@ import ErrorIndicator from "../components/ErrorIndicator";
 import { useQuery } from "@tanstack/react-query";
 
 import { getRecordDetailsComponent } from "../components/record_components/lookup";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Box,
   Button,
@@ -173,6 +173,16 @@ function Record() {
     enabled: validRecordId,
   });
 
+  useEffect(() => {
+    if (recordData) {
+      const recordName = recordData.name ? recordData.name.trim() : "";
+      document.title = `Record ${recordData.id}${recordName ? ": " + recordName : ""}`;
+    }
+    else {
+      document.title = `Record ${parsedRecordId}`;
+    }
+  }, [recordData, parsedRecordId]);
+
   if (!validRecordId) {
     return <ErrorIndicator fullPage message="Invalid record ID" />;
   }
@@ -186,6 +196,7 @@ function Record() {
   if (!recordData) {
     return <ErrorIndicator fullPage message="Record not found" />;
   }
+
 
   //const RecordComponent = getRecordDetailsComponent(recordData.record_type);
   const RecordComponent = getRecordDetailsComponent(recordData.record_type);

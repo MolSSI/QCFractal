@@ -1,6 +1,6 @@
 // src/pages/Profile.tsx
 import { usePortalClient } from "../PortalClient.tsx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as qcpTypes from "../PortalTypes";
 import { useLocation, useParams } from "react-router-dom";
 import { useAuth } from "../Auth.tsx";
@@ -80,6 +80,12 @@ export default function Project() {
     queryFn: () => makeRequest<qcpTypes.Project>("GET", `api/v1/projects/${projectId}`),
     enabled: !!projectId,
   });
+
+  useEffect(() => {
+    if (projectData) {
+      document.title = `Project ${projectId}: ${projectData.name}`;
+    }
+  }, [projectData, projectId]);
 
   const {
     status: datasetMetadataStatus,

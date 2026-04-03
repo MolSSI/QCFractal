@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { usePortalClient } from "../PortalClient.tsx";
 import * as qcpTypes from "../PortalTypes";
 import { useParams } from "react-router-dom";
@@ -58,6 +58,15 @@ export default function Dataset() {
       makeRequest<qcpTypes.Dataset>("GET", `api/v1/datasets/${datasetId}`),
     enabled: !!datasetId,
   });
+
+  useEffect(() => {
+    if (datasetData) {
+      document.title = `Dataset ${datasetData.id}: ${datasetData.name}`;
+    }
+    else {
+      document.title = `Dataset ${datasetId}`;
+    }
+  }, [datasetData, datasetId]);
 
   const { data: statusData } = useQuery({
     queryKey: ["datasetStatus", datasetData?.dataset_type, datasetId],

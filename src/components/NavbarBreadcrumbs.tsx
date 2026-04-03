@@ -56,9 +56,17 @@ export default function NavbarBreadcrumbs() {
           }
           label = "Records";
         } else if (pathnames[index - 1] === "projects") {
-          label = "Project";
+          label = `Project ${value}`;
         } else if (pathnames[index - 1] === "records") {
-          label = "Record";
+          label = `Record ${value}`;
+        } else if (value === "datasets") {
+          const next = pathnames[index + 1];
+          if (next && /^\d+$/.test(next)) {
+            return null; // 👈 Skip this breadcrumb if followed by an ID
+          }
+          label = "Datasets";
+        } else if (pathnames[index - 1] === "datasets") {
+          label = `Dataset ${value}`;
         } else {
           label = value.charAt(0).toUpperCase() + value.slice(1);
         }
