@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Paper,
   Table,
@@ -32,22 +31,22 @@ export default function DatasetStatusTable({ statusData }: DatasetStatusTablePro
         <TableHead>
           <TableRow>
             <TableCell>
-              <strong>Specification</strong>
+              Specification
             </TableCell>
             <TableCell align="right">
-              <strong>Complete</strong>
+              Complete
             </TableCell>
             <TableCell align="right">
-              <strong>Waiting</strong>
+              Waiting
             </TableCell>
             <TableCell align="right">
-              <strong>Running</strong>
+              Running
             </TableCell>
             <TableCell align="right">
-              <strong>Error</strong>
+              Error
             </TableCell>
             <TableCell align="right">
-              <strong>Cancelled/Deleted/Invalid</strong>
+              Cancelled/Deleted/Invalid
             </TableCell>
           </TableRow>
         </TableHead>

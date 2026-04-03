@@ -197,6 +197,18 @@ export const dataDisplayCustomizations: Components<Theme> = {
       }),
     },
   },
+  MuiTableHead: {
+    styleOverrides: {
+      root: ({ theme }) => ({
+        "& .MuiTableCell-root": {
+          fontWeight: 600,
+          borderBottom: `1px solid ${
+            theme.palette.mode === "dark" ? gray[700] : gray[200]
+          }`,
+        },
+      }),
+    },
+  },
   MuiTablePagination: {
     styleOverrides: {
       actions: {

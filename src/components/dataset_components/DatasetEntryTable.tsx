@@ -140,7 +140,7 @@ export default function DatasetEntryTable({
             <TableRow>
               <TableCell width="50px" />
               <TableCell>
-                <strong>Name</strong>
+                Name
               </TableCell>
             </TableRow>
           </TableHead>

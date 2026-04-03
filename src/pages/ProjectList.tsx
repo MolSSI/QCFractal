@@ -121,16 +121,16 @@ const ProjectList: React.FC = () => {
             <TableHead>
               <TableRow>
                 <TableCell width="55%">
-                  <strong>Project Name</strong>
+                  Project Name
                 </TableCell>
                 <TableCell width="15%">
-                  <strong>Owner</strong>
+                  Owner
                 </TableCell>
                 <TableCell width="20%">
-                  <strong>Content</strong>
+                  Content
                 </TableCell>
                 <TableCell width="10%">
-                  <strong>Tags</strong>
+                  Tags
                 </TableCell>
               </TableRow>
             </TableHead>

@@ -75,28 +75,28 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({ recordData }) => {
                 "& td, & th": { borderBottom: "1px solid #ccc" }, // Horizontal lines only
               }}
             >
-              <TableHead>
-                <TableRow>
-                  <TableCell>
-                    <strong>ID</strong>
-                  </TableCell>
-                  <TableCell>
-                    <strong>Manager Name</strong>
-                  </TableCell>
-                  <TableCell>
-                    <strong>Date</strong>
-                  </TableCell>
-                  <TableCell>
-                    <strong>Status</strong>
-                  </TableCell>
-                  <TableCell>
-                    <strong>Output</strong>
-                  </TableCell>
-                  <TableCell>
-                    <strong>Provenance</strong>
-                  </TableCell>
-                </TableRow>
-              </TableHead>
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                ID
+              </TableCell>
+              <TableCell>
+                Manager Name
+              </TableCell>
+              <TableCell>
+                Date
+              </TableCell>
+              <TableCell>
+                Status
+              </TableCell>
+              <TableCell>
+                Output
+              </TableCell>
+              <TableCell>
+                Provenance
+              </TableCell>
+            </TableRow>
+          </TableHead>
               <TableBody>
                 {computeHistory.map(
                   (history: qcpTypes.ComputeHistory, index) => (

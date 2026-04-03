@@ -191,16 +191,16 @@ export default function ProjectRecordTable({
             <TableRow>
               <TableCell width="50px" />
               <TableCell>
-                <strong>Name</strong>
+                Name
               </TableCell>
               <TableCell>
-                <strong>Type</strong>
+                Type
               </TableCell>
               <TableCell>
-                <strong>Status</strong>
+                Status
               </TableCell>
               <TableCell>
-                <strong>Actions</strong>
+                Actions
               </TableCell>
             </TableRow>
           </TableHead>
