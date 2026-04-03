@@ -17,10 +17,10 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import DatasetTab from "../components/DatasetTab";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
-import RecordTab from "../components/RecordTab";
+import ProjectDatasetTable from "../components/project_components/ProjectDatasetTable";
+import ProjectRecordTable from "../components/project_components/ProjectRecordTable";
 import { useQuery } from "@tanstack/react-query";
 import { updateFavoritesList } from "../Utils";
 
@@ -223,35 +223,31 @@ export default function Project() {
                 </Tabs>
 
                 {/* Tab 1: Datasets */}
-                {datasetMetadataStatus === "pending" && <LoadingIndicator />}
-                {datasetMetadataStatus !== "pending" && (
-                  <TabPanel value={tabValue} index={0}>
-                    {datasetMetadata && datasetMetadata.length > 0 && (
-                      <DatasetTab
-                        datasetMetadata={datasetMetadata}
-                        onDelete={(id) => {
-                          console.log("Deleting dataset ID:", id);
-                        }}
-                      />
-                    )}
-                  </TabPanel>
-                )}
+                <TabPanel value={tabValue} index={0}>
+                  {datasetMetadataStatus === "pending" && <LoadingIndicator />}
+                  {datasetMetadataStatus === "success" && datasetMetadata && (
+                    <ProjectDatasetTable
+                      datasetMetadata={datasetMetadata}
+                      onDelete={(id) => {
+                        console.log("Deleting dataset ID:", id);
+                      }}
+                    />
+                  )}
+                </TabPanel>
 
                 {/* Tab 2: Records */}
-                {recordMetadataStatus === "pending" && <LoadingIndicator />}
-                {recordMetadataStatus !== "pending" && (
-                  <TabPanel value={tabValue} index={1}>
-                    {recordMetadata && recordMetadata.length > 0 && (
-                      <RecordTab
-                        recordMetadata={recordMetadata}
-                        onDelete={(id) => {
-                          // Implement your delete logic here, e.g. calling an API endpoint
-                          console.log("Deleting dataset ID:", id);
-                        }}
-                      />
-                    )}
-                  </TabPanel>
-                )}
+                <TabPanel value={tabValue} index={1}>
+                  {recordMetadataStatus === "pending" && <LoadingIndicator />}
+                  {recordMetadataStatus === "success" && recordMetadata && (
+                    <ProjectRecordTable
+                      recordMetadata={recordMetadata}
+                      onDelete={(id) => {
+                        // Implement your delete logic here, e.g. calling an API endpoint
+                        console.log("Deleting dataset ID:", id);
+                      }}
+                    />
+                  )}
+                </TabPanel>
               </Paper>
             </Grid>
           </Grid>

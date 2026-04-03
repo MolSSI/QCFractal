@@ -5,30 +5,19 @@ import { useParams } from "react-router-dom";
 import {
   Box,
   Chip,
-  Collapse,
   Grid,
-  IconButton,
   Paper,
   Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TablePagination,
-  TableRow,
   Tabs,
   Typography,
 } from "@mui/material";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
 import { useQuery } from "@tanstack/react-query";
-import {
-  getDatasetEntryComponent,
-  getSpecificationComponent,
-} from "../components/record_components/lookup.tsx";
+import DatasetStatusTable from "../components/dataset_components/DatasetStatusTable";
+import DatasetActions from "../components/dataset_components/DatasetActions";
+import DatasetSpecificationTable from "../components/dataset_components/DatasetSpecificationTable";
+import DatasetEntryTable from "../components/dataset_components/DatasetEntryTable";
 
 function TabPanel(props: {
   children?: React.ReactNode;
@@ -49,83 +38,11 @@ function TabPanel(props: {
   );
 }
 
-function EntryRow({
-  entryName,
-  datasetType,
-  datasetId,
-}: {
-  entryName: string;
-  datasetType: qcpTypes.RecordType;
-  datasetId: string;
-}) {
-  const [expanded, setExpanded] = React.useState(false);
-  const { makeRequest } = usePortalClient();
-
-  const { data: entryData, status } = useQuery({
-    queryKey: ["datasetEntry", datasetType, datasetId, entryName],
-    queryFn: () =>
-      makeRequest<Record<string, unknown>>(
-        "POST",
-        `api/v1/datasets/${datasetType}/${datasetId}/entries/bulkFetch`,
-        { names: [entryName] },
-      ),
-    enabled: expanded,
-  });
-
-  return (
-    <React.Fragment>
-      <TableRow
-        hover
-        sx={{ cursor: "pointer" }}
-        onClick={() => setExpanded(!expanded)}
-      >
-        <TableCell width="50px">
-          <IconButton size="small">
-            {expanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-          </IconButton>
-        </TableCell>
-        <TableCell>
-          <Typography variant="body2" fontWeight="medium">
-            {entryName}
-          </Typography>
-        </TableCell>
-      </TableRow>
-      <TableRow>
-        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={2}>
-          <Collapse in={expanded} timeout="auto" unmountOnExit>
-            <Box sx={{ p: 2 }}>
-              {status === "pending" && <LoadingIndicator />}
-              {status === "error" && (
-                <Typography color="error">Error fetching entry data</Typography>
-              )}
-              {status === "success" &&
-                entryData &&
-                (() => {
-                  const EntryComponent = getDatasetEntryComponent(datasetType);
-                  return <EntryComponent entry={entryData[entryName]} />;
-                })()}
-            </Box>
-          </Collapse>
-        </TableCell>
-      </TableRow>
-    </React.Fragment>
-  );
-}
-
 export default function Dataset() {
   const { datasetId } = useParams();
   const { makeRequest } = usePortalClient();
 
   const [tabValue, setTabValue] = React.useState(0);
-
-  const [pageSpec, setPageSpec] = React.useState(0);
-  const [rowsPerPageSpec, setRowsPerPageSpec] = React.useState(10);
-  const [expandedSpecName, setExpandedSpecName] = React.useState<string | null>(
-    null,
-  );
-
-  const [pageEntry, setPageEntry] = React.useState(0);
-  const [rowsPerPageEntry, setRowsPerPageEntry] = React.useState(10);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -181,32 +98,6 @@ export default function Dataset() {
       ),
     enabled: !!datasetId && !!datasetData?.dataset_type,
   });
-
-  const handleChangePageSpec = (_event: unknown, newPage: number) => {
-    setPageSpec(newPage);
-  };
-
-  const handleChangeRowsPerPageSpec = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    setRowsPerPageSpec(parseInt(event.target.value, 10));
-    setPageSpec(0);
-  };
-
-  const handleChangePageEntry = (_event: unknown, newPage: number) => {
-    setPageEntry(newPage);
-  };
-
-  const handleChangeRowsPerPageEntry = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    setRowsPerPageEntry(parseInt(event.target.value, 10));
-    setPageEntry(0);
-  };
-
-  const toggleExpandSpec = (name: string) => {
-    setExpandedSpecName((prev) => (prev === name ? null : name));
-  };
 
   if (!datasetId) {
     return <ErrorIndicator fullPage message="Missing dataset ID" />;
@@ -345,97 +236,7 @@ export default function Dataset() {
                 {!statusData ? (
                   <LoadingIndicator />
                 ) : (
-                  (() => {
-                    const totalCounts = Object.values(statusData).reduce(
-                      (acc, counts) => {
-                        Object.entries(counts).forEach(([status, count]) => {
-                          const s = status as qcpTypes.RecordStatus;
-                          acc[s] = (acc[s] || 0) + count;
-                        });
-                        return acc;
-                      },
-                      {} as Record<qcpTypes.RecordStatus, number>,
-                    );
-
-                    return (
-                      <TableContainer component={Paper} variant="outlined">
-                        <Table size="small">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell>
-                                <strong>Specification</strong>
-                              </TableCell>
-                              <TableCell align="right">
-                                <strong>Complete</strong>
-                              </TableCell>
-                              <TableCell align="right">
-                                <strong>Waiting</strong>
-                              </TableCell>
-                              <TableCell align="right">
-                                <strong>Running</strong>
-                              </TableCell>
-                              <TableCell align="right">
-                                <strong>Error</strong>
-                              </TableCell>
-                              <TableCell align="right">
-                                <strong>Cancelled/Deleted/Invalid</strong>
-                              </TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {Object.entries(statusData).map(
-                              ([specName, counts]) => (
-                                <TableRow key={specName}>
-                                  <TableCell>{specName}</TableCell>
-                                  <TableCell align="right">
-                                    {counts.complete || 0}
-                                  </TableCell>
-                                  <TableCell align="right">
-                                    {counts.waiting || 0}
-                                  </TableCell>
-                                  <TableCell align="right">
-                                    {counts.running || 0}
-                                  </TableCell>
-                                  <TableCell align="right">
-                                    {counts.error || 0}
-                                  </TableCell>
-                                  <TableCell align="right">
-                                    {counts.cancelled || 0} /{" "}
-                                    {counts.deleted || 0} /{" "}
-                                    {counts.invalid || 0}
-                                  </TableCell>
-                                </TableRow>
-                              ),
-                            )}
-                            <TableRow sx={{ backgroundColor: "rgba(0, 0, 0, 0.05)" }}>
-                              <TableCell>
-                                <strong>Total</strong>
-                              </TableCell>
-                              <TableCell align="right">
-                                <strong>{totalCounts.complete || 0}</strong>
-                              </TableCell>
-                              <TableCell align="right">
-                                <strong>{totalCounts.waiting || 0}</strong>
-                              </TableCell>
-                              <TableCell align="right">
-                                <strong>{totalCounts.running || 0}</strong>
-                              </TableCell>
-                              <TableCell align="right">
-                                <strong>{totalCounts.error || 0}</strong>
-                              </TableCell>
-                              <TableCell align="right">
-                                <strong>
-                                  {totalCounts.cancelled || 0} /{" "}
-                                  {totalCounts.deleted || 0} /{" "}
-                                  {totalCounts.invalid || 0}
-                                </strong>
-                              </TableCell>
-                            </TableRow>
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    );
-                  })()
+                  <DatasetStatusTable statusData={statusData} />
                 )}
               </Box>
             </Paper>
@@ -448,13 +249,11 @@ export default function Dataset() {
                   Actions
                 </Typography>
               </Box>
-              <Box p={2}>
-                {/* Buttons go here */}
-              </Box>
+              <DatasetActions />
             </Paper>
           </Grid>
 
-          {/* Tabs for Specifications, Entries, Records */}
+          {/* Tabs for Specifications, Entries */}
           <Grid size={12} mt={2}>
             <Paper elevation={2}>
               <Tabs
@@ -469,7 +268,6 @@ export default function Dataset() {
                   aria-controls="tabpanel-0"
                 />
                 <Tab label="Entries" id="tab-1" aria-controls="tabpanel-1" />
-                <Tab label="Records" id="tab-2" aria-controls="tabpanel-2" />
               </Tabs>
 
               {/* Tab 0: Specifications */}
@@ -477,93 +275,10 @@ export default function Dataset() {
                 {!specificationsData ? (
                   <LoadingIndicator />
                 ) : (
-                  <>
-                    <TableContainer component={Paper} variant="outlined">
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell width="50px" />
-                            <TableCell>
-                              <strong>Name</strong>
-                            </TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {Object.keys(specificationsData)
-                            .slice(
-                              pageSpec * rowsPerPageSpec,
-                              pageSpec * rowsPerPageSpec + rowsPerPageSpec,
-                            )
-                            .map((specName) => (
-                              <React.Fragment key={specName}>
-                                <TableRow
-                                  hover
-                                  sx={{ cursor: "pointer" }}
-                                  onClick={() => toggleExpandSpec(specName)}
-                                >
-                                  <TableCell>
-                                    <IconButton size="small">
-                                      {expandedSpecName === specName ? (
-                                        <KeyboardArrowUpIcon />
-                                      ) : (
-                                        <KeyboardArrowDownIcon />
-                                      )}
-                                    </IconButton>
-                                  </TableCell>
-                                  <TableCell>
-                                    <Typography
-                                      variant="body2"
-                                      fontWeight="medium"
-                                    >
-                                      {specName}
-                                    </Typography>
-                                  </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                  <TableCell
-                                    style={{ paddingBottom: 0, paddingTop: 0 }}
-                                    colSpan={2}
-                                  >
-                                    <Collapse
-                                      in={expandedSpecName === specName}
-                                      timeout="auto"
-                                      unmountOnExit
-                                    >
-                                      <Box>
-                                        {(() => {
-                                          const SpecificationComponent =
-                                            getSpecificationComponent(
-                                              datasetData.dataset_type,
-                                            );
-                                          return (
-                                            <SpecificationComponent
-                                              specification={
-                                                specificationsData[
-                                                  specName
-                                                ].specification
-                                              }
-                                            />
-                                          );
-                                        })()}
-                                      </Box>
-                                    </Collapse>
-                                  </TableCell>
-                                </TableRow>
-                              </React.Fragment>
-                            ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                    <TablePagination
-                      rowsPerPageOptions={[10, 25, 50]}
-                      component="div"
-                      count={Object.keys(specificationsData).length}
-                      rowsPerPage={rowsPerPageSpec}
-                      page={pageSpec}
-                      onPageChange={handleChangePageSpec}
-                      onRowsPerPageChange={handleChangeRowsPerPageSpec}
-                    />
-                  </>
+                  <DatasetSpecificationTable
+                    specificationsData={specificationsData}
+                    datasetType={datasetData.dataset_type}
+                  />
                 )}
               </TabPanel>
 
@@ -572,52 +287,12 @@ export default function Dataset() {
                 {!entryNamesData ? (
                   <LoadingIndicator />
                 ) : (
-                  <>
-                    <TableContainer component={Paper} variant="outlined">
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell width="50px" />
-                            <TableCell>
-                              <strong>Name</strong>
-                            </TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {entryNamesData
-                            .slice(
-                              pageEntry * rowsPerPageEntry,
-                              pageEntry * rowsPerPageEntry + rowsPerPageEntry,
-                            )
-                            .map((entryName) => (
-                              <EntryRow
-                                key={entryName}
-                                entryName={entryName}
-                                datasetType={datasetData.dataset_type}
-                                datasetId={datasetId}
-                              />
-                            ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                    <TablePagination
-                      rowsPerPageOptions={[10, 25, 50]}
-                      component="div"
-                      count={entryNamesData.length}
-                      rowsPerPage={rowsPerPageEntry}
-                      page={pageEntry}
-                      onPageChange={handleChangePageEntry}
-                      onRowsPerPageChange={handleChangeRowsPerPageEntry}
-                    />
-                  </>
+                  <DatasetEntryTable
+                    entryNames={entryNamesData}
+                    datasetType={datasetData.dataset_type}
+                    datasetId={datasetId}
+                  />
                 )}
-              </TabPanel>
-
-              {/* Tab 2: Records (blank for now) */}
-              <TabPanel value={tabValue} index={2}>
-                <Typography variant="body1">
-                  Records tab is coming soon.
-                </Typography>
               </TabPanel>
             </Paper>
           </Grid>
