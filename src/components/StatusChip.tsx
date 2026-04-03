@@ -27,7 +27,7 @@ const statusColors: Record<
   deleted: "secondary",
 };
 
-export const Status: React.FC<StatusProps> = ({ status, recordId }) => {
+export const StatusChip: React.FC<StatusProps> = ({ status, recordId }) => {
   const [waitingReasonOpen, setWaitingReasonOpen] = React.useState(false);
 
   const lowerStatus = status.toLowerCase();
@@ -65,4 +65,4 @@ export const Status: React.FC<StatusProps> = ({ status, recordId }) => {
   );
 };
 
-export default Status;
+export default StatusChip;

@@ -16,7 +16,7 @@ import AddIcon from "@mui/icons-material/Add";
 import * as qcpTypes from "../PortalTypes";
 import ManagerLink from "./ManagerLink";
 import ViewOutput from "./ViewOutput.tsx";
-import Status from "./Status.tsx";
+import StatusChip from "./StatusChip.tsx";
 
 interface ComputeHistoryProps {
   recordData: qcpTypes.RecordData;
@@ -114,7 +114,7 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({ recordData }) => {
                           "N/A"}
                       </TableCell>
                       <TableCell>
-                        <Status status={history.status} />
+                        <StatusChip status={history.status} />
                       </TableCell>
                       <TableCell>
                         <ViewOutput

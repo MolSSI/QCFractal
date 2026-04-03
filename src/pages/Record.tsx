@@ -18,8 +18,8 @@ import {
   Typography,
 } from "@mui/material";
 import { format } from "date-fns";
-import Status from "../components/Status.tsx";
-import RecordType from "../components/RecordType.tsx";
+import StatusChip from "../components/StatusChip.tsx";
+import RecordTypeChip from "../components/RecordTypeChip.tsx";
 import Comments from "../components/Comments.tsx";
 import ComputeHistory from "../components/ComputeHistory.tsx";
 import { ViewOutput } from "../components/ViewOutput.tsx";
@@ -92,8 +92,8 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
           justifyContent="flex-start"
         >
           <Stack spacing={1} alignItems="flex-end">
-            <Status status={recordData.status} recordId={recordData.id} />
-            <RecordType type={recordData.record_type} />
+            <StatusChip status={recordData.status} recordId={recordData.id} />
+            <RecordTypeChip type={recordData.record_type} />
             {recordData.is_service && (
               <Chip
                 label="Service"
