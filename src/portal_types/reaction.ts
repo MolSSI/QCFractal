@@ -8,11 +8,19 @@ export type ReactionSpecification = {
   optimization_specification?: OptimizationSpecification;
 };
 
+export type ReactionComponentMeta = {
+  molecule_id: number;
+  coefficient: number;
+  singlepoint_id?: number;
+  optimization_id?: number;
+  molecule?: Molecule;
+};
+
 export type ReactionRecord = BaseRecord & {
   record_type: "reaction";
   specification: ReactionSpecification;
   total_energy?: number;
-  component_records?: Record<string, unknown>[];
+  components?: ReactionComponentMeta[];
 };
 
 export type ReactionDatasetSpecification = {

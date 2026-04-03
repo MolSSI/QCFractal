@@ -8,7 +8,6 @@ import { usePreferences } from "../PreferencesProvider.tsx";
 import { Star, StarBorder } from "@mui/icons-material";
 import {
   Box,
-  Button,
   Chip,
   Grid,
   IconButton,
@@ -181,19 +180,6 @@ export default function Project() {
           <Grid size={12} sx={{ mx: "auto" }}>
             <Grid size={12} mb={3}>
               <Paper elevation={2}>
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="left"
-                  p={2}
-                >
-                  <Typography variant="h6" fontWeight="bold">
-                    Description & Metadata
-                  </Typography>
-                  <Button sx={{ ml: 2 }} variant="outlined" color="primary">
-                    Edit
-                  </Button>
-                </Box>
                 <Box p={2}>
                   <Typography variant="h6" fontWeight="bold" gutterBottom>
                     Description
