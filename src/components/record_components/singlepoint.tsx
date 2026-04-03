@@ -11,7 +11,7 @@ import {
 } from "./types";
 import { RenderSpecification } from "./RenderSpecification.tsx";
 import { RenderEntry } from "./RenderEntry.tsx";
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Grid, Typography, useTheme } from "@mui/material";
 import Properties from "../Properties.tsx";
 import LoadingIndicator from "../LoadingIndicator.tsx";
 import ErrorIndicator from "../ErrorIndicator.tsx";
@@ -53,6 +53,7 @@ export const RecordDetails: React.FC<
   RecordComponentProps<SinglepointRecord>
 > = ({ recordData }) => {
   const { makeRequest } = usePortalClient();
+  const theme = useTheme();
 
   const { status: moleculeStatus, data: moleculeData } = useQuery({
     queryKey: ["molecule", recordData.molecule?.id],
@@ -106,13 +107,13 @@ export const RecordDetails: React.FC<
             <Box
               sx={{
                 width: "100%",
-                height: 280,
-                backgroundColor: "#e0e0e0",
-                borderRadius: 2,
-                overflow: "hidden",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                border: `1px solid ${theme.palette.divider}`,
+                borderRadius: 1,
+                overflow: "hidden",
+                bgcolor: "background.paper",
               }}
             >
               {moleculeStatus === "pending" ? (
@@ -126,7 +127,7 @@ export const RecordDetails: React.FC<
               ) : (
                 <Typography
                   sx={{
-                    color: "#856404",
+                    color: "warning.main",
                     fontSize: "1rem",
                     textAlign: "center",
                     px: 2,
