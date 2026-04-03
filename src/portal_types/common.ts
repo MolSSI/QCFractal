@@ -223,6 +223,8 @@ export type ComputeHistory = {
 
 export type UserPreferences = Record<string, any>;
 
+export type DatasetStatus = Record<string, Record<RecordStatus, number>>;
+
 export type Dataset = {
   id: number;
   dataset_type: RecordType;

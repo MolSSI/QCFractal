@@ -142,6 +142,16 @@ export default function Dataset() {
     enabled: !!datasetId,
   });
 
+  const { data: statusData } = useQuery({
+    queryKey: ["datasetStatus", datasetData?.dataset_type, datasetId],
+    queryFn: () =>
+      makeRequest<qcpTypes.DatasetStatus>(
+        "GET",
+        `api/v1/datasets/${datasetData?.dataset_type}/${datasetId}/status`,
+      ),
+    enabled: !!datasetId && !!datasetData?.dataset_type,
+  });
+
   const { data: specificationsData } = useQuery({
     queryKey: ["datasetSpecifications", datasetData?.dataset_type, datasetId],
     queryFn: () =>
@@ -276,11 +286,6 @@ export default function Dataset() {
           {/* Description & Metadata section */}
           <Grid size={12}>
             <Paper elevation={2}>
-              <Box p={2} borderBottom={1} borderColor="divider">
-                <Typography variant="h6" fontWeight="bold">
-                  Description & Metadata
-                </Typography>
-              </Box>
               <Box p={2}>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                   Description
@@ -324,6 +329,127 @@ export default function Dataset() {
                     {datasetData.default_compute_priority}
                   </Typography>
                 </Box>
+              </Box>
+            </Paper>
+          </Grid>
+
+          {/* Status section */}
+          <Grid size={6}>
+            <Paper elevation={2}>
+              <Box p={2} borderBottom={1} borderColor="divider">
+                <Typography variant="h6" fontWeight="bold">
+                  Status
+                </Typography>
+              </Box>
+              <Box p={2}>
+                {!statusData ? (
+                  <LoadingIndicator />
+                ) : (
+                  (() => {
+                    const totalCounts = Object.values(statusData).reduce(
+                      (acc, counts) => {
+                        Object.entries(counts).forEach(([status, count]) => {
+                          const s = status as qcpTypes.RecordStatus;
+                          acc[s] = (acc[s] || 0) + count;
+                        });
+                        return acc;
+                      },
+                      {} as Record<qcpTypes.RecordStatus, number>,
+                    );
+
+                    return (
+                      <TableContainer component={Paper} variant="outlined">
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>
+                                <strong>Specification</strong>
+                              </TableCell>
+                              <TableCell align="right">
+                                <strong>Complete</strong>
+                              </TableCell>
+                              <TableCell align="right">
+                                <strong>Waiting</strong>
+                              </TableCell>
+                              <TableCell align="right">
+                                <strong>Running</strong>
+                              </TableCell>
+                              <TableCell align="right">
+                                <strong>Error</strong>
+                              </TableCell>
+                              <TableCell align="right">
+                                <strong>Cancelled/Deleted/Invalid</strong>
+                              </TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {Object.entries(statusData).map(
+                              ([specName, counts]) => (
+                                <TableRow key={specName}>
+                                  <TableCell>{specName}</TableCell>
+                                  <TableCell align="right">
+                                    {counts.complete || 0}
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    {counts.waiting || 0}
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    {counts.running || 0}
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    {counts.error || 0}
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    {counts.cancelled || 0} /{" "}
+                                    {counts.deleted || 0} /{" "}
+                                    {counts.invalid || 0}
+                                  </TableCell>
+                                </TableRow>
+                              ),
+                            )}
+                            <TableRow sx={{ backgroundColor: "rgba(0, 0, 0, 0.05)" }}>
+                              <TableCell>
+                                <strong>Total</strong>
+                              </TableCell>
+                              <TableCell align="right">
+                                <strong>{totalCounts.complete || 0}</strong>
+                              </TableCell>
+                              <TableCell align="right">
+                                <strong>{totalCounts.waiting || 0}</strong>
+                              </TableCell>
+                              <TableCell align="right">
+                                <strong>{totalCounts.running || 0}</strong>
+                              </TableCell>
+                              <TableCell align="right">
+                                <strong>{totalCounts.error || 0}</strong>
+                              </TableCell>
+                              <TableCell align="right">
+                                <strong>
+                                  {totalCounts.cancelled || 0} /{" "}
+                                  {totalCounts.deleted || 0} /{" "}
+                                  {totalCounts.invalid || 0}
+                                </strong>
+                              </TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    );
+                  })()
+                )}
+              </Box>
+            </Paper>
+          </Grid>
+
+          <Grid size={6}>
+            <Paper elevation={2}>
+              <Box p={2} borderBottom={1} borderColor="divider">
+                <Typography variant="h6" fontWeight="bold">
+                  Actions
+                </Typography>
+              </Box>
+              <Box p={2}>
+                {/* Buttons go here */}
               </Box>
             </Paper>
           </Grid>
