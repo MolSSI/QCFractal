@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { PortalClientProvider } from "./PortalClient.tsx";
 import { AuthProvider } from "./Auth.tsx";
+const SandboxPage  = lazy(() => import("./pages/Sandbox.tsx"));
 const HomePage = lazy(() => import("./pages/Home.tsx"));
 const LoginPage = lazy(() => import("./pages/Login"));
 const MainLayout = lazy(() => import("./layouts/MainLayout"));
@@ -48,6 +49,7 @@ function App() {
                     <Route element={<ProtectedRoute />}>
                       <Route element={<MainLayout />}>
                         <Route path="/" element={<HomePage />} />
+                        <Route path="/sandbox" element={<SandboxPage />} />
                         <Route path="/me" element={<UserInfo />} />
                         <Route path="/users/:userName" element={<UserInfo />} />
                         <Route path="/projects" element={<ProjectList />} />

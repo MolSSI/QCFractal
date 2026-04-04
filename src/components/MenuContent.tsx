@@ -6,15 +6,15 @@ import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
-import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
+import CarpenterIcon from "@mui/icons-material/Carpenter";
 import ComputerIcon from "@mui/icons-material/Computer";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const mainListItems = [
   { text: "Home", icon: <HomeRoundedIcon />, path: "/" },
   { text: "Projects", icon: <FormatListBulletedIcon />, path: "/projects" },
-  { text: "Clients", icon: <PeopleRoundedIcon />, path: "#" },
   { text: "Compute", icon: <ComputerIcon />, path: "/managers" },
+  { text: "Sandbox", icon: <CarpenterIcon />, path: "/sandbox" },
 ];
 
 interface MenuContentProps {
