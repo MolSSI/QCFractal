@@ -45,6 +45,11 @@ function EntryRow({
     enabled: expanded,
   });
 
+  const EntryComponent = React.useMemo(
+    () => getDatasetEntryComponent(datasetType),
+    [datasetType],
+  );
+
   return (
     <React.Fragment>
       <TableRow
@@ -71,12 +76,9 @@ function EntryRow({
               {status === "error" && (
                 <Typography color="error">Error fetching entry data</Typography>
               )}
-              {status === "success" &&
-                entryData &&
-                (() => {
-                  const EntryComponent = getDatasetEntryComponent(datasetType);
-                  return <EntryComponent entry={entryData[entryName]} />;
-                })()}
+              {status === "success" && entryData && (
+                <EntryComponent entry={entryData[entryName]} />
+              )}
             </Box>
           </Collapse>
         </TableCell>

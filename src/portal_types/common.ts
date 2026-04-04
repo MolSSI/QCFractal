@@ -2,6 +2,13 @@ import { RecordType } from "./record_types";
 export type ServerInfo = {
   name: string;
   version: string;
+  api_limits: {
+    get_records: number;
+    add_records: number;
+    get_dataset_entries: number;
+    get_molecules: number;
+    get_managers: number;
+  }
 };
 
 export type UserInfo = {

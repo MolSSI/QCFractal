@@ -76,6 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [serverInfo, setServerInfo] = useState<qcpTypes.ServerInfo>({
     name: "(unknown)",
     version: "(unknown)",
+    api_limits: {
+      get_records: 0,
+      add_records: 0,
+      get_dataset_entries: 0,
+      get_molecules: 0,
+      get_managers: 0,
+      }
   });
 
   const [authorized, setAuthorized] = useState<boolean>(false);
