@@ -19,6 +19,11 @@ export const renderValue = (value: unknown): React.ReactNode => {
           .map(([k, v]) => (
             <ListItem key={k} disablePadding>
               <ListItemText
+                sx={{
+                  margin: .15,
+                  textIndent: "-1em",
+                  pl: "1em",
+                }}
                 primary={
                   <>
                     <strong>{k}:</strong> {renderValue(v)}

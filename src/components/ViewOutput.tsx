@@ -82,7 +82,7 @@ export const ViewOutput: React.FC<ViewOutputButtonProps> = ({
 
       <Dialog
         fullWidth={true}
-        maxWidth="md"
+        maxWidth="lg"
         open={open}
         onClose={() => setOpen(false)}
       >
@@ -122,7 +122,7 @@ export const ViewOutput: React.FC<ViewOutputButtonProps> = ({
                         whiteSpace: "pre-wrap",
                         fontFamily: "monospace",
                         overflowY: "auto",
-                        maxHeight: "400px",
+                        maxHeight: "1200px",
                       }}
                     >
                       {typeof outputContentData === "string" ? (

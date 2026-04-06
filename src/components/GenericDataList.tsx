@@ -35,16 +35,21 @@ export const GenericDataList: React.FC<GenericDataListProps> = ({ data, keys }) 
         }
 
         return (
-          <ListItem key={index} disablePadding>
-            <ListItemText
-              primary={
-                <>
-                  <strong>{label}:</strong>{" "}
-                  {customRender ? customRender(value) : renderValue(value)}
-                </>
-              }
-            />
-          </ListItem>
+            <ListItem key={index} disablePadding>
+              <ListItemText
+                sx={{
+                  margin: 0.15,
+                  textIndent: "-1em",
+                  pl: "1em",
+                }}
+                primary={
+                  <>
+                    <strong>{label}:</strong>{" "}
+                    {customRender ? customRender(value) : renderValue(value)}
+                  </>
+                }
+              />
+            </ListItem>
         );
       })}
     </List>
