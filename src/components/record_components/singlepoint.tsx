@@ -11,11 +11,11 @@ import {
 } from "./types";
 import { RenderSpecification } from "./RenderSpecification.tsx";
 import { RenderEntry } from "./RenderEntry.tsx";
-import { Box, Grid, Typography, useTheme } from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
 import Properties from "../Properties.tsx";
 import LoadingIndicator from "../LoadingIndicator.tsx";
 import ErrorIndicator from "../ErrorIndicator.tsx";
-import { MoleculeStageProvider, MoleculeViewer } from "../Molecule.tsx";
+import { SingleMoleculeViewer } from "../Molecule.tsx";
 import { useQuery } from "@tanstack/react-query";
 import * as qcpTypes from "../../PortalTypes.ts";
 import { usePortalClient } from "../../PortalClient.tsx";
@@ -53,10 +53,9 @@ export const RecordDetails: React.FC<
   RecordComponentProps<SinglepointRecord>
 > = ({ recordData }) => {
   const { makeRequest } = usePortalClient();
-  const theme = useTheme();
 
   const { status: moleculeStatus, data: moleculeData } = useQuery({
-    queryKey: ["molecule", recordData.molecule?.id],
+    queryKey: ["molecule", recordData.molecule_id],
     queryFn: () =>
       makeRequest<qcpTypes.Molecule>(
         "GET",
@@ -66,6 +65,10 @@ export const RecordDetails: React.FC<
   });
 
   const displayMolecule = recordData.molecule || moleculeData;
+  const moleculeTitle = displayMolecule
+    ? `${displayMolecule.identifiers.molecular_formula} (ID ${displayMolecule.id})`
+    : "Molecule";
+
   return (
     <>
       {/* Specification, Properties, and Molecule Viewer */}
@@ -97,48 +100,20 @@ export const RecordDetails: React.FC<
               p: 1,
               display: "flex",
               flexDirection: "column",
-              alignItems: "center",
             }}
           >
-            <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
-              {displayMolecule?.identifiers.molecular_formula} (ID{" "}
-              {displayMolecule?.id})
-            </Typography>
-            <Box
-              sx={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                border: `1px solid ${theme.palette.divider}`,
-                borderRadius: 1,
-                overflow: "hidden",
-                bgcolor: "background.paper",
-              }}
-            >
               {moleculeStatus === "pending" ? (
                 <LoadingIndicator message="Loading molecule..." />
               ) : moleculeStatus === "error" ? (
                 <ErrorIndicator message="Failed to load molecule." />
-              ) : displayMolecule && typeof displayMolecule === "object" ? (
-                <MoleculeStageProvider width="100%" height={280}>
-                  <MoleculeViewer moleculeData={displayMolecule} />
-                </MoleculeStageProvider>
               ) : (
-                <Typography
-                  sx={{
-                    color: "warning.main",
-                    fontSize: "1rem",
-                    textAlign: "center",
-                    px: 2,
-                    fontWeight: 500,
-                  }}
-                >
-                  No molecule available for this record.
-                </Typography>
+                <SingleMoleculeViewer molecule={displayMolecule}
+                                      title={moleculeTitle}
+                                      width="100%"
+                                      height={280} />
+
               )}
             </Box>
-          </Box>
         </Grid>
       </Grid>
     </>
