@@ -61,6 +61,11 @@ export default function DatasetSpecificationTable({
     setExpandedSpecName((prev) => (prev === name ? null : name));
   };
 
+  const SpecificationComponent = React.useMemo(
+    () => getSpecificationComponent(datasetType),
+    [datasetType],
+  );
+
   return (
     <>
       <Box sx={{ mb: 2 }} width={"30%"}>
@@ -119,17 +124,11 @@ export default function DatasetSpecificationTable({
                         unmountOnExit
                       >
                         <Box>
-                          {(() => {
-                            const SpecificationComponent =
-                              getSpecificationComponent(datasetType);
-                            return (
-                              <SpecificationComponent
-                                specification={
-                                  specificationsData[specName].specification
-                                }
-                              />
-                            );
-                          })()}
+                          <SpecificationComponent
+                            specification={
+                              specificationsData[specName].specification
+                            }
+                          />
                         </Box>
                       </Collapse>
                     </TableCell>

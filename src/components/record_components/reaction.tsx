@@ -84,14 +84,14 @@ export const RecordDetails: React.FC<
         "GET",
         `api/v1/records/reaction/${recordData.id}/components`,
       ),
-    enabled: !recordData.components,
+    enabled: !!recordData.id && !recordData.components,
   });
 
   const displayComponents = recordData.components || componentsData;
 
   const moleculeTuples: [string, qcpTypes.Molecule][] =
     displayComponents?.map((comp) => {
-      const name = `${comp.coefficient > 0 ? "+" : ""}${comp.coefficient} ${comp.molecule?.identifiers.molecular_formula || "Molecule"} (ID ${comp.molecule_id})`;
+      const name = `${comp.coefficient > 0 ? "+" : ""}${comp.coefficient} ${comp.molecule?.identifiers?.molecular_formula || "Molecule"} (ID ${comp.molecule_id})`;
       return [name, comp.molecule as qcpTypes.Molecule];
     }) || [];
 
@@ -125,17 +125,16 @@ export const RecordDetails: React.FC<
               p: 1,
               display: "flex",
               flexDirection: "column",
-              alignItems: "center",
             }}
           >
-            <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+            <Typography variant="h6" fontWeight="bold" sx={{ mb: 1, textAlign: "center" }}>
               Reaction Components
             </Typography>
             <Box
               sx={{
                 width: "100%",
                 display: "flex",
-                alignItems: "center",
+                alignItems: "stretch",
                 justifyContent: "center",
               }}
             >

@@ -1,23 +1,39 @@
 import React, { useEffect } from "react";
 import { usePortalClient } from "../PortalClient.tsx";
 import * as qcpTypes from "../PortalTypes";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import {
   Box,
   Chip,
   Grid,
+  IconButton,
   Paper,
   Tab,
   Tabs,
+  Tooltip,
   Typography,
 } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import DatasetStatusTable from "../components/dataset_components/DatasetStatusTable";
 import DatasetActions from "../components/dataset_components/DatasetActions";
 import DatasetSpecificationTable from "../components/dataset_components/DatasetSpecificationTable";
 import DatasetEntryTable from "../components/dataset_components/DatasetEntryTable";
+import DatasetRecords from "../components/dataset_components/DatasetRecords";
+import { asRecord } from "../Utils.ts";
+import {
+  areDatasetViewStatesEqual,
+  createDefaultDatasetViewState,
+  createSavedDatasetPageState,
+  DatasetLocationState,
+  DatasetRecordViewState,
+  DatasetViewState,
+  getSavedDatasetViewState,
+} from "../components/dataset_components/DatasetViewState.tsx";
+
+const RECORDS_TAB_INDEX = 2;
 
 function TabPanel(props: {
   children?: React.ReactNode;
@@ -40,12 +56,166 @@ function TabPanel(props: {
 
 export default function Dataset() {
   const { datasetId } = useParams();
+  const location = useLocation();
   const { makeRequest } = usePortalClient();
+  const queryClient = useQueryClient();
 
-  const [tabValue, setTabValue] = React.useState(0);
+  const restoredViewState = React.useMemo(
+    () =>
+      getSavedDatasetViewState(location.state, datasetId) ||
+      createDefaultDatasetViewState(),
+    [datasetId, location.state],
+  );
+
+  const [storedDatasetViewState, setStoredDatasetViewState] = React.useState<{
+    datasetId?: string;
+    viewState: DatasetViewState;
+  }>(() => ({
+    datasetId,
+    viewState: restoredViewState,
+  }));
+
+  const viewState =
+    storedDatasetViewState.datasetId === datasetId
+      ? storedDatasetViewState.viewState
+      : restoredViewState;
+
+  const setViewState = (
+    update:
+      | DatasetViewState
+      | ((currentViewState: DatasetViewState) => DatasetViewState),
+  ) => {
+    setStoredDatasetViewState((currentStoredState) => {
+      const currentViewState =
+        currentStoredState.datasetId === datasetId
+          ? currentStoredState.viewState
+          : restoredViewState;
+      const nextViewState =
+        typeof update === "function" ? update(currentViewState) : update;
+
+      return {
+        datasetId,
+        viewState: nextViewState,
+      };
+    });
+  };
+
+  useEffect(() => {
+    if (!datasetId) {
+      return;
+    }
+
+    const historyState = asRecord(window.history.state) || {};
+    const userState = asRecord(historyState.usr) || {};
+    const currentSavedState = getSavedDatasetViewState(userState, datasetId);
+
+    if (
+      currentSavedState &&
+      areDatasetViewStatesEqual(currentSavedState, viewState)
+    ) {
+      return;
+    }
+
+    window.history.replaceState(
+      {
+        ...historyState,
+        usr: {
+          ...userState,
+          datasetPageState: createSavedDatasetPageState(datasetId, viewState),
+        } satisfies DatasetLocationState,
+      },
+      "",
+      `${location.pathname}${location.search}${location.hash}`,
+    );
+  }, [datasetId, location.hash, location.pathname, location.search, viewState]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
+    setViewState((currentViewState) => ({
+      ...currentViewState,
+      tabValue: newValue,
+    }));
+  };
+
+  const updateRecordView = (updates: Partial<DatasetRecordViewState>) => {
+    setViewState((currentViewState) => ({
+      ...currentViewState,
+      recordView: {
+        ...currentViewState.recordView,
+        ...updates,
+      },
+    }));
+  };
+
+  const handleRowsPerPageChange = (rowsPerPage: number) => {
+    updateRecordView({
+      rowsPerPage,
+      page: 0,
+    });
+  };
+
+  const handleEntryFilterChange = (entryFilter: string) => {
+    updateRecordView({
+      entryFilter,
+      page: 0,
+    });
+  };
+
+  const handleSpecFilterChange = (specFilter: string) => {
+    updateRecordView({
+      specFilter,
+      page: 0,
+    });
+  };
+
+  const handleStatusFilterChange = (
+    statusFilter: "all" | qcpTypes.RecordStatus,
+  ) => {
+    updateRecordView({
+      statusFilter,
+      page: 0,
+    });
+  };
+
+  const handleStatusTableSelect = (
+    specificationName: string,
+    status: qcpTypes.RecordStatus,
+  ) => {
+    setViewState((currentViewState) => ({
+      tabValue: RECORDS_TAB_INDEX,
+      recordView: {
+        ...currentViewState.recordView,
+        page: 0,
+        entryFilter: "",
+        specFilter: specificationName,
+        statusFilter: status,
+      },
+    }));
+  };
+
+  const handleRefresh = () => {
+    if (!datasetId) {
+      return;
+    }
+
+    queryClient.invalidateQueries({
+      queryKey: ["dataset", datasetId],
+    });
+
+    if (!datasetData?.dataset_type) {
+      return;
+    }
+
+    const datasetScopedKeys = [
+      ["datasetStatus", datasetData.dataset_type, datasetId],
+      ["datasetSpecifications", datasetData.dataset_type, datasetId],
+      ["datasetEntryNames", datasetData.dataset_type, datasetId],
+      ["datasetRecordCount", datasetData.dataset_type, datasetId],
+      ["datasetRecordDiscovery", datasetData.dataset_type, datasetId],
+    ] as const;
+
+    datasetScopedKeys.forEach((queryKey) => {
+      queryClient.invalidateQueries({ queryKey });
+    });
   };
 
   const {
@@ -62,8 +232,7 @@ export default function Dataset() {
   useEffect(() => {
     if (datasetData) {
       document.title = `Dataset ${datasetData.id}: ${datasetData.name}`;
-    }
-    else {
+    } else {
       document.title = `Dataset ${datasetId}`;
     }
   }, [datasetData, datasetId]);
@@ -81,7 +250,9 @@ export default function Dataset() {
   const { data: specificationsData } = useQuery({
     queryKey: ["datasetSpecifications", datasetData?.dataset_type, datasetId],
     queryFn: () =>
-      makeRequest<Record<string, any>>(
+      makeRequest<
+        Record<string, { specification: qcpTypes.DatasetSpecificationData }>
+      >(
         "GET",
         `api/v1/datasets/${datasetData?.dataset_type}/${datasetId}/specifications`,
       ),
@@ -148,6 +319,13 @@ export default function Dataset() {
                 >
                   {datasetData.tagline}
                 </Typography>
+              </Box>
+              <Box sx={{ ml: "auto" }}>
+                <Tooltip title="Refresh dataset information">
+                  <IconButton onClick={handleRefresh} color="primary">
+                    <RefreshIcon />
+                  </IconButton>
+                </Tooltip>
               </Box>
             </Box>
           </Grid>
@@ -245,7 +423,10 @@ export default function Dataset() {
                 {!statusData ? (
                   <LoadingIndicator />
                 ) : (
-                  <DatasetStatusTable statusData={statusData} />
+                  <DatasetStatusTable
+                    statusData={statusData}
+                    onSelectStatus={handleStatusTableSelect}
+                  />
                 )}
               </Box>
             </Paper>
@@ -266,7 +447,7 @@ export default function Dataset() {
           <Grid size={12} mt={2}>
             <Paper elevation={2}>
               <Tabs
-                value={tabValue}
+                value={viewState.tabValue}
                 onChange={handleTabChange}
                 aria-label="dataset sections tabs"
                 variant="fullWidth"
@@ -277,10 +458,11 @@ export default function Dataset() {
                   aria-controls="tabpanel-0"
                 />
                 <Tab label="Entries" id="tab-1" aria-controls="tabpanel-1" />
+                <Tab label="Records" id="tab-2" aria-controls="tabpanel-2" />
               </Tabs>
 
               {/* Tab 0: Specifications */}
-              <TabPanel value={tabValue} index={0}>
+              <TabPanel value={viewState.tabValue} index={0}>
                 {!specificationsData ? (
                   <LoadingIndicator />
                 ) : (
@@ -292,7 +474,7 @@ export default function Dataset() {
               </TabPanel>
 
               {/* Tab 1: Entries */}
-              <TabPanel value={tabValue} index={1}>
+              <TabPanel value={viewState.tabValue} index={1}>
                 {!entryNamesData ? (
                   <LoadingIndicator />
                 ) : (
@@ -300,6 +482,32 @@ export default function Dataset() {
                     entryNames={entryNamesData}
                     datasetType={datasetData.dataset_type}
                     datasetId={datasetId}
+                  />
+                )}
+              </TabPanel>
+
+              {/* Tab 2: Records */}
+              <TabPanel value={viewState.tabValue} index={2}>
+                {!entryNamesData || !specificationsData || !statusData ? (
+                  <LoadingIndicator />
+                ) : (
+                  <DatasetRecords
+                    datasetId={datasetId}
+                    datasetType={datasetData.dataset_type}
+                    datasetStatus={statusData}
+                    specifications={Object.keys(specificationsData)}
+                    entryNames={entryNamesData}
+                    totalRecords={recordCountData}
+                    page={viewState.recordView.page}
+                    rowsPerPage={viewState.recordView.rowsPerPage}
+                    entryFilter={viewState.recordView.entryFilter}
+                    specFilter={viewState.recordView.specFilter}
+                    statusFilter={viewState.recordView.statusFilter}
+                    onPageChange={(page) => updateRecordView({ page })}
+                    onRowsPerPageChange={handleRowsPerPageChange}
+                    onEntryFilterChange={handleEntryFilterChange}
+                    onSpecFilterChange={handleSpecFilterChange}
+                    onStatusFilterChange={handleStatusFilterChange}
                   />
                 )}
               </TabPanel>
