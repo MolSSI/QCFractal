@@ -185,7 +185,7 @@ export const RecordDetails: React.FC<
               <Box sx={{ width: "100%", height: 350 }}>
                 <LineChart
                   xAxis={[{ data: energies.map((_, i) => i), label: "Step" }]}
-                  yAxis={[{ valueFormatter: (value) => value.toFixed(1) }]}
+                  yAxis={[{ valueFormatter: (value: number) => value.toFixed(1) }]}
                   series={[
                     {
                       data: relativeEnergies,
@@ -233,7 +233,7 @@ export const RecordDetails: React.FC<
                   </TableHead>
                   <TableBody>
                     {trajectory.length > 0 ? (
-                      trajectory.map((step, index) => (
+                      trajectory.map((step: number, index: number) => (
                         <TableRow key={step}>
                           <TableCell>{index}</TableCell>
                           <TableCell>
