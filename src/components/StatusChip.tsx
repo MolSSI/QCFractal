@@ -1,11 +1,15 @@
 import React from "react";
 import { Chip, Tooltip, Dialog, DialogContent, Box } from "@mui/material";
 import HelpOutline from "@mui/icons-material/HelpOutline";
+import ErrorOutline from "@mui/icons-material/ErrorOutline";
 import { WaitingReasonFragment } from "./WaitingReasonFragment";
+import { ViewOutputDialog } from "./ViewOutputDialog.tsx";
 
 interface StatusProps {
   status: string;
+  recordType?: string;
   recordId?: number;
+  computeHistoryId?: number;
 }
 
 const statusColors: Record<
@@ -27,11 +31,15 @@ const statusColors: Record<
   deleted: "secondary",
 };
 
-export const StatusChip: React.FC<StatusProps> = ({ status, recordId }) => {
+export const StatusChip: React.FC<StatusProps> = ({ status, recordType, recordId, computeHistoryId}) => {
   const [waitingReasonOpen, setWaitingReasonOpen] = React.useState(false);
+  const [errorDetailsOpen, setErrorDetailsOpen] = React.useState(false);
 
   const lowerStatus = status.toLowerCase();
   const color = statusColors[lowerStatus] || "default";
+
+  const showWaitingReason = lowerStatus === "waiting" && recordId !== undefined;
+  const showError = lowerStatus === "error" && recordId !== undefined && recordType !== undefined;
 
   return (
     <Box display="flex" alignItems="center" gap={1}>
@@ -40,25 +48,59 @@ export const StatusChip: React.FC<StatusProps> = ({ status, recordId }) => {
         color={color}
         sx={{ fontWeight: "bold", textTransform: "capitalize" }}
       />
-      {lowerStatus === "waiting" && recordId !== undefined && (
+
+      {showWaitingReason && (
         <>
           <Tooltip title="Click here for waiting reason">
             <HelpOutline
               fontSize="small"
               color="action"
               sx={{ cursor: "pointer" }}
-              onClick={() => setWaitingReasonOpen(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setWaitingReasonOpen(true);
+              }}
             />
           </Tooltip>
           <Dialog
             fullWidth={true}
             open={waitingReasonOpen}
-            onClose={() => setWaitingReasonOpen(false)}
+            onClose={() => {
+              setWaitingReasonOpen(false);
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
           >
             <DialogContent>
               <WaitingReasonFragment recordId={recordId} />
             </DialogContent>
           </Dialog>
+        </>
+      )}
+      {showError && (
+        <>
+          <Tooltip title="Click here to view error">
+            <ErrorOutline
+              fontSize="small"
+              color="action"
+              sx={{ cursor: "pointer" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setErrorDetailsOpen(true);
+              }}
+            />
+          </Tooltip>
+          <ViewOutputDialog
+            recordId={recordId}
+            recordType={recordType}
+            computeHistoryId={computeHistoryId}
+            initialKey={"error"}
+            open={errorDetailsOpen}
+            onClose={() => {
+              setErrorDetailsOpen(false);
+            }}
+            />
         </>
       )}
     </Box>

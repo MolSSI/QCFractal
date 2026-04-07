@@ -1,5 +1,4 @@
 import { BaseRecord, QCSpecification, Molecule } from "./common";
-import { SinglepointRecord } from "./singlepoint";
 
 export type OptimizationSpecification = {
   program: string;

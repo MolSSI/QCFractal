@@ -114,7 +114,7 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({ recordData }) => {
                           "N/A"}
                       </TableCell>
                       <TableCell>
-                        <StatusChip status={history.status} />
+                        <StatusChip status={history.status} recordType={recordType} recordId={recordId} />
                       </TableCell>
                       <TableCell>
                         <ViewOutput

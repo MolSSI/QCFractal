@@ -248,10 +248,6 @@ export default function Project() {
                   {recordMetadataStatus === "success" && recordMetadata && (
                     <ProjectRecordTable
                       recordMetadata={recordMetadata}
-                      onDelete={(id) => {
-                        // Implement your delete logic here, e.g. calling an API endpoint
-                        console.log("Deleting dataset ID:", id);
-                      }}
                     />
                   )}
                 </TabPanel>

@@ -135,7 +135,12 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
           <Button variant="outlined" size="small" disabled>
             Reset
           </Button>
-          <TaskServiceDetails recordData={recordData} />
+          <TaskServiceDetails
+            recordId={recordData.id}
+            recordType={recordData.record_type}
+            isService={recordData.is_service}
+            disabled={recordData.status === "complete"}
+          />
         </Box>
 
         {/* Compute History Section */}
