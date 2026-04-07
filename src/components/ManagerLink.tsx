@@ -18,7 +18,10 @@ export const ManagerLink: React.FC<ManagerLinkProps> = ({ managerName }) => {
           cursor: "pointer",
           textDecoration: "underline",
         }}
-        onClick={() => setManagerDialogOpen(true)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setManagerDialogOpen(true);
+        }}
       >
         {managerName}
       </Typography>
@@ -26,7 +29,12 @@ export const ManagerLink: React.FC<ManagerLinkProps> = ({ managerName }) => {
       <Dialog
         fullWidth={true}
         open={managerDialogOpen}
-        onClose={() => setManagerDialogOpen(false)}
+        onClose={() => {
+          setManagerDialogOpen(false);
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
       >
         <DialogContent>
           <ManagerFragment managerName={managerName} />

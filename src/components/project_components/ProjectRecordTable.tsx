@@ -25,16 +25,13 @@ import { StatusChip } from "../StatusChip.tsx";
 
 interface ProjectRecordTableProps {
   recordMetadata: qcpTypes.ProjectRecordMetadata[];
-  onDelete?: (recordId: number) => void;
 }
 
 function RecordRow({
   record,
-  onDelete,
   projectId,
 }: {
   record: qcpTypes.ProjectRecordMetadata;
-  onDelete?: (recordId: number) => void;
   projectId?: string;
 }) {
   const navigate = useNavigate();
@@ -48,14 +45,6 @@ function RecordRow({
     navigate(`/projects/${projectId}/records/${recordId}`, {
       state: { activeTab: 1 },
     });
-  };
-
-  const handleDelete = (id: number) => {
-    if (onDelete) {
-      onDelete(id);
-    } else {
-      console.log("Delete record with ID:", id);
-    }
   };
 
   return (
@@ -72,7 +61,7 @@ function RecordRow({
           <RecordTypeChip type={record.record_type} />
         </TableCell>
         <TableCell>
-          <StatusChip status={record.status} />
+          <StatusChip recordType={record.record_type} recordId={record.record_id} status={record.status} />
         </TableCell>
         <TableCell>
           <Button
@@ -84,18 +73,6 @@ function RecordRow({
             }}
           >
             View
-          </Button>
-          <Button
-            variant="outlined"
-            color="error"
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(record.record_id);
-            }}
-            sx={{ ml: 1 }}
-          >
-            Delete
           </Button>
         </TableCell>
       </TableRow>
@@ -110,9 +87,7 @@ function RecordRow({
                   <Typography variant="body2" fontWeight="bold">
                     Description
                   </Typography>
-                  <Typography variant="body2">
-                    {record.description}
-                  </Typography>
+                  <Typography variant="body2">{record.description}</Typography>
                 </Box>
               )}
               {record.tags && record.tags.length > 0 && (
@@ -144,7 +119,6 @@ function RecordRow({
 
 export default function ProjectRecordTable({
   recordMetadata,
-  onDelete,
 }: ProjectRecordTableProps) {
   const { projectId } = useParams();
   const [page, setPage] = useState(0);
@@ -190,18 +164,10 @@ export default function ProjectRecordTable({
           <TableHead>
             <TableRow>
               <TableCell width="50px" />
-              <TableCell>
-                Name
-              </TableCell>
-              <TableCell>
-                Type
-              </TableCell>
-              <TableCell>
-                Status
-              </TableCell>
-              <TableCell>
-                Actions
-              </TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Type</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -211,7 +177,6 @@ export default function ProjectRecordTable({
                 <RecordRow
                   key={record.record_id}
                   record={record}
-                  onDelete={onDelete}
                   projectId={projectId}
                 />
               ))}

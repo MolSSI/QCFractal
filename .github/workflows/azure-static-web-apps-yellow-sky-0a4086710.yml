@@ -18,7 +18,7 @@ jobs:
        id-token: write
        contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: true
           lfs: false
@@ -58,4 +58,5 @@ jobs:
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_JOLLY_DUNE_0E5DAE00F }}
+          github_id_token: ${{ steps.idtoken.outputs.result }}
           action: "close"

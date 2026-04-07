@@ -46,7 +46,10 @@ export const WaitingReasonFragment: React.FC<{ recordId: number }> = ({
               <Stack
                 direction="row"
                 justifyContent="space-between"
-                onClick={() => setDetailsExpanded(!detailsExpanded)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDetailsExpanded(!detailsExpanded);
+                }}
                 sx={{ cursor: "pointer" }}
               >
                 <Typography variant="h5" paddingBottom={3}>

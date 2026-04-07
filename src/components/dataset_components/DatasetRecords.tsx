@@ -532,6 +532,7 @@ export default function DatasetRecords({
                         <StatusChip
                           status={record.status}
                           recordId={record.record_id}
+                          recordType={datasetType}
                         />
                       </TableCell>
                     </TableRow>

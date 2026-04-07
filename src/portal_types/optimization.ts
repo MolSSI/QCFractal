@@ -1,5 +1,4 @@
 import { BaseRecord, QCSpecification, Molecule } from "./common";
-import { SinglepointRecord } from "./singlepoint";
 
 export type OptimizationSpecification = {
   program: string;
@@ -16,7 +15,7 @@ export type OptimizationRecord = BaseRecord & {
   final_molecule_id?: number;
   final_molecule?: Molecule;
   energies?: number[];
-  trajectory?: SinglepointRecord[];
+  trajectory_ids?: number[];
 };
 
 export type OptimizationDatasetSpecification = {
