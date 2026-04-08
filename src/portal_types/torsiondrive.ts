@@ -1,5 +1,5 @@
 import { BaseRecord, Molecule } from "./common";
-import { OptimizationSpecification, OptimizationRecord } from "./optimization";
+import { OptimizationSpecification } from "./optimization";
 
 export type TorsiondriveSpecification = {
   program: string;
@@ -7,12 +7,19 @@ export type TorsiondriveSpecification = {
   optimization_specification: OptimizationSpecification;
 };
 
+export type TorsiondriveOptimization = {
+  optimization_id: number;
+  key: string;
+  position: number;
+  energy?: number;
+};
+
 export type TorsiondriveRecord = BaseRecord & {
   record_type: "torsiondrive";
   specification: TorsiondriveSpecification;
   initial_molecules_ids: number[];
   initial_molecules?: Molecule[];
-  optimizations?: Record<string, OptimizationRecord[]>;
+  optimizations?: TorsiondriveOptimization[];
 };
 
 export type TorsiondriveDatasetSpecification = {

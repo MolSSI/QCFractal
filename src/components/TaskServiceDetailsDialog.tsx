@@ -1,11 +1,33 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import * as qcpTypes from "../PortalTypes";
-import { Box, Dialog, DialogContent, Typography } from "@mui/material";
+import { format } from "date-fns";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Dialog,
+  DialogContent,
+  Link as MuiLink,
+  Paper, Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { usePortalClient } from "../PortalClient.tsx";
 import { GenericDataList } from "./GenericDataList.tsx";
 import LoadingIndicator from "./LoadingIndicator";
 import ErrorIndicator from "./ErrorIndicator";
+import RecordTypeChip from "./RecordTypeChip.tsx";
+import StatusChip from "./StatusChip.tsx";
+import ManagerLink from "./ManagerLink.tsx";
 
 interface TaskServiceDetailsDialogProps {
   recordId: number;
@@ -13,6 +35,163 @@ interface TaskServiceDetailsDialogProps {
   isService: boolean;
   open: boolean;
   onClose: () => void;
+}
+
+type TaskServiceData = qcpTypes.RecordTask | qcpTypes.RecordService;
+
+type DependencyRecordMetadata = Pick<
+  qcpTypes.BaseRecord,
+  "id" | "record_type" | "status" | "manager_name" | "created_on" | "modified_on"
+>;
+
+type DependencyRow = DependencyRecordMetadata & {
+  extras: Record<string, unknown>;
+};
+
+function renderExtraValue(value: unknown): React.ReactNode {
+  if (Array.isArray(value)) {
+    return value.length > 0 ? value.join(", ") : "[]";
+  }
+
+  if (value === null || value === undefined || value === "") {
+    return "None";
+  }
+
+  if (typeof value === "object") {
+    const entries = Object.entries(value);
+    if (entries.length === 0) {
+      return "{}";
+    }
+
+    return entries
+      .map(([key, entryValue]) => `${key}: ${String(entryValue)}`)
+      .join(", ");
+  }
+
+  return String(value);
+}
+
+function ExtrasCell({ extras, rowId }: { extras: Record<string, unknown>; rowId: number }) {
+  const [expanded, setExpanded] = useState(false);
+  const entries = Object.entries(extras);
+  const visibleEntries = expanded ? entries : entries.slice(0, 3);
+  const hasHiddenEntries = entries.length > 3;
+
+  if (entries.length === 0) {
+    return <Typography variant="body2">None</Typography>;
+  }
+
+  return (
+    <Box>
+      {visibleEntries.map(([key, value]) => (
+        <Typography
+          key={`${rowId}-${key}`}
+          variant="body2"
+          sx={{ overflowWrap: "anywhere" }}
+        >
+          <strong>{key}:</strong> {renderExtraValue(value)}
+        </Typography>
+      ))}
+      {hasHiddenEntries && (
+        <MuiLink
+          component="button"
+          type="button"
+          variant="body2"
+          onClick={() => setExpanded((prev) => !prev)}
+          sx={{ mt: 0.5 }}
+        >
+          {expanded ? "Show less" : `Show ${entries.length - 3} more`}
+        </MuiLink>
+      )}
+    </Box>
+  );
+}
+
+function DependenciesTable({ rows }: { rows: DependencyRow[] }) {
+  if (rows.length === 0) {
+    return (
+      <Typography variant="body2" color="text.secondary">
+        No dependency records available.
+      </Typography>
+    );
+  }
+
+  return (
+    <TableContainer component={Paper} variant="outlined" sx={{ mt: 1 }}>
+      <Table size="small" aria-label="service dependency table">
+        <TableHead>
+          <TableRow>
+            <TableCell>Record ID</TableCell>
+            <TableCell>Record Type</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell width={"200"}>Manager Name</TableCell>
+            <TableCell>Created/Modified On</TableCell>
+            <TableCell>Extras</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.id}>
+              <TableCell>
+                <Link
+                  to={`/records/${row.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {row.id}
+                </Link>
+              </TableCell>
+              <TableCell>
+                <RecordTypeChip type={row.record_type} />
+              </TableCell>
+              <TableCell>
+                <StatusChip
+                  status={row.status}
+                  recordType={row.record_type}
+                  recordId={row.id}
+                />
+              </TableCell>
+              <TableCell>
+                {row.manager_name ? <ManagerLink managerName={row.manager_name} /> : <Typography>(none)</Typography>}
+              </TableCell>
+              <TableCell>
+                <Stack direction={"column"} alignItems={"flex-start"}>
+                  <Typography>{format(new Date(row.created_on), "MMMM dd, yyyy HH:mm")}</Typography>
+                  <Typography>{format(new Date(row.modified_on), "MMMM dd, yyyy HH:mm")}</Typography>
+                </Stack>
+              </TableCell>
+              <TableCell>
+                <ExtrasCell extras={row.extras} rowId={row.id} />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
+
+function ServiceStateDetails({
+  serviceState,
+}: {
+  serviceState: Record<string, unknown> | null | undefined;
+}) {
+  if (!serviceState || Object.keys(serviceState).length === 0) {
+    return (
+      <Typography variant="body2" color="text.secondary">
+        No service state available.
+      </Typography>
+    );
+  }
+
+  return (
+    <GenericDataList
+      data={serviceState}
+      keys={Object.keys(serviceState).filter(
+        (key) => key !== "function_kwargs_compressed",
+      )}
+    />
+  );
 }
 
 export const TaskServiceDetailsDialog: React.FC<TaskServiceDetailsDialogProps> = ({
@@ -23,6 +202,8 @@ export const TaskServiceDetailsDialog: React.FC<TaskServiceDetailsDialogProps> =
   onClose,
 }) => {
   const { makeRequest } = usePortalClient();
+  const [serviceStateExpanded, setServiceStateExpanded] = useState(false);
+  const [dependenciesExpanded, setDependenciesExpanded] = useState(false);
 
   const type = isService ? "service" : "task";
 
@@ -33,16 +214,88 @@ export const TaskServiceDetailsDialog: React.FC<TaskServiceDetailsDialogProps> =
   } = useQuery({
     queryKey: ["recordTask", recordType, recordId],
     queryFn: () =>
-      makeRequest<qcpTypes.RecordTask>(
+      makeRequest<TaskServiceData>(
         "GET",
         `/api/v1/records/${recordType}/${recordId}/${type}`,
       ),
     enabled: open,
   });
 
+  useEffect(() => {
+    if (!open) {
+      setServiceStateExpanded(false);
+      setDependenciesExpanded(false);
+    }
+  }, [open, recordId]);
+
+  const serviceDependencies =
+    isService && taskData && "dependencies" in taskData ? taskData.dependencies : [];
+  const dependencyIds = serviceDependencies.map((dependency) => dependency.record_id);
+
+  const {
+    status: dependencyStatus,
+    data: dependencyRows,
+    error: dependencyError,
+  } = useQuery({
+    queryKey: ["recordServiceDependencies", recordId, dependencyIds],
+    queryFn: async () => {
+      const records = await makeRequest<DependencyRecordMetadata[]>(
+        "POST",
+        "api/v1/records/bulkGet",
+        {
+          ids: dependencyIds,
+          include: [
+            "record_type",
+            "status",
+            "manager_name",
+            "created_on",
+            "modified_on",
+          ],
+        },
+      );
+
+      const recordById = new Map(records.map((record) => [record.id, record]));
+
+      return serviceDependencies.reduce<DependencyRow[]>((rows, dependency) => {
+        const record = recordById.get(dependency.record_id);
+        if (!record) {
+          return rows;
+        }
+
+        rows.push({
+          ...record,
+          extras: (dependency.extras as Record<string, unknown>) ?? {},
+        });
+
+        return rows;
+      }, []);
+    },
+    enabled:
+      open &&
+      isService &&
+      dependenciesExpanded &&
+      dependencyIds.length > 0 &&
+      taskStatus === "success",
+  });
+
+  const detailKeys = taskData
+    ? Object.keys(taskData).filter(
+        (key) =>
+          key !== "function_kwargs_compressed" &&
+          key !== "dependencies" &&
+          key !== "service_state",
+      )
+    : [];
+
+  const serviceState =
+    isService && taskData && "service_state" in taskData
+      ? (taskData.service_state as Record<string, unknown> | null | undefined)
+      : undefined;
+
   return (
     <Dialog
       fullWidth
+      maxWidth="xl"
       open={open}
       onClose={onClose}
       onClick={(e) => {
@@ -62,12 +315,62 @@ export const TaskServiceDetailsDialog: React.FC<TaskServiceDetailsDialogProps> =
           )}
 
           {taskStatus === "success" && taskData && (
-            <GenericDataList
-              data={taskData as Record<string, any>}
-              keys={Object.keys(taskData).filter(
-                (key) => key !== "function_kwargs_compressed",
+            <>
+              <GenericDataList
+                data={taskData as Record<string, any>}
+                keys={detailKeys}
+              />
+
+              {isService && (
+                <>
+                  <Accordion
+                    expanded={serviceStateExpanded}
+                    onChange={(_event, expanded) => {
+                      setServiceStateExpanded(expanded);
+                    }}
+                    disableGutters
+                    sx={{ mt: 2 }}
+                  >
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography variant="subtitle1" fontWeight="bold">
+                        Service State
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <ServiceStateDetails serviceState={serviceState} />
+                    </AccordionDetails>
+                  </Accordion>
+
+                  <Accordion
+                    expanded={dependenciesExpanded}
+                    onChange={(_event, expanded) => {
+                      setDependenciesExpanded(expanded);
+                    }}
+                    disableGutters
+                    sx={{ mt: 2 }}
+                  >
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography variant="subtitle1" fontWeight="bold">
+                        Dependencies ({serviceDependencies.length})
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      {dependencyStatus === "pending" && serviceDependencies.length > 0 && (
+                        <LoadingIndicator message="Loading dependency records..." />
+                      )}
+
+                      {dependencyStatus === "error" && (
+                        <ErrorIndicator message={(dependencyError as Error).message} />
+                      )}
+
+                      {(dependencyStatus === "success" || serviceDependencies.length === 0) && (
+                        <DependenciesTable rows={dependencyRows ?? []} />
+                      )}
+                    </AccordionDetails>
+                  </Accordion>
+                </>
               )}
-            />
+            </>
           )}
           {taskStatus === "success" && !taskData && (
             <Typography>No {type} data available for this record.</Typography>
