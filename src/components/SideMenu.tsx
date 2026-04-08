@@ -9,7 +9,7 @@ import OptionsMenu from "./OptionsMenu";
 import Button from "@mui/material/Button";
 import ServerStatus from "../components/ServerStatus";
 import { useAuth } from "../Auth.tsx";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import qcarchiveLogo from "../assets/qcarchive_logo.svg";
 import qcarchiveLogoInverted from "../assets/qcarchive_logo_inverted.svg";
 
@@ -35,7 +35,8 @@ function DrawerContents({ onNavigate }: { onNavigate?: () => void }) {
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as "light" | "dark";
   const { userInfo, logout } = useAuth();
-  const navigate = useNavigate();
+  const location = useLocation();
+  const loginPath = `/login?redirect=${encodeURIComponent(location.pathname + location.search)}`;
 
   return (
     <>
@@ -118,12 +119,9 @@ function DrawerContents({ onNavigate }: { onNavigate?: () => void }) {
                 variant="contained"
                 color="primary"
                 size="small"
-                onClick={() => {
-                  logout();
-                  navigate(
-                    `/login?redirect=${encodeURIComponent(location.pathname + location.search)}`,
-                  );
-                }}
+                component={Link}
+                to={loginPath}
+                onClick={logout}
               >
                 Login
               </Button>

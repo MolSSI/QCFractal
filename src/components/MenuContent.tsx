@@ -8,7 +8,7 @@ import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import CarpenterIcon from "@mui/icons-material/Carpenter";
 import ComputerIcon from "@mui/icons-material/Computer";
-import { useNavigate, useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 const mainListItems = [
   { text: "Home", icon: <HomeRoundedIcon />, path: "/" },
@@ -22,13 +22,7 @@ interface MenuContentProps {
 }
 
 export default function MenuContent({ onNavigate }: MenuContentProps) {
-  const navigate = useNavigate();
   const location = useLocation();
-
-  const handleClick = (path: string) => {
-    navigate(path);
-    onNavigate?.();
-  };
 
   return (
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}>
@@ -36,8 +30,10 @@ export default function MenuContent({ onNavigate }: MenuContentProps) {
         {mainListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: "block" }}>
             <ListItemButton
+              component={NavLink}
+              to={item.path}
               selected={location.pathname === item.path}
-              onClick={() => handleClick(item.path)}
+              onClick={onNavigate}
               sx={{ cursor: "pointer" }}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>

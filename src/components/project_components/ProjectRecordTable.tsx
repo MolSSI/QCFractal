@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import * as qcpTypes from "../../PortalTypes";
 import { RecordTypeChip } from "../RecordTypeChip.tsx";
 import { StatusChip } from "../StatusChip.tsx";
@@ -34,17 +34,10 @@ function RecordRow({
   record: qcpTypes.ProjectRecordMetadata;
   projectId?: string;
 }) {
-  const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleToggleExpand = () => {
     setIsExpanded((prev) => !prev);
-  };
-
-  const handleViewClick = (recordId: number) => {
-    navigate(`/projects/${projectId}/records/${recordId}`, {
-      state: { activeTab: 1 },
-    });
   };
 
   return (
@@ -61,16 +54,19 @@ function RecordRow({
           <RecordTypeChip type={record.record_type} />
         </TableCell>
         <TableCell>
-          <StatusChip recordType={record.record_type} recordId={record.record_id} status={record.status} />
+          <StatusChip
+            recordType={record.record_type}
+            recordId={record.record_id}
+            status={record.status}
+          />
         </TableCell>
         <TableCell>
           <Button
             variant="contained"
             size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleViewClick(record.record_id);
-            }}
+            component={Link}
+            to={`/projects/${projectId}/records/${record.record_id}`}
+            state={{ activeTab: 1 }}
           >
             View
           </Button>

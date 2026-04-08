@@ -1,8 +1,7 @@
 import * as React from "react";
-import { styled } from "@mui/material/styles";
 import Divider, { dividerClasses } from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
-import MuiMenuItem from "@mui/material/MenuItem";
+import MenuItem from "@mui/material/MenuItem";
 import { paperClasses } from "@mui/material/Paper";
 import { listClasses } from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
@@ -11,11 +10,7 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import MenuButton from "./MenuButton";
 import { useAuth } from "../Auth.tsx";
-import { useNavigate } from "react-router-dom";
-
-const MenuItem = styled(MuiMenuItem)({
-  margin: "2px 0",
-});
+import { Link, useNavigate } from "react-router-dom";
 
 export default function OptionsMenu() {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -59,37 +54,40 @@ export default function OptionsMenu() {
           },
         }}
       >
-        <MenuItem onClick={handleClose}>
-          <ListItemText
-            onClick={() => {
-              navigate("/me");
-            }}
-          >
-            Profile
-          </ListItemText>
+        <MenuItem
+          component={Link}
+          to="/me"
+          onClick={handleClose}
+          sx={{ my: "2px" }}
+        >
+          <ListItemText>Profile</ListItemText>
         </MenuItem>
-        <MenuItem onClick={handleClose}>My account</MenuItem>
+        <MenuItem onClick={handleClose} sx={{ my: "2px" }}>
+          My account
+        </MenuItem>
         <Divider />
-        <MenuItem onClick={handleClose}>Add another account</MenuItem>
-        <MenuItem onClick={handleClose}>Settings</MenuItem>
+        <MenuItem onClick={handleClose} sx={{ my: "2px" }}>
+          Add another account
+        </MenuItem>
+        <MenuItem onClick={handleClose} sx={{ my: "2px" }}>
+          Settings
+        </MenuItem>
         <Divider />
         <MenuItem
-          onClick={handleClose}
+          onClick={() => {
+            handleClose();
+            logout();
+            navigate("/login");
+          }}
           sx={{
+            my: "2px",
             [`& .${listItemIconClasses.root}`]: {
               ml: "auto",
               minWidth: 0,
             },
           }}
         >
-          <ListItemText
-            onClick={() => {
-              logout();
-              navigate("/login");
-            }}
-          >
-            Logout
-          </ListItemText>
+          <ListItemText>Logout</ListItemText>
           <ListItemIcon>
             <LogoutRoundedIcon fontSize="small" />
           </ListItemIcon>

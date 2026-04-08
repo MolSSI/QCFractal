@@ -2,7 +2,7 @@ import React from "react";
 import * as qcpTypes from "../PortalTypes";
 import { usePortalClient } from "../PortalClient.tsx";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "../Auth.tsx";
 import { usePreferences } from "../PreferencesProvider.tsx";
 import { Star, StarBorder } from "@mui/icons-material";
@@ -27,7 +27,6 @@ import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
 
 const ProjectList: React.FC = () => {
-  const navigate = useNavigate();
   const { makeRequest } = usePortalClient();
   const { has_permission } = useAuth();
   const { preferences, updatePreference } = usePreferences();
@@ -54,10 +53,6 @@ const ProjectList: React.FC = () => {
       project.project_name.toLowerCase().includes(filter.toLowerCase()),
     );
   }, [projects, filter]);
-
-  const handleClick = (projectId: string) => {
-    navigate(`/projects/${projectId}`);
-  };
 
   const handleToggleFavorite = async (
     event: React.MouseEvent,
@@ -138,12 +133,7 @@ const ProjectList: React.FC = () => {
               {filteredProjects
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((project) => (
-                  <TableRow
-                    key={project.id}
-                    hover
-                    sx={{ cursor: "pointer" }}
-                    onClick={() => handleClick(project.id)}
-                  >
+                  <TableRow key={project.id} hover>
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center" }}>
                         {canFavorite && (
@@ -172,7 +162,17 @@ const ProjectList: React.FC = () => {
                           </Tooltip>
                         )}
                         <Box>
-                          <Typography variant="body2" fontWeight="bold">
+                          <Typography
+                            component={Link}
+                            to={`/projects/${project.id}`}
+                            variant="body2"
+                            fontWeight="bold"
+                            sx={{
+                              color: "inherit",
+                              textDecoration: "none",
+                              "&:hover": { textDecoration: "underline" },
+                            }}
+                          >
                             [{project.id}] {project.project_name}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
