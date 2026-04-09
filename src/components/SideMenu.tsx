@@ -10,6 +10,7 @@ import Button from "@mui/material/Button";
 import ServerStatus from "../components/ServerStatus";
 import { useAuth } from "../Auth.tsx";
 import { Link, useLocation } from "react-router-dom";
+import Chip from "@mui/material/Chip";
 import qcarchiveLogo from "../assets/qcarchive_logo.svg";
 import qcarchiveLogoInverted from "../assets/qcarchive_logo_inverted.svg";
 
@@ -49,6 +50,8 @@ function DrawerContents({ onNavigate }: { onNavigate?: () => void }) {
           p: 1,
           borderBottom: "1px solid",
           borderColor: "divider",
+          flexDirection: "column",
+          gap: 2,
         }}
       >
         <Avatar
@@ -57,6 +60,7 @@ function DrawerContents({ onNavigate }: { onNavigate?: () => void }) {
           sx={{ width: 125, height: 100 }}
           variant="square"
         />
+        <Chip label="ALPHA" variant="filled" color="warning" />
       </Box>
       <Box
         sx={{
@@ -133,7 +137,10 @@ function DrawerContents({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-export default function SideMenu({ mobileOpen = false, onMobileClose }: SideMenuProps) {
+export default function SideMenu({
+  mobileOpen = false,
+  onMobileClose,
+}: SideMenuProps) {
   return (
     <>
       {/* Mobile: temporary drawer, toggled by hamburger button */}
