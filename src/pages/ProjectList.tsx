@@ -50,7 +50,8 @@ const ProjectList: React.FC = () => {
   const filteredProjects = React.useMemo(() => {
     if (!projects) return [];
     return projects.filter((project) =>
-      project.project_name.toLowerCase().includes(filter.toLowerCase()),
+      project.project_name.toLowerCase().includes(filter.toLowerCase()) ||
+      project.id.toString().includes(filter),
     );
   }, [projects, filter]);
 
