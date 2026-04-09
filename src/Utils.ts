@@ -12,17 +12,17 @@ export const parseToDate = (isoString?: string): Date | undefined => {
 
 export const updateFavoritesList = (
   existing_favorites: number[] | undefined,
-  proj_id: number,
+  obj_id: number,
 ): number[] => {
   // adds or removes the new_id to/from the existing_favorites
   // Also handles if existing favorites is undefined
-  if (!existing_favorites) return [proj_id];
+  if (!existing_favorites) return [obj_id];
 
   // If the project is already in the list, remove it
-  if (existing_favorites.includes(proj_id)) {
-    return existing_favorites.filter((id) => id !== proj_id);
+  if (existing_favorites.includes(obj_id)) {
+    return existing_favorites.filter((id) => id !== obj_id);
   }
-  return [...existing_favorites, proj_id];
+  return [...existing_favorites, obj_id];
 };
 
 export const calculateTotalStatusCounts = (

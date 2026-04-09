@@ -238,6 +238,15 @@ export type UserPreferences = Record<string, any>;
 
 export type DatasetStatus = Record<string, Record<RecordStatus, number>>;
 
+export type DatasetListEntry = {
+  id: number;
+  dataset_type: RecordType;
+  dataset_name: string;
+  tagline: string;
+  description: string;
+  record_count: number;
+};
+
 export type Dataset = {
   id: number;
   dataset_type: RecordType;

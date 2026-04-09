@@ -115,18 +115,12 @@ const ProjectList: React.FC = () => {
           <Table size="medium">
             <TableHead>
               <TableRow>
-                <TableCell width="55%">
-                  Project Name
-                </TableCell>
-                <TableCell width="15%">
-                  Owner
-                </TableCell>
-                <TableCell width="20%">
-                  Content
-                </TableCell>
-                <TableCell width="10%">
-                  Tags
-                </TableCell>
+                <TableCell width="5%">Favorite</TableCell>
+                <TableCell width="5%">ID</TableCell>
+                <TableCell width="50%">Project Name</TableCell>
+                <TableCell width="15%">Owner</TableCell>
+                <TableCell width="25%">Content</TableCell>
+                <TableCell width="10%">Tags</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -135,7 +129,6 @@ const ProjectList: React.FC = () => {
                 .map((project) => (
                   <TableRow key={project.id} hover>
                     <TableCell>
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
                         {canFavorite && (
                           <Tooltip
                             title={
@@ -161,6 +154,12 @@ const ProjectList: React.FC = () => {
                             </IconButton>
                           </Tooltip>
                         )}
+                    </TableCell>
+                    <TableCell>
+                    <Typography fontWeight={"bold"}>{project.id}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
                         <Box>
                           <Typography
                             component={Link}
@@ -173,7 +172,7 @@ const ProjectList: React.FC = () => {
                               "&:hover": { textDecoration: "underline" },
                             }}
                           >
-                            [{project.id}] {project.project_name}
+                            {project.project_name}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
                             {project.tagline}

@@ -13,6 +13,7 @@ const Record = lazy(() => import("./pages/Record.tsx"));
 const Manager = lazy(() => import("./pages/Manager.tsx"));
 const ManagerList = lazy(() => import("./pages/ManagerList.tsx"));
 const Dataset = lazy(() => import("./pages/Dataset.tsx"));
+const DatasetList = lazy(() => import("./pages/DatasetList.tsx"));
 const UserInfo = lazy(() => import("./pages/UserInfo.tsx").then(m => ({ default: m.UserInfo })));
 const AddProjectRecord = lazy(() => import("./components/AddProjectRecord.tsx"));
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -68,6 +69,7 @@ function App() {
                           path="/managers/:managerName"
                           element={<Manager />}
                         />
+                        <Route path="/datasets" element={<DatasetList />} />
                         <Route path="/datasets/:datasetId" element={<Dataset />} />
                       </Route>
                     </Route>
