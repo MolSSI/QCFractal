@@ -47,3 +47,9 @@ export function asRecord(value: unknown): Record<string, unknown> | null {
 
   return value as Record<string, unknown>;
 }
+
+export function stripAnsi(text: string): string {
+  // eslint-disable-next-line no-control-regex
+  return text.replace(/\x1b\[[0-9;]*m/g, "");
+
+}

@@ -13,6 +13,7 @@ import { usePortalClient } from "../PortalClient.tsx";
 import * as qcpTypes from "../PortalTypes";
 import LoadingIndicator from "./LoadingIndicator";
 import ErrorIndicator from "./ErrorIndicator";
+import { stripAnsi } from "../Utils.ts";
 
 interface ViewOutputDialogProps {
   recordType: string;
@@ -183,7 +184,7 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
                   >
                     {/* ... content ... */}
                     {typeof outputContentData === "string" ? (
-                      outputContentData
+                      stripAnsi(outputContentData)
                     ) : (
                       // Render object content if the data is not a string
                       <Box component="div">

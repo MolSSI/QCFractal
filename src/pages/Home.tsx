@@ -64,7 +64,7 @@ const HomePage: React.FC = () => {
   }, [datasets, favoriteDatasetsIds]);
 
   return (
-    <Box width="100%" sx={{p: 2}}>
+    <Box width="100%" sx={{ p: 2 }}>
       <Typography variant="h4" gutterBottom>
         Welcome to QCArchive
       </Typography>
@@ -82,13 +82,19 @@ const HomePage: React.FC = () => {
                 <strong>2026-04-10</strong>
                 <ul>
                   <li><strong>Improved:</strong> Molecular formula formatting & molecule viewer layouts</li>
+                  <li><strong>Improved:</strong> Remove ANSI escape codes from raw output</li>
                 </ul>
               </li>
               <li>
                 <strong>2026-04-09</strong>
                 <ul>
-                  <li><strong>Added:</strong> This homepage </li>
-                  <li><strong>Added:</strong> Dataset records and various record pages</li>
+                  <li>
+                    <strong>Added:</strong> This homepage{" "}
+                  </li>
+                  <li>
+                    <strong>Added:</strong> Dataset records and various record
+                    pages
+                  </li>
                 </ul>
               </li>
             </ul>
