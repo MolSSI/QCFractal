@@ -79,6 +79,12 @@ const HomePage: React.FC = () => {
           <Typography variant="body1" component="div">
             <ul>
               <li>
+                <strong>2026-04-10</strong>
+                <ul>
+                  <li><strong>Improved:</strong> Molecular formula formatting & molecule viewer layouts</li>
+                </ul>
+              </li>
+              <li>
                 <strong>2026-04-09</strong>
                 <ul>
                   <li><strong>Added:</strong> This homepage </li>

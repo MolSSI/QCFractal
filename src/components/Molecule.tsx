@@ -24,11 +24,54 @@ import * as qcpTypes from "../PortalTypes";
 import { Stage, Component } from "ngl";
 import ErrorIndicator from "./ErrorIndicator.tsx";
 
+type MolecularFormulaProps = {
+  molecule: qcpTypes.Molecule;
+};
+
+function MolecularFormula({ molecule }: MolecularFormulaProps) {
+  // Possible that molecular formula isn't in identifiers, so compute by hand
+  // Plus, we want subscripts and superscripts
+  const atomCounts = molecule.symbols.reduce(
+    (acc: Record<string, number>, symbol: string) => {
+      const capSym = symbol[0].toUpperCase() + symbol.substring(1)?.toLowerCase();
+      acc[capSym] = (acc[capSym] || 0) + 1;
+      return acc;
+    },
+    {},
+  );
+
+  const elements = Object.keys(atomCounts);
+
+  const hasCarbon = elements.includes("c");
+
+  const orderedElements = elements.sort((a, b) => {
+    if (hasCarbon) {
+      if (a === "c") return -1;
+      if (b === "c") return 1;
+
+      if (a === "h") return b === "c" ? 1 : -1;
+      if (b === "h") return a === "c" ? -1 : 1;
+    }
+    return a.localeCompare(b);
+  });
+
+  return (
+    <>
+      {orderedElements.map((symbol: string) => (
+        <span key={symbol}>
+          {symbol}
+          {atomCounts[symbol] > 1 && <sub>{atomCounts[symbol]}</sub>}
+        </span>
+      ))}
+    </>
+  );
+}
+
 const StageContext = createContext<Stage | undefined>(undefined);
 
 type MoleculeStageProviderProps = {
   width: number | string;
-  height: number;
+  height: number | string;
   children: ReactNode;
 };
 
@@ -123,17 +166,14 @@ const SingleMoleculeViewer: React.FC<SingleMoleculeViewerProps> = ({
   const theme = useTheme();
 
   if (!molecule) {
-    return <ErrorIndicator message="Molecule data not available" />
-  }
-
-  if (!title) {
-    title = `${molecule?.identifiers.molecular_formula} (ID ${molecule?.id})`;
+    return <ErrorIndicator message="Molecule data not available" />;
   }
 
   return (
     <Box
       sx={{
         width,
+        height,
         display: "flex",
         flexDirection: "column",
         alignItems: "stretch",
@@ -143,9 +183,25 @@ const SingleMoleculeViewer: React.FC<SingleMoleculeViewerProps> = ({
         bgcolor: "background.paper",
       }}
     >
-      <Typography variant="h6" sx={{ p: 1, textAlign: "center" }}>{title}</Typography>
+      <Box sx={{ p: 0.5 }}>
+        <Typography variant="subtitle2" sx={{ textAlign: "center" }}>
+          {title && (
+            <>
+              {title} (<MolecularFormula molecule={molecule} />)
+            </>
+          )}
+          {!title && (
+            <>
+              <MolecularFormula molecule={molecule} />
+            </>
+          )}
+        </Typography>
+        <Typography variant="caption" sx={{ display: "block", textAlign: "center" }}>
+          ID {molecule.id}
+        </Typography>
+      </Box>
       <Box sx={{ flexGrow: 1, width: "100%", position: "relative" }}>
-        <MoleculeStageProvider width="100%" height={height}>
+        <MoleculeStageProvider width="100%" height="100%">
           <MoleculeViewer moleculeData={molecule} />
         </MoleculeStageProvider>
       </Box>
@@ -173,10 +229,6 @@ const MultiMoleculeViewer: React.FC<MultiMoleculeViewerProps> = ({
     return <Typography>No molecules to display</Typography>;
   }
 
-  if (!title) {
-    title = `${molecules[0][1]?.identifiers.molecular_formula}`;
-  }
-
   const currentMolecule = molecules[index][1];
 
   const handleNext = () => {
@@ -191,6 +243,7 @@ const MultiMoleculeViewer: React.FC<MultiMoleculeViewerProps> = ({
     <Box
       sx={{
         width,
+        height,
         display: "flex",
         flexDirection: "column",
         alignItems: "stretch",
@@ -200,11 +253,21 @@ const MultiMoleculeViewer: React.FC<MultiMoleculeViewerProps> = ({
         bgcolor: "background.paper",
       }}
     >
-      <Typography variant="h6" sx={{ p: 1, textAlign: "center" }}>
-        {title}
-      </Typography>
+      <Box sx={{ p: 0.5 }}>
+        <Typography variant="subtitle2" sx={{ textAlign: "center" }}>
+          {title && <>{title}</>}
+          {!title && (
+            <>
+              <MolecularFormula molecule={currentMolecule} />
+            </>
+          )}
+        </Typography>
+        <Typography variant="caption" sx={{ display: "block", textAlign: "center" }}>
+          ID {currentMolecule.id}
+        </Typography>
+      </Box>
       <Box sx={{ flexGrow: 1, width: "100%", position: "relative" }}>
-        <MoleculeStageProvider width="100%" height={height}>
+        <MoleculeStageProvider width="100%" height="100%">
           <MoleculeViewer moleculeData={currentMolecule} />
         </MoleculeStageProvider>
       </Box>
@@ -267,5 +330,5 @@ const MultiMoleculeViewer: React.FC<MultiMoleculeViewerProps> = ({
   );
 };
 
-export default { MoleculeStageProvider, MoleculeViewer, SingleMoleculeViewer, MultiMoleculeViewer };
-export { MoleculeStageProvider, MoleculeViewer, SingleMoleculeViewer, MultiMoleculeViewer };
+export default { MoleculeStageProvider, MoleculeViewer, SingleMoleculeViewer, MultiMoleculeViewer, MolecularFormula };
+export { MoleculeStageProvider, MoleculeViewer, SingleMoleculeViewer, MultiMoleculeViewer, MolecularFormula };

@@ -1,7 +1,7 @@
 import React from "react";
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import { Molecule } from "../../PortalTypes";
-import { MoleculeStageProvider, MoleculeViewer } from "../Molecule.tsx";
+import { MultiMoleculeViewer, SingleMoleculeViewer } from "../Molecule.tsx";
 import { GenericDataList, GenericDataListKey } from "../GenericDataList.tsx";
 
 export interface RenderEntryProps {
@@ -21,26 +21,17 @@ export const EntryMolecules: React.FC<EntryMoleculesProps> = ({
     return null;
   }
 
-  const mol = molecules[0];
+  // Make a list of lists (name, molecule object)
+  // Here name is just the index
+  const molList: [string, Molecule][] = molecules.map((m, i) => [i.toString(), m]);
 
   return (
     <Box>
-      <Typography variant="subtitle2" gutterBottom>
-        Molecule
-      </Typography>
-      <Box
-        sx={{
-          width: "100%",
-          height: 200,
-          backgroundColor: "#f5f5f5",
-          borderRadius: 1,
-          overflow: "hidden",
-        }}
-      >
-        <MoleculeStageProvider width="100%" height={200}>
-          <MoleculeViewer moleculeData={mol} />
-        </MoleculeStageProvider>
-      </Box>
+      {molList.length === 1 ? (
+        <SingleMoleculeViewer height={250} molecule={molList[0][1]} />
+      ) : (
+        <MultiMoleculeViewer height={250} molecules={molList} />
+      )}
     </Box>
   );
 };

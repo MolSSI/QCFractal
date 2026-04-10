@@ -65,9 +65,6 @@ export const RecordDetails: React.FC<
   });
 
   const displayMolecule = recordData.molecule || moleculeData;
-  const moleculeTitle = displayMolecule
-    ? `${displayMolecule.identifiers.molecular_formula} (ID ${displayMolecule.id})`
-    : "Molecule";
 
   return (
     <>
@@ -95,25 +92,17 @@ export const RecordDetails: React.FC<
 
         {/* Molecule Viewer */}
         <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
-          <Box
-            sx={{
-              p: 1,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-              {moleculeStatus === "pending" ? (
-                <LoadingIndicator message="Loading molecule..." />
-              ) : moleculeStatus === "error" ? (
-                <ErrorIndicator message="Failed to load molecule." />
-              ) : (
-                <SingleMoleculeViewer molecule={displayMolecule}
-                                      title={moleculeTitle}
-                                      width="100%"
-                                      height={280} />
-
-              )}
-            </Box>
+          {moleculeStatus === "pending" ? (
+            <LoadingIndicator message="Loading molecule..." />
+          ) : moleculeStatus === "error" ? (
+            <ErrorIndicator message="Failed to load molecule." />
+          ) : (
+            <SingleMoleculeViewer
+              molecule={displayMolecule}
+              width="100%"
+              height={300}
+            />
+          )}
         </Grid>
       </Grid>
     </>
