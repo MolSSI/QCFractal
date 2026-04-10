@@ -42,15 +42,15 @@ function MolecularFormula({ molecule }: MolecularFormulaProps) {
 
   const elements = Object.keys(atomCounts);
 
-  const hasCarbon = elements.includes("c");
+  const hasCarbon = elements.includes("C");
 
   const orderedElements = elements.sort((a, b) => {
     if (hasCarbon) {
-      if (a === "c") return -1;
-      if (b === "c") return 1;
+      if (a === "C") return -1;
+      if (b === "C") return 1;
 
-      if (a === "h") return b === "c" ? 1 : -1;
-      if (b === "h") return a === "c" ? -1 : 1;
+      if (a === "H") return b === "C" ? 1 : -1;
+      if (b === "H") return a === "C" ? -1 : 1;
     }
     return a.localeCompare(b);
   });
