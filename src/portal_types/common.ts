@@ -36,7 +36,7 @@ export type WaitingReason = {
 };
 
 export type ProjectListEntry = {
-  id: string;
+  id: number;
   project_name: string;
   tagline: string;
   tags: string[];

@@ -137,7 +137,7 @@ const DatasetList: React.FC = () => {
           <Table size="medium">
             <TableHead>
               <TableRow>
-                <TableCell width="5%">ID</TableCell>
+                <TableCell width="5%" align="center">ID</TableCell>
                 <TableCell width="55%">Dataset Name</TableCell>
                 <TableCell width="15%">Type</TableCell>
                 <TableCell width="25%">Records</TableCell>
@@ -149,7 +149,7 @@ const DatasetList: React.FC = () => {
                 .map((dataset) => (
                   <TableRow key={dataset.id} hover>
                     <TableCell>
-                      <Stack direction="row" spacing={1} alignItems="flex-start">
+                      <Stack direction="row" spacing={1} alignItems="center">
                         <FavoriteButton
                           preferencesKey="favorite_datasets"
                           objectId={dataset.id}

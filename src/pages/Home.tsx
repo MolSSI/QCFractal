@@ -71,7 +71,7 @@ const HomePage: React.FC = () => {
 
   const favoriteProjects = React.useMemo(() => {
     if (!projects) return [];
-    return projects.filter((p) => favoriteProjectsIds.includes(parseInt(p.id)));
+    return projects.filter((p) => favoriteProjectsIds.includes(p.id));
   }, [projects, favoriteProjectsIds]);
 
   const favoriteDatasets = React.useMemo(() => {
