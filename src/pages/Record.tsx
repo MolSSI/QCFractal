@@ -99,7 +99,7 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
           justifyContent="flex-start"
         >
           <Stack spacing={1} alignItems="flex-end">
-            <StatusChip status={recordData.status} recordId={recordData.id} />
+            <StatusChip status={recordData.status} recordId={recordData.id} recordType={recordData.record_type} />
             <RecordTypeChip type={recordData.record_type} />
             {recordData.is_service && (
               <Chip
