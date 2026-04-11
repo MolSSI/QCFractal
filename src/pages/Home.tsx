@@ -99,6 +99,8 @@ const HomePage: React.FC = () => {
                 <ul>
                   <li>
                     <strong>Added:</strong> Favoriting records
+                    <strong>Improved:</strong> Enhanced record/dataset/project
+                    description display with Markdown support
                   </li>
                   <li>
                     <strong>Improved:</strong> Remove ANSI escape codes from raw

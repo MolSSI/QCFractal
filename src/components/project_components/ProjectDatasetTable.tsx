@@ -22,6 +22,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import * as qcpTypes from "../../PortalTypes";
 import { RecordTypeChip } from "../RecordTypeChip.tsx";
+import ReactMarkdown from "react-markdown";
 
 interface ProjectDatasetTableProps {
   datasetMetadata: qcpTypes.ProjectDatasetMetadata[];
@@ -63,12 +64,12 @@ function DatasetRow({
             <Typography fontSize={"1.0rem"} fontWeight={"bold"}>
               [{ds.dataset_id}] {ds.name}
             </Typography>
-            <Typography>
-              {ds.tagline}
-            </Typography>
+            <Typography>{ds.tagline}</Typography>
           </Box>
         </TableCell>
-        <TableCell><RecordTypeChip type={ds.dataset_type} /></TableCell>
+        <TableCell>
+          <RecordTypeChip type={ds.dataset_type} />
+        </TableCell>
         <TableCell>
           <Stack direction="row" spacing={1}>
             <Button
@@ -106,7 +107,9 @@ function DatasetRow({
                   <Typography variant="body2" fontWeight="bold">
                     Description
                   </Typography>
-                  <Typography variant="body2">{ds.description}</Typography>
+                  <Typography variant="body2">
+                    <ReactMarkdown>{ds.description.trim()}</ReactMarkdown>
+                  </Typography>
                 </Box>
               )}
               {ds.tags && ds.tags.length > 0 && (
@@ -183,26 +186,16 @@ export default function ProjectDatasetTable({
           <TableHead>
             <TableRow>
               <TableCell width="50px" />
-              <TableCell>
-                Name
-              </TableCell>
-              <TableCell>
-                Type
-              </TableCell>
-              <TableCell>
-                Actions
-              </TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Type</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredDatasets
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((ds) => (
-                <DatasetRow
-                  key={ds.dataset_id}
-                  ds={ds}
-                  onDelete={onDelete}
-                />
+                <DatasetRow key={ds.dataset_id} ds={ds} onDelete={onDelete} />
               ))}
           </TableBody>
         </Table>

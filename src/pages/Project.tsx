@@ -10,6 +10,7 @@ import ProjectDatasetTable from "../components/project_components/ProjectDataset
 import ProjectRecordTable from "../components/project_components/ProjectRecordTable";
 import { useQuery } from "@tanstack/react-query";
 import { FavoriteButton } from "../components/FavoriteButton.tsx";
+import ReactMarkdown from "react-markdown";
 
 function TabPanel(props: {
   children?: React.ReactNode;
@@ -158,8 +159,8 @@ export default function Project() {
                   <Typography variant="h6" fontWeight="bold" gutterBottom>
                     Description
                   </Typography>
-                  <Typography variant="body1" paragraph>
-                    {projectData.description}
+                  <Typography variant="body1" component={"p"}>
+                    <ReactMarkdown>{projectData.description.trim()}</ReactMarkdown>
                   </Typography>
 
                   <Typography variant="h6" fontWeight="bold" gutterBottom>
