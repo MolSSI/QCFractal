@@ -184,8 +184,17 @@ export const RecordDetails: React.FC<
               </Typography>
               <Box sx={{ width: "100%", height: 350 }}>
                 <LineChart
-                  xAxis={[{ data: energies.map((_, i) => i), label: "Step" }]}
-                  yAxis={[{ valueFormatter: (value: number) => value.toFixed(1) }]}
+                  xAxis={[
+                    {
+                      data: energies.map((_, i) => i),
+                      tickLabelInterval: "auto",
+                      label: "Step",
+                      height: 60,
+                    },
+                  ]}
+                  yAxis={[
+                    { valueFormatter: (value: number) => value.toFixed(1) },
+                  ]}
                   series={[
                     {
                       data: relativeEnergies,
@@ -194,7 +203,7 @@ export const RecordDetails: React.FC<
                     },
                   ]}
                   height={300}
-                  margin={{ left: 80, right: 30, top: 30, bottom: 50 }}
+                  margin={{ left: 20, right: 30, top: 15, bottom: 10 }}
                 />
               </Box>
             </Box>

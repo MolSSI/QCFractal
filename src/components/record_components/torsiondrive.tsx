@@ -28,10 +28,32 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import { LineChart } from "@mui/x-charts/LineChart";
 import Properties from "../Properties.tsx";
 import LoadingIndicator from "../LoadingIndicator.tsx";
 import ErrorIndicator from "../ErrorIndicator.tsx";
 import { MultiMoleculeViewer } from "../Molecule.tsx";
+
+const parseAnglesFromKey = (key: string): number[] =>
+  key.match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+
+const compareAngleArrays = (anglesA: number[], anglesB: number[]): number => {
+  const maxLength = Math.max(anglesA.length, anglesB.length);
+
+  for (let i = 0; i < maxLength; i += 1) {
+    const angleA = anglesA[i];
+    const angleB = anglesB[i];
+
+    if (angleA === undefined) return -1;
+    if (angleB === undefined) return 1;
+    if (angleA !== angleB) return angleA - angleB;
+  }
+
+  return 0;
+};
+
+const sortableEnergy = (energy?: number): number =>
+  energy ?? Number.POSITIVE_INFINITY;
 
 export const Specification: React.FC<
   SpecificationComponentProps<TorsiondriveSpecification>
@@ -109,25 +131,66 @@ export const RecordDetails: React.FC<
     molecule,
   ] as const);
 
-  const groupedOptimizations = optimizations
+  const sortedOptimizations = optimizations
+    .map((optimization) => ({
+      ...optimization,
+      angles: parseAnglesFromKey(optimization.key),
+    }))
     .slice()
     .sort(
       (a, b) =>
+        compareAngleArrays(a.angles, b.angles) ||
         a.key.localeCompare(b.key) ||
+        sortableEnergy(a.energy) - sortableEnergy(b.energy) ||
         a.position - b.position ||
         a.optimization_id - b.optimization_id,
-    )
-    .reduce<
-      Array<{ key: string; optimizations: TorsiondriveOptimization[] }>
-    >((groups, optimization) => {
+    );
+
+  const groupedOptimizations = sortedOptimizations.reduce<
+    Array<{
+      key: string;
+      angles: number[];
+      lowestEnergy?: number;
+      optimizations: Array<TorsiondriveOptimization & { angles: number[] }>;
+    }>
+  >((groups, optimization) => {
       const lastGroup = groups[groups.length - 1];
       if (lastGroup && lastGroup.key === optimization.key) {
         lastGroup.optimizations.push(optimization);
+        if (
+          optimization.energy !== undefined &&
+          (lastGroup.lowestEnergy === undefined ||
+            optimization.energy < lastGroup.lowestEnergy)
+        ) {
+          lastGroup.lowestEnergy = optimization.energy;
+        }
       } else {
-        groups.push({ key: optimization.key, optimizations: [optimization] });
+        groups.push({
+          key: optimization.key,
+          angles: optimization.angles,
+          lowestEnergy: optimization.energy,
+          optimizations: [optimization],
+        });
       }
       return groups;
     }, []);
+
+  const canPlotSingleAngleScan =
+    groupedOptimizations.length > 0 &&
+    groupedOptimizations.every((group) => group.angles.length === 1);
+
+  const angleEnergyData = canPlotSingleAngleScan
+    ? groupedOptimizations
+        .map((group) => {
+          return group.lowestEnergy === undefined
+            ? undefined
+            : {
+                angle: group.angles[0],
+                energy: group.lowestEnergy,
+              };
+        })
+        .filter((datum) => datum !== undefined)
+    : [];
 
   return (
     <>
@@ -173,9 +236,11 @@ export const RecordDetails: React.FC<
                 justifyContent: "center",
               }}
             >
-              {recordQueryStatus === "pending" && !recordData.initial_molecules ? (
+              {recordQueryStatus === "pending" &&
+              !recordData.initial_molecules ? (
                 <LoadingIndicator message="Loading initial molecules..." />
-              ) : recordQueryStatus === "error" && !recordData.initial_molecules ? (
+              ) : recordQueryStatus === "error" &&
+                !recordData.initial_molecules ? (
                 <ErrorIndicator message="Failed to load initial molecules." />
               ) : moleculeTuples.length > 0 ? (
                 <MultiMoleculeViewer
@@ -204,12 +269,91 @@ export const RecordDetails: React.FC<
       </Grid>
 
       <Grid container spacing={2} sx={{ mt: 2, width: "100%" }}>
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12, lg: 5 }}>
           <Box
             sx={{
               p: 2,
               bgcolor: "background.paper",
               borderRadius: 1,
+            }}
+          >
+            <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+              Lowest Energy by Angle
+            </Typography>
+
+            {recordQueryStatus === "pending" && !recordData.optimizations ? (
+              <LoadingIndicator message="Loading optimizations..." />
+            ) : recordQueryStatus === "error" && !recordData.optimizations ? (
+              <ErrorIndicator message="Failed to load optimizations." />
+            ) : angleEnergyData.length > 0 ? (
+              <Box sx={{ width: "100%", height: 450 }}>
+                <LineChart
+                  xAxis={[
+                    {
+                      data: angleEnergyData.map((datum) => datum.angle),
+                      label: "Angle (degrees)",
+                      height: 80,
+                      scaleType: "linear",
+                      tickInterval: angleEnergyData.map((datum) => datum.angle),
+                      tickLabelInterval: "auto",
+                      tickLabelStyle: {
+                        angle: -70,
+                        fontSize: 11,
+                        textAnchor: "end",
+                      },
+                      valueFormatter: (value: number) => `${value}°`,
+                    },
+                  ]}
+                  yAxis={[
+                    {
+                      valueFormatter: (value: number) => value.toFixed(8),
+                      width: 58,
+                    },
+                  ]}
+                  series={[
+                    {
+                      data: angleEnergyData.map((datum) => datum.energy),
+                      label: "Lowest Energy (Eh)",
+                      showMark: true,
+                      valueFormatter: (value: number | null) =>
+                        value === null ? "N/A" : `${value.toFixed(8)} Eh`,
+                    },
+                  ]}
+                  height={400}
+                  margin={{ left: 5, right: 10, top: 30, bottom: 0 }}
+                />
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  minHeight: 300,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textAlign: "center",
+                  color: "text.secondary",
+                  px: 2,
+                }}
+              >
+                <Typography>
+                  {groupedOptimizations.length === 0
+                    ? "No optimization data available for plotting."
+                    : canPlotSingleAngleScan
+                      ? "No energies are available for plotting."
+                      : "This torsiondrive has multiple scanned angles, so the 1D angle-energy plot is not available."}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Grid>
+
+        <Grid size={{ xs: 12, lg: 7 }}>
+          <Box
+            sx={{
+              p: 2,
+              bgcolor: "background.paper",
+              borderRadius: 1,
+              height: "100%",
             }}
           >
             <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
@@ -228,25 +372,50 @@ export const RecordDetails: React.FC<
                       <TableCell>
                         <strong>Angles</strong>
                       </TableCell>
-                      <TableCell>
-                        <strong>Record ID</strong>
-                      </TableCell>
                       <TableCell align="right">
                         <strong>Energy (Eh)</strong>
+                      </TableCell>
+                      <TableCell align="right">
+                        <strong>Relative (µEh)</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Record ID</strong>
                       </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {groupedOptimizations.flatMap((group) =>
+                    {groupedOptimizations.flatMap((group, groupIndex) =>
                       group.optimizations.map((optimization, index) => (
                         <TableRow
                           key={`${group.key}-${optimization.position}-${optimization.optimization_id}`}
+                          sx={
+                            groupIndex > 0 && index === 0
+                              ? {
+                                  "& td": {
+                                    borderTop: (theme) =>
+                                      `2px solid ${theme.palette.divider}`,
+                                  },
+                                }
+                              : undefined
+                          }
                         >
                           {index === 0 && (
                             <TableCell rowSpan={group.optimizations.length}>
                               {group.key}
                             </TableCell>
                           )}
+                          <TableCell align="right">
+                            {optimization.energy?.toFixed(8) ?? "N/A"}
+                          </TableCell>
+                          <TableCell align="right">
+                            {optimization.energy !== undefined &&
+                            group.lowestEnergy !== undefined
+                              ? (
+                                  (optimization.energy - group.lowestEnergy) *
+                                  1000000
+                                ).toFixed(6)
+                              : "N/A"}
+                          </TableCell>
                           <TableCell>
                             <Link
                               to={`/records/${optimization.optimization_id}`}
@@ -255,9 +424,6 @@ export const RecordDetails: React.FC<
                             >
                               {optimization.optimization_id}
                             </Link>
-                          </TableCell>
-                          <TableCell align="right">
-                            {optimization.energy?.toFixed(8) ?? "N/A"}
                           </TableCell>
                         </TableRow>
                       )),
