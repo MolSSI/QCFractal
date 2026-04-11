@@ -21,6 +21,7 @@ import { useQuery } from "@tanstack/react-query";
 import * as qcpTypes from "../PortalTypes";
 import LoadingIndicator from "../components/LoadingIndicator";
 import { RecordTypeChip } from "../components/RecordTypeChip.tsx";
+import StatusChip from "../components/StatusChip.tsx";
 
 const HomePage: React.FC = () => {
   const { loggedIn, has_permission } = useAuth();
@@ -39,6 +40,11 @@ const HomePage: React.FC = () => {
     return preferences.favorite_datasets as number[];
   }, [preferences]);
 
+  const favoriteRecordsIds = React.useMemo(() => {
+    if (!preferences?.favorite_records) return [];
+    return preferences.favorite_records as number[];
+  }, [preferences]);
+
   const { data: projects, isLoading: projectsLoading } = useQuery({
     queryKey: ["listProjects"],
     queryFn: () =>
@@ -51,6 +57,16 @@ const HomePage: React.FC = () => {
     queryFn: () =>
       makeRequest<qcpTypes.DatasetListEntry[]>("GET", "/api/v1/datasets"),
     enabled: canFavorite && favoriteDatasetsIds.length > 0,
+  });
+
+  const { data: favoriteRecords, isLoading: recordsLoading } = useQuery({
+    queryKey: ["favoriteRecords", favoriteRecordsIds],
+    queryFn: () =>
+      makeRequest<qcpTypes.BaseRecord[]>("POST", "/api/v1/records/bulkGet", {
+        ids: favoriteRecordsIds,
+        include: ["record_type", "status"],
+      }),
+    enabled: canFavorite && favoriteRecordsIds.length > 0,
   });
 
   const favoriteProjects = React.useMemo(() => {
@@ -79,10 +95,28 @@ const HomePage: React.FC = () => {
           <Typography variant="body1" component="div">
             <ul>
               <li>
+                <strong>2026-04-13</strong>
+                <ul>
+                  <li>
+                    <strong>Added:</strong> Favoriting records
+                  </li>
+                  <li>
+                    <strong>Improved:</strong> Remove ANSI escape codes from raw
+                    output
+                  </li>
+                </ul>
+              </li>
+              <li>
                 <strong>2026-04-10</strong>
                 <ul>
-                  <li><strong>Improved:</strong> Molecular formula formatting & molecule viewer layouts</li>
-                  <li><strong>Improved:</strong> Remove ANSI escape codes from raw output</li>
+                  <li>
+                    <strong>Improved:</strong> Molecular formula formatting &
+                    molecule viewer layouts
+                  </li>
+                  <li>
+                    <strong>Improved:</strong> Remove ANSI escape codes from raw
+                    output
+                  </li>
                 </ul>
               </li>
               <li>
@@ -206,6 +240,62 @@ const HomePage: React.FC = () => {
                           </TableCell>
                           <TableCell>
                             <RecordTypeChip type={dataset.dataset_type} />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Box>
+
+            {/* Favorite Records Section */}
+            <Box>
+              <Typography variant="h5" gutterBottom>
+                Favorite Records
+              </Typography>
+              {favoriteRecordsIds.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  You don't have any favorite any records.
+                </Typography>
+              ) : recordsLoading ? (
+                <LoadingIndicator />
+              ) : (
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell width="10%">ID</TableCell>
+                        <TableCell>Type</TableCell>
+                        <TableCell>Status</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {favoriteRecords?.map((record) => (
+                        <TableRow key={record.id} hover>
+                          <TableCell>
+                            <MuiLink
+                              component={Link}
+                              to={`/records/${record.id}`}
+                              sx={{
+                                color: "inherit",
+                                fontWeight: "bold",
+                                textDecoration: "none",
+                                "&:hover": { textDecoration: "underline" },
+                              }}
+                            >
+                              {record.id}
+                            </MuiLink>
+                          </TableCell>
+                          <TableCell>
+                            <RecordTypeChip type={record.record_type} />
+                          </TableCell>
+                          <TableCell>
+                            <StatusChip
+                              status={record.status}
+                              recordId={record.id}
+                              recordType={record.record_type}
+                            />
                           </TableCell>
                         </TableRow>
                       ))}

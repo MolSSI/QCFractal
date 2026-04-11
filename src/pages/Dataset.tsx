@@ -2,9 +2,6 @@ import React, { useEffect } from "react";
 import { usePortalClient } from "../PortalClient.tsx";
 import * as qcpTypes from "../PortalTypes";
 import { useLocation, useParams } from "react-router-dom";
-import { useAuth } from "../Auth.tsx";
-import { usePreferences } from "../PreferencesProvider.tsx";
-import { Star, StarBorder } from "@mui/icons-material";
 import {
   Box,
   Chip,
@@ -25,7 +22,7 @@ import DatasetActions from "../components/dataset_components/DatasetActions";
 import DatasetSpecificationTable from "../components/dataset_components/DatasetSpecificationTable";
 import DatasetEntryTable from "../components/dataset_components/DatasetEntryTable";
 import DatasetRecords from "../components/dataset_components/DatasetRecords";
-import { asRecord, updateFavoritesList } from "../Utils.ts";
+import { asRecord } from "../Utils.ts";
 import {
   areDatasetViewStatesEqual,
   createDefaultDatasetViewState,
@@ -35,6 +32,7 @@ import {
   DatasetViewState,
   getSavedDatasetViewState,
 } from "../components/dataset_components/DatasetViewState.tsx";
+import { FavoriteButton } from "../components/FavoriteButton.tsx";
 
 const RECORDS_TAB_INDEX = 2;
 
@@ -62,18 +60,6 @@ export default function Dataset() {
   const location = useLocation();
   const { makeRequest } = usePortalClient();
   const queryClient = useQueryClient();
-  const { has_permission } = useAuth();
-  const { preferences, updatePreference } = usePreferences();
-
-  const canFavorite = has_permission("me", "modify");
-  const favoriteDatasets = (preferences?.favorite_datasets as number[]) || [];
-
-  const handleToggleFavorite = async () => {
-    if (!datasetId) return;
-    const datasetIdNum = parseInt(datasetId);
-    const newFavorites = updateFavoritesList(favoriteDatasets, datasetIdNum);
-    await updatePreference("favorite_datasets", newFavorites);
-  };
 
   const restoredViewState = React.useMemo(
     () =>
@@ -298,8 +284,6 @@ export default function Dataset() {
     return <ErrorIndicator fullPage message="Missing dataset ID" />;
   }
 
-  const isFavorite = favoriteDatasets.includes(parseInt(datasetId));
-
   return (
     <>
       {datasetStatus === "pending" && <LoadingIndicator fullPage />}
@@ -312,23 +296,10 @@ export default function Dataset() {
         <Grid container spacing={2} width="100%">
           <Grid size={12}>
             <Box sx={{ display: "flex", alignItems: "center" }}>
-              {canFavorite && (
-                <Tooltip
-                  title={isFavorite ? "Remove from favorites" : "Add to favorites"}
-                >
-                  <IconButton
-                    size="large"
-                    onClick={handleToggleFavorite}
-                    sx={{ mr: 1, p: 1 }}
-                  >
-                    {isFavorite ? (
-                      <Star sx={{ color: "gold", fontSize: "1.5rem" }} />
-                    ) : (
-                      <StarBorder sx={{ fontSize: "1.5rem" }} />
-                    )}
-                  </IconButton>
-                </Tooltip>
-              )}
+              <FavoriteButton
+                preferencesKey="favorite_datasets"
+                objectId={parseInt(datasetId)}
+              />
               <Box>
                 <Typography variant="h4" fontWeight="bold">
                   <Typography

@@ -24,6 +24,7 @@ import Comments from "../components/Comments.tsx";
 import ComputeHistory from "../components/ComputeHistory.tsx";
 import { ViewOutput } from "../components/ViewOutput.tsx";
 import TaskServiceDetails from "../components/TaskServiceDetails.tsx";
+import { FavoriteButton } from "../components/FavoriteButton.tsx";
 
 interface RecordHeaderProps {
   recordData: qcpTypes.RecordData;
@@ -44,12 +45,18 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
       >
         {/* Main Content */}
         <Grid>
-          {/* Name */}
-          <Typography variant="h5" fontWeight="bold">
-            {recordData.name
-              ? recordData.name.trim()
-              : `Record ${recordData.id}`}
-          </Typography>
+          <Stack direction="row" alignItems="flex-start" spacing={1}>
+            <FavoriteButton
+              preferencesKey="favorite_records"
+              objectId={recordData.id}
+            />
+            {/* Name */}
+            <Typography variant="h5" fontWeight="bold">
+              {recordData.name
+                ? recordData.name.trim()
+                : `Record ${recordData.id}`}
+            </Typography>
+          </Stack>
 
           {/* Description */}
           {recordData.description && (

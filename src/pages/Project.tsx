@@ -1,28 +1,15 @@
 // src/pages/Profile.tsx
 import { usePortalClient } from "../PortalClient.tsx";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import * as qcpTypes from "../PortalTypes";
 import { useLocation, useParams } from "react-router-dom";
-import { useAuth } from "../Auth.tsx";
-import { usePreferences } from "../PreferencesProvider.tsx";
-import { Star, StarBorder } from "@mui/icons-material";
-import {
-  Box,
-  Chip,
-  Grid,
-  IconButton,
-  Paper,
-  Tab,
-  Tabs,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Box, Chip, Grid, Paper, Tab, Tabs, Typography } from "@mui/material";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
 import ProjectDatasetTable from "../components/project_components/ProjectDatasetTable";
 import ProjectRecordTable from "../components/project_components/ProjectRecordTable";
 import { useQuery } from "@tanstack/react-query";
-import { updateFavoritesList } from "../Utils";
+import { FavoriteButton } from "../components/FavoriteButton.tsx";
 
 function TabPanel(props: {
   children?: React.ReactNode;
@@ -47,18 +34,6 @@ export default function Project() {
   const { projectId } = useParams();
   const location = useLocation();
   const { makeRequest } = usePortalClient();
-  const { has_permission } = useAuth();
-  const { preferences, updatePreference } = usePreferences();
-
-  const canFavorite = has_permission("me", "modify");
-  const favoriteProjects = (preferences?.favorite_projects as number[]) || [];
-
-  const handleToggleFavorite = async () => {
-    if (!projectId) return;
-    const projectIdNum = parseInt(projectId);
-    const newFavorites = updateFavoritesList(favoriteProjects, projectIdNum);
-    await updatePreference("favorite_projects", newFavorites);
-  };
 
   // Load from location state or sessionStorage or fallback to 0
   const [tabValue, setTabValue] = useState<number>(() => {
@@ -117,8 +92,6 @@ export default function Project() {
     return <ErrorIndicator fullPage message="Missing project ID" />;
   }
 
-  const isFavorite = favoriteProjects.includes(parseInt(projectId));
-
   return (
     <>
       {projectStatus === "pending" && <LoadingIndicator fullPage />}
@@ -132,24 +105,18 @@ export default function Project() {
           {/* Project name & tagline */}
           <Grid size={12}>
             <Box sx={{ display: "flex", alignItems: "center" }}>
-              {canFavorite && (
-                <Tooltip title={isFavorite ? "Remove from favorites" : "Add to favorites"}>
-                  <IconButton
-                    size="large"
-                    onClick={handleToggleFavorite}
-                    sx={{ mr: 1, p: 1 }}
-                  >
-                    {isFavorite ? (
-                      <Star sx={{ color: "gold", fontSize: "1.5rem" }} />
-                    ) : (
-                      <StarBorder sx={{ fontSize: "1.5rem" }} />
-                    )}
-                  </IconButton>
-                </Tooltip>
-              )}
+              <FavoriteButton
+                preferencesKey="favorite_projects"
+                objectId={parseInt(projectId)}
+              />
               <Box>
                 <Typography variant="h4" fontWeight="bold">
-                  <Typography variant="h5" fontWeight="bold" component={"span"} pr={2}>
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    component={"span"}
+                    pr={2}
+                  >
                     [{projectData.id}]
                   </Typography>
                   {projectData.name}
@@ -246,9 +213,7 @@ export default function Project() {
                 <TabPanel value={tabValue} index={1}>
                   {recordMetadataStatus === "pending" && <LoadingIndicator />}
                   {recordMetadataStatus === "success" && recordMetadata && (
-                    <ProjectRecordTable
-                      recordMetadata={recordMetadata}
-                    />
+                    <ProjectRecordTable recordMetadata={recordMetadata} />
                   )}
                 </TabPanel>
               </Paper>

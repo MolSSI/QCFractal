@@ -3,19 +3,16 @@ import * as qcpTypes from "../PortalTypes";
 import { usePortalClient } from "../PortalClient.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { useAuth } from "../Auth.tsx";
-import { usePreferences } from "../PreferencesProvider.tsx";
-import { Star, StarBorder } from "@mui/icons-material";
 import {
   Box,
   Chip,
   FormControl,
-  IconButton,
   InputLabel,
   MenuItem,
   Paper,
   Select,
   SelectChangeEvent,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -24,24 +21,19 @@ import {
   TablePagination,
   TableRow,
   TextField,
-  Tooltip,
   Typography,
 } from "@mui/material";
-import { updateFavoritesList } from "../Utils.ts";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
+import { FavoriteButton } from "../components/FavoriteButton.tsx";
 
 const DatasetList: React.FC = () => {
   const { makeRequest } = usePortalClient();
-  const { has_permission } = useAuth();
-  const { preferences, updatePreference } = usePreferences();
 
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(20);
   const [filter, setFilter] = React.useState("");
   const [typeFilter, setTypeFilter] = React.useState<string>("all");
-
-  const favoriteDatasets = (preferences?.favorite_datasets as number[]) || [];
 
   const {
     status,
@@ -58,22 +50,15 @@ const DatasetList: React.FC = () => {
     const searchFilter = filter || "";
     return datasets.filter((dataset) => {
       const matchesSearch =
-        dataset.dataset_name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        dataset.dataset_name
+          .toLowerCase()
+          .includes(searchFilter.toLowerCase()) ||
         dataset.id.toString().includes(searchFilter);
       const matchesType =
         typeFilter === "all" || dataset.dataset_type === typeFilter;
       return matchesSearch && matchesType;
     });
   }, [datasets, filter, typeFilter]);
-
-  const handleToggleFavorite = async (
-    event: React.MouseEvent,
-    datasetId: number,
-  ) => {
-    event.stopPropagation();
-    const newFavorites = updateFavoritesList(favoriteDatasets, datasetId);
-    await updatePreference("favorite_datasets", newFavorites);
-  };
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
@@ -95,8 +80,6 @@ const DatasetList: React.FC = () => {
     setTypeFilter(event.target.value as string);
     setPage(0);
   };
-
-  const canFavorite = has_permission("me", "modify");
 
   if (status == "pending") {
     return <LoadingIndicator fullPage />;
@@ -154,9 +137,8 @@ const DatasetList: React.FC = () => {
           <Table size="medium">
             <TableHead>
               <TableRow>
-                <TableCell width="5%">Favorite</TableCell>
                 <TableCell width="5%">ID</TableCell>
-                <TableCell width="50%">Dataset Name</TableCell>
+                <TableCell width="55%">Dataset Name</TableCell>
                 <TableCell width="15%">Type</TableCell>
                 <TableCell width="25%">Records</TableCell>
               </TableRow>
@@ -167,31 +149,15 @@ const DatasetList: React.FC = () => {
                 .map((dataset) => (
                   <TableRow key={dataset.id} hover>
                     <TableCell>
-                      {canFavorite && (
-                        <Tooltip
-                          title={
-                            favoriteDatasets.includes(dataset.id)
-                              ? "Remove from favorites"
-                              : "Add to favorites"
-                          }
-                        >
-                          <IconButton
-                            size="small"
-                            onClick={(e) => handleToggleFavorite(e, dataset.id)}
-                            sx={{ mr: 1 }}
-                          >
-                            {favoriteDatasets.includes(dataset.id) ? (
-                              <Star sx={{ color: "gold" }} />
-                            ) : (
-                              <StarBorder />
-                            )}
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </TableCell>
-
-                    <TableCell>
-                      <Typography fontWeight={"bold"}>{dataset.id}</Typography>
+                      <Stack direction="row" spacing={1} alignItems="flex-start">
+                        <FavoriteButton
+                          preferencesKey="favorite_datasets"
+                          objectId={dataset.id}
+                        />
+                        <Typography fontWeight={"bold"}>
+                          {dataset.id}
+                        </Typography>
+                      </Stack>
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center" }}>
