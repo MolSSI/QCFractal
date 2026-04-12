@@ -98,9 +98,19 @@ const HomePage: React.FC = () => {
                 <strong>2026-04-13</strong>
                 <ul>
                   <li>
-                    <strong>Added:</strong> Favoriting records
-                    <strong>Improved:</strong> Enhanced record/dataset/project
-                    description display with Markdown support
+                    <li>
+                      <strong>Added:</strong> Favoriting records
+                    </li>
+                    <li>
+                      <strong>Improved:</strong> Enhanced record/dataset/project
+                      description display with Markdown support
+                    </li>
+                    <li>
+                      <strong>Added:</strong> Torsiondrive plots
+                    </li>
+                    <li>
+                      <strong>Improved:</strong> Manager page & fragment (including claimed records)
+                    </li>
                   </li>
                   <li>
                     <strong>Improved:</strong> Remove ANSI escape codes from raw

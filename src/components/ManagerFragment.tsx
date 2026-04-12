@@ -2,11 +2,12 @@ import { usePortalClient } from "../PortalClient.tsx";
 import React from "react";
 import * as qcpTypes from "../PortalTypes";
 import { Chip, Grid, Stack, Typography } from "@mui/material";
-import { PieChart } from "@mui/x-charts/PieChart";
 import { parseToDate } from "../Utils";
 import { useQuery } from "@tanstack/react-query";
 import LoadingIndicator from "./LoadingIndicator";
 import ErrorIndicator from "./ErrorIndicator";
+import { ManagerPieChart } from "./ManagerPieChart.tsx";
+import { Link } from "react-router-dom";
 
 export const ManagerFragment: React.FC<{ managerName: string }> = ({
   managerName,
@@ -34,16 +35,11 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
   const mCreatedOn = parseToDate(managerData.created_on);
   const mLastUpdated = parseToDate(managerData.modified_on);
 
-  const returned = managerData
-    ? managerData.claimed -
-      (managerData.active_tasks + managerData.successes + managerData.failures)
-    : 0;
-
   return (
     <>
       <Grid container spacing={2} width="100%">
         <Grid size={12}>
-          <Stack>
+          <Stack gap={2}>
             <Typography variant="h6" fontWeight="bold">
               {managerData.name}
             </Typography>
@@ -52,6 +48,17 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
               color={managerData.status == "active" ? "success" : "default"}
               sx={{ width: "fit-content", fontWeight: "bold" }}
             />
+            <Link
+              to={`/managers/${managerData.name}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: "inherit",
+                textDecoration: "underline",
+              }}
+            >
+              <Typography variant="h6">Go to manager page</Typography>
+            </Link>
           </Stack>
         </Grid>
         <Grid size={6}>
@@ -90,44 +97,7 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
           </ul>
         </Grid>
         <Grid size={6}>
-          <Stack>
-            <Typography variant="h6">
-              Tasks ({managerData.claimed} total claimed)
-            </Typography>
-            {managerData.claimed == 0 ? (
-              <Typography variant="body1">(no claimed tasks)</Typography>
-            ) : (
-              <PieChart
-                colors={["blue", "green", "red", "orange"]}
-                series={[
-                  {
-                    data: [
-                      {
-                        id: 0,
-                        value: managerData.active_tasks,
-                        label: `${managerData.active_tasks} active`,
-                      },
-                      {
-                        id: 1,
-                        value: managerData.successes,
-                        label: `${managerData.successes} success`,
-                      },
-                      {
-                        id: 2,
-                        value: managerData.failures,
-                        label: `${managerData.failures} failed`,
-                      },
-                      {
-                        id: 4,
-                        value: returned,
-                        label: `${returned} returned`,
-                      },
-                    ],
-                  },
-                ]}
-              />
-            )}
-          </Stack>
+          <ManagerPieChart managerData={managerData} />
         </Grid>
       </Grid>
     </>
