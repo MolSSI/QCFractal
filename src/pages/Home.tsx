@@ -95,22 +95,29 @@ const HomePage: React.FC = () => {
           <Typography variant="body1" component="div">
             <ul>
               <li>
+                <strong>2026-04-14</strong>
+                <ul>
+                  <li>
+                    <strong>Added:</strong> Dataset and project attachments
+                  </li>
+                </ul>
+              </li>
+              <li>
                 <strong>2026-04-13</strong>
                 <ul>
                   <li>
-                    <li>
-                      <strong>Added:</strong> Favoriting records
-                    </li>
-                    <li>
-                      <strong>Improved:</strong> Enhanced record/dataset/project
-                      description display with Markdown support
-                    </li>
-                    <li>
-                      <strong>Added:</strong> Torsiondrive plots
-                    </li>
-                    <li>
-                      <strong>Improved:</strong> Manager page & fragment (including claimed records)
-                    </li>
+                    <strong>Added:</strong> Favoriting records
+                  </li>
+                  <li>
+                    <strong>Improved:</strong> Enhanced record/dataset/project
+                    description display with Markdown support
+                  </li>
+                  <li>
+                    <strong>Added:</strong> Torsiondrive plots
+                  </li>
+                  <li>
+                    <strong>Improved:</strong> Manager page & fragment
+                    (including claimed records)
                   </li>
                   <li>
                     <strong>Improved:</strong> Remove ANSI escape codes from raw

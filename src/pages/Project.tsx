@@ -8,6 +8,7 @@ import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
 import ProjectDatasetTable from "../components/project_components/ProjectDatasetTable";
 import ProjectRecordTable from "../components/project_components/ProjectRecordTable";
+import AttachmentTable from "../components/AttachmentTable";
 import { useQuery } from "@tanstack/react-query";
 import { FavoriteButton } from "../components/FavoriteButton.tsx";
 import ReactMarkdown from "react-markdown";
@@ -88,6 +89,19 @@ export default function Project() {
       ),
     enabled: !!projectId,
   });
+  
+  const {
+    status: attachmentsStatus,
+    data: attachmentsData,
+  } = useQuery({
+    queryKey: ["projectAttachments", projectId],
+    queryFn: () =>
+      makeRequest<Array<qcpTypes.ProjectAttachment>>(
+        "GET",
+        `api/v1/projects/${projectId}/attachments`,
+      ),
+    enabled: !!projectId && tabValue === 2,
+  });
 
   if (!projectId) {
     return <ErrorIndicator fullPage message="Missing project ID" />;
@@ -150,6 +164,15 @@ export default function Project() {
               </Box>
             </Paper>
           </Grid>
+          <Grid size={2}>
+            <Paper elevation={3}>
+              <Box p={1}>
+                <Typography variant="body1" fontWeight="bold">
+                  {attachmentsData ? attachmentsData.length : "..."} Attachments
+                </Typography>
+              </Box>
+            </Paper>
+          </Grid>
 
           {/* Description & Metadata section */}
           <Grid size={12} sx={{ mx: "auto" }}>
@@ -195,6 +218,7 @@ export default function Project() {
                 >
                   <Tab label="Datasets" id="tab-0" aria-controls="tabpanel-0" />
                   <Tab label="Records" id="tab-1" aria-controls="tabpanel-1" />
+                  <Tab label="Attachments" id="tab-2" aria-controls="tabpanel-2" />
                 </Tabs>
 
                 {/* Tab 1: Datasets */}
@@ -215,6 +239,14 @@ export default function Project() {
                   {recordMetadataStatus === "pending" && <LoadingIndicator />}
                   {recordMetadataStatus === "success" && recordMetadata && (
                     <ProjectRecordTable recordMetadata={recordMetadata} />
+                  )}
+                </TabPanel>
+
+                {/* Tab 3: Attachments */}
+                <TabPanel value={tabValue} index={2}>
+                  {attachmentsStatus === "pending" && <LoadingIndicator />}
+                  {attachmentsStatus === "success" && attachmentsData && (
+                    <AttachmentTable attachments={attachmentsData} projectId={projectId} />
                   )}
                 </TabPanel>
               </Paper>

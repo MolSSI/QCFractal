@@ -1,4 +1,5 @@
 import { RecordType } from "./record_types";
+
 export type ServerInfo = {
   name: string;
   version: string;
@@ -8,7 +9,7 @@ export type ServerInfo = {
     get_dataset_entries: number;
     get_molecules: number;
     get_managers: number;
-  }
+  };
 };
 
 export type UserInfo = {
@@ -152,9 +153,7 @@ export type RecordService = {
 
   service_state: object | null;
   dependencies: Array<ServiceDependency>;
-
 };
-
 
 export type RecordTask = {
   id: number;
@@ -166,7 +165,6 @@ export type RecordTask = {
   compute_priority: number;
   required_program: string[];
 };
-
 
 export type RecordStatus =
   | "complete"
@@ -264,4 +262,33 @@ export type Dataset = {
   // These might be present depending on the include/exclude
   specifications?: Record<string, any>;
   entries?: Record<string, any>;
+};
+
+export type ExternalFileStatus = "available" | "processing";
+
+export type Attachment = {
+  id: number;
+  file_type: string;
+
+  created_on: string;
+  status: ExternalFileStatus;
+
+  file_name: string;
+  description: string | undefined;
+  provenance: Record<string, any>;
+  sha256sum: string;
+  file_size: number;
+};
+
+export type DatasetAttachmentType = "other" | "notebook" | "view";
+
+export type DatasetAttachment = Attachment & {
+  attachment_type: DatasetAttachmentType;
+};
+
+export type ProjectAttachmentType = "other" | "notebook";
+
+export type ProjectAttachment = Attachment & {
+  attachment_type: ProjectAttachmentType;
+  tags: string[];
 };

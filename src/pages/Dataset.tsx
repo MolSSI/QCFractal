@@ -22,6 +22,7 @@ import DatasetActions from "../components/dataset_components/DatasetActions";
 import DatasetSpecificationTable from "../components/dataset_components/DatasetSpecificationTable";
 import DatasetEntryTable from "../components/dataset_components/DatasetEntryTable";
 import DatasetRecords from "../components/dataset_components/DatasetRecords";
+import AttachmentTable from "../components/AttachmentTable";
 import { asRecord } from "../Utils.ts";
 import ReactMarkdown from "react-markdown";
 import {
@@ -281,6 +282,19 @@ export default function Dataset() {
     enabled: !!datasetId && !!datasetData?.dataset_type,
   });
 
+  const {
+    status: attachmentsStatus,
+    data: attachmentsData,
+  } = useQuery({
+    queryKey: ["datasetAttachments", datasetId],
+    queryFn: () =>
+      makeRequest<qcpTypes.DatasetAttachment[]>(
+        "GET",
+        `api/v1/datasets/${datasetId}/attachments`,
+      ),
+    enabled: !!datasetId && viewState.tabValue === 3,
+  });
+
   if (!datasetId) {
     return <ErrorIndicator fullPage message="Missing dataset ID" />;
   }
@@ -362,6 +376,15 @@ export default function Dataset() {
               <Box p={1}>
                 <Typography variant="body1" fontWeight="bold">
                   {recordCountData ? recordCountData : 0} Records
+                </Typography>
+              </Box>
+            </Paper>
+          </Grid>
+          <Grid size={2}>
+            <Paper elevation={3}>
+              <Box p={1}>
+                <Typography variant="body1" fontWeight="bold">
+                  {attachmentsData ? attachmentsData.length : "..."} Attachments
                 </Typography>
               </Box>
             </Paper>
@@ -465,6 +488,7 @@ export default function Dataset() {
                 />
                 <Tab label="Entries" id="tab-1" aria-controls="tabpanel-1" />
                 <Tab label="Records" id="tab-2" aria-controls="tabpanel-2" />
+                <Tab label="Attachments" id="tab-3" aria-controls="tabpanel-3" />
               </Tabs>
 
               {/* Tab 0: Specifications */}
@@ -515,6 +539,14 @@ export default function Dataset() {
                     onSpecFilterChange={handleSpecFilterChange}
                     onStatusFilterChange={handleStatusFilterChange}
                   />
+                )}
+              </TabPanel>
+
+              {/* Tab 3: Attachments */}
+              <TabPanel value={viewState.tabValue} index={3}>
+                {attachmentsStatus === "pending" && <LoadingIndicator />}
+                {attachmentsStatus === "success" && attachmentsData && (
+                  <AttachmentTable attachments={attachmentsData} datasetId={datasetId} />
                 )}
               </TabPanel>
             </Paper>
