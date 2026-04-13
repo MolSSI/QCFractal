@@ -100,9 +100,9 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ open, onClose }) =>
           <TextField
             label="Description"
             required
-            fullWidth
             multiline
-            rows={4}
+            fullWidth
+            minRows={1}
             value={newProject.description}
             onChange={(e) =>
               setNewProject({ ...newProject, description: e.target.value })

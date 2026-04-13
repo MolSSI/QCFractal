@@ -402,6 +402,10 @@ export const inputsCustomizations: Components<Theme> = {
             borderColor: gray[500],
           },
         }),
+        "&.MuiInputBase-multiline": {
+          height: "auto",
+          minHeight: "2.5rem",
+        },
         variants: [
           {
             props: {
@@ -433,6 +437,18 @@ export const inputsCustomizations: Components<Theme> = {
         ...theme.applyStyles("dark", {
           color: (theme.vars || theme).palette.grey[400],
         }),
+      }),
+    },
+  },
+  MuiInputLabel: {
+    styleOverrides: {
+      root: ({ theme }) => ({
+        "&.MuiInputLabel-shrink": {
+          backgroundColor: (theme.vars || theme).palette.background.paper,
+          padding: "0 4px",
+          borderRadius: "2px",
+          lineHeight: 1.2,
+        },
       }),
     },
   },
