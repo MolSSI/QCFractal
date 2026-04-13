@@ -443,7 +443,9 @@ export const inputsCustomizations: Components<Theme> = {
   MuiInputLabel: {
     styleOverrides: {
       root: ({ theme }) => ({
+        transform: "translate(14px, 10px) scale(1)",
         "&.MuiInputLabel-shrink": {
+          transform: "translate(14px, -9px) scale(0.75)",
           backgroundColor: (theme.vars || theme).palette.background.paper,
           padding: "0 4px",
           borderRadius: "2px",
