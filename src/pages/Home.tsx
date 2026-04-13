@@ -95,18 +95,12 @@ const HomePage: React.FC = () => {
           <Typography variant="body1" component="div">
             <ul>
               <li>
-                <strong>2026-04-14</strong>
-                <ul>
-                  <li>
-                    <strong>Added:</strong> Dataset and project attachments
-                  </li>
-                </ul>
-              </li>
-              <li>
                 <strong>2026-04-13</strong>
                 <ul>
                   <li>
                     <strong>Added:</strong> Favoriting records
+                    <strong>Added:</strong> Dataset and project attachments
+                    <strong>Added:</strong> Project creation
                   </li>
                   <li>
                     <strong>Improved:</strong> Enhanced record/dataset/project

@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   Box,
+  Button,
   Chip,
   Paper,
   Stack,
@@ -21,13 +22,21 @@ import {
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
 import { FavoriteButton } from "../components/FavoriteButton.tsx";
+import { useAuth } from "../Auth.tsx";
+import AddIcon from "@mui/icons-material/Add";
+import AddProjectDialog from "../components/project_components/AddProjectDialog";
 
 const ProjectList: React.FC = () => {
   const { makeRequest } = usePortalClient();
+  const { has_permission } = useAuth();
 
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(20);
   const [filter, setFilter] = React.useState("");
+
+  const [openAddDialog, setOpenAddDialog] = React.useState(false);
+
+  const canAddProject = has_permission("projects", "add");
 
   const {
     status,
@@ -64,6 +73,7 @@ const ProjectList: React.FC = () => {
     setPage(0);
   };
 
+
   if (status == "pending") {
     return <LoadingIndicator fullPage />;
   }
@@ -83,16 +93,35 @@ const ProjectList: React.FC = () => {
 
       {/* Table wrapped in Paper for typical MUI look */}
       <Box sx={{ width: "100%" }}>
-        <Box sx={{ mb: 2 }} width={"30%"}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            size="small"
-            label="Filter projects"
-            value={filter}
-            onChange={handleFilterChange}
-          />
-        </Box>
+        <Stack
+          direction="row"
+          spacing={2}
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ mb: 2, width: "100%" }}
+        >
+          <Box width={"30%"}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              size="small"
+              label="Filter projects"
+              value={filter}
+              onChange={handleFilterChange}
+            />
+          </Box>
+          <Box>
+            {canAddProject && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setOpenAddDialog(true)}
+                >
+                  Add Project
+                </Button>
+            )}
+          </Box>
+        </Stack>
         <TableContainer component={Paper} variant="outlined">
           <Table size="medium">
             <TableHead>
@@ -179,6 +208,11 @@ const ProjectList: React.FC = () => {
           sx={{ width: "100%" }}
         />
       </Box>
+
+      <AddProjectDialog
+        open={openAddDialog}
+        onClose={() => setOpenAddDialog(false)}
+      />
     </>
   );
 };

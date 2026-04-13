@@ -36,6 +36,19 @@ export type WaitingReason = {
   details: Record<string, string>;
 };
 
+export type PriorityEnum = 0 | 1 | 2;
+
+export type ProjectAddBody = {
+  name: string;
+  description: string;
+  tagline: string;
+  tags: string[];
+  default_compute_tag: string;
+  default_compute_priority: PriorityEnum;
+  extras: object;
+  existing_ok?: boolean;
+};
+
 export type ProjectListEntry = {
   id: number;
   project_name: string;
