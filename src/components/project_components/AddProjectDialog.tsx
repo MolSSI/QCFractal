@@ -154,6 +154,7 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ open, onClose }) =>
       </DialogContent>
       <DialogActions>
         <Button
+          variant="outlined"
           onClick={handleClose}
           disabled={isSubmitting}
         >
@@ -161,7 +162,7 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ open, onClose }) =>
         </Button>
         <Button
           onClick={handleAddProject}
-          variant="contained"
+          variant="outlined"
           disabled={isSubmitting || !newProject.name || !newProject.tagline}
         >
           {isSubmitting ? "Creating..." : "Create Project"}
