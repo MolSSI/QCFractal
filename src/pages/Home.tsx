@@ -98,9 +98,15 @@ const HomePage: React.FC = () => {
                 <strong>2026-04-13</strong>
                 <ul>
                   <li>
-                    <strong>Added:</strong> Favoriting records
-                    <strong>Added:</strong> Dataset and project attachments
-                    <strong>Added:</strong> Project creation
+                    <li>
+                      <strong>Added:</strong> Favoriting records
+                    </li>
+                    <li>
+                      <strong>Added:</strong> Dataset and project attachments
+                    </li>
+                    <li>
+                      <strong>Added:</strong> Project creation
+                    </li>
                   </li>
                   <li>
                     <strong>Improved:</strong> Enhanced record/dataset/project
