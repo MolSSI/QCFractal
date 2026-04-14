@@ -67,6 +67,7 @@ export default function Project() {
   const {
     status: datasetMetadataStatus,
     data: datasetMetadata,
+    refetch: refetchDatasets,
   } = useQuery({
     queryKey: ["projectDatasetMetadata", projectId],
     queryFn: () =>
@@ -226,10 +227,12 @@ export default function Project() {
                   {datasetMetadataStatus === "pending" && <LoadingIndicator />}
                   {datasetMetadataStatus === "success" && datasetMetadata && (
                     <ProjectDatasetTable
+                      projectId={parseInt(projectId)}
                       datasetMetadata={datasetMetadata}
                       onDelete={(id) => {
                         console.log("Deleting dataset ID:", id);
                       }}
+                      onRefresh={refetchDatasets}
                     />
                   )}
                 </TabPanel>

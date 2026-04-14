@@ -107,6 +107,9 @@ const HomePage: React.FC = () => {
                     <li>
                       <strong>Added:</strong> Project creation
                     </li>
+                    <li>
+                      <strong>Added:</strong> Linking existing datasets to a project
+                    </li>
                   </li>
                   <li>
                     <strong>Improved:</strong> Enhanced record/dataset/project

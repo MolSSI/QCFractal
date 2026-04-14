@@ -23,10 +23,14 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import * as qcpTypes from "../../PortalTypes";
 import { RecordTypeChip } from "../RecordTypeChip.tsx";
 import ReactMarkdown from "react-markdown";
+import LinkDatasetDialog from "./LinkDatasetDialog";
+import { useAuth } from "../../Auth";
 
 interface ProjectDatasetTableProps {
+  projectId: number;
   datasetMetadata: qcpTypes.ProjectDatasetMetadata[];
   onDelete?: (datasetId: number) => void;
+  onRefresh?: () => void;
 }
 
 function DatasetRow({
@@ -140,12 +144,18 @@ function DatasetRow({
 }
 
 export default function ProjectDatasetTable({
+  projectId,
   datasetMetadata,
   onDelete,
+  onRefresh,
 }: ProjectDatasetTableProps) {
+  const { has_permission } = useAuth();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filter, setFilter] = useState("");
+  const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
+
+  const canModify = has_permission("projects", "modify")
 
   const filteredDatasets = React.useMemo(() => {
     return datasetMetadata.filter((ds) =>
@@ -171,16 +181,32 @@ export default function ProjectDatasetTable({
 
   return (
     <Box>
-      <Box sx={{ mb: 2 }} width={"30%"}>
-        <TextField
-          fullWidth
-          variant="outlined"
-          size="small"
-          label="Filter datasets"
-          value={filter}
-          onChange={handleFilterChange}
-        />
-      </Box>
+      <Stack
+        direction="row"
+        spacing={2}
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ mb: 2 }}
+      >
+        <Box width={"30%"}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            size="small"
+            label="Filter datasets"
+            value={filter}
+            onChange={handleFilterChange}
+          />
+        </Box>
+        {canModify && (
+          <Button
+            variant="outlined"
+            onClick={() => setIsLinkDialogOpen(true)}
+          >
+            Link Existing Dataset
+          </Button>
+        )}
+      </Stack>
       <TableContainer component={Paper} variant="outlined">
         <Table size="small" aria-label="dataset table">
           <TableHead>
@@ -208,6 +234,16 @@ export default function ProjectDatasetTable({
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+      <LinkDatasetDialog
+        projectId={projectId}
+        open={isLinkDialogOpen}
+        onClose={(success) => {
+          setIsLinkDialogOpen(false);
+          if (success && onRefresh) {
+            onRefresh();
+          }
+        }}
       />
     </Box>
   );

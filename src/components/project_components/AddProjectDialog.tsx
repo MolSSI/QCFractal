@@ -2,6 +2,7 @@ import React from "react";
 import * as qcpTypes from "../../PortalTypes";
 import { usePortalClient } from "../../PortalClient.tsx";
 import { useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Dialog,
@@ -26,9 +27,7 @@ interface AddProjectDialogProps {
 const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ open, onClose }) => {
   const { makeRequest } = usePortalClient();
   const navigate = useNavigate();
-
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [addError, setAddError] = React.useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const [newProject, setNewProject] = React.useState<qcpTypes.ProjectAddBody>({
     name: "",
@@ -40,26 +39,22 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ open, onClose }) =>
     extras: {},
   });
 
-  const handleAddProject = async () => {
-    setIsSubmitting(true);
-    setAddError(null);
-    try {
-      const projectId = await makeRequest<number>(
-        "POST",
-        "/api/v1/projects",
-        newProject,
-      );
+  const mutation = useMutation({
+    mutationFn: (project: qcpTypes.ProjectAddBody) =>
+      makeRequest<number>("POST", "/api/v1/projects", project),
+    onSuccess: (projectId) => {
+      queryClient.invalidateQueries({ queryKey: ["listProjects"] });
       onClose();
       navigate(`/projects/${projectId}`);
-    } catch (e: any) {
-      setAddError(e.message || "Failed to create project");
-    } finally {
-      setIsSubmitting(false);
-    }
+    },
+  });
+
+  const handleAddProject = () => {
+    mutation.mutate(newProject);
   };
 
   const handleClose = () => {
-    if (!isSubmitting) {
+    if (!mutation.isPending) {
       onClose();
     }
   };
@@ -74,9 +69,9 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ open, onClose }) =>
       <DialogTitle>Add New Project</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
-          {addError && (
+          {mutation.isError && (
             <Typography color="error" variant="body2">
-              {addError}
+              {(mutation.error as any).message || "Failed to create project"}
             </Typography>
           )}
           <TextField
@@ -156,16 +151,16 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ open, onClose }) =>
         <Button
           variant="outlined"
           onClick={handleClose}
-          disabled={isSubmitting}
+          disabled={mutation.isPending}
         >
           Cancel
         </Button>
         <Button
           onClick={handleAddProject}
           variant="outlined"
-          disabled={isSubmitting || !newProject.name || !newProject.tagline}
+          disabled={mutation.isPending || !newProject.name || !newProject.tagline}
         >
-          {isSubmitting ? "Creating..." : "Create Project"}
+          {mutation.isPending ? "Creating..." : "Create Project"}
         </Button>
       </DialogActions>
     </Dialog>
