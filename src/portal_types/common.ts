@@ -258,6 +258,12 @@ export type ProjectLinkDatasetBody = {
   dataset_id: number;
 };
 
+export type ProjectUnlinkLinkDatasetBody = {
+  dataset_ids: number[];
+  delete_datasets: boolean;
+  delete_dataset_records: boolean;
+};
+
 export type DatasetStatus = Record<string, Record<RecordStatus, number>>;
 
 export type DatasetListEntry = {

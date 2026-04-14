@@ -24,34 +24,28 @@ import * as qcpTypes from "../../PortalTypes";
 import { RecordTypeChip } from "../RecordTypeChip.tsx";
 import ReactMarkdown from "react-markdown";
 import LinkDatasetDialog from "./LinkDatasetDialog";
-import { useAuth } from "../../Auth";
+import UnlinkDatasetDialog from "./UnlinkDatasetDialog";
+import { useAuth } from "../../Auth.tsx";
 
 interface ProjectDatasetTableProps {
   projectId: number;
   datasetMetadata: qcpTypes.ProjectDatasetMetadata[];
-  onDelete?: (datasetId: number) => void;
   onRefresh?: () => void;
 }
 
 function DatasetRow({
   ds,
-  onDelete,
+  onUnlink,
+  canModify,
 }: {
   ds: qcpTypes.ProjectDatasetMetadata;
-  onDelete?: (datasetId: number) => void;
+  onUnlink: (ds: qcpTypes.ProjectDatasetMetadata) => void;
+  canModify: boolean;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleToggleExpand = () => {
     setIsExpanded((prev) => !prev);
-  };
-
-  const handleDelete = (id: number) => {
-    if (onDelete) {
-      onDelete(id);
-    } else {
-      console.log("Delete dataset with ID:", id);
-    }
   };
 
   return (
@@ -87,16 +81,19 @@ function DatasetRow({
             >
               View
             </Button>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete(ds.dataset_id);
-              }}
-            >
-              Delete
-            </Button>
+            {canModify && (
+              <Button
+                variant="contained"
+                size="small"
+                color="error"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUnlink(ds);
+                }}
+              >
+                Unlink
+              </Button>
+            )}
           </Stack>
         </TableCell>
       </TableRow>
@@ -146,16 +143,32 @@ function DatasetRow({
 export default function ProjectDatasetTable({
   projectId,
   datasetMetadata,
-  onDelete,
   onRefresh,
 }: ProjectDatasetTableProps) {
   const { has_permission } = useAuth();
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filter, setFilter] = useState("");
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
+  const [isUnlinkDialogOpen, setIsUnlinkDialogOpen] = useState(false);
+  const [datasetToUnlink, setDatasetToUnlink] =
+    useState<qcpTypes.ProjectDatasetMetadata | null>(null);
 
-  const canModify = has_permission("projects", "modify")
+  const canModify = has_permission("projects", "modify");
+
+  const handleUnlinkClick = (ds: qcpTypes.ProjectDatasetMetadata) => {
+    setDatasetToUnlink(ds);
+    setIsUnlinkDialogOpen(true);
+  };
+
+  const handleCloseUnlinkDialog = (success?: boolean) => {
+    setIsUnlinkDialogOpen(false);
+    setDatasetToUnlink(null);
+    if (success && onRefresh) {
+      onRefresh();
+    }
+  };
 
   const filteredDatasets = React.useMemo(() => {
     return datasetMetadata.filter((ds) =>
@@ -199,10 +212,7 @@ export default function ProjectDatasetTable({
           />
         </Box>
         {canModify && (
-          <Button
-            variant="outlined"
-            onClick={() => setIsLinkDialogOpen(true)}
-          >
+          <Button variant="outlined" onClick={() => setIsLinkDialogOpen(true)}>
             Link Existing Dataset
           </Button>
         )}
@@ -221,7 +231,12 @@ export default function ProjectDatasetTable({
             {filteredDatasets
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((ds) => (
-                <DatasetRow key={ds.dataset_id} ds={ds} onDelete={onDelete} />
+                <DatasetRow
+                  key={ds.dataset_id}
+                  ds={ds}
+                  onUnlink={handleUnlinkClick}
+                  canModify={canModify}
+                />
               ))}
           </TableBody>
         </Table>
@@ -244,6 +259,13 @@ export default function ProjectDatasetTable({
             onRefresh();
           }
         }}
+      />
+
+      <UnlinkDatasetDialog
+        projectId={projectId}
+        dataset={datasetToUnlink}
+        open={isUnlinkDialogOpen}
+        onClose={handleCloseUnlinkDialog}
       />
     </Box>
   );

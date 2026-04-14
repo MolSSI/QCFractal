@@ -229,9 +229,6 @@ export default function Project() {
                     <ProjectDatasetTable
                       projectId={parseInt(projectId)}
                       datasetMetadata={datasetMetadata}
-                      onDelete={(id) => {
-                        console.log("Deleting dataset ID:", id);
-                      }}
                       onRefresh={refetchDatasets}
                     />
                   )}
