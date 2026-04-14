@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   Box,
-  Button,
   Chip,
   Paper,
   Stack,
@@ -23,8 +22,7 @@ import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
 import { FavoriteButton } from "../components/FavoriteButton.tsx";
 import { useAuth } from "../Auth.tsx";
-import AddIcon from "@mui/icons-material/Add";
-import AddProjectDialog from "../components/project_components/AddProjectDialog";
+import { AddProjectButton } from "../components/project_components/AddProjectDialog";
 
 const ProjectList: React.FC = () => {
   const { makeRequest } = usePortalClient();
@@ -33,8 +31,6 @@ const ProjectList: React.FC = () => {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(20);
   const [filter, setFilter] = React.useState("");
-
-  const [openAddDialog, setOpenAddDialog] = React.useState(false);
 
   const canAddProject = has_permission("projects", "add");
 
@@ -73,7 +69,6 @@ const ProjectList: React.FC = () => {
     setPage(0);
   };
 
-
   if (status == "pending") {
     return <LoadingIndicator fullPage />;
   }
@@ -110,17 +105,7 @@ const ProjectList: React.FC = () => {
               onChange={handleFilterChange}
             />
           </Box>
-          <Box>
-            {canAddProject && (
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setOpenAddDialog(true)}
-                >
-                  Add Project
-                </Button>
-            )}
-          </Box>
+          <Box>{canAddProject && <AddProjectButton />}</Box>
         </Stack>
         <TableContainer component={Paper} variant="outlined">
           <Table size="medium">
@@ -208,11 +193,6 @@ const ProjectList: React.FC = () => {
           sx={{ width: "100%" }}
         />
       </Box>
-
-      <AddProjectDialog
-        open={openAddDialog}
-        onClose={() => setOpenAddDialog(false)}
-      />
     </>
   );
 };

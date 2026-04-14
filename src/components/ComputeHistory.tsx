@@ -15,8 +15,8 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
 import * as qcpTypes from "../PortalTypes";
 import ManagerLink from "./ManagerLink";
-import ViewOutput from "./ViewOutput.tsx";
 import StatusChip from "./StatusChip.tsx";
+import { ViewOutputButton } from "./ViewOutputDialog.tsx";
 
 interface ComputeHistoryProps {
   recordData: qcpTypes.RecordData;
@@ -75,28 +75,16 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({ recordData }) => {
                 "& td, & th": { borderBottom: "1px solid #ccc" }, // Horizontal lines only
               }}
             >
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                ID
-              </TableCell>
-              <TableCell>
-                Manager Name
-              </TableCell>
-              <TableCell>
-                Date
-              </TableCell>
-              <TableCell>
-                Status
-              </TableCell>
-              <TableCell>
-                Output
-              </TableCell>
-              <TableCell>
-                Provenance
-              </TableCell>
-            </TableRow>
-          </TableHead>
+              <TableHead>
+                <TableRow>
+                  <TableCell>ID</TableCell>
+                  <TableCell>Manager Name</TableCell>
+                  <TableCell>Date</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Output</TableCell>
+                  <TableCell>Provenance</TableCell>
+                </TableRow>
+              </TableHead>
               <TableBody>
                 {computeHistory.map(
                   (history: qcpTypes.ComputeHistory, index) => (
@@ -114,10 +102,14 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({ recordData }) => {
                           "N/A"}
                       </TableCell>
                       <TableCell>
-                        <StatusChip status={history.status} recordType={recordType} recordId={recordId} />
+                        <StatusChip
+                          status={history.status}
+                          recordType={recordType}
+                          recordId={recordId}
+                        />
                       </TableCell>
                       <TableCell>
-                        <ViewOutput
+                        <ViewOutputButton
                           recordType={recordType}
                           recordId={recordId}
                           computeHistoryId={history.id}

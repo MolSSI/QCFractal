@@ -1,5 +1,6 @@
 import React from "react";
 import * as qcpTypes from "../../PortalTypes";
+import { PriorityEnum } from "../../PortalTypes";
 import { usePortalClient } from "../../PortalClient.tsx";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -9,7 +10,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
+  FormControl, Grid,
   InputLabel,
   MenuItem,
   Select,
@@ -17,33 +18,46 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { PriorityEnum } from "../../PortalTypes";
+import AddIcon from "@mui/icons-material/Add";
 
 interface AddProjectDialogProps {
   open: boolean;
   onClose: () => void;
 }
 
-const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ open, onClose }) => {
+interface AddProjectButtonProps {
+  disabled?: boolean;
+}
+
+const createInitialProject = (): qcpTypes.ProjectAddBody => ({
+  name: "",
+  description: "",
+  tagline: "",
+  tags: [],
+  default_compute_tag: "*",
+  default_compute_priority: 1, // normal
+  extras: {},
+});
+
+export const AddProjectDialog: React.FC<AddProjectDialogProps> = ({
+  open,
+  onClose,
+}) => {
   const { makeRequest } = usePortalClient();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [newProject, setNewProject] = React.useState<qcpTypes.ProjectAddBody>({
-    name: "",
-    description: "",
-    tagline: "",
-    tags: [],
-    default_compute_tag: "*",
-    default_compute_priority: 1,
-    extras: {},
-  });
+  const [newProject, setNewProject] = React.useState<qcpTypes.ProjectAddBody>(
+    createInitialProject(),
+  );
 
   const mutation = useMutation({
     mutationFn: (project: qcpTypes.ProjectAddBody) =>
       makeRequest<number>("POST", "/api/v1/projects", project),
     onSuccess: (projectId) => {
       queryClient.invalidateQueries({ queryKey: ["listProjects"] });
+      setNewProject(createInitialProject());
+      mutation.reset();
       onClose();
       navigate(`/projects/${projectId}`);
     },
@@ -55,17 +69,14 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ open, onClose }) =>
 
   const handleClose = () => {
     if (!mutation.isPending) {
+      setNewProject(createInitialProject());
+      mutation.reset();
       onClose();
     }
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="sm"
-      fullWidth
-    >
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>Add New Project</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
@@ -97,7 +108,7 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ open, onClose }) =>
             required
             multiline
             fullWidth
-            minRows={1}
+            minRows={3}
             value={newProject.description}
             onChange={(e) =>
               setNewProject({ ...newProject, description: e.target.value })
@@ -114,37 +125,42 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ open, onClose }) =>
                 tags: e.target.value.split(",").map((s) => s.trim()),
               })
             }
-            helperText="Enter tags separated by commas"
           />
-          <TextField
-            label="Default Compute Tag"
-            required
-            fullWidth
-            value={newProject.default_compute_tag}
-            onChange={(e) =>
-              setNewProject({
-                ...newProject,
-                default_compute_tag: e.target.value,
-              })
-            }
-          />
-          <FormControl fullWidth required>
-            <InputLabel>Default Compute Priority</InputLabel>
-            <Select
-              value={newProject.default_compute_priority}
-              label="Default Compute Priority"
-              onChange={(e) =>
-                setNewProject({
-                  ...newProject,
-                  default_compute_priority: e.target.value as PriorityEnum,
-                })
-              }
-            >
-              <MenuItem value={2}>High</MenuItem>
-              <MenuItem value={1}>Normal</MenuItem>
-              <MenuItem value={0}>Low</MenuItem>
-            </Select>
-          </FormControl>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Default Compute Tag"
+                required
+                fullWidth
+                value={newProject.default_compute_tag}
+                onChange={(e) =>
+                  setNewProject({
+                    ...newProject,
+                    default_compute_tag: e.target.value,
+                  })
+                }
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth required>
+                <InputLabel>Default Compute Priority</InputLabel>
+                <Select
+                  value={newProject.default_compute_priority}
+                  label="Default Compute Priority"
+                  onChange={(e) =>
+                    setNewProject({
+                      ...newProject,
+                      default_compute_priority: e.target.value as PriorityEnum,
+                    })
+                  }
+                >
+                  <MenuItem value={2}>High</MenuItem>
+                  <MenuItem value={1}>Normal</MenuItem>
+                  <MenuItem value={0}>Low</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
         </Stack>
       </DialogContent>
       <DialogActions>
@@ -158,7 +174,9 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ open, onClose }) =>
         <Button
           onClick={handleAddProject}
           variant="outlined"
-          disabled={mutation.isPending || !newProject.name || !newProject.tagline}
+          disabled={
+            mutation.isPending || !newProject.name || !newProject.tagline
+          }
         >
           {mutation.isPending ? "Creating..." : "Create Project"}
         </Button>
@@ -167,4 +185,24 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ open, onClose }) =>
   );
 };
 
-export default AddProjectDialog;
+export const AddProjectButton: React.FC<AddProjectButtonProps> = ({
+  disabled = false,
+}) => {
+  const [openAddDialog, setOpenAddDialog] = React.useState(false);
+
+  return (
+    <>
+      <Button
+        startIcon={<AddIcon />}
+        disabled={disabled}
+        onClick={() => setOpenAddDialog(true)}
+      >
+        Add Project
+      </Button>
+      <AddProjectDialog
+        open={openAddDialog}
+        onClose={() => setOpenAddDialog(false)}
+      />
+    </>
+  );
+};

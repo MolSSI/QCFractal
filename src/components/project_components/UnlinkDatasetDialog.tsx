@@ -12,14 +12,14 @@ import * as qcpTypes from "../../PortalTypes";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import ErrorIndicator from "../ErrorIndicator.tsx";
 
-interface UnlinkDatasetDialogProps {
+export interface UnlinkDatasetDialogProps {
   projectId: number;
   dataset: qcpTypes.ProjectDatasetMetadata | null;
   open: boolean;
   onClose: (success?: boolean) => void;
 }
 
-const UnlinkDatasetDialog: React.FC<UnlinkDatasetDialogProps> = ({
+export const UnlinkDatasetDialog: React.FC<UnlinkDatasetDialogProps> = ({
   projectId,
   dataset,
   open,
@@ -100,4 +100,46 @@ const UnlinkDatasetDialog: React.FC<UnlinkDatasetDialogProps> = ({
   );
 };
 
-export default UnlinkDatasetDialog;
+export interface UnlinkDatasetButtonProps {
+  projectId: number;
+  dataset: qcpTypes.ProjectDatasetMetadata;
+  onRefresh?: () => void;
+  disabled?: boolean;
+}
+
+export const UnlinkDatasetButton: React.FC<UnlinkDatasetButtonProps> = ({
+  projectId,
+  dataset,
+  onRefresh,
+  disabled = false,
+}) => {
+  const [openUnlinkDialog, setOpenUnlinkDialog] = React.useState(false);
+
+  return (
+    <>
+      <Button
+        variant="contained"
+        size="small"
+        color="error"
+        disabled={disabled}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpenUnlinkDialog(true);
+        }}
+      >
+        Unlink
+      </Button>
+      <UnlinkDatasetDialog
+        projectId={projectId}
+        dataset={dataset}
+        open={openUnlinkDialog}
+        onClose={(success) => {
+          setOpenUnlinkDialog(false);
+          if (success && onRefresh) {
+            onRefresh();
+          }
+        }}
+      />
+    </>
+  );
+};

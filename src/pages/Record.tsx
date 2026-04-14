@@ -22,9 +22,9 @@ import StatusChip from "../components/StatusChip.tsx";
 import RecordTypeChip from "../components/RecordTypeChip.tsx";
 import Comments from "../components/Comments.tsx";
 import ComputeHistory from "../components/ComputeHistory.tsx";
-import { ViewOutput } from "../components/ViewOutput.tsx";
-import TaskServiceDetails from "../components/TaskServiceDetails.tsx";
 import { FavoriteButton } from "../components/FavoriteButton.tsx";
+import { ViewOutputButton } from "../components/ViewOutputDialog.tsx";
+import { TaskServiceButton } from "../components/TaskServiceDialog.tsx";
 
 interface RecordHeaderProps {
   recordData: qcpTypes.RecordData;
@@ -127,7 +127,7 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
 
         {/* Various buttons */}
         <Box display="flex" gap={1}>
-          <ViewOutput
+          <ViewOutputButton
             recordType={recordData.record_type}
             recordId={recordData.id}
             computeHistoryId={
@@ -142,7 +142,7 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
           <Button variant="outlined" size="small" disabled>
             Reset
           </Button>
-          <TaskServiceDetails
+          <TaskServiceButton
             recordId={recordData.id}
             recordType={recordData.record_type}
             isService={recordData.is_service}

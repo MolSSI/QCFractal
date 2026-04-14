@@ -19,7 +19,13 @@ interface LinkDatasetDialogProps {
   onClose: (success?: boolean) => void;
 }
 
-const LinkDatasetDialog: React.FC<LinkDatasetDialogProps> = ({
+interface LinkDatasetButtonProps {
+  projectId: number;
+  onRefresh?: () => void;
+  disabled?: boolean;
+}
+
+export const LinkDatasetDialog: React.FC<LinkDatasetDialogProps> = ({
   projectId,
   open,
   onClose,
@@ -95,4 +101,32 @@ const LinkDatasetDialog: React.FC<LinkDatasetDialogProps> = ({
   );
 };
 
-export default LinkDatasetDialog;
+export const LinkDatasetButton: React.FC<LinkDatasetButtonProps> = ({
+  projectId,
+  onRefresh,
+  disabled = false,
+}) => {
+  const [openLinkDialog, setOpenLinkDialog] = React.useState(false);
+
+  return (
+    <>
+      <Button
+        variant="outlined"
+        disabled={disabled}
+        onClick={() => setOpenLinkDialog(true)}
+      >
+        Link Existing Dataset
+      </Button>
+      <LinkDatasetDialog
+        projectId={projectId}
+        open={openLinkDialog}
+        onClose={(success) => {
+          setOpenLinkDialog(false);
+          if (success && onRefresh) {
+            onRefresh();
+          }
+        }}
+      />
+    </>
+  );
+};

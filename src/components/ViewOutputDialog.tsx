@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   Box,
+  Button,
   Dialog,
   DialogContent,
   Grid,
@@ -24,6 +25,13 @@ interface ViewOutputDialogProps {
   onClose: () => void;
 }
 
+interface ViewOutputButtonProps {
+  recordType: string;
+  recordId: number;
+  computeHistoryId: number | undefined;
+}
+
+
 export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
   recordType,
   recordId,
@@ -32,14 +40,15 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
   open,
   onClose,
 }) => {
-  const [selectedKey, setSelectedKey] = useState<string | null>(initialKey || null);
+  const [selectedKey, setSelectedKey] = useState<string | null>(
+    initialKey || null,
+  );
   const { makeRequest } = usePortalClient();
 
   const {
     status: historyStatus,
     data: historyData,
     error: historyError,
-    isFetching: historyIsFetching,
   } = useQuery({
     queryKey: ["recordComputeHistory", recordId],
     queryFn: () =>
@@ -106,23 +115,30 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
     enabled: open && effectiveComputeHistoryId !== undefined && !!effectiveKey,
   });
 
+  const handleClose = () => {
+    setSelectedKey(initialKey || null);
+    onClose();
+  };
+
+  const isLoading =
+    (computeHistoryId === undefined && historyStatus === "pending") ||
+    (effectiveComputeHistoryId !== undefined && outputKeysStatus === "pending");
+
   return (
     <Dialog
       fullWidth={true}
       maxWidth="lg"
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       onClick={(e) => {
         e.stopPropagation();
       }}
     >
       <DialogContent>
         <>
-          {( historyIsFetching || outputKeysStatus === "pending") && (
-            <LoadingIndicator />
-          )}
+          {isLoading && <LoadingIndicator />}
 
-          { historyStatus === "error" && (
+          {historyStatus === "error" && (
             <ErrorIndicator message={(historyError as any).message} />
           )}
 
@@ -130,11 +146,14 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
             <ErrorIndicator message={(outputKeysError as any).message} />
           )}
 
-          {historyStatus === "success" &&
+          {computeHistoryId === undefined &&
+            historyStatus === "success" &&
             historyData &&
             historyData.length === 0 && (
               <Box sx={{ p: 2 }}>
-                <Typography>No compute history found for this record.</Typography>
+                <Typography>
+                  No compute history found for this record.
+                </Typography>
               </Box>
             )}
 
@@ -142,7 +161,9 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
             outputKeysData &&
             outputKeys.length === 0 && (
               <Box sx={{ p: 2 }}>
-                <Typography>No outputs found for this compute history.</Typography>
+                <Typography>
+                  No outputs found for this compute history.
+                </Typography>
               </Box>
             )}
 
@@ -152,65 +173,100 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
               <Grid container spacing={2} width="100%">
                 {/* Tabs for output keys */}
                 <Grid size={{ xs: 3 }}>
-                <Tabs
-                  orientation="vertical"
-                  value={effectiveKey || false}
-                  onChange={(event, newValue) => {
-                    event.stopPropagation();
-                    setSelectedKey(newValue);
-                  }}
-                  sx={{ borderRight: 1, borderColor: "divider" }}
-                >
-                  {outputKeys.map((key) => (
-                    <Tab key={key} label={key.toUpperCase()} value={key} />
-                  ))}
-                </Tabs>
-              </Grid>
-
-              {/* Content for the selected key */}
-              <Grid size={{ xs: 9 }}>
-                {outputContentStatus === "pending" && <LoadingIndicator />}
-                {outputContentStatus === "error" && (
-                  <ErrorIndicator message={(outputContentError as any).message} />
-                )}
-                {outputContentStatus === "success" && outputContentData && (
-                  <Box
-                    sx={{
-                      whiteSpace: "pre-wrap",
-                      fontFamily: "monospace",
-                      overflowY: "auto",
-                      maxHeight: "1200px",
+                  <Tabs
+                    orientation="vertical"
+                    value={effectiveKey || false}
+                    onChange={(event, newValue) => {
+                      event.stopPropagation();
+                      setSelectedKey(newValue);
                     }}
+                    sx={{ borderRight: 1, borderColor: "divider" }}
                   >
-                    {/* ... content ... */}
-                    {typeof outputContentData === "string" ? (
-                      stripAnsi(outputContentData)
-                    ) : (
-                      // Render object content if the data is not a string
-                      <Box component="div">
-                        {Object.entries(outputContentData as object).map(
-                          ([key, value]) => (
-                            <Typography
-                              key={key}
-                              variant="body2"
-                              sx={{ marginBottom: "8px" }}
-                            >
-                              <strong>{key}:</strong>{" "}
-                              {typeof value === "string"
-                                ? value
-                                : JSON.stringify(value, null, 2)}
-                            </Typography>
-                          ),
-                        )}
-                      </Box>
-                    )}
-                  </Box>
-                )}
+                    {outputKeys.map((key) => (
+                      <Tab key={key} label={key.toUpperCase()} value={key} />
+                    ))}
+                  </Tabs>
+                </Grid>
+
+                {/* Content for the selected key */}
+                <Grid size={{ xs: 9 }}>
+                  {outputContentStatus === "pending" && <LoadingIndicator />}
+                  {outputContentStatus === "error" && (
+                    <ErrorIndicator
+                      message={(outputContentError as any).message}
+                    />
+                  )}
+                  {outputContentStatus === "success" && outputContentData && (
+                    <Box
+                      sx={{
+                        whiteSpace: "pre-wrap",
+                        fontFamily: "monospace",
+                        overflowY: "auto",
+                        maxHeight: "1200px",
+                      }}
+                    >
+                      {/* ... content ... */}
+                      {typeof outputContentData === "string" ? (
+                        stripAnsi(outputContentData)
+                      ) : (
+                        // Render object content if the data is not a string
+                        <Box component="div">
+                          {Object.entries(outputContentData as object).map(
+                            ([key, value]) => (
+                              <Typography
+                                key={key}
+                                variant="body2"
+                                sx={{ marginBottom: "8px" }}
+                              >
+                                <strong>{key}:</strong>{" "}
+                                {typeof value === "string"
+                                  ? value
+                                  : JSON.stringify(value, null, 2)}
+                              </Typography>
+                            ),
+                          )}
+                        </Box>
+                      )}
+                    </Box>
+                  )}
+                </Grid>
               </Grid>
-            </Grid>
-          )}
+            )}
         </>
       </DialogContent>
     </Dialog>
+  );
+};
+
+export const ViewOutputButton: React.FC<ViewOutputButtonProps> = ({
+  recordType,
+  recordId,
+  computeHistoryId,
+}) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button
+        variant="outlined"
+        size="small"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(true);
+        }}
+      >
+        View Output
+      </Button>
+
+      <ViewOutputDialog
+        recordType={recordType}
+        recordId={recordId}
+        computeHistoryId={computeHistoryId}
+        open={open}
+        onClose={() => {
+          setOpen(false);
+        }}
+      />
+    </>
   );
 };

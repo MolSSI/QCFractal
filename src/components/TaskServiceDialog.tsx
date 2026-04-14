@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import * as qcpTypes from "../PortalTypes";
 import { format } from "date-fns";
 import {
@@ -6,10 +6,12 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
+  Button,
   Dialog,
   DialogContent,
   Link as MuiLink,
-  Paper, Stack,
+  Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -194,7 +196,7 @@ function ServiceStateDetails({
   );
 }
 
-export const TaskServiceDetailsDialog: React.FC<TaskServiceDetailsDialogProps> = ({
+export const TaskServiceDialog: React.FC<TaskServiceDetailsDialogProps> = ({
   recordId,
   recordType,
   isService,
@@ -221,12 +223,11 @@ export const TaskServiceDetailsDialog: React.FC<TaskServiceDetailsDialogProps> =
     enabled: open,
   });
 
-  useEffect(() => {
-    if (!open) {
-      setServiceStateExpanded(false);
-      setDependenciesExpanded(false);
-    }
-  }, [open, recordId]);
+  const handleClose = () => {
+    setServiceStateExpanded(false);
+    setDependenciesExpanded(false);
+    onClose();
+  };
 
   const serviceDependencies =
     isService && taskData && "dependencies" in taskData ? taskData.dependencies : [];
@@ -297,7 +298,7 @@ export const TaskServiceDetailsDialog: React.FC<TaskServiceDetailsDialogProps> =
       fullWidth
       maxWidth="xl"
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       onClick={(e) => {
         e.stopPropagation();
       }}
@@ -378,5 +379,47 @@ export const TaskServiceDetailsDialog: React.FC<TaskServiceDetailsDialogProps> =
         </Box>
       </DialogContent>
     </Dialog>
+  );
+};
+
+interface TaskServiceButtonProps {
+  recordId: number;
+  recordType: string;
+  isService: boolean;
+  disabled: boolean;
+}
+
+export const TaskServiceButton: React.FC<TaskServiceButtonProps> = ({
+  recordId,
+  recordType,
+  isService,
+  disabled,
+}) => {
+  const [taskServiceDialogOpen, setTaskServiceDialogOpen] = useState(false);
+
+  const buttonText = isService ? "View Service" : "View Task";
+
+  return (
+    <>
+      <Button
+        variant="outlined"
+        size="small"
+        disabled={disabled}
+        onClick={(e) => {
+          e.stopPropagation();
+          setTaskServiceDialogOpen(true);
+        }}
+      >
+        {buttonText}
+      </Button>
+
+      <TaskServiceDialog
+        recordId={recordId}
+        recordType={recordType}
+        isService={isService}
+        open={taskServiceDialogOpen}
+        onClose={() => setTaskServiceDialogOpen(false)}
+      />
+    </>
   );
 };
