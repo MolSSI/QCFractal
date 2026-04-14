@@ -380,15 +380,6 @@ export default function Dataset() {
               </Box>
             </Paper>
           </Grid>
-          <Grid size={2}>
-            <Paper elevation={3}>
-              <Box p={1}>
-                <Typography variant="body1" fontWeight="bold">
-                  {attachmentsData ? attachmentsData.length : "..."} Attachments
-                </Typography>
-              </Box>
-            </Paper>
-          </Grid>
 
           {/* Description & Metadata section */}
           <Grid size={12}>
