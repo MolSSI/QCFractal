@@ -6,7 +6,7 @@ import { toggleButtonClasses } from "@mui/material/ToggleButton";
 import CheckBoxOutlineBlankRoundedIcon from "@mui/icons-material/CheckBoxOutlineBlankRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
-import { gray, brand } from "../themePrimitives";
+import { gray, brand, red } from "../themePrimitives";
 
 /* eslint-disable import/prefer-default-export */
 export const inputsCustomizations: Components<Theme> = {
@@ -69,6 +69,13 @@ export const inputsCustomizations: Components<Theme> = {
               "&:active": {
                 backgroundColor: gray[800],
               },
+              "&.Mui-disabled": {
+                color: gray[500],
+                backgroundColor: gray[200],
+                backgroundImage: "none",
+                boxShadow: "none",
+                border: `1px solid ${gray[200]}`,
+              },
               ...theme.applyStyles("dark", {
                 color: "black",
                 backgroundColor: gray[50],
@@ -82,6 +89,13 @@ export const inputsCustomizations: Components<Theme> = {
                 },
                 "&:active": {
                   backgroundColor: gray[400],
+                },
+                "&.Mui-disabled": {
+                  color: gray[500],
+                  backgroundColor: gray[800],
+                  backgroundImage: "none",
+                  boxShadow: "none",
+                  border: `1px solid ${gray[700]}`,
                 },
               }),
             },
@@ -105,6 +119,59 @@ export const inputsCustomizations: Components<Theme> = {
                 backgroundColor: brand[700],
                 backgroundImage: "none",
               },
+              "&.Mui-disabled": {
+                color: gray[500],
+                backgroundColor: gray[200],
+                backgroundImage: "none",
+                boxShadow: "none",
+                border: `1px solid ${gray[200]}`,
+              },
+              ...theme.applyStyles("dark", {
+                "&.Mui-disabled": {
+                  color: gray[500],
+                  backgroundColor: gray[800],
+                  backgroundImage: "none",
+                  boxShadow: "none",
+                  border: `1px solid ${gray[700]}`,
+                },
+              }),
+            },
+          },
+          {
+            props: {
+              color: "error",
+              variant: "contained",
+            },
+            style: {
+              color: "white",
+              backgroundColor: red[400],
+              backgroundImage: `linear-gradient(to bottom, ${alpha(red[400], 0.8)}, ${red[500]})`,
+              boxShadow: `inset 0 2px 0 ${alpha(red[200], 0.2)}, inset 0 -2px 0 ${alpha(red[700], 0.4)}`,
+              border: `1px solid ${red[500]}`,
+              "&:hover": {
+                backgroundColor: red[700],
+                boxShadow: "none",
+              },
+              "&:active": {
+                backgroundColor: red[700],
+                backgroundImage: "none",
+              },
+              "&.Mui-disabled": {
+                color: gray[500],
+                backgroundColor: gray[200],
+                backgroundImage: "none",
+                boxShadow: "none",
+                border: `1px solid ${gray[200]}`,
+              },
+              ...theme.applyStyles("dark", {
+                "&.Mui-disabled": {
+                  color: gray[500],
+                  backgroundColor: gray[800],
+                  backgroundImage: "none",
+                  boxShadow: "none",
+                  border: `1px solid ${gray[700]}`,
+                },
+              }),
             },
           },
           {
@@ -249,7 +316,22 @@ export const inputsCustomizations: Components<Theme> = {
           "&:active": {
             backgroundColor: gray[900],
           },
+          "&.Mui-disabled": {
+            color: gray[500],
+            backgroundColor: gray[800],
+            borderColor: gray[700],
+          },
         }),
+        "&.Mui-disabled": {
+          color: gray[500],
+          backgroundColor: gray[200],
+          borderColor: gray[200],
+        },
+        "&:disabled": {
+          color: gray[500],
+          backgroundColor: gray[200],
+          borderColor: gray[200],
+        },
         variants: [
           {
             props: {
