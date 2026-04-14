@@ -17,7 +17,7 @@ function ErrorIndicator({ message = "An error occurred.", fullPage = false }: Er
       sx={{ py: 6 }}
     >
       <ErrorOutlineIcon color="error" sx={{ fontSize: 48 }} />
-      <Typography variant="body2" color="error">
+      <Typography variant="body2" color="error" fontWeight={1000}>
         {message}
       </Typography>
     </Box>

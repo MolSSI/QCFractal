@@ -11,6 +11,7 @@ import { usePortalClient } from "../../PortalClient";
 import * as qcpTypes from "../../PortalTypes";
 import { DatasetSearch } from "../DatasetSearch";
 import { useMutation } from "@tanstack/react-query";
+import ErrorIndicator from "../ErrorIndicator.tsx";
 
 interface LinkDatasetDialogProps {
   projectId: number;
@@ -70,7 +71,12 @@ const LinkDatasetDialog: React.FC<LinkDatasetDialogProps> = ({
         <Typography variant="body2" sx={{ mb: 2 }}>
           Search for an existing dataset to link to this project.
         </Typography>
-        <DatasetSearch onDatasetSelect={setSelectedDatasetId} error={error} />
+        <DatasetSearch onDatasetSelect={setSelectedDatasetId} />
+        {error && (
+          <ErrorIndicator
+            message={error || "Failed to link dataset"}
+          />
+        )}
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={isSubmitting}>

@@ -6,11 +6,11 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Typography,
 } from "@mui/material";
 import { usePortalClient } from "../../PortalClient";
 import * as qcpTypes from "../../PortalTypes";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import ErrorIndicator from "../ErrorIndicator.tsx";
 
 interface UnlinkDatasetDialogProps {
   projectId: number;
@@ -76,10 +76,11 @@ const UnlinkDatasetDialog: React.FC<UnlinkDatasetDialogProps> = ({
           this project? This will not delete the dataset itself.
         </DialogContentText>
         {mutation.isError && (
-          <Typography color="error" variant="body2" sx={{ mt: 2 }}>
-            Error:{" "}
-            {(mutation.error as any)?.message || "Failed to unlink dataset"}
-          </Typography>
+          <ErrorIndicator
+            message={
+              (mutation.error as any)?.message || "Failed to unlink dataset"
+            }
+          />
         )}
       </DialogContent>
       <DialogActions>

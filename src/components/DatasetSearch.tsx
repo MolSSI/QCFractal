@@ -12,12 +12,10 @@ import RecordTypeChip from "./RecordTypeChip.tsx";
 
 interface DatasetSearchProps {
   onDatasetSelect: (datasetId: number | null) => void;
-  error?: string | null;
 }
 
 export const DatasetSearch: React.FC<DatasetSearchProps> = ({
   onDatasetSelect,
-  error,
 }) => {
   const { makeRequest } = usePortalClient();
   const [open, setOpen] = useState(false);
@@ -62,8 +60,6 @@ export const DatasetSearch: React.FC<DatasetSearchProps> = ({
           label="Search Dataset"
           variant="outlined"
           fullWidth
-          error={!!error}
-          helperText={error}
           InputProps={{
             ...params.InputProps,
             endAdornment: (
