@@ -22,10 +22,131 @@ import {
   TableRow,
   TextField,
   Typography,
+  Button,
+  IconButton,
+  Collapse,
 } from "@mui/material";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
 import { FavoriteButton } from "../components/FavoriteButton.tsx";
+import ReactMarkdown from "react-markdown";
+
+const DatasetRow: React.FC<{ dataset: qcpTypes.DatasetListEntry }> = ({
+  dataset,
+}) => {
+  const { makeRequest } = usePortalClient();
+  const [isExpanded, setIsExpanded] = React.useState(false);
+
+  const {
+    status,
+    data: datasetDetails,
+    error,
+  } = useQuery({
+    queryKey: ["dataset", dataset.id],
+    queryFn: () =>
+      makeRequest<qcpTypes.Dataset>("GET", `/api/v1/datasets/${dataset.id}`),
+    enabled: isExpanded,
+  });
+
+  const handleToggleExpand = () => {
+    setIsExpanded((prev) => !prev);
+  };
+
+  return (
+    <React.Fragment>
+      <TableRow
+        key={dataset.id}
+        hover
+        onClick={handleToggleExpand}
+        sx={{ cursor: "pointer" }}
+      >
+        <TableCell width="50px">
+          <IconButton size="small">
+            {isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+          </IconButton>
+        </TableCell>
+        <TableCell>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <FavoriteButton
+              preferencesKey="favorite_datasets"
+              objectId={dataset.id}
+            />
+            <Typography fontWeight={"bold"}>{dataset.id}</Typography>
+          </Stack>
+        </TableCell>
+        <TableCell>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Box>
+              <Typography variant="body2" fontWeight="bold">
+                {dataset.dataset_name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {dataset.tagline}
+              </Typography>
+            </Box>
+          </Box>
+        </TableCell>
+        <TableCell>
+          <Chip label={dataset.dataset_type} size="small" />
+        </TableCell>
+        <TableCell>{dataset.record_count.toLocaleString()}</TableCell>
+        <TableCell>
+          <Button
+            variant="contained"
+            size="small"
+            component={Link}
+            to={`/datasets/${dataset.id}`}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            View
+          </Button>
+        </TableCell>
+      </TableRow>
+      <TableRow>
+        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
+          <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+            <Box m={3} display="flex" flexDirection="column" gap={2}>
+              {status === "pending" && <LoadingIndicator />}
+              {status === "error" && (
+                <ErrorIndicator message={error.message} />
+              )}
+              {status === "success" && datasetDetails && (
+                <>
+                  {datasetDetails.description && (
+                    <Box>
+                      <Typography variant="body2" fontWeight="bold">
+                        Description
+                      </Typography>
+                      <Typography variant="body2" component="div">
+                        <ReactMarkdown>
+                          {datasetDetails.description.trim()}
+                        </ReactMarkdown>
+                      </Typography>
+                    </Box>
+                  )}
+                  {!datasetDetails.description && (
+                    <Box>
+                      <Typography variant="body2" fontWeight="bold">
+                        Description
+                      </Typography>
+                      <Typography variant="body2" component="div">
+                        No description available for this dataset.
+                      </Typography>
+                    </Box>
+                  )}
+                </>
+              )}
+            </Box>
+          </Collapse>
+        </TableCell>
+      </TableRow>
+    </React.Fragment>
+  );
+};
 
 const DatasetList: React.FC = () => {
   const { makeRequest } = usePortalClient();
@@ -137,57 +258,21 @@ const DatasetList: React.FC = () => {
           <Table size="medium">
             <TableHead>
               <TableRow>
-                <TableCell width="5%" align="center">ID</TableCell>
-                <TableCell width="55%">Dataset Name</TableCell>
-                <TableCell width="15%">Type</TableCell>
-                <TableCell width="25%">Records</TableCell>
+                <TableCell width="50px" />
+                <TableCell width="5%" align="center">
+                  ID
+                </TableCell>
+                <TableCell width="65%">Dataset Name</TableCell>
+                <TableCell width="10%">Type</TableCell>
+                <TableCell width="10%">Records</TableCell>
+                <TableCell width="10%">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredDatasets
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((dataset) => (
-                  <TableRow key={dataset.id} hover>
-                    <TableCell>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <FavoriteButton
-                          preferencesKey="favorite_datasets"
-                          objectId={dataset.id}
-                        />
-                        <Typography fontWeight={"bold"}>
-                          {dataset.id}
-                        </Typography>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Box>
-                          <Typography
-                            component={Link}
-                            to={`/datasets/${dataset.id}`}
-                            variant="body2"
-                            fontWeight="bold"
-                            sx={{
-                              color: "inherit",
-                              textDecoration: "none",
-                              "&:hover": { textDecoration: "underline" },
-                            }}
-                          >
-                            {dataset.dataset_name}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {dataset.tagline}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Chip label={dataset.dataset_type} size="small" />
-                    </TableCell>
-                    <TableCell>
-                      {dataset.record_count.toLocaleString()}
-                    </TableCell>
-                  </TableRow>
+                  <DatasetRow key={dataset.id} dataset={dataset} />
                 ))}
             </TableBody>
           </Table>
