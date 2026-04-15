@@ -17,6 +17,7 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  DialogContentText,
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -218,29 +219,52 @@ export const AttachmentTable: React.FC<AttachmentTableProps> = ({
           </TableHead>
           <TableBody>
             {attachments.map((attachment) => (
-              <AttachmentRow key={attachment.id} attachment={attachment} onDelete={handleDeleteClick} />
+              <AttachmentRow
+                key={attachment.id}
+                attachment={attachment}
+                onDelete={handleDeleteClick}
+              />
             ))}
           </TableBody>
         </Table>
       </TableContainer>
 
-      <Dialog open={deleteDialogOpen} onClose={() => !deleting && setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => !deleting && setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
-          <Typography variant="body1" gutterBottom>
+          <DialogContentText>
             Are you sure you want to delete the following attachment?
-          </Typography>
+          </DialogContentText>
           {itemToDelete && (
             <Box sx={{ mt: 2, p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
-              <Typography variant="body2"><strong>Filename:</strong> {itemToDelete.file_name}</Typography>
-              <Typography variant="body2"><strong>Size:</strong> {formatSize(itemToDelete.file_size)}</Typography>
-              <Typography variant="body2"><strong>Created On:</strong> {formattedDate}</Typography>
+              <Typography variant="body2">
+                <strong>Filename:</strong> {itemToDelete.file_name}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Size:</strong> {formatSize(itemToDelete.file_size)}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Created On:</strong> {formattedDate}
+              </Typography>
             </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>Cancel</Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained" disabled={deleting}>
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            disabled={deleting}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+            disabled={deleting}
+          >
             {deleting ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>

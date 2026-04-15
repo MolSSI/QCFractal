@@ -4,8 +4,8 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
-  Typography,
 } from "@mui/material";
 import { usePortalClient } from "../../PortalClient";
 import * as qcpTypes from "../../PortalTypes";
@@ -74,14 +74,12 @@ export const LinkDatasetDialog: React.FC<LinkDatasetDialogProps> = ({
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>Link Existing Dataset</DialogTitle>
       <DialogContent>
-        <Typography variant="body2" sx={{ mb: 2 }}>
+        <DialogContentText>
           Search for an existing dataset to link to this project.
-        </Typography>
+        </DialogContentText>
         <DatasetSearch onDatasetSelect={setSelectedDatasetId} />
         {error && (
-          <ErrorIndicator
-            message={error || "Failed to link dataset"}
-          />
+          <ErrorIndicator message={error || "Failed to link dataset"} />
         )}
       </DialogContent>
       <DialogActions>
