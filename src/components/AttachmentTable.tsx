@@ -1,13 +1,7 @@
 import React, { useState } from "react";
 import {
   Box,
-  Button,
   Collapse,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   IconButton,
   Paper,
   Table,
@@ -22,8 +16,6 @@ import {
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import DownloadIcon from "@mui/icons-material/Download";
-import DeleteIcon from "@mui/icons-material/Delete";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { DatasetAttachment, ProjectAttachment } from "../PortalTypes";
 import AttachmentStatusChip from "./AttachmentStatusChip";
 import AttachmentTypeChip from "./AttachmentTypeChip";
@@ -31,9 +23,8 @@ import { formatSize, parseToDate } from "../Utils";
 import { GenericDataList } from "./GenericDataList";
 import { server_address } from "../request_config";
 import { useAuth } from "../Auth.tsx";
-import { usePortalClient } from "../PortalClient.tsx";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import ErrorIndicator from "./ErrorIndicator";
+import { DeleteAttachmentButton } from "./DeleteAttachmentDialog.tsx";
+import { OpenAttachmentButton } from "./OpenAttachmentDialog.tsx";
 
 interface AttachmentTableProps {
   attachments: (DatasetAttachment | ProjectAttachment)[];
@@ -44,9 +35,11 @@ interface AttachmentTableProps {
 
 function AttachmentRow(props: {
   attachment: DatasetAttachment | ProjectAttachment;
-  onDelete: (attachment: DatasetAttachment | ProjectAttachment) => void;
+  parentType: "dataset" | "project";
+  parentId: number;
+  parentName: string;
 }) {
-  const { attachment, onDelete } = props;
+  const { attachment, parentType, parentId, parentName } = props;
   const [open, setOpen] = useState(false);
   const { has_permission } = useAuth();
 
@@ -90,20 +83,14 @@ function AttachmentRow(props: {
                 <DownloadIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Open">
-              <IconButton size="small">
-                <OpenInNewIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Delete">
-              <IconButton
-                disabled={!can_modify}
-                size="small"
-                onClick={() => onDelete(attachment)}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            <OpenAttachmentButton attachment={attachment} />
+            <DeleteAttachmentButton
+              attachment={attachment}
+              parentType={parentType}
+              parentId={parentId}
+              parentName={parentName}
+              disabled={!can_modify}
+            />
           </Box>
         </TableCell>
       </TableRow>
@@ -162,58 +149,8 @@ export const AttachmentTable: React.FC<AttachmentTableProps> = ({
   attachments,
   parentType,
   parentId,
-  parentName,
+  parentName
 }) => {
-  const { makeRequest } = usePortalClient();
-  const queryClient = useQueryClient();
-  const attachmentQueryKey =
-    parentType === "project"
-      ? ["projectAttachments", parentId]
-      : ["datasetAttachments", parentId];
-
-  const deleteMutation = useMutation({
-    mutationFn: async (itemToDelete: DatasetAttachment | ProjectAttachment) => {
-      switch (parentType) {
-        case "project":
-          await makeRequest(
-            "DELETE",
-            `api/v1/projects/${parentId}/attachments/${itemToDelete.id}`,
-          );
-          break;
-        case "dataset":
-          await makeRequest(
-            "DELETE",
-            `api/v1/datasets/${parentId}/attachments/${itemToDelete.id}`,
-          );
-          break;
-      }
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: attachmentQueryKey,
-      });
-      setDeleteDialogOpen(false);
-      setItemToDelete(null);
-    },
-  });
-
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<
-    DatasetAttachment | ProjectAttachment | null
-  >(null);
-
-  const handleDeleteClick = (
-    attachment: DatasetAttachment | ProjectAttachment,
-  ) => {
-    setItemToDelete(attachment);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleConfirmDelete = () => {
-    if (!itemToDelete) return;
-    deleteMutation.mutate(itemToDelete);
-  };
-
   if (attachments.length === 0) {
     return (
       <Typography variant="body1" color="text.secondary" sx={{ p: 2 }}>
@@ -221,11 +158,6 @@ export const AttachmentTable: React.FC<AttachmentTableProps> = ({
       </Typography>
     );
   }
-
-  const formattedDate = itemToDelete
-    ? parseToDate(itemToDelete.created_on)?.toLocaleString() ||
-      itemToDelete.created_on
-    : "";
 
   return (
     <>
@@ -247,66 +179,14 @@ export const AttachmentTable: React.FC<AttachmentTableProps> = ({
               <AttachmentRow
                 key={attachment.id}
                 attachment={attachment}
-                onDelete={handleDeleteClick}
+                parentType={parentType}
+                parentId={parentId}
+                parentName={parentName}
               />
             ))}
           </TableBody>
         </Table>
       </TableContainer>
-
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => !deleteMutation.isPending && setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete the following attachment?
-          </DialogContentText>
-          {itemToDelete && (
-            <Box sx={{ mt: 2, p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
-              <Typography variant="body2">
-                <strong>Attached to:</strong> {parentName}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Filename:</strong> {itemToDelete.file_name}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Size:</strong> {formatSize(itemToDelete.file_size)}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Created On:</strong> {formattedDate}
-              </Typography>
-            </Box>
-          )}
-          {deleteMutation.isError && (
-            <Box sx={{ mb: 2 }}>
-              <ErrorIndicator
-                message={
-                  (deleteMutation.error as any)?.message ||
-                  "Failed to delete attachment"
-                }
-              />
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setDeleteDialogOpen(false)}
-            disabled={deleteMutation.isPending}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleConfirmDelete}
-            color="error"
-            variant="contained"
-            disabled={deleteMutation.isPending}
-          >
-            {deleteMutation.isPending ? "Deleting..." : "Delete"}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 };

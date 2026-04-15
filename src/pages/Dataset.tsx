@@ -196,16 +196,19 @@ export default function Dataset() {
     }));
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     if (datasetIdNumber === null || Number.isNaN(datasetIdNumber)) {
       return;
     }
 
-    queryClient.invalidateQueries({
-      queryKey: ["dataset", datasetIdNumber],
-    });
+    const queryKeys = [["dataset", datasetIdNumber]] as const;
 
     if (!datasetData?.dataset_type) {
+      await Promise.all(
+        queryKeys.map((queryKey) =>
+          queryClient.invalidateQueries({ queryKey }),
+        ),
+      );
       return;
     }
 
@@ -215,11 +218,14 @@ export default function Dataset() {
       ["datasetEntryNames", datasetData.dataset_type, datasetIdNumber],
       ["datasetRecordCount", datasetData.dataset_type, datasetIdNumber],
       ["datasetRecordDiscovery", datasetData.dataset_type, datasetIdNumber],
+      ["datasetAttachments", datasetIdNumber],
     ] as const;
 
-    datasetScopedKeys.forEach((queryKey) => {
-      queryClient.invalidateQueries({ queryKey });
-    });
+    await Promise.all(
+      [...queryKeys, ...datasetScopedKeys].map((queryKey) =>
+        queryClient.invalidateQueries({ queryKey }),
+      ),
+    );
   };
 
   const {
