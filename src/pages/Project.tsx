@@ -36,6 +36,7 @@ export default function Project() {
   const { projectId } = useParams();
   const location = useLocation();
   const { makeRequest } = usePortalClient();
+  const projectIdNumber = projectId ? Number.parseInt(projectId, 10) : null;
 
   // Load from location state or sessionStorage or fallback to 0
   const [tabValue, setTabValue] = useState<number>(() => {
@@ -53,9 +54,9 @@ export default function Project() {
     data: projectData,
     error: projectError,
   } = useQuery({
-    queryKey: ["project", projectId],
+    queryKey: ["project", projectIdNumber],
     queryFn: () => makeRequest<qcpTypes.Project>("GET", `api/v1/projects/${projectId}`),
-    enabled: !!projectId,
+    enabled: projectIdNumber !== null && !Number.isNaN(projectIdNumber),
   });
 
   useEffect(() => {
@@ -69,43 +70,43 @@ export default function Project() {
     data: datasetMetadata,
     refetch: refetchDatasets,
   } = useQuery({
-    queryKey: ["projectDatasetMetadata", projectId],
+    queryKey: ["projectDatasetMetadata", projectIdNumber],
     queryFn: () =>
       makeRequest<Array<qcpTypes.ProjectDatasetMetadata>>(
         "GET",
         `api/v1/projects/${projectId}/dataset_metadata`,
       ),
-    enabled: !!projectId,
+    enabled: projectIdNumber !== null && !Number.isNaN(projectIdNumber),
   });
 
   const {
     status: recordMetadataStatus,
     data: recordMetadata,
   } = useQuery({
-    queryKey: ["projectRecordMetadata", projectId],
+    queryKey: ["projectRecordMetadata", projectIdNumber],
     queryFn: () =>
       makeRequest<Array<qcpTypes.ProjectRecordMetadata>>(
         "GET",
         `api/v1/projects/${projectId}/record_metadata`,
       ),
-    enabled: !!projectId,
+    enabled: projectIdNumber !== null && !Number.isNaN(projectIdNumber),
   });
   
   const {
     status: attachmentsStatus,
     data: attachmentsData,
   } = useQuery({
-    queryKey: ["projectAttachments", projectId],
+    queryKey: ["projectAttachments", projectIdNumber],
     queryFn: () =>
       makeRequest<Array<qcpTypes.ProjectAttachment>>(
         "GET",
-        `api/v1/projects/${projectId}/attachments`,
+        `api/v1/projects/${projectIdNumber}/attachments`,
       ),
-    enabled: !!projectId && tabValue === 2,
+    enabled: projectIdNumber !== null && tabValue === 2,
   });
 
-  if (!projectId) {
-    return <ErrorIndicator fullPage message="Missing project ID" />;
+  if (!projectId || projectIdNumber === null || Number.isNaN(projectIdNumber)) {
+    return <ErrorIndicator fullPage message="Invalid project ID" />;
   }
 
   return (
@@ -123,7 +124,7 @@ export default function Project() {
             <Box sx={{ display: "flex", alignItems: "center" }}>
               <FavoriteButton
                 preferencesKey="favorite_projects"
-                objectId={parseInt(projectId)}
+                objectId={projectIdNumber}
               />
               <Box>
                 <Typography variant="h4" fontWeight="bold">
@@ -237,7 +238,12 @@ export default function Project() {
                 <TabPanel value={tabValue} index={2}>
                   {attachmentsStatus === "pending" && <LoadingIndicator />}
                   {attachmentsStatus === "success" && attachmentsData && (
-                    <AttachmentTable attachments={attachmentsData} projectId={projectId} />
+                    <AttachmentTable
+                      attachments={attachmentsData}
+                      parentType="project"
+                      parentId={projectIdNumber}
+                      parentName={projectData.name}
+                    />
                   )}
                 </TabPanel>
               </Paper>

@@ -29,7 +29,7 @@ function EntryRow({
 }: {
   entryName: string;
   datasetType: qcpTypes.RecordType;
-  datasetId: string;
+  datasetId: number;
 }) {
   const [expanded, setExpanded] = React.useState(false);
   const { makeRequest } = usePortalClient();
@@ -90,7 +90,7 @@ function EntryRow({
 interface DatasetEntryTableProps {
   entryNames: string[];
   datasetType: qcpTypes.RecordType;
-  datasetId: string;
+  datasetId: number;
 }
 
 export default function DatasetEntryTable({

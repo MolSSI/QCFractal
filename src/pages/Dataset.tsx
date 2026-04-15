@@ -22,7 +22,7 @@ import DatasetActions from "../components/dataset_components/DatasetActions";
 import DatasetSpecificationTable from "../components/dataset_components/DatasetSpecificationTable";
 import DatasetEntryTable from "../components/dataset_components/DatasetEntryTable";
 import DatasetRecords from "../components/dataset_components/DatasetRecords";
-import AttachmentTable from "../components/AttachmentTable";
+import { AttachmentTable } from "../components/AttachmentTable";
 import { asRecord } from "../Utils.ts";
 import ReactMarkdown from "react-markdown";
 import {
@@ -62,6 +62,7 @@ export default function Dataset() {
   const location = useLocation();
   const { makeRequest } = usePortalClient();
   const queryClient = useQueryClient();
+  const datasetIdNumber = datasetId ? Number.parseInt(datasetId, 10) : null;
 
   const restoredViewState = React.useMemo(
     () =>
@@ -196,12 +197,12 @@ export default function Dataset() {
   };
 
   const handleRefresh = () => {
-    if (!datasetId) {
+    if (datasetIdNumber === null || Number.isNaN(datasetIdNumber)) {
       return;
     }
 
     queryClient.invalidateQueries({
-      queryKey: ["dataset", datasetId],
+      queryKey: ["dataset", datasetIdNumber],
     });
 
     if (!datasetData?.dataset_type) {
@@ -209,11 +210,11 @@ export default function Dataset() {
     }
 
     const datasetScopedKeys = [
-      ["datasetStatus", datasetData.dataset_type, datasetId],
-      ["datasetSpecifications", datasetData.dataset_type, datasetId],
-      ["datasetEntryNames", datasetData.dataset_type, datasetId],
-      ["datasetRecordCount", datasetData.dataset_type, datasetId],
-      ["datasetRecordDiscovery", datasetData.dataset_type, datasetId],
+      ["datasetStatus", datasetData.dataset_type, datasetIdNumber],
+      ["datasetSpecifications", datasetData.dataset_type, datasetIdNumber],
+      ["datasetEntryNames", datasetData.dataset_type, datasetIdNumber],
+      ["datasetRecordCount", datasetData.dataset_type, datasetIdNumber],
+      ["datasetRecordDiscovery", datasetData.dataset_type, datasetIdNumber],
     ] as const;
 
     datasetScopedKeys.forEach((queryKey) => {
@@ -226,10 +227,10 @@ export default function Dataset() {
     data: datasetData,
     error: datasetError,
   } = useQuery({
-    queryKey: ["dataset", datasetId],
+    queryKey: ["dataset", datasetIdNumber],
     queryFn: () =>
       makeRequest<qcpTypes.Dataset>("GET", `api/v1/datasets/${datasetId}`),
-    enabled: !!datasetId,
+    enabled: datasetIdNumber !== null && !Number.isNaN(datasetIdNumber),
   });
 
   useEffect(() => {
@@ -241,17 +242,24 @@ export default function Dataset() {
   }, [datasetData, datasetId]);
 
   const { data: statusData } = useQuery({
-    queryKey: ["datasetStatus", datasetData?.dataset_type, datasetId],
+    queryKey: ["datasetStatus", datasetData?.dataset_type, datasetIdNumber],
     queryFn: () =>
       makeRequest<qcpTypes.DatasetStatus>(
         "GET",
         `api/v1/datasets/${datasetData?.dataset_type}/${datasetId}/status`,
       ),
-    enabled: !!datasetId && !!datasetData?.dataset_type,
+    enabled:
+      datasetIdNumber !== null &&
+      !Number.isNaN(datasetIdNumber) &&
+      !!datasetData?.dataset_type,
   });
 
   const { data: specificationsData } = useQuery({
-    queryKey: ["datasetSpecifications", datasetData?.dataset_type, datasetId],
+    queryKey: [
+      "datasetSpecifications",
+      datasetData?.dataset_type,
+      datasetIdNumber,
+    ],
     queryFn: () =>
       makeRequest<
         Record<string, { specification: qcpTypes.DatasetSpecificationData }>
@@ -259,44 +267,53 @@ export default function Dataset() {
         "GET",
         `api/v1/datasets/${datasetData?.dataset_type}/${datasetId}/specifications`,
       ),
-    enabled: !!datasetId && !!datasetData?.dataset_type,
+    enabled:
+      datasetIdNumber !== null &&
+      !Number.isNaN(datasetIdNumber) &&
+      !!datasetData?.dataset_type,
   });
 
   const { data: entryNamesData } = useQuery({
-    queryKey: ["datasetEntryNames", datasetData?.dataset_type, datasetId],
+    queryKey: ["datasetEntryNames", datasetData?.dataset_type, datasetIdNumber],
     queryFn: () =>
       makeRequest<string[]>(
         "GET",
         `api/v1/datasets/${datasetData?.dataset_type}/${datasetId}/entry_names`,
       ),
-    enabled: !!datasetId && !!datasetData?.dataset_type,
+    enabled:
+      datasetIdNumber !== null &&
+      !Number.isNaN(datasetIdNumber) &&
+      !!datasetData?.dataset_type,
   });
 
   const { data: recordCountData } = useQuery({
-    queryKey: ["datasetRecordCount", datasetData?.dataset_type, datasetId],
+    queryKey: ["datasetRecordCount", datasetData?.dataset_type, datasetIdNumber],
     queryFn: () =>
       makeRequest<number>(
         "GET",
         `api/v1/datasets/${datasetData?.dataset_type}/${datasetId}/record_count`,
       ),
-    enabled: !!datasetId && !!datasetData?.dataset_type,
+    enabled:
+      datasetIdNumber !== null &&
+      !Number.isNaN(datasetIdNumber) &&
+      !!datasetData?.dataset_type,
   });
 
   const {
     status: attachmentsStatus,
     data: attachmentsData,
   } = useQuery({
-    queryKey: ["datasetAttachments", datasetId],
+    queryKey: ["datasetAttachments", datasetIdNumber],
     queryFn: () =>
       makeRequest<qcpTypes.DatasetAttachment[]>(
         "GET",
-        `api/v1/datasets/${datasetId}/attachments`,
+        `api/v1/datasets/${datasetIdNumber}/attachments`,
       ),
-    enabled: !!datasetId && viewState.tabValue === 3,
+    enabled: datasetIdNumber !== null && viewState.tabValue === 3,
   });
 
-  if (!datasetId) {
-    return <ErrorIndicator fullPage message="Missing dataset ID" />;
+  if (!datasetId || datasetIdNumber === null || Number.isNaN(datasetIdNumber)) {
+    return <ErrorIndicator fullPage message="Invalid dataset ID" />;
   }
 
   return (
@@ -313,7 +330,7 @@ export default function Dataset() {
             <Box sx={{ display: "flex", alignItems: "center" }}>
               <FavoriteButton
                 preferencesKey="favorite_datasets"
-                objectId={parseInt(datasetId)}
+                objectId={datasetIdNumber}
               />
               <Box>
                 <Typography variant="h4" fontWeight="bold">
@@ -502,7 +519,7 @@ export default function Dataset() {
                   <DatasetEntryTable
                     entryNames={entryNamesData}
                     datasetType={datasetData.dataset_type}
-                    datasetId={datasetId}
+                    datasetId={datasetIdNumber}
                   />
                 )}
               </TabPanel>
@@ -513,7 +530,7 @@ export default function Dataset() {
                   <LoadingIndicator />
                 ) : (
                   <DatasetRecords
-                    datasetId={datasetId}
+                    datasetId={datasetIdNumber}
                     datasetType={datasetData.dataset_type}
                     datasetStatus={statusData}
                     specifications={Object.keys(specificationsData)}
@@ -537,7 +554,15 @@ export default function Dataset() {
               <TabPanel value={viewState.tabValue} index={3}>
                 {attachmentsStatus === "pending" && <LoadingIndicator />}
                 {attachmentsStatus === "success" && attachmentsData && (
-                  <AttachmentTable attachments={attachmentsData} datasetId={datasetId} />
+                  <AttachmentTable
+                    attachments={attachmentsData}
+                    parentType="dataset"
+                    parentId={datasetIdNumber}
+                    parentName={datasetData.name}
+                  />
+                )}
+                {attachmentsStatus === "error" && (
+                  <ErrorIndicator message="Failed to load attachments" />
                 )}
               </TabPanel>
             </Paper>

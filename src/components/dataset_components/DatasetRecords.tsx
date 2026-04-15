@@ -28,7 +28,7 @@ import LoadingIndicator from "../LoadingIndicator";
 import StatusChip from "../StatusChip.tsx";
 
 interface DatasetRecordsProps {
-  datasetId: string;
+  datasetId: number;
   datasetType: qcpTypes.RecordType;
   datasetStatus: qcpTypes.DatasetStatus;
   specifications: string[];
