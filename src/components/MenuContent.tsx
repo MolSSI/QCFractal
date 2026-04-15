@@ -25,7 +25,16 @@ const mainListItems: {
   { text: "Projects", icon: <AccountTreeIcon />, path: "/projects" },
   { text: "Datasets", icon: <FormatListBulletedIcon />, path: "/datasets" },
   { text: "Compute", icon: <ComputerIcon />, path: "/managers" },
+];
+
+const bottomListItems: {
+  text: string;
+  icon: ReactElement;
+  path: string;
+  target?: string;
+}[] = [
   { text: "Sandbox", icon: <CarpenterIcon />, path: "/sandbox" },
+  { text: "Theme Playground", icon: <CarpenterIcon />, path: "/themeplayground" },
 ];
 
 if (feedbackUrl) {
@@ -48,6 +57,23 @@ export default function MenuContent({ onNavigate }: MenuContentProps) {
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}>
       <List dense>
         {mainListItems.map((item, index) => (
+          <ListItem key={index} disablePadding sx={{ display: "block" }}>
+            <ListItemButton
+              component={NavLink}
+              to={item.path}
+              selected={location.pathname === item.path}
+              target={item.target ? item.target : ""}
+              onClick={onNavigate}
+              sx={{ cursor: "pointer" }}
+            >
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+      <List dense>
+        {bottomListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: "block" }}>
             <ListItemButton
               component={NavLink}

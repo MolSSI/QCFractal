@@ -31,6 +31,14 @@ export const feedbackCustomizations: Components<Theme> = {
       }),
     },
   },
+  MuiDialogContentText: {
+    styleOverrides: {
+      root: ({ theme }) => ({
+        fontSize: theme.typography.pxToRem(14),
+        color: (theme.vars || theme).palette.text.primary,
+      }),
+    },
+  },
   MuiLinearProgress: {
     styleOverrides: {
       root: ({ theme }) => ({
