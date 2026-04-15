@@ -7,7 +7,6 @@ import { useQuery } from "@tanstack/react-query";
 import LoadingIndicator from "./LoadingIndicator";
 import ErrorIndicator from "./ErrorIndicator";
 import { ManagerPieChart } from "./ManagerPieChart.tsx";
-import { Link } from "react-router-dom";
 
 export const ManagerFragment: React.FC<{ managerName: string }> = ({
   managerName,
@@ -48,36 +47,26 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
               color={managerData.status == "active" ? "success" : "default"}
               sx={{ width: "fit-content", fontWeight: "bold" }}
             />
-            <Link
-              to={`/managers/${managerData.name}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                color: "inherit",
-                textDecoration: "underline",
-              }}
-            >
-              <Typography variant="h6">Go to manager page</Typography>
-            </Link>
           </Stack>
         </Grid>
         <Grid size={6}>
           <Typography variant="body1">
-            Manager version: {managerData.manager_version}
+            <strong>Manager version:</strong> {managerData.manager_version}
           </Typography>
           <Typography variant="body1">
-            Cluster: {managerData.cluster}
+            <strong>Cluster:</strong>
+            {managerData.cluster}
           </Typography>
           <Typography variant="body1">
-            Hostname: {managerData.hostname}
+            <strong>Hostname:</strong> {managerData.hostname}
           </Typography>
         </Grid>
         <Grid size={6}>
           <Typography variant="body1">
-            Created: {mCreatedOn?.toLocaleString()}
+            <strong>Created:</strong> {mCreatedOn?.toLocaleString()}
           </Typography>
           <Typography variant="body1">
-            Last seen: {mLastUpdated?.toLocaleString()}
+            <strong>Last seen:</strong> {mLastUpdated?.toLocaleString()}
           </Typography>
         </Grid>
         <Grid size={6}>
