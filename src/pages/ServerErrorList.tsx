@@ -23,7 +23,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import LoadingIndicator from "../components/LoadingIndicator.tsx";
 import ErrorIndicator from "../components/ErrorIndicator.tsx";
-import { parseToDate, truncateFront } from "../Utils.ts";
+import { dateStringToLocalTime, truncateFront } from "../Utils.ts";
 import { useAuth } from "../Auth.tsx";
 
 const ServerErrorRow: React.FC<{ errorLog: qcpTypes.ServerErrorLog }> = ({
@@ -50,7 +50,7 @@ const ServerErrorRow: React.FC<{ errorLog: qcpTypes.ServerErrorLog }> = ({
         </TableCell>
         <TableCell>
           <Typography variant="body2">
-            {parseToDate(errorLog.error_date)?.toLocaleString()}
+            {dateStringToLocalTime(errorLog.error_date)}
           </Typography>
         </TableCell>
         <TableCell>

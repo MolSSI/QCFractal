@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import * as qcpTypes from "../PortalTypes";
-import { format } from "date-fns";
 import {
   Accordion,
   AccordionDetails,
@@ -30,6 +29,7 @@ import ErrorIndicator from "./ErrorIndicator";
 import RecordTypeChip from "./RecordTypeChip.tsx";
 import StatusChip from "./StatusChip.tsx";
 import ManagerLink from "./ManagerLink.tsx";
+import { dateStringToLocalTime } from "../Utils.ts";
 
 interface TaskServiceDetailsDialogProps {
   recordId: number;
@@ -43,7 +43,12 @@ type TaskServiceData = qcpTypes.RecordTask | qcpTypes.RecordService;
 
 type DependencyRecordMetadata = Pick<
   qcpTypes.BaseRecord,
-  "id" | "record_type" | "status" | "manager_name" | "created_on" | "modified_on"
+  | "id"
+  | "record_type"
+  | "status"
+  | "manager_name"
+  | "created_on"
+  | "modified_on"
 >;
 
 type DependencyRow = DependencyRecordMetadata & {
@@ -73,7 +78,13 @@ function renderExtraValue(value: unknown): React.ReactNode {
   return String(value);
 }
 
-function ExtrasCell({ extras, rowId }: { extras: Record<string, unknown>; rowId: number }) {
+function ExtrasCell({
+  extras,
+  rowId,
+}: {
+  extras: Record<string, unknown>;
+  rowId: number;
+}) {
   const [expanded, setExpanded] = useState(false);
   const entries = Object.entries(extras);
   const visibleEntries = expanded ? entries : entries.slice(0, 3);
@@ -154,12 +165,20 @@ function DependenciesTable({ rows }: { rows: DependencyRow[] }) {
                 />
               </TableCell>
               <TableCell>
-                {row.manager_name ? <ManagerLink managerName={row.manager_name} /> : <Typography>(none)</Typography>}
+                {row.manager_name ? (
+                  <ManagerLink managerName={row.manager_name} />
+                ) : (
+                  <Typography>(none)</Typography>
+                )}
               </TableCell>
               <TableCell>
                 <Stack direction={"column"} alignItems={"flex-start"}>
-                  <Typography>{format(new Date(row.created_on), "MMMM dd, yyyy HH:mm")}</Typography>
-                  <Typography>{format(new Date(row.modified_on), "MMMM dd, yyyy HH:mm")}</Typography>
+                  <Typography>
+                    {dateStringToLocalTime(row.created_on)}
+                  </Typography>
+                  <Typography>
+                    {dateStringToLocalTime(row.modified_on)}
+                  </Typography>
                 </Stack>
               </TableCell>
               <TableCell>
@@ -230,8 +249,12 @@ export const TaskServiceDialog: React.FC<TaskServiceDetailsDialogProps> = ({
   };
 
   const serviceDependencies =
-    isService && taskData && "dependencies" in taskData ? taskData.dependencies : [];
-  const dependencyIds = serviceDependencies.map((dependency) => dependency.record_id);
+    isService && taskData && "dependencies" in taskData
+      ? taskData.dependencies
+      : [];
+  const dependencyIds = serviceDependencies.map(
+    (dependency) => dependency.record_id,
+  );
 
   const {
     status: dependencyStatus,
@@ -356,15 +379,19 @@ export const TaskServiceDialog: React.FC<TaskServiceDetailsDialogProps> = ({
                       </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
-                      {dependencyStatus === "pending" && serviceDependencies.length > 0 && (
-                        <LoadingIndicator message="Loading dependency records..." />
-                      )}
+                      {dependencyStatus === "pending" &&
+                        serviceDependencies.length > 0 && (
+                          <LoadingIndicator message="Loading dependency records..." />
+                        )}
 
                       {dependencyStatus === "error" && (
-                        <ErrorIndicator message={(dependencyError as Error).message} />
+                        <ErrorIndicator
+                          message={(dependencyError as Error).message}
+                        />
                       )}
 
-                      {(dependencyStatus === "success" || serviceDependencies.length === 0) && (
+                      {(dependencyStatus === "success" ||
+                        serviceDependencies.length === 0) && (
                         <DependenciesTable rows={dependencyRows ?? []} />
                       )}
                     </AccordionDetails>

@@ -5,27 +5,27 @@ import { ManagerFragment } from "../components/ManagerFragment.tsx";
 import * as qcpTypes from "../PortalTypes.ts";
 import {
   Box,
+  Button,
+  Collapse,
   Grid,
+  IconButton,
+  Paper,
   Stack,
-  Typography,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-  Collapse,
-  Button,
   TablePagination,
+  TableRow,
   TextField,
+  Typography,
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import LoadingIndicator from "../components/LoadingIndicator.tsx";
 import ErrorIndicator from "../components/ErrorIndicator.tsx";
-import { parseToDate } from "../Utils.ts";
+import { dateStringToLocalTime } from "../Utils.ts";
 import { PieChart } from "@mui/x-charts/PieChart";
 import { Link } from "react-router-dom";
 
@@ -42,11 +42,7 @@ const ManagerRow: React.FC<{ manager: qcpTypes.Manager }> = ({ manager }) => {
 
   return (
     <React.Fragment>
-      <TableRow
-        hover
-        onClick={handleToggleExpand}
-        sx={{ cursor: "pointer" }}
-      >
+      <TableRow hover onClick={handleToggleExpand} sx={{ cursor: "pointer" }}>
         <TableCell width="50px">
           <IconButton size="small">
             {isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
@@ -60,15 +56,20 @@ const ManagerRow: React.FC<{ manager: qcpTypes.Manager }> = ({ manager }) => {
         <TableCell>{manager.cluster}</TableCell>
         <TableCell>
           <Typography variant="body2">
-            Created: {parseToDate(manager.created_on)?.toLocaleString()}
+            Created: {dateStringToLocalTime(manager.created_on)}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Updated: {parseToDate(manager.modified_on)?.toLocaleString()}
+            Updated: {dateStringToLocalTime(manager.modified_on)}
           </Typography>
         </TableCell>
         <TableCell>
           <Stack direction="row" spacing={1} alignItems="center">
-            <Typography variant="body2" sx={{ width: "40px", textAlign: "right" }}>{manager.claimed}</Typography>
+            <Typography
+              variant="body2"
+              sx={{ width: "40px", textAlign: "right" }}
+            >
+              {manager.claimed}
+            </Typography>
             <PieChart
               skipAnimation={true}
               width={40}
@@ -105,7 +106,7 @@ const ManagerRow: React.FC<{ manager: qcpTypes.Manager }> = ({ manager }) => {
       <TableRow>
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
           <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-            <Box mt={3} mb={3} ml={8} >
+            <Box mt={3} mb={3} ml={8}>
               <ManagerFragment managerName={manager.name} />
             </Box>
           </Collapse>

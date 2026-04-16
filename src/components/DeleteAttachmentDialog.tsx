@@ -15,7 +15,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DatasetAttachment, ProjectAttachment } from "../PortalTypes";
 import { usePortalClient } from "../PortalClient.tsx";
-import { formatSize, parseToDate } from "../Utils.ts";
+import { dateStringToLocalTime, formatSize } from "../Utils.ts";
 import ErrorIndicator from "./ErrorIndicator.tsx";
 
 type Attachment = DatasetAttachment | ProjectAttachment;
@@ -61,10 +61,6 @@ export const DeleteAttachmentDialog: React.FC<DeleteAttachmentDialogProps> = ({
     },
   });
 
-  const formattedDate =
-    parseToDate(attachment.created_on)?.toLocaleString() ||
-    attachment.created_on;
-
   const handleClose = () => {
     if (!deleteMutation.isPending) {
       deleteMutation.reset();
@@ -94,7 +90,8 @@ export const DeleteAttachmentDialog: React.FC<DeleteAttachmentDialogProps> = ({
             <strong>Size:</strong> {formatSize(attachment.file_size)}
           </Typography>
           <Typography variant="body2">
-            <strong>Created On:</strong> {formattedDate}
+            <strong>Created On:</strong>{" "}
+            {dateStringToLocalTime(attachment.created_on)}
           </Typography>
         </Box>
         {deleteMutation.isError && (

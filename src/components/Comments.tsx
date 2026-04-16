@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import * as qcpTypes from "../PortalTypes";
+import { dateStringToLocalTime } from "../Utils.ts";
 
 interface CommentsProps {
   comments?: qcpTypes.RecordComment[];
@@ -56,7 +57,7 @@ export default function Comments({ comments = [] }: CommentsProps) {
                 comments.map((comment) => (
                   <TableRow key={comment.id}>
                     <TableCell>
-                      {new Date(comment.timestamp).toLocaleString()}
+                      {dateStringToLocalTime(comment.timestamp)}
                     </TableCell>
                     <TableCell>{comment.username}</TableCell>
                     <TableCell>{comment.comment}</TableCell>

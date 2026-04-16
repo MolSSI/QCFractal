@@ -1,21 +1,29 @@
-import { Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import {
+  Box,
+  Chip,
+  Grid,
+  Paper,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  Typography,
+} from "@mui/material";
 import { usePortalClient } from "../PortalClient.tsx";
 import React from "react";
 import * as qcpTypes from "../PortalTypes.ts";
 import { Link, useParams } from "react-router-dom";
-import {
-  Box,
-  Chip,
-  Stack,
-  TablePagination,
-} from "@mui/material";
-import { parseToDate } from "../Utils.ts";
 import { useQuery } from "@tanstack/react-query";
 import LoadingIndicator from "../components/LoadingIndicator.tsx";
 import ErrorIndicator from "../components/ErrorIndicator.tsx";
 import { RecordTypeChip } from "../components/RecordTypeChip.tsx";
 import { StatusChip } from "../components/StatusChip.tsx";
 import { ManagerPieChart } from "../components/ManagerPieChart.tsx";
+import { dateStringToLocalTime } from "../Utils.ts";
 
 export default function Manager() {
   const { managerName } = useParams();
@@ -40,16 +48,24 @@ export default function Manager() {
   } = useQuery({
     queryKey: ["managerActiveRecords", managerName],
     queryFn: async () => {
-      const recordIds = await makeRequest<number[]>("POST", `api/v1/records/query`, {
-        manager_name: [managerName],
-        status: ["running"],
-      });
+      const recordIds = await makeRequest<number[]>(
+        "POST",
+        `api/v1/records/query`,
+        {
+          manager_name: [managerName],
+          status: ["running"],
+        },
+      );
       if (recordIds.length === 0) {
         return [];
       }
-      return makeRequest<qcpTypes.BaseRecord[]>("POST", `api/v1/records/bulkGet`, {
-        ids: recordIds,
-      });
+      return makeRequest<qcpTypes.BaseRecord[]>(
+        "POST",
+        `api/v1/records/bulkGet`,
+        {
+          ids: recordIds,
+        },
+      );
     },
     enabled: !!managerName && managerData?.status === "active",
   });
@@ -61,21 +77,28 @@ export default function Manager() {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
   if (!managerName) {
     return (
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh", width: "100%" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "70vh",
+          width: "100%",
+        }}
+      >
         <ErrorIndicator message="Missing manager name" />
       </Box>
     );
   }
-
-  const mCreatedOn = parseToDate(managerData?.created_on);
-  const mLastUpdated = parseToDate(managerData?.modified_on);
 
   return (
     <>
@@ -126,10 +149,12 @@ export default function Manager() {
               <strong>Manager version:</strong> {managerData.manager_version}
             </Typography>
             <Typography variant="body1">
-              <strong>Created:</strong> {mCreatedOn?.toLocaleString()}
+              <strong>Created:</strong>{" "}
+              {dateStringToLocalTime(managerData.created_on)}
             </Typography>
             <Typography variant="body1">
-              <strong>Last seen:</strong> {mLastUpdated?.toLocaleString()}
+              <strong>Last seen:</strong>{" "}
+              {dateStringToLocalTime(managerData.modified_on)}
             </Typography>
             <Typography variant="body1">
               <strong>Cluster:</strong> {managerData.cluster}
@@ -185,7 +210,9 @@ export default function Manager() {
             <Typography variant="h6" sx={{ mb: 2 }}>
               Currently Claimed Records
             </Typography>
-            {managerData.status ==="active" && recordsStatus === "pending" && <LoadingIndicator />}
+            {managerData.status === "active" && recordsStatus === "pending" && (
+              <LoadingIndicator />
+            )}
             {recordsStatus === "error" && (
               <ErrorIndicator message={recordsError.message} />
             )}

@@ -2,7 +2,7 @@ import { usePortalClient } from "../PortalClient.tsx";
 import React from "react";
 import * as qcpTypes from "../PortalTypes";
 import { Chip, Grid, Stack, Typography } from "@mui/material";
-import { parseToDate } from "../Utils";
+import { dateStringToLocalTime } from "../Utils";
 import { useQuery } from "@tanstack/react-query";
 import LoadingIndicator from "./LoadingIndicator";
 import ErrorIndicator from "./ErrorIndicator";
@@ -30,9 +30,6 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
   if (status == "error") {
     return <ErrorIndicator message={error.message} />;
   }
-
-  const mCreatedOn = parseToDate(managerData.created_on);
-  const mLastUpdated = parseToDate(managerData.modified_on);
 
   return (
     <>
@@ -63,10 +60,12 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
         </Grid>
         <Grid size={6}>
           <Typography variant="body1">
-            <strong>Created:</strong> {mCreatedOn?.toLocaleString()}
+            <strong>Created:</strong>{" "}
+            {dateStringToLocalTime(managerData.created_on)}
           </Typography>
           <Typography variant="body1">
-            <strong>Last seen:</strong> {mLastUpdated?.toLocaleString()}
+            <strong>Last seen:</strong>{" "}
+            {dateStringToLocalTime(managerData.modified_on)}
           </Typography>
         </Grid>
         <Grid size={6}>

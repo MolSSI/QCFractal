@@ -17,7 +17,6 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { format } from "date-fns";
 import StatusChip from "../components/StatusChip.tsx";
 import RecordTypeChip from "../components/RecordTypeChip.tsx";
 import Comments from "../components/Comments.tsx";
@@ -25,6 +24,7 @@ import ComputeHistory from "../components/ComputeHistory.tsx";
 import { FavoriteButton } from "../components/FavoriteButton.tsx";
 import { ViewOutputButton } from "../components/ViewOutputDialog.tsx";
 import { TaskServiceButton } from "../components/TaskServiceDialog.tsx";
+import { dateStringToLocalTime } from "../Utils.ts";
 
 interface RecordHeaderProps {
   recordData: qcpTypes.RecordData;
@@ -79,11 +79,11 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
         <Box>
           <Typography variant="body2" sx={{ mb: 1 }}>
             <strong>Created On:</strong>{" "}
-            {format(new Date(recordData.created_on), "MMMM dd, yyyy HH:mm")}
+            {dateStringToLocalTime(recordData.created_on)}
           </Typography>
           <Typography variant="body2" sx={{ mb: 1 }}>
             <strong>Modified On:</strong>{" "}
-            {format(new Date(recordData.modified_on), "MMMM dd, yyyy HH:mm")}
+            {dateStringToLocalTime(recordData.modified_on)}
           </Typography>
           <Typography variant="body2">
             <strong>Creator:</strong> {recordData.owner_group || "(none)"}
@@ -99,7 +99,11 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
           justifyContent="flex-start"
         >
           <Stack spacing={1} alignItems="flex-end">
-            <StatusChip status={recordData.status} recordId={recordData.id} recordType={recordData.record_type} />
+            <StatusChip
+              status={recordData.status}
+              recordId={recordData.id}
+              recordType={recordData.record_type}
+            />
             <RecordTypeChip type={recordData.record_type} />
             {recordData.is_service && (
               <Chip
@@ -189,8 +193,7 @@ function Record() {
     if (recordData) {
       const recordName = recordData.name ? recordData.name.trim() : "";
       document.title = `Record ${recordData.id}${recordName ? ": " + recordName : ""}`;
-    }
-    else {
+    } else {
       document.title = `Record ${parsedRecordId}`;
     }
   }, [recordData, parsedRecordId]);
@@ -208,7 +211,6 @@ function Record() {
   if (!recordData) {
     return <ErrorIndicator fullPage message="Record not found" />;
   }
-
 
   //const RecordComponent = getRecordDetailsComponent(recordData.record_type);
   const RecordComponent = getRecordDetailsComponent(recordData.record_type);

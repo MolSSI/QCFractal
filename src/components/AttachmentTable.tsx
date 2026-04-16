@@ -19,7 +19,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import { DatasetAttachment, ProjectAttachment } from "../PortalTypes";
 import AttachmentStatusChip from "./AttachmentStatusChip";
 import AttachmentTypeChip from "./AttachmentTypeChip";
-import { formatSize, parseToDate } from "../Utils";
+import { dateStringToLocalTime, formatSize } from "../Utils";
 import { GenericDataList } from "./GenericDataList";
 import { server_address } from "../request_config";
 import { useAuth } from "../Auth.tsx";
@@ -44,10 +44,6 @@ function AttachmentRow(props: {
   const { has_permission } = useAuth();
 
   const can_modify = has_permission("projects", "modify");
-
-  const formattedDate =
-    parseToDate(attachment.created_on)?.toLocaleString() ||
-    attachment.created_on;
 
   const handleDownload = () => {
     window.location.href = `${server_address}/api/v1/external_files/${attachment.id}/download`;
@@ -74,7 +70,7 @@ function AttachmentRow(props: {
         <TableCell>
           <AttachmentStatusChip status={attachment.status} />
         </TableCell>
-        <TableCell>{formattedDate}</TableCell>
+        <TableCell>{dateStringToLocalTime(attachment.created_on)}</TableCell>
         <TableCell>{formatSize(attachment.file_size)}</TableCell>
         <TableCell align="right">
           <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
@@ -149,7 +145,7 @@ export const AttachmentTable: React.FC<AttachmentTableProps> = ({
   attachments,
   parentType,
   parentId,
-  parentName
+  parentName,
 }) => {
   if (attachments.length === 0) {
     return (

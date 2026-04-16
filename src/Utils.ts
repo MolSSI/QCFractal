@@ -10,6 +10,17 @@ export const parseToDate = (isoString?: string): Date | undefined => {
   return new Date(trimmed);
 };
 
+export const dateStringToLocalTime = (isoString: string | null | undefined): string | undefined => {
+  if (!isoString) {
+    return undefined;
+  }
+
+  const date = new Date(isoString);
+  return date.toLocaleString(undefined, {
+    timeZoneName: "short",
+  });
+}
+
 export const truncateFront = (s: string, maxLength: number): string => {
   return s.length > maxLength ? "..."+s.slice(s.length-maxLength, s.length) : s;
 

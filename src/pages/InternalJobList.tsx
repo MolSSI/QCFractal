@@ -23,7 +23,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import LoadingIndicator from "../components/LoadingIndicator.tsx";
 import ErrorIndicator from "../components/ErrorIndicator.tsx";
-import { parseToDate } from "../Utils.ts";
+import { dateStringToLocalTime } from "../Utils.ts";
 import { InternalJobStatusChip } from "../components/InternalJobStatusChip.tsx";
 
 const InternalJobRow: React.FC<{ job: qcpTypes.InternalJob }> = ({ job }) => {
@@ -54,13 +54,12 @@ const InternalJobRow: React.FC<{ job: qcpTypes.InternalJob }> = ({ job }) => {
         </TableCell>
         <TableCell>
           <Typography variant="body2">
-            <strong>Added:</strong>{" "}
-            {parseToDate(job.added_date)?.toLocaleString()}
+            <strong>Added:</strong> {dateStringToLocalTime(job.added_date)}
           </Typography>
           {job.started_date && (
             <Typography variant="body2" color="text.secondary">
               <strong>Started:</strong>{" "}
-              {parseToDate(job.started_date)?.toLocaleString()}
+              {dateStringToLocalTime(job.started_date)}
             </Typography>
           )}
         </TableCell>

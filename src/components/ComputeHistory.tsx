@@ -17,6 +17,7 @@ import * as qcpTypes from "../PortalTypes";
 import ManagerLink from "./ManagerLink";
 import StatusChip from "./StatusChip.tsx";
 import { ViewOutputButton } from "./ViewOutputDialog.tsx";
+import { dateStringToLocalTime } from "../Utils.ts";
 
 interface ComputeHistoryProps {
   recordData: qcpTypes.RecordData;
@@ -98,8 +99,7 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({ recordData }) => {
                         )}
                       </TableCell>
                       <TableCell>
-                        {new Date(history.modified_on).toLocaleString() ||
-                          "N/A"}
+                        {dateStringToLocalTime(history.modified_on) || "N/A"}
                       </TableCell>
                       <TableCell>
                         <StatusChip

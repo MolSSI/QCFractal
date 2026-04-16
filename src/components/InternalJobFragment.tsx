@@ -1,7 +1,7 @@
 import { usePortalClient } from "../PortalClient.tsx";
 import React from "react";
 import * as qcpTypes from "../PortalTypes";
-import { parseToDate } from "../Utils";
+import { dateStringToLocalTime } from "../Utils";
 import { useQuery } from "@tanstack/react-query";
 import LoadingIndicator from "./LoadingIndicator";
 import ErrorIndicator from "./ErrorIndicator";
@@ -54,20 +54,6 @@ export const InternalJobFragment: React.FC<InternalJobFragmentProps> = ({
   if (status == "error") {
     return <ErrorIndicator message={error.message} />;
   }
-
-  const addedDate = parseToDate(internalJobData.added_date);
-  const scheduledDate = parseToDate(internalJobData.scheduled_date);
-  const startedDate = internalJobData.started_date
-    ? parseToDate(internalJobData.started_date)
-    : null;
-  const lastUpdated = internalJobData.last_updated
-    ? parseToDate(internalJobData.last_updated)
-    : null;
-  const endedDate = internalJobData.ended_date
-    ? parseToDate(internalJobData.ended_date)
-    : null;
-
-  console.log(internalJobData);
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -147,23 +133,27 @@ export const InternalJobFragment: React.FC<InternalJobFragmentProps> = ({
             Dates
           </Typography>
           <Typography variant="body2">
-            <strong>Added:</strong> {addedDate?.toLocaleString() || "(unknown)"}
+            <strong>Added:</strong>{" "}
+            {dateStringToLocalTime(internalJobData.added_date) || "(unknown)"}
           </Typography>
           <Typography variant="body2">
             <strong>Scheduled:</strong>{" "}
-            {scheduledDate?.toLocaleString() || "(unknown)"}
+            {dateStringToLocalTime(internalJobData.scheduled_date) ||
+              "(unknown)"}
           </Typography>
           <Typography variant="body2">
             <strong>Started:</strong>{" "}
-            {startedDate?.toLocaleString() || "(not started)"}
+            {dateStringToLocalTime(internalJobData.started_date) ||
+              "(not started)"}
           </Typography>
           <Typography variant="body2">
             <strong>Last Updated:</strong>{" "}
-            {lastUpdated?.toLocaleString() || "(not updated)"}
+            {dateStringToLocalTime(internalJobData.last_updated) ||
+              "(not updated)"}
           </Typography>
           <Typography variant="body2">
             <strong>Ended:</strong>{" "}
-            {endedDate?.toLocaleString() || "(not ended)"}
+            {dateStringToLocalTime(internalJobData.ended_date) || "(not ended)"}
           </Typography>
         </Grid>
 
