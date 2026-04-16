@@ -322,3 +322,31 @@ export type ProjectAttachment = Attachment & {
   attachment_type: ProjectAttachmentType;
   tags: string[];
 };
+
+export type InternalJobStatusEnum = "complete" | "waiting" | "running" | "error" | "cancelled";
+
+export type InternalJob = {
+  id: number;
+  name: string;
+  status: InternalJobStatusEnum;
+
+  added_date: string;
+  scheduled_date: string;
+  started_date: string | null;
+  last_updated: string | null;
+  ended_date: string | null;
+
+  runner_hostname: string | null;
+  runner_uuid: string | null;
+  repeat_delay: number | null;
+  serial_group: string | null;
+
+  progress: number;
+  progress_description: string | null;
+  function: string;
+  kwargs: Record<string, any>;
+  after_function: string | null;
+  after_function_kwargs: Record<string, any> | null;
+  result: any;
+  user: string | null;
+};

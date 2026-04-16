@@ -25,9 +25,17 @@ const SandboxPage = () => {
   const moleculeQueryId =
     typeof currentMoleculeId === "number" ? currentMoleculeId : null;
 
-  const { status: moleculeStatus, data: moleculeData, error: moleculeError } = useQuery({
+  const {
+    status: moleculeStatus,
+    data: moleculeData,
+    error: moleculeError,
+  } = useQuery({
     queryKey: ["molecule", moleculeQueryId],
-    queryFn: () => makeRequest<qcpTypes.Molecule>("GET", `api/v1/molecules/${moleculeQueryId}`),
+    queryFn: () =>
+      makeRequest<qcpTypes.Molecule>(
+        "GET",
+        `api/v1/molecules/${moleculeQueryId}`,
+      ),
     enabled: moleculeQueryId !== null,
   });
 
@@ -76,7 +84,9 @@ const SandboxPage = () => {
         ) : moleculeStatus === "pending" ? (
           <LoadingIndicator message="Loading molecule..." />
         ) : moleculeStatus === "error" ? (
-          <ErrorIndicator message={moleculeError?.message ?? "Failed to load molecule."} />
+          <ErrorIndicator
+            message={moleculeError?.message ?? "Failed to load molecule."}
+          />
         ) : (
           <MoleculeStageProvider width={500} height={500}>
             {moleculeData && <MoleculeViewer moleculeData={moleculeData} />}
