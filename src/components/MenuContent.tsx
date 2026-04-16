@@ -10,8 +10,10 @@ import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import CarpenterIcon from "@mui/icons-material/Carpenter";
 import ComputerIcon from "@mui/icons-material/Computer";
+import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 import { NavLink, useLocation } from "react-router-dom";
 import FeedbackIcon from "@mui/icons-material/Feedback";
+import { useAuth } from "../Auth.tsx";
 
 const feedbackUrl: string = import.meta.env.VITE_FEEDBACK_URL;
 
@@ -20,11 +22,14 @@ const mainListItems: {
   icon: ReactElement;
   path: string;
   target?: string;
+  requiredPermissions?: [string, string]
 }[] = [
   { text: "Home", icon: <HomeRoundedIcon />, path: "/" },
   { text: "Projects", icon: <AccountTreeIcon />, path: "/projects" },
   { text: "Datasets", icon: <FormatListBulletedIcon />, path: "/datasets" },
   { text: "Compute", icon: <ComputerIcon />, path: "/managers" },
+  { text: "Internal Jobs", icon: <WorkHistoryIcon />, path: "/internal_jobs",
+  requiredPermissions: ["internal_jobs", "read"]},
 ];
 
 const bottomListItems: {
@@ -52,11 +57,20 @@ interface MenuContentProps {
 
 export default function MenuContent({ onNavigate }: MenuContentProps) {
   const location = useLocation();
+  const { has_permission } = useAuth();
+
+  const filteredMainListItems = mainListItems.filter(item => {
+    if (item.requiredPermissions) {
+      const [resource, action] = item.requiredPermissions;
+      return has_permission(resource, action);
+    }
+    return true;
+  })
 
   return (
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}>
       <List dense>
-        {mainListItems.map((item, index) => (
+        {filteredMainListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: "block" }}>
             <ListItemButton
               component={NavLink}
@@ -70,7 +84,7 @@ export default function MenuContent({ onNavigate }: MenuContentProps) {
               <ListItemText primary={item.text} />
             </ListItemButton>
           </ListItem>
-        ))}
+          ))}
       </List>
       <List dense>
         {bottomListItems.map((item, index) => (

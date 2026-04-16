@@ -12,6 +12,7 @@ const ProjectList = lazy(() => import("./pages/ProjectList.tsx"));
 const Record = lazy(() => import("./pages/Record.tsx"));
 const Manager = lazy(() => import("./pages/Manager.tsx"));
 const ManagerList = lazy(() => import("./pages/ManagerList.tsx"));
+const InternalJobList = lazy(() => import("./pages/InternalJobList.tsx"));
 const Dataset = lazy(() => import("./pages/Dataset.tsx"));
 const DatasetList = lazy(() => import("./pages/DatasetList.tsx"));
 const UserInfo = lazy(() => import("./pages/UserInfo.tsx").then(m => ({ default: m.UserInfo })));
@@ -67,6 +68,7 @@ function App() {
                           element={<AddProjectRecord />}
                         />
                         <Route path="/managers" element={<ManagerList />} />
+                        <Route path="/internal_jobs" element={<InternalJobList />} />
                         <Route
                           path="/managers/:managerName"
                           element={<Manager />}
