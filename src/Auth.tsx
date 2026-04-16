@@ -82,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       get_dataset_entries: 0,
       get_molecules: 0,
       get_managers: 0,
+      get_error_logs: 0,
       }
   });
 

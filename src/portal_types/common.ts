@@ -9,6 +9,7 @@ export type ServerInfo = {
     get_dataset_entries: number;
     get_molecules: number;
     get_managers: number;
+    get_error_logs: number;
   };
 };
 
@@ -349,4 +350,24 @@ export type InternalJob = {
   after_function_kwargs: Record<string, any> | null;
   result: any;
   user: string | null;
+};
+
+export type ServerErrorLog = {
+  id: number;
+  error_date: string;
+  qcfractal_version: string;
+  error_text: string;
+  user: string | null;
+  request_path: string | null;
+  request_headers: Record<string, string> | null;
+  request_body: string | null;
+};
+
+export type ServerErrorLogQueryFilters = {
+  error_id?: number[];
+  user?: (string | number)[];
+  before?: string;
+  after?: string;
+  limit?: number;
+  cursor?: number;
 };

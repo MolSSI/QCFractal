@@ -10,6 +10,11 @@ export const parseToDate = (isoString?: string): Date | undefined => {
   return new Date(trimmed);
 };
 
+export const truncateFront = (s: string, maxLength: number): string => {
+  return s.length > maxLength ? "..."+s.slice(s.length-maxLength, s.length) : s;
+
+}
+
 export const updateFavoritesList = (
   existing_favorites: number[] | undefined,
   obj_id: number,

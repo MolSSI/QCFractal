@@ -11,6 +11,7 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import CarpenterIcon from "@mui/icons-material/Carpenter";
 import ComputerIcon from "@mui/icons-material/Computer";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
+import BugReportIcon from "@mui/icons-material/BugReport";
 import { NavLink, useLocation } from "react-router-dom";
 import FeedbackIcon from "@mui/icons-material/Feedback";
 import { useAuth } from "../Auth.tsx";
@@ -30,6 +31,8 @@ const mainListItems: {
   { text: "Compute", icon: <ComputerIcon />, path: "/managers" },
   { text: "Internal Jobs", icon: <WorkHistoryIcon />, path: "/internal_jobs",
   requiredPermissions: ["internal_jobs", "read"]},
+  { text: "Server Errors", icon: <BugReportIcon />, path: "/server_errors",
+    requiredPermissions: ["server_errors", "read"]},
 ];
 
 const bottomListItems: {
