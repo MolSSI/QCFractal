@@ -67,6 +67,11 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({ recordData }) => {
       {/* Content */}
       {isExpanded && (
         <>
+          {computeHistory.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              No compute history available.
+            </Typography>
+          ) : (
           <TableContainer component={Paper} sx={{ boxShadow: "none" }}>
             <Table
               size="small"
@@ -145,6 +150,7 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({ recordData }) => {
               </TableBody>
             </Table>
           </TableContainer>
+          )}
         </>
       )}
     </>
