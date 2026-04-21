@@ -225,7 +225,7 @@ def get_project_record_v1(project_id: int, record_id: int, url_params: ProjURLPa
 #########################
 # @api_v1.route("/projects/<string:project_type>/<int:project_id>", methods=["PATCH"])
 # @check_permissions("projects", "modify")
-@serialization()
+# @serialization()
 # def modify_project_metadata_v1(project_type: str, project_id: int, body_data: DatasetModifyMetadata):
 #    ds_socket = storage_socket.projects.get_socket(project_type)
 #    return ds_socket.update_metadata(project_id, new_metadata=body_data)
