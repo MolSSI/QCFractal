@@ -23,4 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 
+# Planning files
+task_plan.md
+progress.md
+findings.md
+claude_plan.md
+
 qcfractal_docs
