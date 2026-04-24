@@ -305,6 +305,7 @@ class PortalClient(PortalClientBase):
     def list_datasets_table(self) -> str:
         ds_list = self.list_datasets()
 
+        # Listing includes descriptions, but we don't put them in the able
         # older servers don't have record_count
         if all("record_count" in x for x in ds_list):
             headers = ["id", "type", "record_count", "name"]

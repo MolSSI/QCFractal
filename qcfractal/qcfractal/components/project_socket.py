@@ -177,6 +177,7 @@ class ProjectSocket:
                 ProjectORM.name,
                 ProjectORM.tagline,
                 ProjectORM.tags,
+                ProjectORM.description,
                 func.coalesce(record_count_cte.c.record_count, 0),
                 func.coalesce(dataset_count_cte.c.dataset_count, 0),
                 UserORM.username,
@@ -193,9 +194,11 @@ class ProjectSocket:
                     "project_name": x[1],
                     "tagline": x[2],
                     "tags": x[3],
-                    "record_count": x[4],
-                    "dataset_count": x[5],
-                    "owner_user": x[6],
+                    "description": x[4],
+                    "record_count": x[5],
+                    "dataset_count": x[6],
+                    "creator_user": x[7], # Same as owner_user for now
+                    "owner_user": x[7],
                 }
                 for x in r
             ]
