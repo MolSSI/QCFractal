@@ -360,24 +360,6 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
             >
               {initials}
             </Avatar>
-            {isOwnProfile && (
-              <IconButton
-                size="small"
-                sx={{
-                  position: "absolute",
-                  bottom: 0,
-                  right: 0,
-                  width: 26,
-                  height: 26,
-                  bgcolor: "background.paper",
-                  border: "2px solid",
-                  borderColor: "background.paper",
-                  "&:hover": { bgcolor: "action.hover" },
-                }}
-              >
-                <CameraAltIcon sx={{ fontSize: 12 }} />
-              </IconButton>
-            )}
           </Box>
           <Box>
             <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
