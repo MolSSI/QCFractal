@@ -8,6 +8,7 @@ import {
   Button,
   Dialog,
   DialogContent,
+  IconButton,
   Link as MuiLink,
   Paper,
   Stack,
@@ -19,6 +20,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -326,7 +328,21 @@ export const TaskServiceDialog: React.FC<TaskServiceDetailsDialogProps> = ({
         e.stopPropagation();
       }}
     >
-      <DialogContent>
+      <DialogContent sx={{ position: "relative", pt: 5 }}>
+        <IconButton
+          size="small"
+          onClick={handleClose}
+          sx={{
+            position: "absolute",
+            right: 8,
+            top: 8,
+            "&&": { bgcolor: "transparent", border: "none" },
+            "&&:hover": { bgcolor: "transparent", border: "none" },
+            "&&:active": { bgcolor: "transparent" },
+          }}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
         <Box>
           <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
             {type.charAt(0).toUpperCase() + type.slice(1)} Details

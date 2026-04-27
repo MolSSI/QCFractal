@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Typography, Dialog, DialogContent } from "@mui/material";
+import { Typography, Dialog, DialogContent, IconButton } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { ManagerFragment } from "./ManagerFragment";
 
 interface ManagerLinkProps {
@@ -36,7 +37,21 @@ export const ManagerLink: React.FC<ManagerLinkProps> = ({ managerName }) => {
           e.stopPropagation();
         }}
       >
-        <DialogContent>
+        <DialogContent sx={{ position: "relative", pt: 5 }}>
+          <IconButton
+            size="small"
+            onClick={() => setManagerDialogOpen(false)}
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+              "&&": { bgcolor: "transparent", border: "none" },
+              "&&:hover": { bgcolor: "transparent", border: "none" },
+              "&&:active": { bgcolor: "transparent" },
+            }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
           <ManagerFragment managerName={managerName} />
         </DialogContent>
       </Dialog>

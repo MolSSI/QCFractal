@@ -5,10 +5,12 @@ import {
   Dialog,
   DialogContent,
   Grid,
+  IconButton,
   Tab,
   Tabs,
   Typography,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { useQuery } from "@tanstack/react-query";
 import { usePortalClient } from "../PortalClient.tsx";
 import * as qcpTypes from "../PortalTypes";
@@ -134,7 +136,21 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
         e.stopPropagation();
       }}
     >
-      <DialogContent>
+      <DialogContent sx={{ position: "relative", pt: 5 }}>
+        <IconButton
+          size="small"
+          onClick={handleClose}
+          sx={{
+            position: "absolute",
+            right: 8,
+            top: 8,
+            "&&": { bgcolor: "transparent", border: "none" },
+            "&&:hover": { bgcolor: "transparent", border: "none" },
+            "&&:active": { bgcolor: "transparent" },
+          }}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
         <>
           {isLoading && <LoadingIndicator />}
 

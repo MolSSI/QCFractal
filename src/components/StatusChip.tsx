@@ -1,7 +1,8 @@
 import React from "react";
-import { Chip, Tooltip, Dialog, DialogContent, Box } from "@mui/material";
+import { Chip, Tooltip, Dialog, DialogContent, Box, IconButton } from "@mui/material";
 import HelpOutline from "@mui/icons-material/HelpOutline";
 import ErrorOutline from "@mui/icons-material/ErrorOutline";
+import CloseIcon from "@mui/icons-material/Close";
 import { WaitingReasonFragment } from "./WaitingReasonFragment";
 import { ViewOutputDialog } from "./ViewOutputDialog.tsx";
 
@@ -72,7 +73,21 @@ export const StatusChip: React.FC<StatusProps> = ({ status, recordType, recordId
               e.stopPropagation();
             }}
           >
-            <DialogContent>
+            <DialogContent sx={{ position: "relative", pt: 5 }}>
+              <IconButton
+                size="small"
+                onClick={() => setWaitingReasonOpen(false)}
+                sx={{
+                  position: "absolute",
+                  right: 8,
+                  top: 8,
+                  "&&": { bgcolor: "transparent", border: "none" },
+                  "&&:hover": { bgcolor: "transparent", border: "none" },
+                  "&&:active": { bgcolor: "transparent" },
+                }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
               <WaitingReasonFragment recordId={recordId} />
             </DialogContent>
           </Dialog>
