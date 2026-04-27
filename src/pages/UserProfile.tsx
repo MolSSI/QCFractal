@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   Alert,
@@ -67,13 +67,38 @@ const EditableFieldRow: React.FC<{
   label: string;
   value: string | undefined;
   readOnly?: boolean;
+  validate?: (val: string) => string | undefined;
+  asyncValidate?: (val: string) => Promise<string | undefined>;
   onSave: (val: string) => Promise<void>;
-}> = ({ label, value, readOnly, onSave }) => {
+}> = ({ label, value, readOnly, validate, asyncValidate, onSave }) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value ?? "");
   const [saving, setSaving] = useState(false);
+  const [asyncError, setAsyncError] = useState<string | undefined>();
+  const [isChecking, setIsChecking] = useState(false);
+
+  const syncError = editing && draft.length > 0 ? validate?.(draft) : undefined;
+  const fieldError = syncError ?? asyncError;
+  const blocked = saving || !!fieldError || isChecking;
+
+  useEffect(() => {
+    if (!asyncValidate || !editing || draft === (value ?? "")) {
+      setAsyncError(undefined);
+      setIsChecking(false);
+      return;
+    }
+    setIsChecking(true);
+    setAsyncError(undefined);
+    const timer = setTimeout(async () => {
+      const err = await asyncValidate(draft);
+      setAsyncError(err);
+      setIsChecking(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [draft, asyncValidate, editing, value]);
 
   const handleSave = async () => {
+    if (blocked) return;
     setSaving(true);
     try {
       await onSave(draft);
@@ -85,10 +110,13 @@ const EditableFieldRow: React.FC<{
 
   const handleCancel = () => {
     setDraft(value ?? "");
+    setAsyncError(undefined);
+    setIsChecking(false);
     setEditing(false);
   };
 
   if (editing) {
+    const helperText = fieldError ?? (isChecking ? "Checking…" : " ");
     return (
       <Box sx={{ display: "flex", alignItems: "center", px: 2.5, py: 1.25, gap: 1.5, minHeight: 52 }}>
         <Typography
@@ -103,10 +131,12 @@ const EditableFieldRow: React.FC<{
           onChange={(e) => setDraft(e.target.value)}
           size="small"
           autoFocus
+          error={!!fieldError}
+          helperText={helperText}
           onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") handleCancel(); }}
           sx={{ maxWidth: 280 }}
         />
-        <Button size="small" variant="contained" onClick={handleSave} disabled={saving} sx={{ minWidth: 56 }}>
+        <Button size="small" variant="contained" onClick={handleSave} disabled={blocked} sx={{ minWidth: 56 }}>
           {saving ? <CircularProgress size={14} /> : "Save"}
         </Button>
         <Button size="small" onClick={handleCancel} disabled={saving}>
@@ -140,8 +170,9 @@ const ChangePasswordForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [confirm, setConfirm] = useState("");
   const [success, setSuccess] = useState(false);
 
+  const sameAsCurrent = current.length > 0 && next.length > 0 && next === current;
   const mismatch = next.length > 0 && confirm.length > 0 && next !== confirm;
-  const canSubmit = current.length > 0 && next.length > 0 && next === confirm;
+  const canSubmit = current.length > 0 && next.length > 0 && next === confirm && !sameAsCurrent;
 
   const mutation = useMutation<void, Error, string>({
     mutationFn: (pw) =>
@@ -186,6 +217,8 @@ const ChangePasswordForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             size="small"
             fullWidth
             autoComplete="new-password"
+            error={sameAsCurrent}
+            helperText={sameAsCurrent ? "New password must differ from current password" : " "}
           />
           <TextField
             label="Confirm new password"
@@ -359,12 +392,21 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
               label="Username"
               value={userData.username}
               readOnly={!isOwnProfile}
+              asyncValidate={async (val) => {
+                try {
+                  await makeRequest("GET", `api/v1/users/${val}`);
+                  return "Username is already taken";
+                } catch {
+                  return undefined;
+                }
+              }}
               onSave={(val) => saveField("username", val)}
             />
             <EditableFieldRow
               label="Email"
               value={userData.email}
               readOnly={!isOwnProfile}
+              validate={(val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ? undefined : "Enter a valid email address"}
               onSave={(val) => saveField("email", val)}
             />
             <EditableFieldRow
@@ -437,9 +479,9 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
   );
 };
 
-const UserInfo: React.FC = () => {
+const UserProfile: React.FC = () => {
   const { userName } = useParams();
   return <BaseUserInfo userName={userName} />;
 };
 
-export { UserInfo };
+export { UserProfile };
