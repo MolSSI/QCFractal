@@ -1,5 +1,8 @@
 import React from "react";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Divider,
   Link as MuiLink,
@@ -13,6 +16,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Link } from "react-router-dom";
 import { useAuth } from "../Auth.tsx";
 import { usePreferences } from "../PreferencesProvider.tsx";
@@ -93,66 +97,91 @@ const HomePage: React.FC = () => {
           </Typography>
           <Divider sx={{ mb: 2 }} />
           <Typography variant="body1" component="div">
-            <ul>
+            <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
               <li>
-                <strong>2026-04-13</strong>
+                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                  2026-04-27
+                </Typography>
                 <ul>
                   <li>
-                    <li>
-                      <strong>Added:</strong> Favoriting records
-                    </li>
-                    <li>
-                      <strong>Added:</strong> Dataset and project attachments
-                    </li>
-                    <li>
-                      <strong>Added:</strong> Project creation
-                    </li>
-                    <li>
-                      <strong>Added:</strong> Linking/Unlinking existing datasets to a project
-                    </li>
-                  </li>
-                  <li>
-                    <strong>Improved:</strong> Enhanced record/dataset/project
-                    description display with Markdown support
-                  </li>
-                  <li>
-                    <strong>Added:</strong> Torsiondrive plots
-                  </li>
-                  <li>
-                    <strong>Improved:</strong> Manager page & fragment
-                    (including claimed records)
-                  </li>
-                  <li>
-                    <strong>Improved:</strong> Remove ANSI escape codes from raw
-                    output
+                    <strong>Added:</strong> User info page (and user modification)
                   </li>
                 </ul>
               </li>
-              <li>
-                <strong>2026-04-10</strong>
-                <ul>
-                  <li>
-                    <strong>Improved:</strong> Molecular formula formatting &
-                    molecule viewer layouts
-                  </li>
-                  <li>
-                    <strong>Improved:</strong> Remove ANSI escape codes from raw
-                    output
-                  </li>
-                </ul>
-              </li>
-              <li>
-                <strong>2026-04-09</strong>
-                <ul>
-                  <li>
-                    <strong>Added:</strong> This homepage{" "}
-                  </li>
-                  <li>
-                    <strong>Added:</strong> Dataset records and various record
-                    pages
-                  </li>
-                </ul>
-              </li>
+
+              <Accordion
+                variant="outlined"
+                sx={{ mt: 2, "&:before": { display: "none" } }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography sx={{ fontWeight: "bold" }}>
+                    Previous Updates
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ pt: 0 }}>
+                  <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
+                    <li>
+                      <strong>2026-04-13</strong>
+                      <ul>
+                        <li>
+                          <strong>Added:</strong> Favoriting records
+                        </li>
+                        <li>
+                          <strong>Added:</strong> Dataset and project attachments
+                        </li>
+                        <li>
+                          <strong>Added:</strong> Project creation
+                        </li>
+                        <li>
+                          <strong>Added:</strong> Linking/Unlinking existing
+                          datasets to a project
+                        </li>
+                        <li>
+                          <strong>Improved:</strong> Enhanced
+                          record/dataset/project description display with
+                          Markdown support
+                        </li>
+                        <li>
+                          <strong>Added:</strong> Torsiondrive plots
+                        </li>
+                        <li>
+                          <strong>Improved:</strong> Manager page & fragment
+                          (including claimed records)
+                        </li>
+                        <li>
+                          <strong>Improved:</strong> Remove ANSI escape codes
+                          from raw output
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-04-10</strong>
+                      <ul>
+                        <li>
+                          <strong>Improved:</strong> Molecular formula
+                          formatting & molecule viewer layouts
+                        </li>
+                        <li>
+                          <strong>Improved:</strong> Remove ANSI escape codes
+                          from raw output
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-04-09</strong>
+                      <ul>
+                        <li>
+                          <strong>Added:</strong> This homepage{" "}
+                        </li>
+                        <li>
+                          <strong>Added:</strong> Dataset records and various
+                          record pages
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+                </AccordionDetails>
+              </Accordion>
             </ul>
           </Typography>
         </Paper>
