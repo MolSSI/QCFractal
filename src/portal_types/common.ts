@@ -246,6 +246,26 @@ export type ComputeHistory = {
   };
 };
 
+export type UserModifyBody = {
+  id?: number;
+  username: string;
+  role: string;
+  enabled: boolean;
+  groups: string[];
+  auth_type: string;
+  fullname?: string;
+  organization?: string;
+  email?: string;
+};
+
+export type Session = {
+  id: number;
+  ip_address: string;
+  user_agent: string;
+  created_on: string;
+  last_used: string;
+};
+
 export type UserPreferences = Record<string, any>;
 
 export type DatasetQueryModel = {
