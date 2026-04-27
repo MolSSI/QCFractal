@@ -8,13 +8,11 @@ import {
   Chip,
   CircularProgress,
   Divider,
-  IconButton,
   Paper,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
-import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePortalClient } from "../PortalClient";
 import { useAuth } from "../Auth";
