@@ -94,9 +94,11 @@ export async function rawMakeRequest<T>(
   };
 
   // Put URL params at the end of the url
+  const base = server_address.replace(/\/+$/, "");
+  const path = endpoint.replace(/^\/+/, "");
   const full_url = url_params
-    ? `${server_address}/${endpoint}?${objectToQueryParams(url_params)}`
-    : `${server_address}/${endpoint}`;
+    ? `${base}/${path}?${objectToQueryParams(url_params)}`
+    : `${base}/${path}`;
 
   return rawRequest<T>(full_url, req_options);
 }
