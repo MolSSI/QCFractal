@@ -163,51 +163,69 @@ const EditableFieldRow: React.FC<{
 };
 
 // Inline change-password form (expands below the Password row)
-const ChangePasswordForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+const ChangePasswordForm: React.FC<{ username: string; onClose: () => void }> = ({ username, onClose }) => {
   const { makeRequest } = usePortalClient();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [currentError, setCurrentError] = useState<string | undefined>();
   const [success, setSuccess] = useState(false);
 
-  const sameAsCurrent = current.length > 0 && next.length > 0 && next === current;
   const mismatch = next.length > 0 && confirm.length > 0 && next !== confirm;
+  const sameAsCurrent = current.length > 0 && next.length > 0 && next === current;
   const canSubmit = current.length > 0 && next.length > 0 && next === confirm && !sameAsCurrent;
 
   const mutation = useMutation<void, Error, string>({
-    mutationFn: (pw) =>
-      makeRequest<void>("PUT", "api/v1/me/password", pw as unknown as object),
+    mutationFn: async (pw) => {
+      // Verify current password against the login endpoint before changing
+      try {
+        await makeRequest<unknown>("POST", "auth/v1/session_login", { username, password: current });
+      } catch {
+        throw new Error("Current password is incorrect");
+      }
+      await makeRequest<void>("PUT", "api/v1/me/password", pw as unknown as object);
+    },
     onSuccess: () => {
       setSuccess(true);
       setCurrent("");
       setNext("");
       setConfirm("");
+      setCurrentError(undefined);
+    },
+    onError: (err) => {
+      if (err.message === "Current password is incorrect") {
+        setCurrentError(err.message);
+      }
     },
   });
+
+  const handleSubmit = () => {
+    setCurrentError(undefined);
+    mutation.mutate(next);
+  };
 
   return (
     <Box sx={{ px: 2.5, pb: 2, pt: 0 }}>
       <Box sx={{ borderRadius: 1.5, bgcolor: "action.hover", p: 2, maxWidth: 380 }}>
         <Stack spacing={1.5}>
           {success && (
-            <Alert
-              severity="success"
-              onClose={() => { setSuccess(false); onClose(); }}
-            >
+            <Alert severity="success" onClose={() => { setSuccess(false); onClose(); }}>
               Password changed successfully.
             </Alert>
           )}
-          {mutation.isError && (
+          {mutation.isError && !currentError && (
             <Alert severity="error">{mutation.error.message}</Alert>
           )}
           <TextField
             label="Current password"
             type="password"
             value={current}
-            onChange={(e) => setCurrent(e.target.value)}
+            onChange={(e) => { setCurrent(e.target.value); setCurrentError(undefined); }}
             size="small"
             fullWidth
             autoComplete="current-password"
+            error={!!currentError}
+            helperText={currentError ?? " "}
           />
           <TextField
             label="New password"
@@ -236,11 +254,11 @@ const ChangePasswordForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               variant="contained"
               size="small"
               disabled={!canSubmit || mutation.isPending}
-              onClick={() => mutation.mutate(next)}
+              onClick={handleSubmit}
             >
               {mutation.isPending ? <CircularProgress size={14} /> : "Change password"}
             </Button>
-            <Button size="small" onClick={onClose}>
+            <Button size="small" onClick={onClose} disabled={mutation.isPending}>
               Cancel
             </Button>
           </Stack>
@@ -464,7 +482,7 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
                   </Typography>
                 </FieldRow>
                 {showPasswordForm && (
-                  <ChangePasswordForm onClose={() => setShowPasswordForm(false)} />
+                  <ChangePasswordForm username={userData.username} onClose={() => setShowPasswordForm(false)} />
                 )}
               </Box>
             )}
