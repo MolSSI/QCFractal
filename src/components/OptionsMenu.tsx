@@ -62,15 +62,9 @@ export default function OptionsMenu() {
         >
           <ListItemText>Profile</ListItemText>
         </MenuItem>
-        <MenuItem onClick={handleClose} sx={{ my: "2px" }}>
-          My account
-        </MenuItem>
         <Divider />
         <MenuItem onClick={handleClose} sx={{ my: "2px" }}>
           Add another account
-        </MenuItem>
-        <MenuItem onClick={handleClose} sx={{ my: "2px" }}>
-          Settings
         </MenuItem>
         <Divider />
         <MenuItem
