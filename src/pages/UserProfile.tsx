@@ -19,6 +19,7 @@ import { useAuth } from "../Auth";
 import * as qcpTypes from "../PortalTypes";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
+import { RoleChip } from "../components/RoleChip";
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -30,13 +31,6 @@ function getInitials(fullname?: string, username?: string): string {
   }
   return (username ?? "?").slice(0, 2).toUpperCase();
 }
-
-const roleColors: Record<string, "error" | "success" | "info" | "default"> = {
-  admin: "error",
-  submit: "success",
-  monitor: "info",
-  read: "default",
-};
 
 // ─── Row primitives ───────────────────────────────────────────────────────────
 
@@ -337,7 +331,6 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
   };
 
   const initials = getInitials(userData.fullname, userData.username);
-  const roleColor = roleColors[userData.role] ?? "default";
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -364,7 +357,7 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
               <Typography variant="h5" fontWeight="bold" sx={{ color: "#fff" }}>
                 {userData.fullname || userData.username}
               </Typography>
-              <Chip label={userData.role} color={roleColor} size="small" />
+              <RoleChip role={userData.role} />
             </Stack>
             <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.6)" }}>
               @{userData.username}
@@ -422,7 +415,7 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
           <Stack divider={<Divider />}>
             <FieldRow label="Role">
               <Stack direction="row" spacing={1} alignItems="center">
-                <Chip label={userData.role} size="small" />
+                <RoleChip role={userData.role} />
                 <Typography variant="caption" color="text.disabled">
                   managed by your admin
                 </Typography>
