@@ -15,6 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { usePortalClient } from "../PortalClient.tsx";
@@ -219,6 +220,7 @@ export const RecordRelationshipButton: React.FC<
       <Button
         variant="outlined"
         size="small"
+        startIcon={<AccountTreeIcon />}
         onClick={() => setOpen(true)}
         sx={{ mt: 1 }}
       >

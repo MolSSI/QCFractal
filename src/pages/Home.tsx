@@ -100,11 +100,22 @@ const HomePage: React.FC = () => {
             <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
               <li>
                 <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                  2026-04-28
+                </Typography>
+                <ul>
+                  <li>
+                    <strong>Added:</strong> Record relationship dialog
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
                   2026-04-27
                 </Typography>
                 <ul>
                   <li>
-                    <strong>Added:</strong> User info page (and user modification)
+                    <strong>Added:</strong> User info page (and user
+                    modification)
                   </li>
                 </ul>
               </li>
@@ -127,7 +138,8 @@ const HomePage: React.FC = () => {
                           <strong>Added:</strong> Favoriting records
                         </li>
                         <li>
-                          <strong>Added:</strong> Dataset and project attachments
+                          <strong>Added:</strong> Dataset and project
+                          attachments
                         </li>
                         <li>
                           <strong>Added:</strong> Project creation
