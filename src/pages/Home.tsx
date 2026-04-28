@@ -104,6 +104,9 @@ const HomePage: React.FC = () => {
                 </Typography>
                 <ul>
                   <li>
+                    <strong>Added:</strong> Lookup by project or dataset id/name
+                  </li>
+                  <li>
                     <strong>Added:</strong> Record relationship dialog
                   </li>
                 </ul>
