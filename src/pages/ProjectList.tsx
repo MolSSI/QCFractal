@@ -3,6 +3,7 @@ import * as qcpTypes from "../PortalTypes";
 import { usePortalClient } from "../PortalClient.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { matchesTokens } from "../Utils.ts";
 import {
   Box,
   Chip,
@@ -179,7 +180,7 @@ const ProjectList: React.FC = () => {
     if (!projects) return [];
     return projects.filter(
       (project) =>
-        project.project_name.toLowerCase().includes(filter.toLowerCase()) ||
+        matchesTokens(filter, project.project_name) ||
         project.id.toString().includes(filter),
     );
   }, [projects, filter]);

@@ -9,6 +9,7 @@ import { usePortalClient } from "../PortalClient";
 import * as qcpTypes from "../PortalTypes";
 import { useQuery } from "@tanstack/react-query";
 import RecordTypeChip from "./RecordTypeChip.tsx";
+import { matchesTokens } from "../Utils";
 
 interface DatasetSearchProps {
   onDatasetSelect: (datasetId: number | null) => void;
@@ -30,11 +31,10 @@ export const DatasetSearch: React.FC<DatasetSearchProps> = ({
 
   const filteredOptions = React.useMemo(() => {
     if (!inputValue) return datasets;
-    const search = inputValue.toLowerCase();
     return datasets.filter(
       (ds) =>
-        ds.id.toString().includes(search) ||
-        ds.dataset_name.toLowerCase().includes(search),
+        ds.id.toString().includes(inputValue) ||
+        matchesTokens(inputValue, ds.dataset_name),
     );
   }, [datasets, inputValue]);
 

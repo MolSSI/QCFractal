@@ -3,6 +3,7 @@ import * as qcpTypes from "../PortalTypes";
 import { usePortalClient } from "../PortalClient.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { matchesTokens } from "../Utils.ts";
 import {
   Box,
   Chip,
@@ -171,9 +172,7 @@ const DatasetList: React.FC = () => {
     const searchFilter = filter || "";
     return datasets.filter((dataset) => {
       const matchesSearch =
-        dataset.dataset_name
-          .toLowerCase()
-          .includes(searchFilter.toLowerCase()) ||
+        matchesTokens(searchFilter, dataset.dataset_name) ||
         dataset.id.toString().includes(searchFilter);
       const matchesType =
         typeFilter === "all" || dataset.dataset_type === typeFilter;

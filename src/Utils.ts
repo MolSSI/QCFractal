@@ -76,4 +76,27 @@ export function formatSize(bytes: number): string {
   const sizes = ["Bytes", "KiB", "MiB", "GiB", "TiB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-};
+}
+
+/**
+ * Checks if all tokens in the query string are present in the target string in the given order.
+ * Case-insensitive.
+ */
+export function matchesTokens(query: string, target: string | null | undefined): boolean {
+  if (!target) return false;
+  if (!query) return true;
+
+  const queryTokens = query.toLowerCase().split(/\s+/).filter((t) => t.length > 0);
+  const targetLower = target.toLowerCase();
+
+  let lastIndex = -1;
+  for (const token of queryTokens) {
+    const index = targetLower.indexOf(token, lastIndex + 1);
+    if (index === -1) {
+      return false;
+    }
+    lastIndex = index;
+  }
+
+  return true;
+}
