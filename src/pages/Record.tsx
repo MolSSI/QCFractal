@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import StatusChip from "../components/StatusChip.tsx";
 import RecordTypeChip from "../components/RecordTypeChip.tsx";
+import { RecordRelationshipButton } from "../components/RecordRelationshipDialog.tsx";
 import Comments from "../components/Comments.tsx";
 import ComputeHistory from "../components/ComputeHistory.tsx";
 import { FavoriteButton } from "../components/FavoriteButton.tsx";
@@ -105,6 +106,7 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
               recordType={recordData.record_type}
             />
             <RecordTypeChip type={recordData.record_type} />
+            <RecordRelationshipButton recordId={recordData.id} />
             {recordData.is_service && (
               <Chip
                 label="Service"
