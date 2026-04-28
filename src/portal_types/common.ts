@@ -277,6 +277,10 @@ export type DatasetQueryModel = {
 
 export type ProjectLinkDatasetBody = {
   dataset_id: number;
+  name: string | null;
+  description: string | null;
+  tagline: string | null;
+  tags: string[] | null;
 };
 
 export type ProjectUnlinkLinkDatasetBody = {

@@ -40,6 +40,10 @@ export const LinkDatasetDialog: React.FC<LinkDatasetDialogProps> = ({
     mutationFn: (datasetId: number) =>
       makeRequest<void>("POST", `/api/v1/projects/${projectId}/datasets/link`, {
         dataset_id: datasetId,
+        name: null,
+        description: null,
+        tagline: null,
+        tags: null
       } as qcpTypes.ProjectLinkDatasetBody),
     onSuccess: () => {
       onClose(true);
