@@ -339,7 +339,7 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
   const navigate = useNavigate();
 
   const isOwnProfile = !userName || userInfo?.username === userName;
-  const canManageUsers = has_permission("users", "modify") && !isOwnProfile;
+  const canManageUsers = has_permission("users", "modify");
   const endpoint = isOwnProfile ? "api/v1/me" : `api/v1/users/${userName}`;
 
   const { status, data: userData, error } = useQuery({
@@ -351,7 +351,7 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const patchMutation = useMutation<void, Error, qcpTypes.UserModifyBody>({
-    mutationFn: (body) => makeRequest<void>("PATCH", isOwnProfile ? "api/v1/me" : "api/v1/users", body),
+    mutationFn: (body) => makeRequest<void>("PATCH", canManageUsers ? "api/v1/users" : "api/v1/me", body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userInfo", userName ?? "me"] });
       queryClient.invalidateQueries({ queryKey: ["listUsers"] });
