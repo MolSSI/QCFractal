@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Alert,
   Avatar,
@@ -7,9 +7,17 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
+  MenuItem,
   Paper,
+  Select,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from "@mui/material";
@@ -260,6 +268,56 @@ const ChangePasswordForm: React.FC<{ username: string; onClose: () => void }> = 
   );
 };
 
+// ─── Role select row (admin-only) ─────────────────────────────────────────────
+
+const ROLE_OPTIONS = ["admin", "maintain", "monitor", "submit", "read"];
+
+const RoleSelectRow: React.FC<{ value: string; onSave: (val: string) => Promise<void> }> = ({ value, onSave }) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onSave(draft);
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setDraft(value);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", px: 2.5, py: 1.25, gap: 1.5, minHeight: 52 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ width: ROW_LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>
+          Role
+        </Typography>
+        <Select value={draft} onChange={(e) => setDraft(e.target.value)} size="small" sx={{ minWidth: 160 }}>
+          {ROLE_OPTIONS.map((r) => (
+            <MenuItem key={r} value={r}><RoleChip role={r} /></MenuItem>
+          ))}
+        </Select>
+        <Button size="small" variant="contained" onClick={handleSave} disabled={saving || draft === value} sx={{ minWidth: 56 }}>
+          {saving ? <CircularProgress size={14} /> : "Save"}
+        </Button>
+        <Button size="small" onClick={handleCancel} disabled={saving}>Cancel</Button>
+      </Box>
+    );
+  }
+
+  return (
+    <FieldRow label="Role" action={<Button size="small" variant="text" onClick={() => setEditing(true)}>Edit</Button>}>
+      <RoleChip role={value} />
+    </FieldRow>
+  );
+};
+
 // ─── Section label ────────────────────────────────────────────────────────────
 
 const SectionLabel: React.FC<{ children: string }> = ({ children }) => (
@@ -276,10 +334,12 @@ const SectionLabel: React.FC<{ children: string }> = ({ children }) => (
 
 const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
   const { makeRequest } = usePortalClient();
-  const { userInfo, ping } = useAuth();
+  const { userInfo, ping, has_permission } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const isOwnProfile = !userName || userInfo?.username === userName;
+  const canManageUsers = has_permission("users", "modify") && !isOwnProfile;
   const endpoint = isOwnProfile ? "api/v1/me" : `api/v1/users/${userName}`;
 
   const { status, data: userData, error } = useQuery({
@@ -288,12 +348,22 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
   });
 
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const patchMutation = useMutation<void, Error, qcpTypes.UserModifyBody>({
-    mutationFn: (body) => makeRequest<void>("PATCH", "api/v1/me", body),
+    mutationFn: (body) => makeRequest<void>("PATCH", isOwnProfile ? "api/v1/me" : "api/v1/users", body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["userInfo", "me"] });
-      ping();
+      queryClient.invalidateQueries({ queryKey: ["userInfo", userName ?? "me"] });
+      queryClient.invalidateQueries({ queryKey: ["listUsers"] });
+      if (isOwnProfile) ping();
+    },
+  });
+
+  const deleteMutation = useMutation<void, Error, void>({
+    mutationFn: () => makeRequest<void>("DELETE", `api/v1/users/${userData?.username}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["listUsers"] });
+      navigate("/users");
     },
   });
 
@@ -314,19 +384,33 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
   if (!userData) return null;
 
   const saveField = async (
-    field: "fullname" | "organization" | "email" | "username",
+    field: "fullname" | "organization" | "email" | "username" | "role",
     value: string,
   ) => {
     await patchMutation.mutateAsync({
       id: userData.id,
       username: field === "username" ? value : userData.username,
-      role: userData.role,
+      role: field === "role" ? value : userData.role,
       enabled: userData.enabled,
       groups: userData.groups,
       auth_type: userData.auth_type,
       fullname: field === "fullname" ? value || undefined : userData.fullname,
       organization: field === "organization" ? value || undefined : userData.organization,
       email: field === "email" ? value || undefined : userData.email,
+    });
+  };
+
+  const toggleEnabled = async () => {
+    await patchMutation.mutateAsync({
+      id: userData.id,
+      username: userData.username,
+      role: userData.role,
+      enabled: !userData.enabled,
+      groups: userData.groups,
+      auth_type: userData.auth_type,
+      fullname: userData.fullname,
+      organization: userData.organization,
+      email: userData.email,
     });
   };
 
@@ -413,14 +497,34 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
         <SectionLabel>Account</SectionLabel>
         <Paper variant="outlined" sx={{ mt: 0.75 }}>
           <Stack divider={<Divider />}>
-            <FieldRow label="Role">
-              <Stack direction="row" spacing={1} alignItems="center">
-                <RoleChip role={userData.role} />
-                <Typography variant="caption" color="text.disabled">
-                  managed by your admin
-                </Typography>
-              </Stack>
-            </FieldRow>
+            {canManageUsers ? (
+              <RoleSelectRow value={userData.role} onSave={(val) => saveField("role", val)} />
+            ) : (
+              <FieldRow label="Role">
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <RoleChip role={userData.role} />
+                  <Typography variant="caption" color="text.disabled">
+                    managed by your admin
+                  </Typography>
+                </Stack>
+              </FieldRow>
+            )}
+
+            {canManageUsers && (
+              <FieldRow label="Enabled">
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Switch
+                    checked={userData.enabled}
+                    onChange={toggleEnabled}
+                    disabled={patchMutation.isPending}
+                    size="small"
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    {userData.enabled ? "Active" : "Disabled"}
+                  </Typography>
+                </Stack>
+              </FieldRow>
+            )}
 
             <FieldRow label="Groups">
               {userData.groups.length === 0 ? (
@@ -465,6 +569,55 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
             </FieldRow>
           </Stack>
         </Paper>
+        {canManageUsers && (
+          <>
+            <SectionLabel>Danger Zone</SectionLabel>
+            <Paper
+              variant="outlined"
+              sx={{ mt: 0.75, borderColor: "error.main" }}
+            >
+              <FieldRow
+                label="Delete user"
+                action={
+                  <Button
+                    size="small"
+                    color="error"
+                    variant="outlined"
+                    onClick={() => setDeleteDialogOpen(true)}
+                  >
+                    Delete
+                  </Button>
+                }
+              >
+                <Typography variant="body2" color="text.secondary">
+                  Permanently remove this account.
+                </Typography>
+              </FieldRow>
+            </Paper>
+
+            <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+              <DialogTitle>Delete user?</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  This will permanently delete <strong>{userData.username}</strong>. This action cannot be undone.
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleteMutation.isPending}>
+                  Cancel
+                </Button>
+                <Button
+                  color="error"
+                  variant="contained"
+                  onClick={() => deleteMutation.mutate()}
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending ? <CircularProgress size={14} /> : "Delete"}
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </>
+        )}
       </Box>
     </Box>
   );
