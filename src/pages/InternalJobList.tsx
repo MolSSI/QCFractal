@@ -1,6 +1,7 @@
 import { usePortalClient } from "../PortalClient.tsx";
 import { useQuery } from "@tanstack/react-query";
 import React, { useMemo, useState } from "react";
+import { usePageTitle } from "../UsePageTitle.ts";
 import { InternalJobFragment } from "../components/InternalJobFragment.tsx";
 import * as qcpTypes from "../PortalTypes.ts";
 import {
@@ -81,6 +82,7 @@ const InternalJobRow: React.FC<{ job: qcpTypes.InternalJob }> = ({ job }) => {
 };
 
 export default function InternalJobList() {
+  usePageTitle("Internal Jobs");
   const internalJobQueryBody = useMemo(
     () => ({
       status: ["waiting", "running"],

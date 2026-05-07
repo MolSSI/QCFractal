@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { usePortalClient } from "../PortalClient.tsx";
+import { usePageTitle } from "../UsePageTitle.ts";
 import * as qcpTypes from "../PortalTypes";
 import { useLocation, useParams } from "react-router-dom";
 import {
@@ -239,13 +240,10 @@ export default function Dataset() {
     enabled: datasetIdNumber !== null && !Number.isNaN(datasetIdNumber),
   });
 
-  useEffect(() => {
-    if (datasetData) {
-      document.title = `Dataset ${datasetData.id}: ${datasetData.name}`;
-    } else {
-      document.title = `Dataset ${datasetId}`;
-    }
-  }, [datasetData, datasetId]);
+  const pageTitle = datasetData
+    ? `Dataset ${datasetData.id}: ${datasetData.name}`
+    : `Dataset ${datasetId}`;
+  usePageTitle(pageTitle);
 
   const { data: statusData } = useQuery({
     queryKey: ["datasetStatus", datasetData?.dataset_type, datasetIdNumber],

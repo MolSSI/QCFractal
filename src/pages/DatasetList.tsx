@@ -4,6 +4,7 @@ import { usePortalClient } from "../PortalClient.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { matchesTokens } from "../Utils.ts";
+import { usePageTitle } from "../UsePageTitle.ts";
 import {
   Box,
   Chip,
@@ -150,6 +151,7 @@ const DatasetRow: React.FC<{ dataset: qcpTypes.DatasetListEntry }> = ({
 };
 
 const DatasetList: React.FC = () => {
+  usePageTitle("Datasets");
   const { makeRequest } = usePortalClient();
 
   const [page, setPage] = React.useState(0);

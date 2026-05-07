@@ -1,4 +1,5 @@
 import * as React from "react";
+import { usePageTitle } from "../UsePageTitle.ts";
 import {
   Box,
   Stack,
@@ -49,6 +50,7 @@ function ColorSwatch({ label, color }: { label: string; color: string }) {
 }
 
 export default function ThemePlaygroundPage() {
+  usePageTitle("Theme Playground");
   const theme = useTheme();
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [disabled, setDisabled] = React.useState(false);

@@ -1,6 +1,7 @@
 import { usePortalClient } from "../PortalClient.tsx";
 import { useQuery } from "@tanstack/react-query";
 import React, { useMemo, useState } from "react";
+import { usePageTitle } from "../UsePageTitle.ts";
 import { ServerErrorFragment } from "../components/ServerErrorFragment.tsx";
 import * as qcpTypes from "../PortalTypes.ts";
 import {
@@ -84,6 +85,7 @@ const ServerErrorRow: React.FC<{ errorLog: qcpTypes.ServerErrorLog }> = ({
 };
 
 export default function ServerErrorList() {
+  usePageTitle("Server Errors");
   const { makeRequest } = usePortalClient();
   const { serverInfo } = useAuth();
 

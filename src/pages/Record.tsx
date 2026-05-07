@@ -7,7 +7,8 @@ import ErrorIndicator from "../components/ErrorIndicator";
 import { useQuery } from "@tanstack/react-query";
 
 import { getRecordDetailsComponent } from "../components/record_components/lookup";
-import React, { useEffect } from "react";
+import React from "react";
+import { usePageTitle } from "../UsePageTitle.ts";
 import {
   Box,
   Button,
@@ -191,14 +192,10 @@ function Record() {
     enabled: validRecordId,
   });
 
-  useEffect(() => {
-    if (recordData) {
-      const recordName = recordData.name ? recordData.name.trim() : "";
-      document.title = `Record ${recordData.id}${recordName ? ": " + recordName : ""}`;
-    } else {
-      document.title = `Record ${parsedRecordId}`;
-    }
-  }, [recordData, parsedRecordId]);
+  const pageTitle = recordData ?
+    `Record ${recordData.id}${recordData.name ? ": " + recordData.name.trim() : ""}`
+    : `Record ${parsedRecordId}`;
+  usePageTitle(pageTitle);
 
   if (!validRecordId) {
     return <ErrorIndicator fullPage message="Invalid record ID" />;

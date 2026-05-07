@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { usePageTitle } from "../UsePageTitle.ts";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Alert,
@@ -335,6 +336,10 @@ const SectionLabel: React.FC<{ children: string }> = ({ children }) => (
 const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
   const { makeRequest } = usePortalClient();
   const { userInfo, ping, has_permission } = useAuth();
+
+  const pageTitle = userName ? `User Profile: ${userName}` : "Your Profile";
+  usePageTitle(pageTitle);
+
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 

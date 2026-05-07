@@ -1,6 +1,7 @@
 import { usePortalClient } from "../PortalClient.tsx";
 import { useQuery } from "@tanstack/react-query";
 import React, { useMemo, useState } from "react";
+import { usePageTitle } from "../UsePageTitle.ts";
 import { ManagerFragment } from "../components/ManagerFragment.tsx";
 import * as qcpTypes from "../PortalTypes.ts";
 import {
@@ -117,6 +118,7 @@ const ManagerRow: React.FC<{ manager: qcpTypes.Manager }> = ({ manager }) => {
 };
 
 export default function ManagerList() {
+  usePageTitle("Compute Managers");
   const managerQueryBody = useMemo<qcpTypes.ManagerQueryFilters>(
     () => ({
       status: ["active"],

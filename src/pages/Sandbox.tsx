@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { usePageTitle } from "../UsePageTitle.ts";
 import { MoleculeStageProvider, MoleculeViewer } from "../components/Molecule";
 import { useState } from "react";
 import { usePortalClient } from "../PortalClient.tsx";
@@ -10,6 +11,7 @@ import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
 
 const SandboxPage = () => {
+  usePageTitle("Sandbox");
   const navigate = useNavigate();
 
   const { makeRequest } = usePortalClient();

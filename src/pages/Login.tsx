@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { usePageTitle } from "../UsePageTitle.ts";
 import AppTheme from "../shared-theme/AppTheme";
 import {
   Box,
@@ -13,6 +14,7 @@ import { useAuth } from "../Auth.tsx";
 import { alpha } from "@mui/material/styles";
 
 const LoginPage: React.FC = () => {
+  usePageTitle("Login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");

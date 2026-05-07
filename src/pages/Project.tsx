@@ -1,6 +1,7 @@
 // src/pages/Profile.tsx
 import { usePortalClient } from "../PortalClient.tsx";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { usePageTitle } from "../UsePageTitle.ts";
 import * as qcpTypes from "../PortalTypes";
 import { useLocation, useParams } from "react-router-dom";
 import { Box, Chip, Grid, Paper, Tab, Tabs, Typography } from "@mui/material";
@@ -59,11 +60,8 @@ export default function Project() {
     enabled: projectIdNumber !== null && !Number.isNaN(projectIdNumber),
   });
 
-  useEffect(() => {
-    if (projectData) {
-      document.title = `Project ${projectId}: ${projectData.name}`;
-    }
-  }, [projectData, projectId]);
+  const pageTitle = projectData ? `Project ${projectId}: ${projectData.name}` : `Proejct ${projectId}`;
+  usePageTitle(pageTitle);
 
   const {
     status: datasetMetadataStatus,

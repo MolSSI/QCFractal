@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { usePortalClient } from "../PortalClient.tsx";
 import React from "react";
+import { usePageTitle } from "../UsePageTitle.ts";
 import * as qcpTypes from "../PortalTypes.ts";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -27,6 +28,8 @@ import { dateStringToLocalTime } from "../Utils.ts";
 
 export default function Manager() {
   const { managerName } = useParams();
+
+  usePageTitle(`Manager: ${managerName}`);
 
   const { makeRequest } = usePortalClient();
 

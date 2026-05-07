@@ -4,6 +4,7 @@ import { usePortalClient } from "../PortalClient.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { matchesTokens } from "../Utils.ts";
+import { usePageTitle } from "../UsePageTitle.ts";
 import {
   Box,
   Chip,
@@ -157,6 +158,7 @@ const ProjectRow: React.FC<{ project: qcpTypes.ProjectListEntry }> = ({
 };
 
 const ProjectList: React.FC = () => {
+  usePageTitle("Projects");
   const { makeRequest } = usePortalClient();
   const { has_permission } = useAuth();
 

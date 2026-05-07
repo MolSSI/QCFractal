@@ -24,10 +24,12 @@ import { usePortalClient } from "../PortalClient.tsx";
 import { useQuery } from "@tanstack/react-query";
 import * as qcpTypes from "../PortalTypes";
 import LoadingIndicator from "../components/LoadingIndicator";
+import { usePageTitle } from "../UsePageTitle.ts";
 import { RecordTypeChip } from "../components/RecordTypeChip.tsx";
 import StatusChip from "../components/StatusChip.tsx";
 
 const HomePage: React.FC = () => {
+  usePageTitle("Home");
   const { loggedIn, has_permission } = useAuth();
   const { preferences } = usePreferences();
   const { makeRequest } = usePortalClient();
