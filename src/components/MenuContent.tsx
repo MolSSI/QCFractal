@@ -8,7 +8,7 @@ import Stack from "@mui/material/Stack";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import CarpenterIcon from "@mui/icons-material/Carpenter";
+//import CarpenterIcon from "@mui/icons-material/Carpenter";
 import ComputerIcon from "@mui/icons-material/Computer";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 import BugReportIcon from "@mui/icons-material/BugReport";
@@ -44,8 +44,8 @@ const bottomListItems: {
   path: string;
   target?: string;
 }[] = [
-  { text: "Sandbox", icon: <CarpenterIcon />, path: "/sandbox" },
-  { text: "Theme Playground", icon: <CarpenterIcon />, path: "/themeplayground" },
+//  { text: "Sandbox", icon: <CarpenterIcon />, path: "/sandbox" },
+//  { text: "Theme Playground", icon: <CarpenterIcon />, path: "/themeplayground" },
 ];
 
 if (feedbackUrl) {
