@@ -24,6 +24,7 @@ import * as qcpTypes from "../PortalTypes";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
 import { RoleChip } from "../components/RoleChip";
+import { usePageTitle } from "../UsePageTitle.ts";
 
 function getInitials(fullname?: string, username?: string): string {
   if (fullname) {
@@ -84,6 +85,8 @@ const UserList: React.FC = () => {
   const [filter, setFilter] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
+
+  usePageTitle("Users");
 
   const { status, data: users, error } = useQuery({
     queryKey: ["listUsers"],
