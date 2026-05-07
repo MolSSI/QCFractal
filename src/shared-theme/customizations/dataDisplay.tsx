@@ -1,4 +1,4 @@
-import { Theme, alpha, Components } from "@mui/material/styles";
+import { Theme, Components } from "@mui/material/styles";
 import { svgIconClasses } from "@mui/material/SvgIcon";
 import { typographyClasses } from "@mui/material/Typography";
 import { buttonBaseClasses } from "@mui/material/ButtonBase";
@@ -34,22 +34,17 @@ export const dataDisplayCustomizations: Components<Theme> = {
           gap: 8,
           padding: "2px 8px",
           borderRadius: (theme.vars || theme).shape.borderRadius,
-          opacity: 0.7,
           "&.Mui-selected": {
-            opacity: 1,
-            backgroundColor: alpha(theme.palette.action.selected, 0.3),
+            backgroundColor: (theme.vars || theme).palette.action.selected,
             [`& .${svgIconClasses.root}`]: {
               color: (theme.vars || theme).palette.text.primary,
             },
             "&:focus-visible": {
-              backgroundColor: alpha(theme.palette.action.selected, 0.3),
+              backgroundColor: (theme.vars || theme).palette.action.selected,
             },
             "&:hover": {
-              backgroundColor: alpha(theme.palette.action.selected, 0.5),
+              backgroundColor: (theme.vars || theme).palette.action.hover,
             },
-          },
-          "&:focus-visible": {
-            backgroundColor: "transparent",
           },
         },
       }),

@@ -17,7 +17,7 @@ export const navigationCustomizations: Components<Theme> = {
         borderRadius: (theme.vars || theme).shape.borderRadius,
         padding: "6px 8px",
         [`&.${menuItemClasses.focusVisible}`]: {
-          backgroundColor: "transparent",
+          backgroundColor: (theme.vars || theme).palette.action.selected,
         },
         [`&.${menuItemClasses.selected}`]: {
           [`&.${menuItemClasses.focusVisible}`]: {
@@ -85,7 +85,6 @@ export const navigationCustomizations: Components<Theme> = {
         },
 
         ...theme.applyStyles("dark", {
-          borderRadius: (theme.vars || theme).shape.borderRadius,
           borderColor: gray[700],
           backgroundColor: (theme.vars || theme).palette.background.paper,
           boxShadow: `inset 0 1px 0 1px ${alpha(gray[700], 0.15)}, inset 0 -1px 0 1px hsla(220, 0%, 0%, 0.7)`,
@@ -98,17 +97,12 @@ export const navigationCustomizations: Components<Theme> = {
             outlineOffset: 0,
             borderColor: gray[900],
           },
-          "&:before, &:after": {
-            display: "none",
-          },
         }),
       }),
       select: ({ theme }) => ({
         display: "flex",
         alignItems: "center",
         ...theme.applyStyles("dark", {
-          display: "flex",
-          alignItems: "center",
           "&:focus-visible": {
             backgroundColor: gray[900],
           },
@@ -142,7 +136,7 @@ export const navigationCustomizations: Components<Theme> = {
           width: 0,
         },
         "&:focus-visible": {
-          outline: `3px solid ${alpha(brand[500], 0.5)}`,
+          outline: `3px solid ${brand[400]}`,
           outlineOffset: "4px",
           borderRadius: "2px",
         },
