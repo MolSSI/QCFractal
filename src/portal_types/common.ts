@@ -15,7 +15,6 @@ export type ServerInfo = {
 
 export type UserInfo = {
   id?: number;
-  user_id?: number;
   username: string;
   groups: string[];
   role: string;
@@ -244,18 +243,6 @@ export type ComputeHistory = {
     qcengine_version: string;
     wall_time: number;
   };
-};
-
-export type UserModifyBody = {
-  id?: number;
-  username: string;
-  role: string;
-  enabled: boolean;
-  groups: string[];
-  auth_type: string;
-  fullname?: string;
-  organization?: string;
-  email?: string;
 };
 
 export type Session = {

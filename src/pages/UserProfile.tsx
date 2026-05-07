@@ -355,7 +355,7 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const patchMutation = useMutation<void, Error, qcpTypes.UserModifyBody>({
+  const patchMutation = useMutation<void, Error, qcpTypes.UserInfo>({
     mutationFn: (body) => makeRequest<void>("PATCH", canManageUsers ? "api/v1/users" : "api/v1/me", body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userInfo", userName ?? "me"] });
