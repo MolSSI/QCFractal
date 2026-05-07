@@ -20,7 +20,7 @@ export const inputsCustomizations: Components<Theme> = {
         boxSizing: "border-box",
         transition: "all 100ms ease-in",
         "&:focus-visible": {
-          outline: `3px solid ${alpha(theme.palette.primary.main, 0.5)}`,
+          outline: `3px solid ${(theme.vars || theme).palette.primary.main}`,
           outlineOffset: "2px",
         },
       }),
@@ -181,11 +181,11 @@ export const inputsCustomizations: Components<Theme> = {
             style: {
               color: (theme.vars || theme).palette.text.primary,
               border: "1px solid",
-              borderColor: gray[200],
+              borderColor: gray[300],
               backgroundColor: alpha(gray[50], 0.3),
               "&:hover": {
                 backgroundColor: gray[100],
-                borderColor: gray[300],
+                borderColor: gray[400],
               },
               "&:active": {
                 backgroundColor: gray[200],
@@ -296,15 +296,20 @@ export const inputsCustomizations: Components<Theme> = {
         fontWeight: theme.typography.fontWeightMedium,
         letterSpacing: 0,
         color: (theme.vars || theme).palette.text.primary,
-        border: "1px solid ",
-        borderColor: gray[200],
+        border: "1px solid",
+        borderColor: gray[300],
         backgroundColor: alpha(gray[50], 0.3),
         "&:hover": {
           backgroundColor: gray[100],
-          borderColor: gray[300],
+          borderColor: gray[400],
         },
         "&:active": {
           backgroundColor: gray[200],
+        },
+        "&.Mui-disabled": {
+          color: gray[500],
+          backgroundColor: gray[200],
+          borderColor: gray[200],
         },
         ...theme.applyStyles("dark", {
           backgroundColor: gray[800],
@@ -322,16 +327,6 @@ export const inputsCustomizations: Components<Theme> = {
             borderColor: gray[700],
           },
         }),
-        "&.Mui-disabled": {
-          color: gray[500],
-          backgroundColor: gray[200],
-          borderColor: gray[200],
-        },
-        "&:disabled": {
-          color: gray[500],
-          backgroundColor: gray[200],
-          borderColor: gray[200],
-        },
         variants: [
           {
             props: {
@@ -360,7 +355,7 @@ export const inputsCustomizations: Components<Theme> = {
   MuiToggleButtonGroup: {
     styleOverrides: {
       root: ({ theme }) => ({
-        borderRadius: "10px",
+        borderRadius: (theme.vars || theme).shape.borderRadius,
         boxShadow: `0 4px 16px ${alpha(gray[400], 0.2)}`,
         [`& .${toggleButtonGroupClasses.selected}`]: {
           color: brand[500],
@@ -379,7 +374,7 @@ export const inputsCustomizations: Components<Theme> = {
       root: ({ theme }) => ({
         padding: "12px 16px",
         textTransform: "none",
-        borderRadius: "10px",
+        borderRadius: (theme.vars || theme).shape.borderRadius,
         fontWeight: 500,
         ...theme.applyStyles("dark", {
           color: gray[400],
@@ -417,7 +412,7 @@ export const inputsCustomizations: Components<Theme> = {
           borderColor: brand[300],
         },
         "&.Mui-focusVisible": {
-          outline: `3px solid ${alpha(brand[500], 0.5)}`,
+          outline: `3px solid ${brand[400]}`,
           outlineOffset: "2px",
           borderColor: brand[400],
         },
@@ -439,7 +434,7 @@ export const inputsCustomizations: Components<Theme> = {
           },
           "&.Mui-focusVisible": {
             borderColor: brand[400],
-            outline: `3px solid ${alpha(brand[500], 0.5)}`,
+            outline: `3px solid ${brand[400]}`,
             outlineOffset: "2px",
           },
         }),
@@ -453,7 +448,6 @@ export const inputsCustomizations: Components<Theme> = {
       },
       input: {
         "&::placeholder": {
-          opacity: 0.7,
           color: gray[500],
         },
       },
@@ -469,17 +463,19 @@ export const inputsCustomizations: Components<Theme> = {
         padding: "8px 12px",
         color: (theme.vars || theme).palette.text.primary,
         borderRadius: (theme.vars || theme).shape.borderRadius,
-        border: `1px solid ${(theme.vars || theme).palette.divider}`,
+        border: "1px solid",
+        borderColor: gray[300],
         backgroundColor: (theme.vars || theme).palette.background.default,
-        transition: "border 120ms ease-in",
+        transition: "border-color 120ms ease-in",
         "&:hover": {
           borderColor: gray[400],
         },
         [`&.${outlinedInputClasses.focused}`]: {
-          outline: `3px solid ${alpha(brand[500], 0.5)}`,
+          outline: `3px solid ${brand[400]}`,
           borderColor: brand[400],
         },
         ...theme.applyStyles("dark", {
+          borderColor: gray[600],
           "&:hover": {
             borderColor: gray[500],
           },
@@ -533,6 +529,11 @@ export const inputsCustomizations: Components<Theme> = {
           borderRadius: "2px",
           lineHeight: 1.2,
         },
+        ...theme.applyStyles("dark", {
+          "&.Mui-focused": {
+            color: (theme.vars || theme).palette.primary.light,
+          },
+        }),
       }),
     },
   },

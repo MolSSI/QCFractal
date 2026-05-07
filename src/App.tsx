@@ -17,6 +17,7 @@ const ServerErrorList = lazy(() => import("./pages/ServerErrorList.tsx"));
 const Dataset = lazy(() => import("./pages/Dataset.tsx"));
 const DatasetList = lazy(() => import("./pages/DatasetList.tsx"));
 const UserProfile = lazy(() => import("./pages/UserProfile.tsx").then(m => ({ default: m.UserProfile })));
+const UserList = lazy(() => import("./pages/UserList.tsx").then(m => ({ default: m.UserList })));
 const AddProjectRecord = lazy(() => import("./components/AddProjectRecord.tsx"));
 const ThemePlaygroundPage = lazy(() => import("./pages/ThemePlayground.tsx"));
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -56,6 +57,7 @@ function App() {
                         <Route path="/sandbox" element={<SandboxPage />} />
                         <Route path="/themeplayground" element={<ThemePlaygroundPage />} />
                         <Route path="/me" element={<UserProfile />} />
+                        <Route path="/users" element={<UserList />} />
                         <Route path="/users/:userName" element={<UserProfile />} />
                         <Route path="/projects" element={<ProjectList />} />
                         <Route path="/projects/:projectId" element={<Project />} />

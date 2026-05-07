@@ -1,0 +1,186 @@
+import React, { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  Avatar,
+  Box,
+  Chip,
+  Grid,
+  Paper,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
+import { usePortalClient } from "../PortalClient";
+import { useAuth } from "../Auth";
+import * as qcpTypes from "../PortalTypes";
+import LoadingIndicator from "../components/LoadingIndicator";
+import ErrorIndicator from "../components/ErrorIndicator";
+import { RoleChip } from "../components/RoleChip";
+
+function getInitials(fullname?: string, username?: string): string {
+  if (fullname) {
+    const parts = fullname.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return parts[0][0]?.toUpperCase() ?? "?";
+  }
+  return (username ?? "?").slice(0, 2).toUpperCase();
+}
+
+const UserRow: React.FC<{ user: qcpTypes.UserInfo }> = ({ user }) => {
+  const initials = getInitials(user.fullname, user.username);
+  return (
+    <TableRow hover>
+      <TableCell>
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          <Avatar sx={{ width: 32, height: 32, fontSize: "0.75rem", bgcolor: "primary.main" }}>
+            {initials}
+          </Avatar>
+          <Typography
+            variant="body2"
+            fontWeight="bold"
+            component={Link}
+            to={`/users/${user.username}`}
+            sx={{ textDecoration: "none", color: "inherit", "&:hover": { textDecoration: "underline" } }}
+          >
+            {user.username}
+          </Typography>
+        </Stack>
+      </TableCell>
+      <TableCell>
+        <Typography variant="body2">{user.fullname ?? "—"}</Typography>
+      </TableCell>
+      <TableCell>
+        <Typography variant="body2" color="text.secondary">{user.email ?? "—"}</Typography>
+      </TableCell>
+      <TableCell>
+        <RoleChip role={user.role} />
+      </TableCell>
+      <TableCell>
+        <Chip
+          label={user.enabled ? "Active" : "Disabled"}
+          size="small"
+          color={user.enabled ? "success" : "default"}
+          variant="outlined"
+        />
+      </TableCell>
+      <TableCell>
+        <Chip label={user.auth_type} size="small" variant="outlined" />
+      </TableCell>
+    </TableRow>
+  );
+};
+
+const UserList: React.FC = () => {
+  const { makeRequest } = usePortalClient();
+  const { has_permission } = useAuth();
+  const [filter, setFilter] = useState("");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
+
+  const { status, data: users, error } = useQuery({
+    queryKey: ["listUsers"],
+    queryFn: () => makeRequest<qcpTypes.UserInfo[]>("GET", "api/v1/users"),
+    enabled: has_permission("users", "read"),
+  });
+
+  const filtered = useMemo(() => {
+    if (!users) return [];
+    const q = filter.toLowerCase();
+    return users.filter(
+      (u) =>
+        u.username.toLowerCase().includes(q) ||
+        (u.fullname ?? "").toLowerCase().includes(q) ||
+        (u.email ?? "").toLowerCase().includes(q),
+    );
+  }, [users, filter]);
+
+  if (!has_permission("users", "read")) {
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh" }}>
+        <Typography color="text.secondary">You do not have permission to view users.</Typography>
+      </Box>
+    );
+  }
+
+  if (status === "pending") {
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh" }}>
+        <LoadingIndicator />
+      </Box>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "70vh" }}>
+        <ErrorIndicator message={error.message} />
+      </Box>
+    );
+  }
+
+  return (
+    <Grid container spacing={2} width="100%">
+      <Grid size={12}>
+        <Typography variant="h4" marginBottom={3}>Users</Typography>
+        <Box width="30%" mb={2}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            size="small"
+            label="Filter users"
+            value={filter}
+            onChange={(e) => { setFilter(e.target.value); setPage(0); }}
+          />
+        </Box>
+        {filtered.length > 0 ? (
+          <>
+            <TableContainer component={Paper} variant="outlined">
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Username</TableCell>
+                    <TableCell>Full Name</TableCell>
+                    <TableCell>Email</TableCell>
+                    <TableCell>Role</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Auth</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filtered
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    .map((user) => (
+                      <UserRow key={user.username} user={user} />
+                    ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <TablePagination
+              rowsPerPageOptions={[10, 20, 50]}
+              component="div"
+              count={filtered.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={(_e, p) => setPage(p)}
+              onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+            />
+          </>
+        ) : (
+          <Typography variant="body1">
+            {filter ? "(no users match the filter)" : "(no users found)"}
+          </Typography>
+        )}
+      </Grid>
+    </Grid>
+  );
+};
+
+export { UserList };
