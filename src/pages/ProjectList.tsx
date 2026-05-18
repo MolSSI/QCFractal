@@ -30,7 +30,7 @@ import ErrorIndicator from "../components/ErrorIndicator";
 import { FavoriteButton } from "../components/FavoriteButton.tsx";
 import { useAuth } from "../Auth.tsx";
 import { AddProjectButton } from "../components/project_components/AddProjectDialog";
-import ReactMarkdown from "react-markdown";
+import MarkdownContent from "../components/MarkdownContent";
 
 const ProjectRow: React.FC<{ project: qcpTypes.ProjectListEntry }> = ({
   project,
@@ -131,9 +131,9 @@ const ProjectRow: React.FC<{ project: qcpTypes.ProjectListEntry }> = ({
                         Description
                       </Typography>
                       <Typography variant="body2" component="div">
-                        <ReactMarkdown>
+                        <MarkdownContent>
                           {projectDetails.description.trim()}
-                        </ReactMarkdown>
+                        </MarkdownContent>
                       </Typography>
                     </Box>
                   )}
