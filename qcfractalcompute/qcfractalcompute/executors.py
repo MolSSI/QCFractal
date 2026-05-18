@@ -94,6 +94,7 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
                 worker_init=";".join(executor_config.worker_init),
                 scheduler_options="\n".join(executor_config.scheduler_options),
             ),
+            **executor_config.extra_executor_options,
         )
 
     elif executor_config.type == "torque":
@@ -123,6 +124,7 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
                 worker_init=";".join(executor_config.worker_init),
                 scheduler_options="\n".join(executor_config.scheduler_options),
             ),
+            **executor_config.extra_executor_options,
         )
 
     elif executor_config.type == "lsf":
@@ -162,6 +164,7 @@ def build_executor(executor_label: str, executor_config: ExecutorConfig) -> Pars
                 worker_init=";".join(executor_config.worker_init),
                 scheduler_options="\n".join(executor_config.scheduler_options),
             ),
+            **executor_config.extra_executor_options,
         )
 
     elif executor_config.type == "custom":
