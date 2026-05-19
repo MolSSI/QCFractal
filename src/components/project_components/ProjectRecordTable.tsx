@@ -22,7 +22,7 @@ import { Link, useParams } from "react-router-dom";
 import * as qcpTypes from "../../PortalTypes";
 import { RecordTypeChip } from "../RecordTypeChip.tsx";
 import { StatusChip } from "../StatusChip.tsx";
-import ReactMarkdown from "react-markdown";
+import MarkdownContent from "../MarkdownContent";
 
 interface ProjectRecordTableProps {
   recordMetadata: qcpTypes.ProjectRecordMetadata[];
@@ -85,7 +85,7 @@ function RecordRow({
                     Description
                   </Typography>
                   <Typography variant="body2">
-                    <ReactMarkdown>{record.description.trim()}</ReactMarkdown>
+                    <MarkdownContent>{record.description.trim()}</MarkdownContent>
                   </Typography>
                 </Box>
               )}

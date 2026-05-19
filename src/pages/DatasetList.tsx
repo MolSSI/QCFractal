@@ -33,7 +33,7 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
 import { FavoriteButton } from "../components/FavoriteButton.tsx";
-import ReactMarkdown from "react-markdown";
+import MarkdownContent from "../components/MarkdownContent";
 
 const DatasetRow: React.FC<{ dataset: qcpTypes.DatasetListEntry }> = ({
   dataset,
@@ -124,9 +124,9 @@ const DatasetRow: React.FC<{ dataset: qcpTypes.DatasetListEntry }> = ({
                         Description
                       </Typography>
                       <Typography variant="body2" component="div">
-                        <ReactMarkdown>
+                        <MarkdownContent>
                           {datasetDetails.description.trim()}
-                        </ReactMarkdown>
+                        </MarkdownContent>
                       </Typography>
                     </Box>
                   )}
