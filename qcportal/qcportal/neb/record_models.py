@@ -315,7 +315,7 @@ class NEBRecord(BaseRecord):
     @property
     def result(self):
         if self.status != RecordStatusEnum.complete:
-            raise RuntimeError(f"Cannot create QCSchema result from record with status {self.status}")
+            raise ValueError("NEB result is only available after the calculation is complete.")
 
         if self.neb_result_ is None:
             # Fetch the result if possible

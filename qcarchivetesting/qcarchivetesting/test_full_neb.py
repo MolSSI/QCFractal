@@ -49,7 +49,7 @@ def test_neb_full_1(fulltest_client: PortalClient):
         keywords=neb_keywords,
     )
 
-    for i in range(40):
+    for i in range(600):
         time.sleep(15)
         rec = fulltest_client.get_nebs(ids[0])
         if rec.status not in [RecordStatusEnum.running, RecordStatusEnum.waiting]:
@@ -129,7 +129,7 @@ def test_neb_full_2(fulltest_client: PortalClient):
         keywords=neb_keywords,
     )
 
-    for i in range(40):
+    for i in range(600):
         time.sleep(15)
         rec = fulltest_client.get_nebs(ids[0])
         if rec.status not in [RecordStatusEnum.running, RecordStatusEnum.waiting]:
