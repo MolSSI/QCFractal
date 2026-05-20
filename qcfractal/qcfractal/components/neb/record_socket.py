@@ -318,9 +318,12 @@ class NEBRecordSocket(BaseRecordSocket):
         has_optimization = bool(neb_spec.optimization_specification)
         qc_spec = neb_orm.specification.singlepoint_specification.model_dict()
         if service_state.tsoptimize and service_state.converged:
+            # 5/19/2026 HP: geomeTRIC will convert the Hessian list into an NxN array in a future release.
+            side_length = int(len(service_state.tshessian)**0.5)
+            hessian = [service_state.tshessian[i*side_length : (i+1)*side_length] for i in range(side_length)]
             if has_optimization:
                 opt_spec = neb_orm.specification.optimization_specification.model_dict()
-                opt_spec["keywords"]["hessian"] = service_state.tshessian
+                opt_spec["keywords"]["hess_data"] = hessian
                 opt_spec["keywords"]["transition"] = True
                 opt_spec["program"] = "geometric"
                 opt_spec = OptimizationSpecification(
@@ -334,7 +337,7 @@ class NEBRecordSocket(BaseRecordSocket):
                     keywords={
                         "transition": True,
                         "coordsys": "tric",
-                        "hessian": service_state.tshessian,
+                        "hess_data": hessian,
                     },
                 )
             ts = True

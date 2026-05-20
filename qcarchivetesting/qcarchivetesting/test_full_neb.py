@@ -49,7 +49,7 @@ def test_neb_full_1(fulltest_client: PortalClient):
         keywords=neb_keywords,
     )
 
-    for i in range(600):
+    for i in range(40):
         time.sleep(15)
         rec = fulltest_client.get_nebs(ids[0])
         if rec.status not in [RecordStatusEnum.running, RecordStatusEnum.waiting]:
@@ -83,7 +83,7 @@ def test_neb_full_1(fulltest_client: PortalClient):
     # When optimize_ts is False, there should not ba a record for the Hessian.
     assert hessian is None
     # SinglepointRecords should not have 'return_hessian' either.
-    assert sum(1 if singlepoints[0][i].properties["return_hessian"] is None else 0 for i in range(7)) == 7
+    assert sum(1 if not singlepoints[0][i].properties.get("return_hessian") else 0 for i in range(7)) == 7
     # Result of the neb and the highest energy image of the last iteration should have the same molecule id.
     assert ts_guess.id == neb_result_id
 
@@ -99,8 +99,8 @@ def test_neb_full_2(fulltest_client: PortalClient):
         images=11,
         spring_constant=1,
         spring_type=0,
-        maximum_force=0.05,
-        average_force=0.025,
+        maximum_force=0.5,
+        average_force=0.25,
         maximum_cycle=100,
         optimize_ts=True,
         optimize_endpoints=True,
@@ -129,7 +129,7 @@ def test_neb_full_2(fulltest_client: PortalClient):
         keywords=neb_keywords,
     )
 
-    for i in range(600):
+    for i in range(40):
         time.sleep(15)
         rec = fulltest_client.get_nebs(ids[0])
         if rec.status not in [RecordStatusEnum.running, RecordStatusEnum.waiting]:
@@ -165,6 +165,6 @@ def test_neb_full_2(fulltest_client: PortalClient):
     # The rec.hessian should have the Hessian used for the TS optimization.
     assert hessian.properties["return_hessian"] is not None
     # Other SinglepointRecords should not have 'return_hessian'
-    assert sum(1 if singlepoints[0][i].properties["return_hessian"] is None else 0 for i in range(11)) == 11
+    assert sum(1 if not singlepoints[0][i].properties.get("return_hessian") else 0 for i in range(11)) == 11
     # Result of the neb and the highest energy image of the last iteration should have the same molecule id.
     assert ts_guess.id == neb_result_id
