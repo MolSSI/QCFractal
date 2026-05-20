@@ -1,4 +1,11 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  useEffect,
+  useDeferredValue,
+} from "react";
 import {
   Box,
   Button,
@@ -27,6 +34,11 @@ import LoadingIndicator from "./LoadingIndicator";
 import ErrorIndicator from "./ErrorIndicator";
 import { stripAnsi } from "../Utils.ts";
 
+// Line height must match: font-size 0.85rem (~13.6px) × line-height 1.5 ≈ 20.4px → round up
+const LINE_HEIGHT = 21;
+// Extra lines to render above/below viewport to avoid visible blank flashes on fast scroll
+const RENDER_BUFFER = 20;
+
 interface ViewOutputDialogProps {
   recordType: string;
   recordId: number;
@@ -42,6 +54,11 @@ interface ViewOutputButtonProps {
   computeHistoryId: number | undefined;
 }
 
+interface MatchPosition {
+  lineIndex: number;
+  charOffset: number;
+}
+
 function getPlainText(data: unknown): string {
   if (typeof data === "string") return stripAnsi(data);
   if (data && typeof data === "object") {
@@ -52,60 +69,58 @@ function getPlainText(data: unknown): string {
   return String(data);
 }
 
-interface HighlightedTextProps {
-  text: string;
+interface HighlightedLineProps {
+  line: string;
+  lineIndex: number;
   search: string;
+  lineMatches: MatchPosition[];
   currentMatchIndex: number;
-  matchRefs: React.RefObject<(HTMLElement | null)[]>;
+  globalMatchOffset: number;
 }
 
-const HighlightedText: React.FC<HighlightedTextProps> = ({
-  text,
+const HighlightedLine: React.FC<HighlightedLineProps> = ({
+  line,
+  lineMatches,
   search,
   currentMatchIndex,
-  matchRefs,
+  globalMatchOffset,
 }) => {
-  if (!search) return <>{text}</>;
+  if (!search || lineMatches.length === 0) {
+    return <>{line || "​"}</>;
+  }
 
   const parts: React.ReactNode[] = [];
-  const lowerText = text.toLowerCase();
-  const lowerSearch = search.toLowerCase();
-  let lastIndex = 0;
-  let matchIndex = 0;
+  let lastChar = 0;
 
-  let pos = lowerText.indexOf(lowerSearch, lastIndex);
-  while (pos !== -1) {
-    if (pos > lastIndex) {
-      parts.push(text.slice(lastIndex, pos));
+  lineMatches.forEach((match, i) => {
+    const globalIdx = globalMatchOffset + i;
+    const start = match.charOffset;
+    const end = start + search.length;
+    if (start > lastChar) {
+      parts.push(line.slice(lastChar, start));
     }
-    const isActive = matchIndex === currentMatchIndex;
-    const idx = matchIndex;
     parts.push(
       <mark
-        key={`m-${pos}`}
-        ref={(el) => { matchRefs.current[idx] = el; }}
+        key={`${match.lineIndex}-${start}`}
         style={{
-          backgroundColor: isActive ? "#ff9632" : "#fff176",
+          backgroundColor: globalIdx === currentMatchIndex ? "#ff9632" : "#fff176",
           color: "inherit",
           borderRadius: 2,
           padding: "0 1px",
         }}
       >
-        {text.slice(pos, pos + search.length)}
+        {line.slice(start, end)}
       </mark>,
     );
-    matchIndex++;
-    lastIndex = pos + search.length;
-    pos = lowerText.indexOf(lowerSearch, lastIndex);
-  }
+    lastChar = end;
+  });
 
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
+  if (lastChar < line.length) {
+    parts.push(line.slice(lastChar));
   }
 
   return <>{parts}</>;
 };
-
 
 export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
   recordType,
@@ -115,13 +130,24 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
   open,
   onClose,
 }) => {
-  const [selectedKey, setSelectedKey] = useState<string | null>(
-    initialKey || null,
-  );
-  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedKey, setSelectedKey] = useState<string | null>(initialKey || null);
+  const [searchInputValue, setSearchInputValue] = useState("");
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
   const [copyTooltip, setCopyTooltip] = useState("Copy to clipboard");
-  const matchRefs = useRef<(HTMLElement | null)[]>([]);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(600);
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Two-stage search deferral: 200ms debounce prevents the match scan from
+  // firing on every keystroke; useDeferredValue keeps the UI responsive even
+  // during the (rare) case where the scan itself takes a full frame.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchInputValue), 200);
+    return () => clearTimeout(id);
+  }, [searchInputValue]);
+  const deferredSearch = useDeferredValue(debouncedSearch);
 
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
@@ -152,12 +178,7 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
     data: outputKeysData,
     error: outputKeysError,
   } = useQuery({
-    queryKey: [
-      "recordOutputs",
-      recordType,
-      recordId,
-      effectiveComputeHistoryId,
-    ],
+    queryKey: ["recordOutputs", recordType, recordId, effectiveComputeHistoryId],
     queryFn: () =>
       makeRequest<Record<string, any>>(
         "GET",
@@ -200,37 +221,73 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
     [outputContentData],
   );
 
-  const totalMatches = useMemo(() => {
-    if (!searchTerm || !plainText) return 0;
-    const lowerText = plainText.toLowerCase();
-    const lowerSearch = searchTerm.toLowerCase();
-    let count = 0;
-    let pos = lowerText.indexOf(lowerSearch);
-    while (pos !== -1) {
-      count++;
-      pos = lowerText.indexOf(lowerSearch, pos + lowerSearch.length);
+  const lines = useMemo(() => plainText.split("\n"), [plainText]);
+
+  // Pre-compute all match positions by line using the deferred search value.
+  // Runs only when deferredSearch changes (not on every keystroke).
+  const matchPositions = useMemo((): MatchPosition[] => {
+    if (!deferredSearch || !lines.length) return [];
+    const lowerSearch = deferredSearch.toLowerCase();
+    const result: MatchPosition[] = [];
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+      const lowerLine = lines[lineIndex].toLowerCase();
+      let pos = lowerLine.indexOf(lowerSearch);
+      while (pos !== -1) {
+        result.push({ lineIndex, charOffset: pos });
+        pos = lowerLine.indexOf(lowerSearch, pos + lowerSearch.length);
+      }
     }
-    return count;
-  }, [plainText, searchTerm]);
+    return result;
+  }, [lines, deferredSearch]);
+
+  const totalMatches = matchPositions.length;
+
+  // Group match positions by line index for O(1) lookup during render
+  const matchesByLine = useMemo((): Map<number, { matches: MatchPosition[]; globalOffset: number }> => {
+    const map = new Map<number, { matches: MatchPosition[]; globalOffset: number }>();
+    for (let i = 0; i < matchPositions.length; i++) {
+      const { lineIndex } = matchPositions[i];
+      if (!map.has(lineIndex)) {
+        map.set(lineIndex, { matches: [], globalOffset: i });
+      }
+      map.get(lineIndex)!.matches.push(matchPositions[i]);
+    }
+    return map;
+  }, [matchPositions]);
 
   useEffect(() => {
     setCurrentMatchIndex(0);
-    matchRefs.current = [];
-  }, [searchTerm]);
+  }, [deferredSearch]);
 
+  // Measure container height when dialog opens or the selected key changes
   useEffect(() => {
-    if (totalMatches > 0 && matchRefs.current[currentMatchIndex]) {
-      matchRefs.current[currentMatchIndex]?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+    if (scrollContainerRef.current) {
+      setContainerHeight(scrollContainerRef.current.clientHeight);
     }
-  }, [currentMatchIndex, totalMatches]);
+  }, [open, effectiveKey]);
+
+  // Scroll the virtual container so the current match is centered in the viewport.
+  // No DOM refs to marks needed — we know exactly which line the match is on.
+  useEffect(() => {
+    if (totalMatches === 0 || !scrollContainerRef.current) return;
+    const targetLine = matchPositions[currentMatchIndex]?.lineIndex;
+    if (targetLine === undefined) return;
+    const targetScrollTop = targetLine * LINE_HEIGHT - containerHeight / 2;
+    scrollContainerRef.current.scrollTop = Math.max(0, targetScrollTop);
+  }, [currentMatchIndex, totalMatches, matchPositions, containerHeight]);
+
+  // Virtual scroll: compute the visible line range
+  const firstLine = Math.max(0, Math.floor(scrollTop / LINE_HEIGHT) - RENDER_BUFFER);
+  const lastLine = Math.min(
+    lines.length - 1,
+    Math.ceil((scrollTop + containerHeight) / LINE_HEIGHT) + RENDER_BUFFER,
+  );
 
   const handleClose = useCallback(() => {
     setSelectedKey(initialKey || null);
-    setSearchTerm("");
+    setSearchInputValue("");
     setCurrentMatchIndex(0);
+    setScrollTop(0);
     onClose();
   }, [initialKey, onClose]);
 
@@ -316,8 +373,8 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
           <TextField
             size="small"
             placeholder="Search output..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchInputValue}
+            onChange={(e) => setSearchInputValue(e.target.value)}
             onKeyDown={handleSearchKeyDown}
             disabled={!hasContent || outputContentStatus !== "success"}
             slotProps={{
@@ -331,17 +388,17 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
             }}
             sx={{ minWidth: 200, maxWidth: 350 }}
           />
-          {searchTerm && totalMatches > 0 && (
+          {deferredSearch && totalMatches > 0 && (
             <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
               {currentMatchIndex + 1} / {totalMatches}
             </Typography>
           )}
-          {searchTerm && totalMatches === 0 && (
+          {deferredSearch && totalMatches === 0 && (
             <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
               No matches
             </Typography>
           )}
-          {searchTerm && totalMatches > 0 && (
+          {deferredSearch && totalMatches > 0 && (
             <>
               <IconButton size="small" onClick={handlePrevMatch} aria-label="Previous match">
                 <KeyboardArrowUpIcon fontSize="small" />
@@ -437,7 +494,8 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
                 value={effectiveKey || false}
                 onChange={(_event, newValue) => {
                   setSelectedKey(newValue);
-                  setSearchTerm("");
+                  setSearchInputValue("");
+                  setScrollTop(0);
                 }}
                 sx={{
                   flexShrink: 0,
@@ -451,34 +509,56 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
                 ))}
               </Tabs>
 
-              {/* Output content */}
+              {/* Virtual scroll output container */}
               <Box
-                sx={{
-                  flex: 1,
-                  overflow: "auto",
-                  p: 2,
-                }}
+                ref={scrollContainerRef}
+                onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
+                sx={{ flex: 1, overflow: "auto", position: "relative" }}
               >
                 {outputContentStatus === "pending" && <LoadingIndicator />}
                 {outputContentStatus === "error" && (
                   <ErrorIndicator message={(outputContentError as any).message} />
                 )}
                 {outputContentStatus === "success" && outputContentData && (
-                  <Box
-                    sx={{
-                      whiteSpace: "pre-wrap",
-                      wordBreak: "break-word",
-                      fontFamily: "monospace",
-                      fontSize: "0.85rem",
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    <HighlightedText
-                      text={plainText}
-                      search={searchTerm}
-                      currentMatchIndex={currentMatchIndex}
-                      matchRefs={matchRefs}
-                    />
+                  // Full-height spacer keeps the scrollbar proportional to total content
+                  <Box sx={{ height: lines.length * LINE_HEIGHT, position: "relative" }}>
+                    {/* Absolutely positioned so it "floats" at the correct scroll offset */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: firstLine * LINE_HEIGHT,
+                        left: 0,
+                        right: 0,
+                        px: 2,
+                      }}
+                    >
+                      {lines.slice(firstLine, lastLine + 1).map((line, i) => {
+                        const globalLineIndex = firstLine + i;
+                        const lineMatchInfo = matchesByLine.get(globalLineIndex);
+                        return (
+                          <Box
+                            key={globalLineIndex}
+                            sx={{
+                              height: LINE_HEIGHT,
+                              fontFamily: "monospace",
+                              fontSize: "0.85rem",
+                              lineHeight: `${LINE_HEIGHT}px`,
+                              whiteSpace: "pre",
+                              overflow: "visible",
+                            }}
+                          >
+                            <HighlightedLine
+                              line={line}
+                              lineIndex={globalLineIndex}
+                              search={deferredSearch}
+                              lineMatches={lineMatchInfo?.matches ?? []}
+                              currentMatchIndex={currentMatchIndex}
+                              globalMatchOffset={lineMatchInfo?.globalOffset ?? 0}
+                            />
+                          </Box>
+                        );
+                      })}
+                    </Box>
                   </Box>
                 )}
               </Box>
