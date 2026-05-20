@@ -31,5 +31,4 @@ dependencies:
   - qcengine>=0.34,<0.70a0
   - psi4>=1.9.1
   - rdkit
-  - geometric
-  - scipy # TODO Required for geometric REMOVE EVENTUALLY
+  - geometric>=1.1.1
