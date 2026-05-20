@@ -4,6 +4,7 @@ import {
   FormControl,
   InputLabel,
   LinearProgress,
+  Link as MuiLink,
   MenuItem,
   Paper,
   Select,
@@ -19,7 +20,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
 import { useAuth } from "../../Auth.tsx";
 import { usePortalClient } from "../../PortalClient.tsx";
 import * as qcpTypes from "../../PortalTypes";
@@ -524,9 +524,9 @@ export default function DatasetRecords({
                       <TableCell>{record.entry_name}</TableCell>
                       <TableCell>{record.specification_name}</TableCell>
                       <TableCell sx={{ width: 120 }}>
-                        <Link to={`/records/${record.record_id}`}>
+                        <MuiLink to={`/records/${record.record_id}`}>
                           {record.record_id}
-                        </Link>
+                        </MuiLink>
                       </TableCell>
                       <TableCell sx={{ width: 150 }}>
                         <StatusChip

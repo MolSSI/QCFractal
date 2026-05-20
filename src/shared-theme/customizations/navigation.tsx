@@ -7,6 +7,7 @@ import { menuItemClasses } from "@mui/material/MenuItem";
 import { selectClasses } from "@mui/material/Select";
 import { tabClasses } from "@mui/material/Tab";
 import UnfoldMoreRoundedIcon from "@mui/icons-material/UnfoldMoreRounded";
+import { Link as RouterLink } from "react-router-dom";
 import { gray, brand } from "../themePrimitives";
 
 /* eslint-disable import/prefer-default-export */
@@ -113,6 +114,7 @@ export const navigationCustomizations: Components<Theme> = {
   MuiLink: {
     defaultProps: {
       underline: "none",
+      component: RouterLink as React.ElementType,
     },
     styleOverrides: {
       root: ({ theme }) => ({

@@ -1,8 +1,9 @@
 import { styled } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
+import MuiLink from "@mui/material/Link";
 import Breadcrumbs, { breadcrumbsClasses } from "@mui/material/Breadcrumbs";
 import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
   margin: theme.spacing(1, 0),
@@ -27,18 +28,9 @@ export default function NavbarBreadcrumbs() {
       separator={<NavigateNextRoundedIcon fontSize="small" />}
     >
       {/* Always include a link to the Home */}
-      <Typography
-        component={Link}
-        to="/"
-        variant="body1"
-        sx={{
-          textDecoration: "none",
-          color: "inherit",
-          "&:hover": { textDecoration: "underline" },
-        }}
-      >
+      <MuiLink to="/" variant="body1">
         Home
-      </Typography>
+      </MuiLink>
 
       {/* Dynamically generate breadcrumbs */}
       {pathnames.map((value, index) => {
@@ -83,19 +75,9 @@ export default function NavbarBreadcrumbs() {
             {label}
           </Typography>
         ) : (
-          <Typography
-            key={to}
-            component={Link}
-            to={to}
-            variant="body1"
-            sx={{
-              textDecoration: "none",
-              color: "inherit",
-              "&:hover": { textDecoration: "underline" },
-            }}
-          >
+          <MuiLink key={to} to={to} variant="body1">
             {label}
-          </Typography>
+          </MuiLink>
         );
       })}
     </StyledBreadcrumbs>

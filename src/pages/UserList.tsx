@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import {
   Avatar,
   Box,
   Chip,
   Grid,
+  Link as MuiLink,
   Paper,
   Stack,
   Table,
@@ -44,15 +44,9 @@ const UserRow: React.FC<{ user: qcpTypes.UserInfo }> = ({ user }) => {
           <Avatar sx={{ width: 32, height: 32, fontSize: "0.75rem", bgcolor: "primary.main" }}>
             {initials}
           </Avatar>
-          <Typography
-            variant="body2"
-            fontWeight="bold"
-            component={Link}
-            to={`/users/${user.username}`}
-            sx={{ textDecoration: "none", color: "inherit", "&:hover": { textDecoration: "underline" } }}
-          >
+          <MuiLink to={`/users/${user.username}`} variant="body2" sx={{ fontWeight: "bold" }}>
             {user.username}
-          </Typography>
+          </MuiLink>
         </Stack>
       </TableCell>
       <TableCell>

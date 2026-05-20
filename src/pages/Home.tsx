@@ -17,7 +17,6 @@ import {
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Link } from "react-router-dom";
 import { useAuth } from "../Auth.tsx";
 import { usePreferences } from "../PreferencesProvider.tsx";
 import { usePortalClient } from "../PortalClient.tsx";
@@ -236,7 +235,6 @@ const HomePage: React.FC = () => {
                           </TableCell>
                           <TableCell>
                             <MuiLink
-                              component={Link}
                               to={`/projects/${project.id}`}
                               sx={{
                                 color: "inherit",
@@ -291,7 +289,6 @@ const HomePage: React.FC = () => {
                           </TableCell>
                           <TableCell>
                             <MuiLink
-                              component={Link}
                               to={`/datasets/${dataset.id}`}
                               sx={{
                                 color: "inherit",
@@ -343,7 +340,6 @@ const HomePage: React.FC = () => {
                         <TableRow key={record.id} hover>
                           <TableCell>
                             <MuiLink
-                              component={Link}
                               to={`/records/${record.id}`}
                               sx={{
                                 color: "inherit",
