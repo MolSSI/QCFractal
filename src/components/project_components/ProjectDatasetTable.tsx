@@ -22,7 +22,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import * as qcpTypes from "../../PortalTypes";
 import { RecordTypeChip } from "../RecordTypeChip.tsx";
-import ReactMarkdown from "react-markdown";
+import MarkdownContent from "../MarkdownContent";
 import { LinkDatasetButton } from "./LinkDatasetDialog";
 import { UnlinkDatasetButton } from "./UnlinkDatasetDialog";
 import { useAuth } from "../../Auth.tsx";
@@ -105,7 +105,7 @@ function DatasetRow({
                     Description
                   </Typography>
                   <Typography variant="body2">
-                    <ReactMarkdown>{ds.description.trim()}</ReactMarkdown>
+                    <MarkdownContent>{ds.description.trim()}</MarkdownContent>
                   </Typography>
                 </Box>
               )}

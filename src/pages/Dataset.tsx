@@ -25,7 +25,7 @@ import DatasetEntryTable from "../components/dataset_components/DatasetEntryTabl
 import DatasetRecords from "../components/dataset_components/DatasetRecords";
 import { AttachmentTable } from "../components/AttachmentTable";
 import { asRecord } from "../Utils.ts";
-import ReactMarkdown from "react-markdown";
+import MarkdownContent from "../components/MarkdownContent";
 import {
   areDatasetViewStatesEqual,
   createDefaultDatasetViewState,
@@ -410,7 +410,7 @@ export default function Dataset() {
                   Description
                 </Typography>
                 <Typography variant="body1" component={"p"}>
-                  <ReactMarkdown>{datasetData.description.trim()}</ReactMarkdown>
+                  <MarkdownContent>{datasetData.description.trim()}</MarkdownContent>
                 </Typography>
 
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
