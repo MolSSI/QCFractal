@@ -1,22 +1,43 @@
-import React, { useState } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  useEffect,
+  useDeferredValue,
+} from "react";
 import {
   Box,
   Button,
   Dialog,
   DialogContent,
-  Grid,
   IconButton,
+  InputAdornment,
   Tab,
   Tabs,
+  TextField,
+  Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import SearchIcon from "@mui/icons-material/Search";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import DownloadIcon from "@mui/icons-material/Download";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useQuery } from "@tanstack/react-query";
 import { usePortalClient } from "../PortalClient.tsx";
 import * as qcpTypes from "../PortalTypes";
 import LoadingIndicator from "./LoadingIndicator";
 import ErrorIndicator from "./ErrorIndicator";
 import { stripAnsi } from "../Utils.ts";
+
+// Line height must match: font-size 0.85rem (~13.6px) × line-height 1.5 ≈ 20.4px → round up
+const LINE_HEIGHT = 21;
+// Extra lines to render above/below viewport to avoid visible blank flashes on fast scroll
+const RENDER_BUFFER = 20;
 
 interface ViewOutputDialogProps {
   recordType: string;
@@ -33,6 +54,73 @@ interface ViewOutputButtonProps {
   computeHistoryId: number | undefined;
 }
 
+interface MatchPosition {
+  lineIndex: number;
+  charOffset: number;
+}
+
+function getPlainText(data: unknown): string {
+  if (typeof data === "string") return stripAnsi(data);
+  if (data && typeof data === "object") {
+    return Object.entries(data)
+      .map(([k, v]) => `${k}: ${typeof v === "string" ? v : JSON.stringify(v, null, 2)}`)
+      .join("\n");
+  }
+  return String(data);
+}
+
+interface HighlightedLineProps {
+  line: string;
+  lineIndex: number;
+  search: string;
+  lineMatches: MatchPosition[];
+  currentMatchIndex: number;
+  globalMatchOffset: number;
+}
+
+const HighlightedLine: React.FC<HighlightedLineProps> = ({
+  line,
+  lineMatches,
+  search,
+  currentMatchIndex,
+  globalMatchOffset,
+}) => {
+  if (!search || lineMatches.length === 0) {
+    return <>{line || "​"}</>;
+  }
+
+  const parts: React.ReactNode[] = [];
+  let lastChar = 0;
+
+  lineMatches.forEach((match, i) => {
+    const globalIdx = globalMatchOffset + i;
+    const start = match.charOffset;
+    const end = start + search.length;
+    if (start > lastChar) {
+      parts.push(line.slice(lastChar, start));
+    }
+    parts.push(
+      <mark
+        key={`${match.lineIndex}-${start}`}
+        style={{
+          backgroundColor: globalIdx === currentMatchIndex ? "#ff9632" : "#fff176",
+          color: "inherit",
+          borderRadius: 2,
+          padding: "0 1px",
+        }}
+      >
+        {line.slice(start, end)}
+      </mark>,
+    );
+    lastChar = end;
+  });
+
+  if (lastChar < line.length) {
+    parts.push(line.slice(lastChar));
+  }
+
+  return <>{parts}</>;
+};
 
 export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
   recordType,
@@ -42,9 +130,27 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
   open,
   onClose,
 }) => {
-  const [selectedKey, setSelectedKey] = useState<string | null>(
-    initialKey || null,
-  );
+  const [selectedKey, setSelectedKey] = useState<string | null>(initialKey || null);
+  const [searchInputValue, setSearchInputValue] = useState("");
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+  const [copyTooltip, setCopyTooltip] = useState("Copy to clipboard");
+  const [scrollTop, setScrollTop] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(600);
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Two-stage search deferral: 200ms debounce prevents the match scan from
+  // firing on every keystroke; useDeferredValue keeps the UI responsive even
+  // during the (rare) case where the scan itself takes a full frame.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchInputValue), 200);
+    return () => clearTimeout(id);
+  }, [searchInputValue]);
+  const deferredSearch = useDeferredValue(debouncedSearch);
+
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const { makeRequest } = usePortalClient();
 
   const {
@@ -72,12 +178,7 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
     data: outputKeysData,
     error: outputKeysError,
   } = useQuery({
-    queryKey: [
-      "recordOutputs",
-      recordType,
-      recordId,
-      effectiveComputeHistoryId,
-    ],
+    queryKey: ["recordOutputs", recordType, recordId, effectiveComputeHistoryId],
     queryFn: () =>
       makeRequest<Record<string, any>>(
         "GET",
@@ -86,10 +187,8 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
     enabled: open && effectiveComputeHistoryId !== undefined,
   });
 
-  // Extract keys from fetched data
   const outputKeys = outputKeysData ? Object.keys(outputKeysData) : [];
 
-  // Derive effective key: user selection or first available key
   const effectiveKey =
     selectedKey !== null && outputKeys.includes(selectedKey)
       ? selectedKey
@@ -117,138 +216,355 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
     enabled: open && effectiveComputeHistoryId !== undefined && !!effectiveKey,
   });
 
-  const handleClose = () => {
+  const plainText = useMemo(
+    () => (outputContentData ? getPlainText(outputContentData) : ""),
+    [outputContentData],
+  );
+
+  const lines = useMemo(() => plainText.split("\n"), [plainText]);
+
+  // Pre-compute all match positions by line using the deferred search value.
+  // Runs only when deferredSearch changes (not on every keystroke).
+  const matchPositions = useMemo((): MatchPosition[] => {
+    if (!deferredSearch || !lines.length) return [];
+    const lowerSearch = deferredSearch.toLowerCase();
+    const result: MatchPosition[] = [];
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+      const lowerLine = lines[lineIndex].toLowerCase();
+      let pos = lowerLine.indexOf(lowerSearch);
+      while (pos !== -1) {
+        result.push({ lineIndex, charOffset: pos });
+        pos = lowerLine.indexOf(lowerSearch, pos + lowerSearch.length);
+      }
+    }
+    return result;
+  }, [lines, deferredSearch]);
+
+  const totalMatches = matchPositions.length;
+
+  // Group match positions by line index for O(1) lookup during render
+  const matchesByLine = useMemo((): Map<number, { matches: MatchPosition[]; globalOffset: number }> => {
+    const map = new Map<number, { matches: MatchPosition[]; globalOffset: number }>();
+    for (let i = 0; i < matchPositions.length; i++) {
+      const { lineIndex } = matchPositions[i];
+      if (!map.has(lineIndex)) {
+        map.set(lineIndex, { matches: [], globalOffset: i });
+      }
+      map.get(lineIndex)!.matches.push(matchPositions[i]);
+    }
+    return map;
+  }, [matchPositions]);
+
+  useEffect(() => {
+    setCurrentMatchIndex(0);
+  }, [deferredSearch]);
+
+  // Measure container height when dialog opens or the selected key changes
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      setContainerHeight(scrollContainerRef.current.clientHeight);
+    }
+  }, [open, effectiveKey]);
+
+  // Scroll the virtual container so the current match is centered in the viewport.
+  // No DOM refs to marks needed — we know exactly which line the match is on.
+  useEffect(() => {
+    if (totalMatches === 0 || !scrollContainerRef.current) return;
+    const targetLine = matchPositions[currentMatchIndex]?.lineIndex;
+    if (targetLine === undefined) return;
+    const targetScrollTop = targetLine * LINE_HEIGHT - containerHeight / 2;
+    scrollContainerRef.current.scrollTop = Math.max(0, targetScrollTop);
+  }, [currentMatchIndex, totalMatches, matchPositions, containerHeight]);
+
+  // Virtual scroll: compute the visible line range
+  const firstLine = Math.max(0, Math.floor(scrollTop / LINE_HEIGHT) - RENDER_BUFFER);
+  const lastLine = Math.min(
+    lines.length - 1,
+    Math.ceil((scrollTop + containerHeight) / LINE_HEIGHT) + RENDER_BUFFER,
+  );
+
+  const handleClose = useCallback(() => {
     setSelectedKey(initialKey || null);
+    setSearchInputValue("");
+    setCurrentMatchIndex(0);
+    setScrollTop(0);
     onClose();
-  };
+  }, [initialKey, onClose]);
+
+  const handleCopy = useCallback(async () => {
+    if (!plainText) return;
+    await navigator.clipboard.writeText(plainText);
+    setCopyTooltip("Copied!");
+    setTimeout(() => setCopyTooltip("Copy to clipboard"), 1500);
+  }, [plainText]);
+
+  const handleDownload = useCallback(() => {
+    if (!plainText || !effectiveKey) return;
+    const blob = new Blob([plainText], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${recordId}_${effectiveKey}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [plainText, effectiveKey, recordId]);
+
+  const handlePrevMatch = useCallback(() => {
+    setCurrentMatchIndex((prev) =>
+      totalMatches === 0 ? 0 : (prev - 1 + totalMatches) % totalMatches,
+    );
+  }, [totalMatches]);
+
+  const handleNextMatch = useCallback(() => {
+    setCurrentMatchIndex((prev) =>
+      totalMatches === 0 ? 0 : (prev + 1) % totalMatches,
+    );
+  }, [totalMatches]);
+
+  const handleSearchKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (e.shiftKey) handlePrevMatch();
+        else handleNextMatch();
+      }
+    },
+    [handleNextMatch, handlePrevMatch],
+  );
 
   const isLoading =
     (computeHistoryId === undefined && historyStatus === "pending") ||
     (effectiveComputeHistoryId !== undefined && outputKeysStatus === "pending");
 
+  const hasContent =
+    outputKeysStatus === "success" && outputKeysData && outputKeys.length > 0;
+
   return (
     <Dialog
-      fullWidth={true}
+      fullWidth
       maxWidth="lg"
+      fullScreen={fullScreen}
       open={open}
       onClose={handleClose}
-      onClick={(e) => {
-        e.stopPropagation();
-      }}
+      onClick={(e) => e.stopPropagation()}
     >
-      <DialogContent sx={{ position: "relative", pt: 5 }}>
-        <IconButton
-          size="small"
-          onClick={handleClose}
+      <DialogContent
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          p: 0,
+          height: fullScreen ? "100vh" : "80vh",
+        }}
+      >
+        {/* Toolbar */}
+        <Box
           sx={{
-            position: "absolute",
-            right: 8,
-            top: 8,
-            "&&": { bgcolor: "transparent", border: "none" },
-            "&&:hover": { bgcolor: "transparent", border: "none" },
-            "&&:active": { bgcolor: "transparent" },
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            px: 2,
+            py: 1,
+            borderBottom: 1,
+            borderColor: "divider",
+            flexShrink: 0,
           }}
         >
-          <CloseIcon fontSize="small" />
-        </IconButton>
-        <>
-          {isLoading && <LoadingIndicator />}
+          <TextField
+            size="small"
+            placeholder="Search output..."
+            value={searchInputValue}
+            onChange={(e) => setSearchInputValue(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
+            disabled={!hasContent || outputContentStatus !== "success"}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+            sx={{ minWidth: 200, maxWidth: 350 }}
+          />
+          {deferredSearch && totalMatches > 0 && (
+            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+              {currentMatchIndex + 1} / {totalMatches}
+            </Typography>
+          )}
+          {deferredSearch && totalMatches === 0 && (
+            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+              No matches
+            </Typography>
+          )}
+          {deferredSearch && totalMatches > 0 && (
+            <>
+              <IconButton size="small" onClick={handlePrevMatch} aria-label="Previous match">
+                <KeyboardArrowUpIcon fontSize="small" />
+              </IconButton>
+              <IconButton size="small" onClick={handleNextMatch} aria-label="Next match">
+                <KeyboardArrowDownIcon fontSize="small" />
+              </IconButton>
+            </>
+          )}
+
+          <Box sx={{ flex: 1 }} />
+
+          <Tooltip title={copyTooltip}>
+            <span>
+              <IconButton
+                size="small"
+                onClick={handleCopy}
+                disabled={!plainText}
+                aria-label="Copy to clipboard"
+              >
+                <ContentCopyIcon fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Tooltip title="Download as text file">
+            <span>
+              <IconButton
+                size="small"
+                onClick={handleDownload}
+                disabled={!plainText}
+                aria-label="Download output"
+              >
+                <DownloadIcon fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
+          <IconButton size="small" onClick={handleClose} aria-label="Close">
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+
+        {/* Body */}
+        <Box sx={{ flex: 1, display: "flex", overflow: "hidden" }}>
+          {isLoading && (
+            <Box sx={{ p: 3, width: "100%" }}>
+              <LoadingIndicator />
+            </Box>
+          )}
 
           {historyStatus === "error" && (
-            <ErrorIndicator message={(historyError as any).message} />
+            <Box sx={{ p: 3 }}>
+              <ErrorIndicator message={(historyError as any).message} />
+            </Box>
           )}
 
           {outputKeysStatus === "error" && (
-            <ErrorIndicator message={(outputKeysError as any).message} />
+            <Box sx={{ p: 3 }}>
+              <ErrorIndicator message={(outputKeysError as any).message} />
+            </Box>
           )}
 
           {computeHistoryId === undefined &&
             historyStatus === "success" &&
             historyData &&
             historyData.length === 0 && (
-              <Box sx={{ p: 2 }}>
-                <Typography>
-                  No compute history found for this record.
-                </Typography>
+              <Box sx={{ p: 3 }}>
+                <Typography>No compute history found for this record.</Typography>
               </Box>
             )}
 
           {outputKeysStatus === "success" &&
             outputKeysData &&
             outputKeys.length === 0 && (
-              <Box sx={{ p: 2 }}>
-                <Typography>
-                  No outputs found for this compute history.
-                </Typography>
+              <Box sx={{ p: 3 }}>
+                <Typography>No outputs found for this compute history.</Typography>
               </Box>
             )}
 
-          {outputKeysStatus === "success" &&
-            outputKeysData &&
-            outputKeys.length > 0 && (
-              <Grid container spacing={2} width="100%">
-                {/* Tabs for output keys */}
-                <Grid size={{ xs: 3 }}>
-                  <Tabs
-                    orientation="vertical"
-                    value={effectiveKey || false}
-                    onChange={(event, newValue) => {
-                      event.stopPropagation();
-                      setSelectedKey(newValue);
-                    }}
-                    sx={{ borderRight: 1, borderColor: "divider" }}
-                  >
-                    {outputKeys.map((key) => (
-                      <Tab key={key} label={key.toUpperCase()} value={key} />
-                    ))}
-                  </Tabs>
-                </Grid>
+          {hasContent && (
+            <Box
+              sx={{
+                flex: 1,
+                display: "flex",
+                flexDirection: fullScreen ? "column" : "row",
+                overflow: "hidden",
+              }}
+            >
+              {/* Tabs */}
+              <Tabs
+                orientation={fullScreen ? "horizontal" : "vertical"}
+                variant="scrollable"
+                scrollButtons="auto"
+                value={effectiveKey || false}
+                onChange={(_event, newValue) => {
+                  setSelectedKey(newValue);
+                  setSearchInputValue("");
+                  setScrollTop(0);
+                }}
+                sx={{
+                  flexShrink: 0,
+                  ...(fullScreen
+                    ? { borderBottom: 1, borderColor: "divider" }
+                    : { borderRight: 1, borderColor: "divider", minWidth: 140 }),
+                }}
+              >
+                {outputKeys.map((key) => (
+                  <Tab key={key} label={key.toUpperCase()} value={key} />
+                ))}
+              </Tabs>
 
-                {/* Content for the selected key */}
-                <Grid size={{ xs: 9 }}>
-                  {outputContentStatus === "pending" && <LoadingIndicator />}
-                  {outputContentStatus === "error" && (
-                    <ErrorIndicator
-                      message={(outputContentError as any).message}
-                    />
-                  )}
-                  {outputContentStatus === "success" && outputContentData && (
+              {/* Virtual scroll output container */}
+              <Box
+                ref={scrollContainerRef}
+                onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
+                sx={{ flex: 1, overflow: "auto", position: "relative" }}
+              >
+                {outputContentStatus === "pending" && <LoadingIndicator />}
+                {outputContentStatus === "error" && (
+                  <ErrorIndicator message={(outputContentError as any).message} />
+                )}
+                {outputContentStatus === "success" && outputContentData && (
+                  // Full-height spacer keeps the scrollbar proportional to total content
+                  <Box sx={{ height: lines.length * LINE_HEIGHT, position: "relative" }}>
+                    {/* Absolutely positioned so it "floats" at the correct scroll offset */}
                     <Box
                       sx={{
-                        whiteSpace: "pre-wrap",
-                        fontFamily: "monospace",
-                        overflowY: "auto",
-                        maxHeight: "1200px",
+                        position: "absolute",
+                        top: firstLine * LINE_HEIGHT,
+                        left: 0,
+                        right: 0,
+                        px: 2,
                       }}
                     >
-                      {/* ... content ... */}
-                      {typeof outputContentData === "string" ? (
-                        stripAnsi(outputContentData)
-                      ) : (
-                        // Render object content if the data is not a string
-                        <Box component="div">
-                          {Object.entries(outputContentData as object).map(
-                            ([key, value]) => (
-                              <Typography
-                                key={key}
-                                variant="body2"
-                                sx={{ marginBottom: "8px" }}
-                              >
-                                <strong>{key}:</strong>{" "}
-                                {typeof value === "string"
-                                  ? value
-                                  : JSON.stringify(value, null, 2)}
-                              </Typography>
-                            ),
-                          )}
-                        </Box>
-                      )}
+                      {lines.slice(firstLine, lastLine + 1).map((line, i) => {
+                        const globalLineIndex = firstLine + i;
+                        const lineMatchInfo = matchesByLine.get(globalLineIndex);
+                        return (
+                          <Box
+                            key={globalLineIndex}
+                            sx={{
+                              height: LINE_HEIGHT,
+                              fontFamily: "monospace",
+                              fontSize: "0.85rem",
+                              lineHeight: `${LINE_HEIGHT}px`,
+                              whiteSpace: "pre",
+                              overflow: "visible",
+                            }}
+                          >
+                            <HighlightedLine
+                              line={line}
+                              lineIndex={globalLineIndex}
+                              search={deferredSearch}
+                              lineMatches={lineMatchInfo?.matches ?? []}
+                              currentMatchIndex={currentMatchIndex}
+                              globalMatchOffset={lineMatchInfo?.globalOffset ?? 0}
+                            />
+                          </Box>
+                        );
+                      })}
                     </Box>
-                  )}
-                </Grid>
-              </Grid>
-            )}
-        </>
+                  </Box>
+                )}
+              </Box>
+            </Box>
+          )}
+        </Box>
       </DialogContent>
     </Dialog>
   );
