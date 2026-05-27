@@ -192,8 +192,14 @@ class NEBRecordSocket(BaseRecordSocket):
                     initial_molecules[0] = complete_opts[0].record.final_molecule.to_model(Molecule)
                     initial_molecules[-1] = complete_opts[-1].record.final_molecule.to_model(Molecule)
 
+                chain_list = [[[mol.molecular_charge, mol.molecular_multiplicity], mol.symbols.tolist(), mol.geometry]
+                              for mol in initial_molecules]
+
                 with capture_all_output("geometric.nifty") as (rdout, _):
-                    respaced_chain = geometric.qcf_neb.arrange(initial_molecules, params.get("align"))
+                    chain_respaced = geometric.qcf_neb.arrange(chain_list, params.get("align"))
+
+                respaced_chain = [
+                    Molecule(**molecule_template, geometry=img[2]) for img in chain_respaced]
 
                 output += "\n" + rdout.getvalue()
 
@@ -248,15 +254,7 @@ class NEBRecordSocket(BaseRecordSocket):
                     service_state.nebinfo["params"] = params
 
                     with capture_all_output("geometric.nifty") as (rdout, _):
-                        if service_state.iteration == 1:
-                            newcoords, prev = geometric.qcf_neb.prepare(service_state.nebinfo)
-                            service_state.nebinfo = prev
-
-                            next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
-                            self.submit_singlepoints(session, service_state, service_orm, next_chain)
-                            service_state.iteration += 1
-                        else:
-                            self.submit_nextchain_subtask(session, service_state, service_orm)
+                        self.submit_nextchain_subtask(session, service_state, service_orm)
 
                     output += "\n" + rdout.getvalue()
 
@@ -320,9 +318,12 @@ class NEBRecordSocket(BaseRecordSocket):
         has_optimization = bool(neb_spec.optimization_specification)
         qc_spec = neb_orm.specification.singlepoint_specification.model_dict()
         if service_state.tsoptimize and service_state.converged:
+            # 5/19/2026 HP: geomeTRIC will convert the Hessian list into an NxN array in a future release.
+            side_length = int(len(service_state.tshessian)**0.5)
+            hessian = [service_state.tshessian[i*side_length : (i+1)*side_length] for i in range(side_length)]
             if has_optimization:
                 opt_spec = neb_orm.specification.optimization_specification.model_dict()
-                opt_spec["keywords"]["hessian"] = service_state.tshessian
+                opt_spec["keywords"]["hess_data"] = hessian
                 opt_spec["keywords"]["transition"] = True
                 opt_spec["program"] = "geometric"
                 opt_spec = OptimizationSpecification(
@@ -336,7 +337,7 @@ class NEBRecordSocket(BaseRecordSocket):
                     keywords={
                         "transition": True,
                         "coordsys": "tric",
-                        "hessian": service_state.tshessian,
+                        "hess_data": hessian,
                     },
                 )
             ts = True
