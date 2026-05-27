@@ -42,7 +42,7 @@ dependencies:
 
   # QCFractal Services
   - torsiondrive
-  - qcmanybody
+  - qcmanybody>=0.7.1
   - geometric>=1.1.1
 
   # Worker codes below
