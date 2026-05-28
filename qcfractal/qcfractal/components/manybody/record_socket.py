@@ -84,7 +84,7 @@ def _get_qcmanybody_core(
         level_spec_map[sp_name] = lvl
 
     qcm = qcmanybody.ManyBodyCore(
-        molecule=init_mol.convert_v(1),
+        molecule=init_mol.convert_v(2),
         levels=qcm_levels,
         bsse_type=[qcmanybody.BsseEnum[x] for x in mb_orm.specification.bsse_correction],
         return_total_data=mb_orm.specification.keywords.get("return_total_data", False),
