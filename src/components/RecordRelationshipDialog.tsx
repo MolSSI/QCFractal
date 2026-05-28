@@ -17,7 +17,6 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
 import { usePortalClient } from "../PortalClient.tsx";
 import * as qcpTypes from "../PortalTypes";
 import StatusChip from "./StatusChip.tsx";
@@ -118,7 +117,6 @@ const RecordRelationshipDialog: React.FC<RecordRelationshipDialogProps> = ({
                           component="div"
                         >
                           <MuiLink
-                            component={Link}
                             to={`/datasets/${ds.dataset_id}`}
                             target="_blank"
                           >
@@ -177,7 +175,6 @@ const RecordRelationshipDialog: React.FC<RecordRelationshipDialogProps> = ({
                       width="100%"
                     >
                       <MuiLink
-                        component={Link}
                         to={`/records/${parent.id}`}
                         target="_blank"
                       >

@@ -15,10 +15,10 @@ import { RenderEntry } from "./RenderEntry.tsx";
 import { usePortalClient } from "../../PortalClient.tsx";
 import { useQuery } from "@tanstack/react-query";
 import * as qcpTypes from "../../PortalTypes.ts";
-import { Link } from "react-router-dom";
 import {
   Box,
   Grid,
+  Link as MuiLink,
   Paper,
   Table,
   TableBody,
@@ -246,13 +246,13 @@ export const RecordDetails: React.FC<
                         <TableRow key={step}>
                           <TableCell>{index}</TableCell>
                           <TableCell>
-                            <Link
+                            <MuiLink
                               to={`/records/${step}`}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
                               {step}
-                            </Link>
+                            </MuiLink>
                           </TableCell>
                           <TableCell align="right">
                             {energies[index]?.toFixed(8) ?? "N/A"}

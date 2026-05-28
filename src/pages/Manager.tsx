@@ -2,6 +2,7 @@ import {
   Box,
   Chip,
   Grid,
+  Link as MuiLink,
   Paper,
   Stack,
   Table,
@@ -17,7 +18,7 @@ import { usePortalClient } from "../PortalClient.tsx";
 import React from "react";
 import { usePageTitle } from "../UsePageTitle.ts";
 import * as qcpTypes from "../PortalTypes.ts";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import LoadingIndicator from "../components/LoadingIndicator.tsx";
 import ErrorIndicator from "../components/ErrorIndicator.tsx";
@@ -255,17 +256,13 @@ export default function Manager() {
                           .map((record) => (
                             <TableRow key={record.id}>
                               <TableCell>
-                                <Link
+                                <MuiLink
                                   to={`/records/${record.id}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  style={{
-                                    color: "inherit",
-                                    textDecoration: "underline",
-                                  }}
                                 >
                                   {record.id}
-                                </Link>
+                                </MuiLink>
                               </TableCell>
                               <TableCell>
                                 <RecordTypeChip type={record.record_type} />

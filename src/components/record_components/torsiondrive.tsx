@@ -15,10 +15,10 @@ import { RenderSpecification } from "./RenderSpecification.tsx";
 import { RenderEntry } from "./RenderEntry.tsx";
 import { usePortalClient } from "../../PortalClient.tsx";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
 import {
   Box,
   Grid,
+  Link as MuiLink,
   Paper,
   Table,
   TableBody,
@@ -417,13 +417,13 @@ export const RecordDetails: React.FC<
                               : "N/A"}
                           </TableCell>
                           <TableCell>
-                            <Link
+                            <MuiLink
                               to={`/records/${optimization.optimization_id}`}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
                               {optimization.optimization_id}
-                            </Link>
+                            </MuiLink>
                           </TableCell>
                         </TableRow>
                       )),

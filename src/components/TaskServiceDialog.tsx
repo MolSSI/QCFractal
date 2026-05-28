@@ -23,7 +23,6 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
 import { usePortalClient } from "../PortalClient.tsx";
 import { GenericDataList } from "./GenericDataList.tsx";
 import LoadingIndicator from "./LoadingIndicator";
@@ -148,13 +147,13 @@ function DependenciesTable({ rows }: { rows: DependencyRow[] }) {
           {rows.map((row) => (
             <TableRow key={row.id}>
               <TableCell>
-                <Link
+                <MuiLink
                   to={`/records/${row.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   {row.id}
-                </Link>
+                </MuiLink>
               </TableCell>
               <TableCell>
                 <RecordTypeChip type={row.record_type} />
