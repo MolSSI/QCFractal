@@ -28,7 +28,7 @@ export default function NavbarBreadcrumbs() {
       separator={<NavigateNextRoundedIcon fontSize="small" />}
     >
       {/* Always include a link to the Home */}
-      <MuiLink to="/" variant="body1">
+      <MuiLink to="/" variant="body1" sx={{ color: "inherit" }}>
         Home
       </MuiLink>
 
@@ -75,7 +75,7 @@ export default function NavbarBreadcrumbs() {
             {label}
           </Typography>
         ) : (
-          <MuiLink key={to} to={to} variant="body1">
+          <MuiLink key={to} to={to} variant="body1" sx={{ color: "inherit" }}>
             {label}
           </MuiLink>
         );
