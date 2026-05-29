@@ -16,7 +16,7 @@ dependencies:
   - pydantic-settings
   - zstandard
   - apsw>=3.42
-  - qcelemental>=0.50.1,<0.70a0
+  - qcelemental>=0.50.2,<0.70a0
   - tabulate
   - tqdm
   - pandas
@@ -30,6 +30,6 @@ dependencies:
 
   # Worker codes below
   - qcengine>=0.50,<0.70a0
-  - psi4>=1.9.1
+  - psi4>=1.10.1
   - rdkit
   - geometric>=1.1.1
