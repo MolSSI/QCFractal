@@ -24,6 +24,8 @@ from qcportal.record_models import (
 class Model(BaseModel):
     """The computational molecular sciences model to run."""
 
+    model_config = ConfigDict(extra="allow")
+
     method: str = Field(  # type: ignore
         ...,
         description="The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...). "
@@ -34,10 +36,6 @@ class Model(BaseModel):
         description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for "
         "methods without basis sets. For molecular mechanics, name of the atom-typer.",
     )
-
-    class Config:
-        extra: str = "allow"
-
 
 class SinglepointDriver(str, Enum):
     # Copied from qcelemental to add "deferred"
