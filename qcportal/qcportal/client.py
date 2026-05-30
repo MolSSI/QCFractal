@@ -97,6 +97,7 @@ from .project_models import (
     ProjectAddBody,
     ProjectDeleteParams,
     ProjectQueryModel,
+    ProjectQueryRecords,
 )
 
 from .record_models import (
@@ -295,6 +296,10 @@ class PortalClient(PortalClientBase):
 
     def list_projects(self):
         return self.make_request("get", f"api/v1/projects", List[Dict[str, Any]])
+
+    def query_project_records(self, record_id: Union[int, Iterable[int]]):
+        body = ProjectQueryRecords(record_id=make_list(record_id))
+        return self.make_request("post", f"api/v1/projects/queryrecords", List[Dict], body=body)
 
     ##############################################################
     # Datasets
@@ -879,6 +884,7 @@ class PortalClient(PortalClientBase):
         manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
+        project_id: Optional[Union[int, Iterable[int]]] = None,
         parent_id: Optional[Union[int, Iterable[int]]] = None,
         child_id: Optional[Union[int, Iterable[int]]] = None,
         created_before: Optional[Union[datetime, str]] = None,
@@ -909,6 +915,8 @@ class PortalClient(PortalClientBase):
             Query records whose status is in the given list
         dataset_id
             Query records that are part of a dataset is in the given list
+        project_id
+            Query records belonging to the given project IDs
         parent_id
             Query records that have a parent is in the given list
         child_id
@@ -940,6 +948,7 @@ class PortalClient(PortalClientBase):
             "manager_name": make_list(manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
+            "project_id": make_list(project_id),
             "parent_id": make_list(parent_id),
             "child_id": make_list(child_id),
             "created_before": created_before,
@@ -1265,6 +1274,7 @@ class PortalClient(PortalClientBase):
         manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
+        project_id: Optional[Union[int, Iterable[int]]] = None,
         parent_id: Optional[Union[int, Iterable[int]]] = None,
         created_before: Optional[Union[datetime, str]] = None,
         created_after: Optional[Union[datetime, str]] = None,
@@ -1295,6 +1305,8 @@ class PortalClient(PortalClientBase):
             Query records whose status is in the given list
         dataset_id
             Query records that are part of a dataset is in the given list
+        project_id
+            Query records belonging to the given project IDs
         parent_id
             Query records that have a parent is in the given list
         created_before
@@ -1336,6 +1348,7 @@ class PortalClient(PortalClientBase):
             "manager_name": make_list(manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
+            "project_id": make_list(project_id),
             "parent_id": make_list(parent_id),
             "program": make_list(program),
             "driver": make_list(driver),
@@ -1485,6 +1498,7 @@ class PortalClient(PortalClientBase):
         manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
+        project_id: Optional[Union[int, Iterable[int]]] = None,
         parent_id: Optional[Union[int, Iterable[int]]] = None,
         child_id: Optional[Union[int, Iterable[int]]] = None,
         created_before: Optional[Union[datetime, str]] = None,
@@ -1516,6 +1530,8 @@ class PortalClient(PortalClientBase):
             Query records whose status is in the given list
         dataset_id
             Query records that are part of a dataset is in the given list
+        project_id
+            Query records belonging to the given project IDs
         parent_id
             Query records that have a parent is in the given list
         child_id
@@ -1558,6 +1574,7 @@ class PortalClient(PortalClientBase):
             "manager_name": make_list(manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
+            "project_id": make_list(project_id),
             "parent_id": make_list(parent_id),
             "child_id": make_list(child_id),
             "program": make_list(program),
@@ -1698,6 +1715,7 @@ class PortalClient(PortalClientBase):
         manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
+        project_id: Optional[Union[int, Iterable[int]]] = None,
         parent_id: Optional[Union[int, Iterable[int]]] = None,
         child_id: Optional[Union[int, Iterable[int]]] = None,
         created_before: Optional[Union[datetime, str]] = None,
@@ -1729,6 +1747,8 @@ class PortalClient(PortalClientBase):
             Query records whose status is in the given list
         dataset_id
             Query records that are part of a dataset is in the given list
+        project_id
+            Query records belonging to the given project IDs
         parent_id
             Query records that have a parent is in the given list
         child_id
@@ -1771,6 +1791,7 @@ class PortalClient(PortalClientBase):
             "manager_name": make_list(manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
+            "project_id": make_list(project_id),
             "parent_id": make_list(parent_id),
             "child_id": make_list(child_id),
             "program": make_list(program),
@@ -1911,6 +1932,7 @@ class PortalClient(PortalClientBase):
         manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
+        project_id: Optional[Union[int, Iterable[int]]] = None,
         parent_id: Optional[Union[int, Iterable[int]]] = None,
         child_id: Optional[Union[int, Iterable[int]]] = None,
         created_before: Optional[Union[datetime, str]] = None,
@@ -1942,6 +1964,8 @@ class PortalClient(PortalClientBase):
             Query records whose status is in the given list
         dataset_id
             Query records that are part of a dataset is in the given list
+        project_id
+            Query records belonging to the given project IDs
         parent_id
             Query records that have a parent is in the given list
         child_id
@@ -1984,6 +2008,7 @@ class PortalClient(PortalClientBase):
             "manager_name": make_list(manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
+            "project_id": make_list(project_id),
             "parent_id": make_list(parent_id),
             "child_id": make_list(child_id),
             "program": make_list(program),
@@ -2132,6 +2157,7 @@ class PortalClient(PortalClientBase):
         manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
+        project_id: Optional[Union[int, Iterable[int]]] = None,
         parent_id: Optional[Union[int, Iterable[int]]] = None,
         child_id: Optional[Union[int, Iterable[int]]] = None,
         created_before: Optional[Union[datetime, str]] = None,
@@ -2163,6 +2189,8 @@ class PortalClient(PortalClientBase):
             Query records whose status is in the given list
         dataset_id
             Query records that are part of a dataset is in the given list
+        project_id
+            Query records belonging to the given project IDs
         parent_id
             Query records that have a parent is in the given list
         child_id
@@ -2205,6 +2233,7 @@ class PortalClient(PortalClientBase):
             "manager_name": make_list(manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
+            "project_id": make_list(project_id),
             "parent_id": make_list(parent_id),
             "child_id": make_list(child_id),
             "program": make_list(program),
@@ -2346,6 +2375,7 @@ class PortalClient(PortalClientBase):
         manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
+        project_id: Optional[Union[int, Iterable[int]]] = None,
         parent_id: Optional[Union[int, Iterable[int]]] = None,
         child_id: Optional[Union[int, Iterable[int]]] = None,
         created_before: Optional[Union[datetime, str]] = None,
@@ -2376,6 +2406,8 @@ class PortalClient(PortalClientBase):
             Query records whose status is in the given list
         dataset_id
             Query records that are part of a dataset is in the given list
+        project_id
+            Query records belonging to the given project IDs
         parent_id
             Query records that have a parent is in the given list
         child_id
@@ -2416,6 +2448,7 @@ class PortalClient(PortalClientBase):
             "manager_name": make_list(manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
+            "project_id": make_list(project_id),
             "parent_id": make_list(parent_id),
             "child_id": make_list(child_id),
             "program": make_list(program),
@@ -2561,6 +2594,7 @@ class PortalClient(PortalClientBase):
         manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
+        project_id: Optional[Union[int, Iterable[int]]] = None,
         parent_id: Optional[Union[int, Iterable[int]]] = None,
         child_id: Optional[Union[int, Iterable[int]]] = None,
         created_before: Optional[Union[datetime, str]] = None,
@@ -2591,6 +2625,8 @@ class PortalClient(PortalClientBase):
             Query records whose status is in the given list
         dataset_id
             Query records that are part of a dataset is in the given list
+        project_id
+            Query records belonging to the given project IDs
         parent_id
             Query records that have a parent is in the given list
         child_id
@@ -2631,6 +2667,7 @@ class PortalClient(PortalClientBase):
             "manager_name": make_list(manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
+            "project_id": make_list(project_id),
             "parent_id": make_list(parent_id),
             "child_id": make_list(child_id),
             "program": make_list(program),

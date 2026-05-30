@@ -334,3 +334,41 @@ def test_project_client_import_records(secure_snowflake: QCATestingSnowflake):
         test_r = test_data[rm.name]
         compare_records(server_r, test_r)
         assert server_r.creator_user == "submit_user"
+
+
+def test_project_client_query_records(snowflake_client: PortalClient):
+    proj1 = snowflake_client.add_project(
+        "test project",
+    )
+
+    # Another project for testing
+    proj2 = snowflake_client.add_project(
+        "test project 2",
+    )
+
+    r1 = proj1.add_record("test_record", test_inp_1)
+    r2 = proj2.add_record("test_record 2", test_inp_1, find_existing=False)
+
+    # Query which project contains a record
+    qr = snowflake_client.query_project_records(r2.id)
+    assert len(qr) == 1
+    assert qr[0]["project_id"] == proj2.id
+    assert qr[0]["record_id"] == r2.id
+    assert qr[0]["project_name"] == proj2.name
+    assert qr[0]["record_name"] == "test_record 2"
+
+
+    # Query records by project
+    proj_records = snowflake_client.query_records(project_id=proj1.id)
+    proj_records_l = list(proj_records)
+    assert len(proj_records_l) == 1
+    assert proj_records_l[0].id == r1.id
+
+    # Other projects
+    proj_records = snowflake_client.query_records(project_id=proj1.id+proj2.id+1)
+    assert len(list(proj_records)) == 0
+
+    # Remove/unlink the record from the dataset
+    proj1.unlink_records([r1.id])
+    proj_records = snowflake_client.query_records(project_id=proj1.id)
+    assert len(list(proj_records)) == 0

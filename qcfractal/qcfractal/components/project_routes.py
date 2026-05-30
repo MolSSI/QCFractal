@@ -7,6 +7,7 @@ from qcportal.base_models import ProjURLParameters
 from qcportal.project_models import (
     ProjectAddBody,
     ProjectQueryModel,
+    ProjectQueryRecords,
     ProjectDeleteParams,
     ProjectDatasetAddBody,
     ProjectRecordAddBody,
@@ -36,6 +37,11 @@ def query_general_project_v1(body_data: ProjectQueryModel):
     with storage_socket.session_scope(True) as session:
         project_id = storage_socket.projects.lookup_id(body_data.project_name, session=session)
         return storage_socket.projects.get(project_id, body_data.include, body_data.exclude, session=session)
+
+@api_v1.route("/projects/queryrecords", methods=["POST"])
+@wrap_global_route("projects", "read")
+def query_project_records_v1(body_data: ProjectQueryRecords):
+    return storage_socket.projects.query_project_records(record_id=body_data.record_id)
 
 
 @api_v1.route("/projects/<int:project_id>", methods=["DELETE"])
