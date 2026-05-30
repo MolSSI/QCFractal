@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum
 from typing import Optional, List, Dict, Union
 
@@ -194,3 +194,15 @@ class ErrorLogQueryIterator(QueryIteratorBase[ErrorLogEntry]):
             List[ErrorLogEntry],
             body=self._query_filters,
         )
+
+
+class ServerStatsEntry(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
+    date: date
+    record_count: int
+    cpu_hours: float
+    record_count_details: Dict[str, int]
+    database_size: int
+    timestamp: datetime

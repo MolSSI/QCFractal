@@ -120,6 +120,7 @@ from .serverinfo import (
     ErrorLogQueryFilters,
     ErrorLogQueryIterator,
     DeleteBeforeDateBody,
+    ServerStatsEntry,
 )
 from .utils import make_list, chunk_iterable, process_chunk_iterable
 
@@ -215,6 +216,17 @@ class PortalClient(PortalClientBase):
 
         # Request the info, and store here for later use
         return self.make_request("get", "api/v1/information", Dict[str, Any])
+
+    def get_server_stats(self) -> List[ServerStatsEntry]:
+        """Request statistics about the server
+
+        Returns
+        -------
+        :
+            Server statistics.
+        """
+
+        return self.make_request("get", "api/v1/server_stats", List[ServerStatsEntry])
 
     #################################################
     # Message-of-the-Day (MOTD)

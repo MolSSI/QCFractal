@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional, Iterable, Dict, Any
 
-from sqlalchemy import Column, Integer, TIMESTAMP, String, Float, BigInteger, JSON, Index, CHAR, ForeignKey
+from sqlalchemy import Column, Integer, TIMESTAMP, String, Float, BigInteger, Double, JSON, Index, CHAR, ForeignKey, Date
 from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.orm import relationship
 
@@ -119,3 +119,18 @@ class MessageOfTheDayORM(BaseORM):
 
     id = Column(Integer, primary_key=True)
     motd = Column(String, nullable=False)
+
+
+class ServerStatsORM(BaseORM):
+    """
+    Table for storing server statistics
+    """
+
+    __tablename__ = "server_stats"
+
+    date = Column(Date, primary_key=True)
+    timestamp = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
+    record_count = Column(BigInteger, nullable=False)
+    cpu_hours = Column(Double, nullable=False)
+    record_count_details = Column(JSON, nullable=False)
+    database_size = Column(BigInteger, nullable=False)

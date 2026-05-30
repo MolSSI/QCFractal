@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
 import logging
 import os
 import re
@@ -11,7 +12,7 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 import requests
-from sqlalchemy import and_, or_, func, select, delete
+from sqlalchemy import and_, or_, func, select, delete, text
 from sqlalchemy.orm import load_only
 
 import qcfractal
@@ -23,7 +24,7 @@ from qcportal.serverinfo import (
     ErrorLogQueryFilters,
 )
 from qcportal.utils import now_at_utc
-from .db_models import AccessLogORM, InternalErrorLogORM, MessageOfTheDayORM, ServerStatsMetadataORM
+from .db_models import AccessLogORM, InternalErrorLogORM, MessageOfTheDayORM, ServerStatsMetadataORM, ServerStatsORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -54,6 +55,7 @@ class ServerInfoSocket:
 
         self._geolocate_accesses_frequency = 120  # two minutes should be ok?
         self._update_geoip2_frequency = 60 * 60 * 24  # one day
+        self._update_stats_frequency = 60 * 60 * 24  # one day
 
         # Set up access logging
         self._access_log_enabled = root_socket.qcf_config.log_access
@@ -115,6 +117,18 @@ class ServerInfoSocket:
                     repeat_delay=self._delete_access_log_frequency,
                     session=session,
                 )
+
+            # Updating server statistics
+            self.root_socket.internal_jobs.add(
+                "update_server_stats",
+                now_at_utc() + timedelta(seconds=3.0),
+                "serverinfo.update_server_stats",
+                {},
+                user_id=None,
+                unique_name=True,
+                repeat_delay=self._update_stats_frequency,
+                session=session,
+            )
 
     def update_geoip2_file(self) -> None:
         # Possible to reach this if we changed the settings, but have a job still in the queue
@@ -627,3 +641,74 @@ class ServerInfoSocket:
             stmt = delete(InternalErrorLogORM).where(InternalErrorLogORM.error_date < before)
             r = session.execute(stmt)
             return r.rowcount
+
+    def update_server_stats(self, session: Session) -> None:
+        """
+        Updates server statistics in the database
+        """
+
+        # We go 3 days to update the various stats. This will leave the historical values in case
+        # of large deletions, etc.
+        sql = text(
+            """
+            INSERT
+            INTO server_stats (date, record_count, cpu_hours, timestamp, record_count_details, database_size)
+                SELECT DATE(rch.modified_on) AS date,
+                       COUNT(*)              AS record_count,
+                       SUM(
+                              COALESCE((rch.provenance ->> 'wall_time')::double precision, 0) *
+                              COALESCE((rch.provenance ->> 'nthreads')::double precision, 1)
+                      ) / 3600.0            AS cpu_hours,
+                       NOW()                 AS timestamp,
+                       '{}'::JSON            AS record_count_details,
+                       0::BIGINT             AS database_size
+                FROM record_compute_history rch
+                    INNER JOIN base_record br ON rch.record_id = br.id
+                WHERE rch.status = 'complete'
+                  AND br.status = 'complete'
+                  AND br.record_type = 'singlepoint'
+                  AND rch.modified_on > (CURRENT_DATE - INTERVAL '3 days')
+                GROUP BY DATE(rch.modified_on)
+            ON CONFLICT (date)
+                DO UPDATE SET record_count              = EXCLUDED.record_count,
+                              cpu_hours                 = EXCLUDED.cpu_hours,
+                              timestamp                 = EXCLUDED.timestamp
+            """
+        )
+
+        with self.root_socket.optional_session(session, False) as session:
+            session.execute(sql)
+
+            # Compute current record counts
+            count_sql = text("SELECT record_type, COUNT(*) FROM base_record GROUP BY record_type")
+            counts = session.execute(count_sql).all()
+            record_counts = {r[0]: r[1] for r in counts}
+
+            # Compute database size
+            size_sql = text("SELECT pg_database_size(current_database())")
+            db_size = session.execute(size_sql).scalar()
+
+            # Update today's row
+            update_sql = text(
+                """
+                INSERT INTO server_stats (date, record_count, cpu_hours, record_count_details, database_size, timestamp)
+                VALUES (CURRENT_DATE, 0, 0, :counts, :size, NOW())
+                ON CONFLICT (date) DO UPDATE SET
+                    record_count_details = EXCLUDED.record_count_details,
+                    database_size = EXCLUDED.database_size,
+                    timestamp = EXCLUDED.timestamp
+                """
+            )
+            session.execute(update_sql, {"counts": json.dumps(record_counts), "size": db_size})
+
+            session.commit()
+
+    def get_server_stats(self, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
+        """
+        Obtains server statistics from the database
+        """
+
+        stmt = select(ServerStatsORM).order_by(ServerStatsORM.date.asc())
+        with self.root_socket.optional_session(session, True) as session:
+            results = session.execute(stmt).scalars().all()
+            return [r.model_dict() for r in results]
