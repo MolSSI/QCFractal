@@ -63,7 +63,7 @@ def test_reset_logic_dict_comprehension_bug(postgres_server, pytestconfig):
             assert len(tasks) == 1
             storage_socket.tasks.update_finished(
                 activated_manager_name.fullname,
-                {tasks[0]["id"]: compress_result(fop_bad_state.dict())}
+                {tasks[0]["id"]: compress_result(fop_bad_state.model_dump())}
             )
             session.expire(rec)
             assert rec.status == RecordStatusEnum.waiting
@@ -80,7 +80,7 @@ def test_reset_logic_dict_comprehension_bug(postgres_server, pytestconfig):
                 assert len(tasks) == 1
                 storage_socket.tasks.update_finished(
                     activated_manager_name.fullname,
-                    {tasks[0]["id"]: compress_result(fop_too_many.dict())}
+                    {tasks[0]["id"]: compress_result(fop_too_many.model_dump())}
                 )
                 session.expire(rec)
             
