@@ -287,6 +287,11 @@ class RecordSocket:
         if query_data.modified_after is not None:
             and_query.append(orm_type.modified_on >= query_data.modified_after)
 
+        if query_data.history_manager_name is not None:
+            stmt = stmt.join(RecordComputeHistoryORM, RecordComputeHistoryORM.record_id == orm_type.id, isouter=True)
+            and_query.append(or_(RecordComputeHistoryORM.manager_name.in_(query_data.history_manager_name),
+            orm_type.manager_name.in_(query_data.history_manager_name)))
+
         if query_data.creator_user is not None:
             stmt = stmt.join(UserIDMapSubquery)
 

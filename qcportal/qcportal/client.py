@@ -882,6 +882,7 @@ class PortalClient(PortalClientBase):
         record_id: Optional[Union[int, Iterable[int]]] = None,
         record_type: Optional[Union[str, Iterable[str]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
+        history_manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
         project_id: Optional[Union[int, Iterable[int]]] = None,
@@ -911,6 +912,8 @@ class PortalClient(PortalClientBase):
             Query records whose type is in the given list
         manager_name
             Query records that were completed (or are currently runnning) on a manager is in the given list
+        history_manager_name
+            Query any records that have been run by the given manager(s), even if not currently assigned
         status
             Query records whose status is in the given list
         dataset_id
@@ -946,6 +949,7 @@ class PortalClient(PortalClientBase):
             "record_id": make_list(record_id),
             "record_type": make_list(record_type),
             "manager_name": make_list(manager_name),
+            "history_manager_name": make_list(history_manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
             "project_id": make_list(project_id),
@@ -1272,6 +1276,7 @@ class PortalClient(PortalClientBase):
         *,
         record_id: Optional[Union[int, Iterable[int]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
+        history_manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
         project_id: Optional[Union[int, Iterable[int]]] = None,
@@ -1301,6 +1306,8 @@ class PortalClient(PortalClientBase):
             Query records whose ID is in the given list
         manager_name
             Query records that were completed (or are currently runnning) on a manager is in the given list
+        history_manager_name
+            Query any records that have been run by the given manager(s), even if not currently assigned
         status
             Query records whose status is in the given list
         dataset_id
@@ -1346,6 +1353,7 @@ class PortalClient(PortalClientBase):
         filter_dict = {
             "record_id": make_list(record_id),
             "manager_name": make_list(manager_name),
+            "history_manager_name": make_list(history_manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
             "project_id": make_list(project_id),
@@ -1496,6 +1504,7 @@ class PortalClient(PortalClientBase):
         *,
         record_id: Optional[Union[int, Iterable[int]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
+        history_manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
         project_id: Optional[Union[int, Iterable[int]]] = None,
@@ -1526,6 +1535,8 @@ class PortalClient(PortalClientBase):
             Query records whose ID is in the given list
         manager_name
             Query records that were completed (or are currently runnning) on a manager is in the given list
+        history_manager_name
+            Query any records that have been run by the given manager(s), even if not currently assigned
         status
             Query records whose status is in the given list
         dataset_id
@@ -1572,6 +1583,7 @@ class PortalClient(PortalClientBase):
         filter_dict = {
             "record_id": make_list(record_id),
             "manager_name": make_list(manager_name),
+            "history_manager_name": make_list(history_manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
             "project_id": make_list(project_id),
@@ -1713,6 +1725,7 @@ class PortalClient(PortalClientBase):
         *,
         record_id: Optional[Union[int, Iterable[int]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
+        history_manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
         project_id: Optional[Union[int, Iterable[int]]] = None,
@@ -1743,6 +1756,8 @@ class PortalClient(PortalClientBase):
             Query records whose ID is in the given list
         manager_name
             Query records that were completed (or are currently runnning) on a manager is in the given list
+        history_manager_name
+            Query any records that have been run by the given manager(s), even if not currently assigned
         status
             Query records whose status is in the given list
         dataset_id
@@ -1789,6 +1804,7 @@ class PortalClient(PortalClientBase):
         filter_dict = {
             "record_id": make_list(record_id),
             "manager_name": make_list(manager_name),
+            "history_manager_name": make_list(history_manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
             "project_id": make_list(project_id),
@@ -1930,6 +1946,7 @@ class PortalClient(PortalClientBase):
         *,
         record_id: Optional[Union[int, Iterable[int]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
+        history_manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
         project_id: Optional[Union[int, Iterable[int]]] = None,
@@ -1960,6 +1977,8 @@ class PortalClient(PortalClientBase):
             Query records whose ID is in the given list
         manager_name
             Query records that were completed (or are currently runnning) on a manager is in the given list
+        history_manager_name
+            Query any records that have been run by the given manager(s), even if not currently assigned
         status
             Query records whose status is in the given list
         dataset_id
@@ -2006,6 +2025,7 @@ class PortalClient(PortalClientBase):
         filter_dict = {
             "record_id": make_list(record_id),
             "manager_name": make_list(manager_name),
+            "history_manager_name": make_list(history_manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
             "project_id": make_list(project_id),
@@ -2155,6 +2175,7 @@ class PortalClient(PortalClientBase):
         *,
         record_id: Optional[Union[int, Iterable[int]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
+        history_manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
         project_id: Optional[Union[int, Iterable[int]]] = None,
@@ -2185,6 +2206,8 @@ class PortalClient(PortalClientBase):
             Query records whose ID is in the given list
         manager_name
             Query records that were completed (or are currently runnning) on a manager is in the given list
+        history_manager_name
+            Query any records that have been run by the given manager(s), even if not currently assigned
         status
             Query records whose status is in the given list
         dataset_id
@@ -2231,6 +2254,7 @@ class PortalClient(PortalClientBase):
         filter_dict = {
             "record_id": make_list(record_id),
             "manager_name": make_list(manager_name),
+            "history_manager_name": make_list(history_manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
             "project_id": make_list(project_id),
@@ -2373,6 +2397,7 @@ class PortalClient(PortalClientBase):
         *,
         record_id: Optional[Union[int, Iterable[int]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
+        history_manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
         project_id: Optional[Union[int, Iterable[int]]] = None,
@@ -2402,6 +2427,8 @@ class PortalClient(PortalClientBase):
             Query records whose ID is in the given list
         manager_name
             Query records that were completed (or are currently runnning) on a manager is in the given list
+        history_manager_name
+            Query any records that have been run by the given manager(s), even if not currently assigned
         status
             Query records whose status is in the given list
         dataset_id
@@ -2446,6 +2473,7 @@ class PortalClient(PortalClientBase):
         filter_dict = {
             "record_id": make_list(record_id),
             "manager_name": make_list(manager_name),
+            "history_manager_name": make_list(history_manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
             "project_id": make_list(project_id),
@@ -2592,6 +2620,7 @@ class PortalClient(PortalClientBase):
         *,
         record_id: Optional[Union[int, Iterable[int]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
+        history_manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         dataset_id: Optional[Union[int, Iterable[int]]] = None,
         project_id: Optional[Union[int, Iterable[int]]] = None,
@@ -2621,6 +2650,8 @@ class PortalClient(PortalClientBase):
             Query records whose ID is in the given list
         manager_name
             Query records that were completed (or are currently runnning) on a manager is in the given list
+        history_manager_name
+            Query any records that have been run by the given manager(s), even if not currently assigned
         status
             Query records whose status is in the given list
         dataset_id
@@ -2665,6 +2696,7 @@ class PortalClient(PortalClientBase):
         filter_dict = {
             "record_id": make_list(record_id),
             "manager_name": make_list(manager_name),
+            "history_manager_name": make_list(history_manager_name),
             "status": make_list(status),
             "dataset_id": make_list(dataset_id),
             "project_id": make_list(project_id),

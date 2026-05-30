@@ -823,6 +823,7 @@ class RecordQueryFilters(QueryModelBase):
     record_id: Optional[List[int]] = None
     record_type: Optional[List[str]] = None
     manager_name: Optional[List[str]] = None
+    history_manager_name: Optional[List[str]] = None
     status: Optional[List[RecordStatusEnum]] = None
     dataset_id: Optional[List[int]] = None
     project_id: Optional[List[int]] = None

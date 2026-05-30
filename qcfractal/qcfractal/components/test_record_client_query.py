@@ -99,6 +99,10 @@ def test_record_client_query(queryable_records_client: PortalClient):
     query_res_l = list(query_res)
     assert len(query_res_l) == 4
 
+    query_res = queryable_records_client.query_records(history_manager_name=manager.name)
+    query_res_l = list(query_res)
+    assert len(query_res_l) == 4
+
     # Querying based on status
     query_res = queryable_records_client.query_records(status=[RecordStatusEnum.error])
     query_res_l = list(query_res)
