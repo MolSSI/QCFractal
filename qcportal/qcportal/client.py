@@ -1711,7 +1711,6 @@ class PortalClient(PortalClientBase):
         qc_basis: Optional[Union[str, Iterable[str]]] = None,
         initial_molecule_id: Optional[Union[int, Iterable[int]]] = None,
         creator_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
-        creator_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator[TorsiondriveRecord]:
