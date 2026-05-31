@@ -35,6 +35,7 @@ from qcportal.record_models import PriorityEnum, RecordStatusEnum, OutputTypeEnu
 from qcportal.utils import chunk_iterable, now_at_utc, is_included
 from .base_record_socket import BaseRecordSocket
 from .outputstore.utils import create_output_orm
+from .project_db_models import ProjectRecordORM
 from .record_db_models import (
     RecordComputeHistoryORM,
     BaseRecordORM,
@@ -286,6 +287,11 @@ class RecordSocket:
         if query_data.modified_after is not None:
             and_query.append(orm_type.modified_on >= query_data.modified_after)
 
+        if query_data.history_manager_name is not None:
+            stmt = stmt.join(RecordComputeHistoryORM, RecordComputeHistoryORM.record_id == orm_type.id, isouter=True)
+            and_query.append(or_(RecordComputeHistoryORM.manager_name.in_(query_data.history_manager_name),
+            orm_type.manager_name.in_(query_data.history_manager_name)))
+
         if query_data.creator_user is not None:
             stmt = stmt.join(UserIDMapSubquery)
 
@@ -311,6 +317,10 @@ class RecordSocket:
         if query_data.dataset_id is not None:
             stmt = stmt.join(DatasetDirectRecordsView, DatasetDirectRecordsView.c.record_id == orm_type.id)
             stmt = stmt.where(DatasetDirectRecordsView.c.dataset_id.in_(query_data.dataset_id))
+
+        if query_data.project_id is not None:
+            stmt = stmt.join(ProjectRecordORM, ProjectRecordORM.record_id == orm_type.id)
+            stmt = stmt.where(ProjectRecordORM.project_id.in_(query_data.project_id))
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = stmt.where(*and_query)

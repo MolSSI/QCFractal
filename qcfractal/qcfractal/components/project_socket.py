@@ -239,6 +239,40 @@ class ProjectSocket:
             stmt = stmt.where(ProjectORM.id == project_id)
             session.execute(stmt)
 
+    def query_project_records(
+            self,
+            record_id: Iterable[int],
+            *,
+            session: Optional[Session] = None,
+    ):
+        """
+        Query which projects the specified records belong to
+
+        This returns a dictionary containing the project id, project name, and the
+        name of the record in the project
+        """
+
+        stmt = select(
+            ProjectRecordORM.record_id,
+            ProjectRecordORM.project_id,
+            ProjectORM.name,
+            ProjectRecordORM.name,
+        )
+        stmt = stmt.join(ProjectORM, ProjectORM.id == ProjectRecordORM.project_id)
+        stmt = stmt.where(ProjectRecordORM.record_id.in_(record_id))
+
+        with self.root_socket.optional_session(session, True) as session:
+            ret = session.execute(stmt).all()
+            return [
+                {
+                    "record_id": x[0],
+                    "project_id": x[1],
+                    "project_name": x[2],
+                    "record_name": x[3],
+                }
+                for x in ret
+            ]
+
     #################################
     # Status and General Info
     #################################

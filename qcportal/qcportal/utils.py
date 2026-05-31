@@ -14,7 +14,7 @@ import re
 import time
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from hashlib import sha256
-from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Generator, Iterable, Callable, Set, Tuple
+from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Generator, Iterable, Callable, Set, Tuple, overload
 
 import numpy as np
 
@@ -23,7 +23,16 @@ from qcportal.serialization import _JSONEncoder
 _T = TypeVar("_T")
 
 
-def make_list(obj: Optional[Union[_T, Sequence[_T], Set[_T]]]) -> Optional[List[_T]]:
+@overload
+def make_list(obj: Union[Sequence[_T], Set[_T], Iterable[_T], _T]) -> List[_T]: ...
+
+@overload
+def make_list(obj: Optional[Union[Sequence[_T], Set[_T], Iterable[_T], _T]]) -> Optional[List[_T]]: ...
+
+@overload
+def make_list(obj: None) -> None: ...
+
+def make_list(obj: Optional[Union[Sequence[_T], Set[_T], Iterable[_T], _T]]) -> Optional[List[_T]]:
     """
     Returns a list containing obj if obj is not a list or other iterable type object
 

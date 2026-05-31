@@ -139,6 +139,9 @@ class ProjectDatasetMetadata(BaseModel):
     tags: List[str]
 
 
+class ProjectQueryRecords(RestModelBase):
+    record_id: List[int]
+
 class Project(BaseModel):
     class Config:
         extra = Extra.forbid
