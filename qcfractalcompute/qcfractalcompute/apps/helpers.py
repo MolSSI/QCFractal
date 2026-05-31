@@ -79,8 +79,22 @@ def run_conda_subprocess(
                 ret = {}
             else:
                 ret = json.loads(proc_result.stdout)
-        except json.JSONDecodeError as e:
-            raise RuntimeError(f"Failed to parse JSON from subprocess stdout: {proc_result.stdout}")
+        except json.JSONDecodeError:
+            # Local patch (BUG_qcfractalcompute_xtb_json_parse, 2026-05-30):
+            # xtb on systems with near-degenerate frontier orbitals prints
+            # non-JSON output (STDA-like excitation analysis) to stdout BEFORE
+            # the qcengine result JSON. Scan back for the last well-formed
+            # JSON object. Remove when upstream merges the fix.
+            import re
+            ret = None
+            for _m in reversed(list(re.finditer(r"^\s*\{", proc_result.stdout, re.MULTILINE))):
+                try:
+                    ret, _ = json.JSONDecoder().raw_decode(proc_result.stdout[_m.start():])
+                    break
+                except json.JSONDecodeError:
+                    continue
+            if ret is None:
+                raise RuntimeError(f"Failed to parse JSON from subprocess stdout: {proc_result.stdout[-2000:]}")
     else:
         msg = (
             f"Subprocess failed with error code {proc_result.returncode}\n"
