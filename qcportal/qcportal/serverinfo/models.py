@@ -4,6 +4,8 @@ from typing import Optional, List, Dict, Union
 
 from dateutil.parser import parse as date_parser
 
+from qcportal.record_models import RecordStatusEnum
+
 try:
     from pydantic.v1 import BaseModel, Extra, validator, IPvAnyAddress, constr
 except ImportError:
@@ -203,6 +205,6 @@ class ServerStatsEntry(BaseModel):
     date: date
     record_count: int
     cpu_hours: float
-    record_count_details: Dict[str, int]
+    record_count_details: Dict[str, Dict[RecordStatusEnum, int]]
     database_size: int
     timestamp: datetime

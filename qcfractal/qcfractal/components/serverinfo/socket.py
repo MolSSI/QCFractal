@@ -680,9 +680,14 @@ class ServerInfoSocket:
             session.execute(sql)
 
             # Compute current record counts
-            count_sql = text("SELECT record_type, COUNT(*) FROM base_record GROUP BY record_type")
+            count_sql = text("SELECT record_type, status, COUNT(*) FROM base_record GROUP BY record_type, status")
             counts = session.execute(count_sql).all()
-            record_counts = {r[0]: r[1] for r in counts}
+
+            record_counts = {}
+            for record_type, status, count in counts:
+                if record_type not in record_counts:
+                    record_counts[record_type] = {}
+                record_counts[record_type][status] = count
 
             # Compute database size
             size_sql = text("SELECT pg_database_size(current_database())")
