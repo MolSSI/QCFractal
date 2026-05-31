@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
 
-    <script src="../../_static/documentation_options.js?v=16bf548e"></script>
+    <script src="../../_static/documentation_options.js?v=9ed4814e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.64.post20+g87f212b22" />
+  <meta name="docsearch:version" content="0.64.post26+g04ac5d28a" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -555,6 +555,7 @@
     <span class="n">ProjectAddBody</span><span class="p">,</span>
     <span class="n">ProjectDeleteParams</span><span class="p">,</span>
     <span class="n">ProjectQueryModel</span><span class="p">,</span>
+    <span class="n">ProjectQueryRecords</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -778,6 +779,13 @@
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_projects">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">list_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span></div>
+
+
+<div class="viewcode-block" id="PortalClient.query_project_records">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.query_project_records">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_project_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]):</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">ProjectQueryRecords</span><span class="p">(</span><span class="n">record_id</span><span class="o">=</span><span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/queryrecords&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span></div>
 
 
     <span class="c1">##############################################################</span>
@@ -1426,8 +1434,10 @@
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">record_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">history_manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">dataset_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">parent_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">child_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">created_before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1454,10 +1464,14 @@
 <span class="sd">            Query records whose type is in the given list</span>
 <span class="sd">        manager_name</span>
 <span class="sd">            Query records that were completed (or are currently runnning) on a manager is in the given list</span>
+<span class="sd">        history_manager_name</span>
+<span class="sd">            Query any records that have been run by the given manager(s), even if not currently assigned</span>
 <span class="sd">        status</span>
 <span class="sd">            Query records whose status is in the given list</span>
 <span class="sd">        dataset_id</span>
 <span class="sd">            Query records that are part of a dataset is in the given list</span>
+<span class="sd">        project_id</span>
+<span class="sd">            Query records belonging to the given project IDs</span>
 <span class="sd">        parent_id</span>
 <span class="sd">            Query records that have a parent is in the given list</span>
 <span class="sd">        child_id</span>
@@ -1487,8 +1501,10 @@
             <span class="s2">&quot;record_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">),</span>
             <span class="s2">&quot;record_type&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_type</span><span class="p">),</span>
             <span class="s2">&quot;manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">manager_name</span><span class="p">),</span>
+            <span class="s2">&quot;history_manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">history_manager_name</span><span class="p">),</span>
             <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">status</span><span class="p">),</span>
             <span class="s2">&quot;dataset_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">),</span>
+            <span class="s2">&quot;project_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span>
             <span class="s2">&quot;parent_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">parent_id</span><span class="p">),</span>
             <span class="s2">&quot;child_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">child_id</span><span class="p">),</span>
             <span class="s2">&quot;created_before&quot;</span><span class="p">:</span> <span class="n">created_before</span><span class="p">,</span>
@@ -1851,8 +1867,10 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">history_manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">dataset_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">parent_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">created_before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">created_after</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1879,10 +1897,14 @@
 <span class="sd">            Query records whose ID is in the given list</span>
 <span class="sd">        manager_name</span>
 <span class="sd">            Query records that were completed (or are currently runnning) on a manager is in the given list</span>
+<span class="sd">        history_manager_name</span>
+<span class="sd">            Query any records that have been run by the given manager(s), even if not currently assigned</span>
 <span class="sd">        status</span>
 <span class="sd">            Query records whose status is in the given list</span>
 <span class="sd">        dataset_id</span>
 <span class="sd">            Query records that are part of a dataset is in the given list</span>
+<span class="sd">        project_id</span>
+<span class="sd">            Query records belonging to the given project IDs</span>
 <span class="sd">        parent_id</span>
 <span class="sd">            Query records that have a parent is in the given list</span>
 <span class="sd">        created_before</span>
@@ -1922,8 +1944,10 @@
         <span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;record_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">),</span>
             <span class="s2">&quot;manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">manager_name</span><span class="p">),</span>
+            <span class="s2">&quot;history_manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">history_manager_name</span><span class="p">),</span>
             <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">status</span><span class="p">),</span>
             <span class="s2">&quot;dataset_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">),</span>
+            <span class="s2">&quot;project_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span>
             <span class="s2">&quot;parent_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">parent_id</span><span class="p">),</span>
             <span class="s2">&quot;program&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">program</span><span class="p">),</span>
             <span class="s2">&quot;driver&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">driver</span><span class="p">),</span>
@@ -2080,8 +2104,10 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">history_manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">dataset_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">parent_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">child_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">created_before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2109,10 +2135,14 @@
 <span class="sd">            Query records whose ID is in the given list</span>
 <span class="sd">        manager_name</span>
 <span class="sd">            Query records that were completed (or are currently runnning) on a manager is in the given list</span>
+<span class="sd">        history_manager_name</span>
+<span class="sd">            Query any records that have been run by the given manager(s), even if not currently assigned</span>
 <span class="sd">        status</span>
 <span class="sd">            Query records whose status is in the given list</span>
 <span class="sd">        dataset_id</span>
 <span class="sd">            Query records that are part of a dataset is in the given list</span>
+<span class="sd">        project_id</span>
+<span class="sd">            Query records belonging to the given project IDs</span>
 <span class="sd">        parent_id</span>
 <span class="sd">            Query records that have a parent is in the given list</span>
 <span class="sd">        child_id</span>
@@ -2153,8 +2183,10 @@
         <span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;record_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">),</span>
             <span class="s2">&quot;manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">manager_name</span><span class="p">),</span>
+            <span class="s2">&quot;history_manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">history_manager_name</span><span class="p">),</span>
             <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">status</span><span class="p">),</span>
             <span class="s2">&quot;dataset_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">),</span>
+            <span class="s2">&quot;project_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span>
             <span class="s2">&quot;parent_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">parent_id</span><span class="p">),</span>
             <span class="s2">&quot;child_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">child_id</span><span class="p">),</span>
             <span class="s2">&quot;program&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">program</span><span class="p">),</span>
@@ -2302,8 +2334,10 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">history_manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">dataset_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">parent_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">child_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">created_before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2317,7 +2351,6 @@
         <span class="n">qc_basis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">initial_molecule_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">creator_user</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">creator_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecordQueryIterator</span><span class="p">[</span><span class="n">TorsiondriveRecord</span><span class="p">]:</span>
@@ -2332,10 +2365,14 @@
 <span class="sd">            Query records whose ID is in the given list</span>
 <span class="sd">        manager_name</span>
 <span class="sd">            Query records that were completed (or are currently runnning) on a manager is in the given list</span>
+<span class="sd">        history_manager_name</span>
+<span class="sd">            Query any records that have been run by the given manager(s), even if not currently assigned</span>
 <span class="sd">        status</span>
 <span class="sd">            Query records whose status is in the given list</span>
 <span class="sd">        dataset_id</span>
 <span class="sd">            Query records that are part of a dataset is in the given list</span>
+<span class="sd">        project_id</span>
+<span class="sd">            Query records belonging to the given project IDs</span>
 <span class="sd">        parent_id</span>
 <span class="sd">            Query records that have a parent is in the given list</span>
 <span class="sd">        child_id</span>
@@ -2376,8 +2413,10 @@
         <span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;record_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">),</span>
             <span class="s2">&quot;manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">manager_name</span><span class="p">),</span>
+            <span class="s2">&quot;history_manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">history_manager_name</span><span class="p">),</span>
             <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">status</span><span class="p">),</span>
             <span class="s2">&quot;dataset_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">),</span>
+            <span class="s2">&quot;project_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span>
             <span class="s2">&quot;parent_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">parent_id</span><span class="p">),</span>
             <span class="s2">&quot;child_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">child_id</span><span class="p">),</span>
             <span class="s2">&quot;program&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">program</span><span class="p">),</span>
@@ -2525,8 +2564,10 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">history_manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">dataset_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">parent_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">child_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">created_before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2554,10 +2595,14 @@
 <span class="sd">            Query records whose ID is in the given list</span>
 <span class="sd">        manager_name</span>
 <span class="sd">            Query records that were completed (or are currently runnning) on a manager is in the given list</span>
+<span class="sd">        history_manager_name</span>
+<span class="sd">            Query any records that have been run by the given manager(s), even if not currently assigned</span>
 <span class="sd">        status</span>
 <span class="sd">            Query records whose status is in the given list</span>
 <span class="sd">        dataset_id</span>
 <span class="sd">            Query records that are part of a dataset is in the given list</span>
+<span class="sd">        project_id</span>
+<span class="sd">            Query records belonging to the given project IDs</span>
 <span class="sd">        parent_id</span>
 <span class="sd">            Query records that have a parent is in the given list</span>
 <span class="sd">        child_id</span>
@@ -2598,8 +2643,10 @@
         <span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;record_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">),</span>
             <span class="s2">&quot;manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">manager_name</span><span class="p">),</span>
+            <span class="s2">&quot;history_manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">history_manager_name</span><span class="p">),</span>
             <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">status</span><span class="p">),</span>
             <span class="s2">&quot;dataset_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">),</span>
+            <span class="s2">&quot;project_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span>
             <span class="s2">&quot;parent_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">parent_id</span><span class="p">),</span>
             <span class="s2">&quot;child_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">child_id</span><span class="p">),</span>
             <span class="s2">&quot;program&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">program</span><span class="p">),</span>
@@ -2755,8 +2802,10 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">history_manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">dataset_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">parent_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">child_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">created_before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2784,10 +2833,14 @@
 <span class="sd">            Query records whose ID is in the given list</span>
 <span class="sd">        manager_name</span>
 <span class="sd">            Query records that were completed (or are currently runnning) on a manager is in the given list</span>
+<span class="sd">        history_manager_name</span>
+<span class="sd">            Query any records that have been run by the given manager(s), even if not currently assigned</span>
 <span class="sd">        status</span>
 <span class="sd">            Query records whose status is in the given list</span>
 <span class="sd">        dataset_id</span>
 <span class="sd">            Query records that are part of a dataset is in the given list</span>
+<span class="sd">        project_id</span>
+<span class="sd">            Query records belonging to the given project IDs</span>
 <span class="sd">        parent_id</span>
 <span class="sd">            Query records that have a parent is in the given list</span>
 <span class="sd">        child_id</span>
@@ -2828,8 +2881,10 @@
         <span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;record_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">),</span>
             <span class="s2">&quot;manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">manager_name</span><span class="p">),</span>
+            <span class="s2">&quot;history_manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">history_manager_name</span><span class="p">),</span>
             <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">status</span><span class="p">),</span>
             <span class="s2">&quot;dataset_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">),</span>
+            <span class="s2">&quot;project_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span>
             <span class="s2">&quot;parent_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">parent_id</span><span class="p">),</span>
             <span class="s2">&quot;child_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">child_id</span><span class="p">),</span>
             <span class="s2">&quot;program&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">program</span><span class="p">),</span>
@@ -2978,8 +3033,10 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">history_manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">dataset_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">parent_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">child_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">created_before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -3006,10 +3063,14 @@
 <span class="sd">            Query records whose ID is in the given list</span>
 <span class="sd">        manager_name</span>
 <span class="sd">            Query records that were completed (or are currently runnning) on a manager is in the given list</span>
+<span class="sd">        history_manager_name</span>
+<span class="sd">            Query any records that have been run by the given manager(s), even if not currently assigned</span>
 <span class="sd">        status</span>
 <span class="sd">            Query records whose status is in the given list</span>
 <span class="sd">        dataset_id</span>
 <span class="sd">            Query records that are part of a dataset is in the given list</span>
+<span class="sd">        project_id</span>
+<span class="sd">            Query records belonging to the given project IDs</span>
 <span class="sd">        parent_id</span>
 <span class="sd">            Query records that have a parent is in the given list</span>
 <span class="sd">        child_id</span>
@@ -3048,8 +3109,10 @@
         <span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;record_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">),</span>
             <span class="s2">&quot;manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">manager_name</span><span class="p">),</span>
+            <span class="s2">&quot;history_manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">history_manager_name</span><span class="p">),</span>
             <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">status</span><span class="p">),</span>
             <span class="s2">&quot;dataset_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">),</span>
+            <span class="s2">&quot;project_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span>
             <span class="s2">&quot;parent_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">parent_id</span><span class="p">),</span>
             <span class="s2">&quot;child_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">child_id</span><span class="p">),</span>
             <span class="s2">&quot;program&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">program</span><span class="p">),</span>
@@ -3202,8 +3265,10 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">record_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">history_manager_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">dataset_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">parent_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">child_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">created_before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -3230,10 +3295,14 @@
 <span class="sd">            Query records whose ID is in the given list</span>
 <span class="sd">        manager_name</span>
 <span class="sd">            Query records that were completed (or are currently runnning) on a manager is in the given list</span>
+<span class="sd">        history_manager_name</span>
+<span class="sd">            Query any records that have been run by the given manager(s), even if not currently assigned</span>
 <span class="sd">        status</span>
 <span class="sd">            Query records whose status is in the given list</span>
 <span class="sd">        dataset_id</span>
 <span class="sd">            Query records that are part of a dataset is in the given list</span>
+<span class="sd">        project_id</span>
+<span class="sd">            Query records belonging to the given project IDs</span>
 <span class="sd">        parent_id</span>
 <span class="sd">            Query records that have a parent is in the given list</span>
 <span class="sd">        child_id</span>
@@ -3272,8 +3341,10 @@
         <span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;record_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">),</span>
             <span class="s2">&quot;manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">manager_name</span><span class="p">),</span>
+            <span class="s2">&quot;history_manager_name&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">history_manager_name</span><span class="p">),</span>
             <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">status</span><span class="p">),</span>
             <span class="s2">&quot;dataset_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">),</span>
+            <span class="s2">&quot;project_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span>
             <span class="s2">&quot;parent_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">parent_id</span><span class="p">),</span>
             <span class="s2">&quot;child_id&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">child_id</span><span class="p">),</span>
             <span class="s2">&quot;program&quot;</span><span class="p">:</span> <span class="n">make_list</span><span class="p">(</span><span class="n">program</span><span class="p">),</span>
