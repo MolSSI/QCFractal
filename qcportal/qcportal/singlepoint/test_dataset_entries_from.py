@@ -192,3 +192,76 @@ def test_singlepoint_dataset_model_entries_from_errors(snowflake: QCATestingSnow
     # Source is optimization ds, but no specification given
     with pytest.raises(PortalRequestError, match="from_specification_name must be provided"):
         sp_ds.add_entries_from(dataset_id=src_opt_ds.id)
+
+
+
+@pytest.mark.parametrize("use_id", [True, False])
+def test_torsiondrive_dataset_model_entries_from_opt_1(snowflake: QCATestingSnowflake, use_id: bool):
+    snowflake_client = snowflake.client()
+    src_ds = snowflake_client.add_dataset("optimization", "Test src optimization dataset")
+
+    # Slight cheat
+    # Run the data as standalone calculations just so they finish
+    activated_manager_name, _ = snowflake.activate_manager()
+    socket = snowflake.get_storage_socket()
+    run_optimization_procedure_data(socket, activated_manager_name, "opt_psi4_benzene")
+    run_optimization_procedure_data(socket, activated_manager_name, "opt_psi4_methane")
+
+    # Now load as a dataset entry/spec
+    input_spec_1, molecule_1, _ = load_optimization_procedure_data("opt_psi4_benzene")
+    input_spec_2, molecule_2, _ = load_optimization_procedure_data("opt_psi4_methane")
+    molecule_3 = load_molecule_data("hooh")  # Won't be run
+
+    src_ds.add_entry(
+        name="test_molecule_1", initial_molecule=molecule_1, comment="This is a comment", attributes={"key": "value"}
+    )
+    src_ds.add_entry(name="test_molecule_2", initial_molecule=molecule_2)
+    src_ds.add_entry(name="test_molecule_3", initial_molecule=molecule_3)
+    src_ds.add_specification("test_spec", input_spec_1, "test_specification")
+
+    src_ds.submit()
+    assert src_ds.status()["test_spec"]["complete"] == 2
+    assert src_ds.status()["test_spec"]["waiting"] == 1
+
+    # Now create the torsiondrive dataset
+    td_ds = snowflake_client.add_dataset("torsiondrive", "Test torsiondrive dataset")
+
+    if use_id:
+        m = td_ds.add_entries_from(dataset_id=src_ds.id, specification_name="test_spec")
+    else:
+        # Purposefully change case of name - should be case insensitive
+        m = td_ds.add_entries_from(
+            dataset_type="optimization", dataset_name=src_ds.name.upper(), specification_name="test_spec"
+        )
+    assert m.n_inserted == 2
+
+    # refetch for up-to-date info
+    td_ds = snowflake_client.get_dataset_by_id(td_ds.id)
+
+    # Is missing molecule_3 - wasn't run
+    assert set(td_ds.entry_names) == {"test_molecule_1", "test_molecule_2"}
+
+    td_entry_1 = td_ds.get_entry("test_molecule_1")
+    td_entry_2 = td_ds.get_entry("test_molecule_2")
+    opt_entry_1 = src_ds.get_entry("test_molecule_1")
+    opt_entry_2 = src_ds.get_entry("test_molecule_2")
+    opt_record_1 = src_ds.get_record("test_molecule_1", "test_spec")
+    opt_record_2 = src_ds.get_record("test_molecule_2", "test_spec")
+
+    assert opt_record_1.final_molecule_id == td_entry_1.initial_molecules[0].id
+    assert opt_record_2.final_molecule_id == td_entry_2.initial_molecules[0].id
+
+    assert opt_entry_1.comment == td_entry_1.comment
+    assert opt_entry_2.comment == td_entry_2.comment
+
+    assert opt_entry_1.attributes == td_entry_1.attributes
+    assert opt_entry_2.attributes == td_entry_2.attributes
+
+    # If we add again, nothing happens
+    if use_id:
+        m = td_ds.add_entries_from(dataset_id=src_ds.id, specification_name="test_spec")
+    else:
+        m = td_ds.add_entries_from(
+            dataset_type="optimization", dataset_name=src_ds.name.upper(), specification_name="test_spec"
+        )
+    assert m.n_inserted == 0

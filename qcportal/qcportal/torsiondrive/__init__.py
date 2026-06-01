@@ -3,6 +3,7 @@ from .dataset_models import (
     TorsiondriveDatasetNewEntry,
     TorsiondriveDatasetSpecification,
     TorsiondriveDatasetEntry,
+    TorsiondriveDatasetEntriesFrom,
 )
 from .record_models import (
     serialize_key,

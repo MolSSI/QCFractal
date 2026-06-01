@@ -259,24 +259,27 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
                     )
 
             if from_dataset_type == "singlepoint":
-                stmt = """
-                    INSERT INTO singlepoint_dataset_entry (dataset_id, name, comment, molecule_id, attributes, additional_keywords)
-                    SELECT :dataset_id, sde.name, sde.comment, sde.molecule_id, sde.attributes, sde.additional_keywords
-                    FROM singlepoint_dataset_entry sde
-                    WHERE sde.dataset_id = :from_dataset_id
-                    ON CONFLICT (dataset_id, name) DO NOTHING
-                    RETURNING 1
-                """
+                stmt = text("""
+                    WITH inserted_entries AS (
+                        INSERT INTO singlepoint_dataset_entry (dataset_id, name, comment, molecule_id, attributes, additional_keywords)
+                        SELECT :dataset_id, sde.name, sde.comment, sde.molecule_id, sde.attributes, sde.additional_keywords
+                        FROM singlepoint_dataset_entry sde
+                        WHERE sde.dataset_id = :from_dataset_id
+                        ON CONFLICT (dataset_id, name) DO NOTHING
+                        RETURNING name
+                    )
+                    SELECT count(*) FROM inserted_entries
+                """)
 
-                r = session.execute(
-                    text(stmt),
+                n_inserted = session.execute(
+                    stmt,
                     {
                         "dataset_id": dataset_id,
                         "from_dataset_id": from_dataset_id,
                     },
-                )
+                ).scalar_one()
 
-                meta = InsertCountsMetadata(n_inserted=r.rowcount, n_existing=0)
+                meta = InsertCountsMetadata(n_inserted=n_inserted, n_existing=0)
 
             elif from_dataset_type == "optimization":
 
@@ -285,31 +288,34 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
                         "from_specification_name must be provided when adding entries from an optimization dataset"
                     )
 
-                stmt = """
-                    INSERT INTO singlepoint_dataset_entry (dataset_id, name, comment, molecule_id, attributes, additional_keywords)
-                    SELECT :dataset_id, ode.name, ode.comment, opr.final_molecule_id, ode.attributes, '{}'::jsonb
-                    FROM optimization_dataset_entry ode
-                    INNER JOIN optimization_dataset_record odr ON ode.dataset_id = odr.dataset_id AND ode.name = odr.entry_name
-                    INNER JOIN optimization_record opr ON odr.record_id = opr.id
-                    INNER JOIN base_record br ON opr.id = br.id
-                    WHERE ode.dataset_id = :optimization_dataset_id
-                    AND odr.specification_name = :specification_name
-                    AND br.status = 'complete'
-                    AND opr.final_molecule_id IS NOT NULL
-                    ON CONFLICT (dataset_id, name) DO NOTHING
-                    RETURNING 1
-                """
+                stmt = text("""
+                    WITH inserted_entries AS (
+                        INSERT INTO singlepoint_dataset_entry (dataset_id, name, comment, molecule_id, attributes, additional_keywords)
+                        SELECT :dataset_id, ode.name, ode.comment, opr.final_molecule_id, ode.attributes, '{}'::jsonb
+                        FROM optimization_dataset_entry ode
+                        INNER JOIN optimization_dataset_record odr ON ode.dataset_id = odr.dataset_id AND ode.name = odr.entry_name
+                        INNER JOIN optimization_record opr ON odr.record_id = opr.id
+                        INNER JOIN base_record br ON opr.id = br.id
+                        WHERE ode.dataset_id = :optimization_dataset_id
+                        AND odr.specification_name = :specification_name
+                        AND br.status = 'complete'
+                        AND opr.final_molecule_id IS NOT NULL
+                        ON CONFLICT (dataset_id, name) DO NOTHING
+                        RETURNING name
+                    )
+                    SELECT count(*) FROM inserted_entries
+                """)
 
-                r = session.execute(
-                    text(stmt),
+                n_inserted = session.execute(
+                    stmt,
                     {
                         "dataset_id": dataset_id,
                         "optimization_dataset_id": from_dataset_id,
                         "specification_name": from_specification_name,
                     },
-                )
+                ).scalar_one()
 
-                meta = InsertCountsMetadata(n_inserted=r.rowcount, n_existing=0)
+                meta = InsertCountsMetadata(n_inserted=n_inserted, n_existing=0)
             else:
                 raise InvalidArgumentsError(
                     f"Unable to handle adding singlepoint dataset entries from dataset of type {from_dataset_type}"
