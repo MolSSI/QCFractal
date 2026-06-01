@@ -11,6 +11,7 @@ from qcportal.torsiondrive import (
     TorsiondriveDatasetNewEntry,
     TorsiondriveAddBody,
     TorsiondriveQueryFilters,
+    TorsiondriveDatasetEntriesFrom,
 )
 from qcportal.utils import calculate_limit
 
@@ -88,3 +89,15 @@ def add_torsiondrive_dataset_entries_v1(dataset_id: int, body_data: List[Torsion
 @wrap_global_route("datasets", "modify")
 def background_add_torsiondrive_dataset_entries_v1(dataset_id: int, body_data: List[TorsiondriveDatasetNewEntry]):
     return storage_socket.datasets.torsiondrive.background_add_entries(dataset_id, new_entries=body_data)
+
+
+@api_v1.route("/datasets/torsiondrive/<int:dataset_id>/entries/addFrom", methods=["POST"])
+@wrap_global_route("datasets", "modify")
+def add_torsiondrive_dataset_entries_from_v1(dataset_id: int, body_data: TorsiondriveDatasetEntriesFrom):
+    return storage_socket.datasets.torsiondrive.add_entries_from_ds(
+        dataset_id=dataset_id,
+        from_dataset_id=body_data.dataset_id,
+        from_dataset_type=body_data.dataset_type,
+        from_dataset_name=body_data.dataset_name,
+        from_specification_name=body_data.specification_name,
+    )

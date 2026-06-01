@@ -124,7 +124,7 @@ class SinglepointDataset(BaseDataset):
         *,
         dataset_type: Optional[str] = None,
         dataset_name: Optional[str] = None,
-        dataset_id: Optional[str] = None,
+        dataset_id: Optional[int] = None,
         specification_name: Optional[str] = None,
     ) -> InsertCountsMetadata:
         body = SinglepointDatasetEntriesFrom(
