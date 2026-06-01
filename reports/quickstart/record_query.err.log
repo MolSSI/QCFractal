@@ -27,14 +27,14 @@ results = client.query_records(created_after="2023/01/10", created_before="2023/
 [36mCell[39m[36m [39m[32mIn[4][39m[32m, line 1[39m
 [32m----> [39m[32m1[39m results = client.query_records(created_after=[33m"2023/01/10"[39m, created_before=[33m"2023/01/14"[39m)
 
-[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:968[39m, in [36mPortalClient.query_records[39m[34m(self, record_id, record_type, manager_name, history_manager_name, status, dataset_id, project_id, parent_id, child_id, created_before, created_after, modified_before, modified_after, creator_user, limit, include)[39m
-[32m    948[39m filter_dict = {
-[32m    949[39m     [33m"[39m[33mrecord_id[39m[33m"[39m: make_list(record_id),
-[32m    950[39m     [33m"[39m[33mrecord_type[39m[33m"[39m: make_list(record_type),
-[32m   (...)[39m[32m    963[39m     [33m"[39m[33mlimit[39m[33m"[39m: limit,
-[32m    964[39m }
-[32m    966[39m filter_data = RecordQueryFilters(**filter_dict)
-[32m--> [39m[32m968[39m [38;5;28;01mreturn[39;00m [30;43mRecordQueryIterator[39;49m[30;43m[[39;49m[30;43mBaseRecord[39;49m[30;43m][39;49m[30;43m([39;49m[30;43mself[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mfilter_data[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43;01mNone[39;49;00m[30;43m,[39;49m[30;43m [39;49m[30;43minclude[39;49m[30;43m)[39;49m
+[36mFile [39m[32m~/work/QCFractal/QCFractal/qcportal/qcportal/client.py:980[39m, in [36mPortalClient.query_records[39m[34m(self, record_id, record_type, manager_name, history_manager_name, status, dataset_id, project_id, parent_id, child_id, created_before, created_after, modified_before, modified_after, creator_user, limit, include)[39m
+[32m    960[39m filter_dict = {
+[32m    961[39m     [33m"[39m[33mrecord_id[39m[33m"[39m: make_list(record_id),
+[32m    962[39m     [33m"[39m[33mrecord_type[39m[33m"[39m: make_list(record_type),
+[32m   (...)[39m[32m    975[39m     [33m"[39m[33mlimit[39m[33m"[39m: limit,
+[32m    976[39m }
+[32m    978[39m filter_data = RecordQueryFilters(**filter_dict)
+[32m--> [39m[32m980[39m [38;5;28;01mreturn[39;00m [30;43mRecordQueryIterator[39;49m[30;43m[[39;49m[30;43mBaseRecord[39;49m[30;43m][39;49m[30;43m([39;49m[30;43mself[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mfilter_data[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43;01mNone[39;49;00m[30;43m,[39;49m[30;43m [39;49m[30;43minclude[39;49m[30;43m)[39;49m
 
 [36mFile [39m[32m/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/typing.py:1289[39m, in [36m_BaseGenericAlias.__call__[39m[34m(self, *args, **kwargs)[39m
 [32m   1286[39m [38;5;28;01mif[39;00m [38;5;129;01mnot[39;00m [38;5;28mself[39m._inst:
