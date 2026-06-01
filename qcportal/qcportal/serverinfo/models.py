@@ -1,8 +1,10 @@
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum
 from typing import Optional, List, Dict, Union
 
 from dateutil.parser import parse as date_parser
+
+from qcportal.record_models import RecordStatusEnum
 
 try:
     from pydantic.v1 import BaseModel, Extra, validator, IPvAnyAddress, constr
@@ -194,3 +196,15 @@ class ErrorLogQueryIterator(QueryIteratorBase[ErrorLogEntry]):
             List[ErrorLogEntry],
             body=self._query_filters,
         )
+
+
+class ServerStatsEntry(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
+    date: date
+    record_count: int
+    cpu_hours: float
+    record_count_details: Dict[str, Dict[RecordStatusEnum, int]]
+    database_size: int
+    timestamp: datetime

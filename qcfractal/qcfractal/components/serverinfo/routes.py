@@ -63,3 +63,9 @@ def query_error_log_v1(body_data: ErrorLogQueryFilters):
 @wrap_global_route("server_errors", "delete")
 def delete_server_error_log_v1(body_data: DeleteBeforeDateBody):
     return storage_socket.serverinfo.delete_error_logs(before=body_data.before)
+
+
+@api_v1.route("/server_stats", methods=["GET"])
+@wrap_global_route("information", "read")
+def get_server_stats_v1():
+    return storage_socket.serverinfo.get_server_stats()
