@@ -9,4 +9,5 @@ from .models import (
     ErrorLogQueryFilters,
     ErrorLogEntry,
     ErrorLogQueryIterator,
+    ServerStatsEntry,
 )
