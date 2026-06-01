@@ -80,11 +80,6 @@ def run_conda_subprocess(
             else:
                 ret = json.loads(proc_result.stdout)
         except json.JSONDecodeError:
-            # Local patch (BUG_qcfractalcompute_xtb_json_parse, 2026-05-30):
-            # xtb on systems with near-degenerate frontier orbitals prints
-            # non-JSON output (STDA-like excitation analysis) to stdout BEFORE
-            # the qcengine result JSON. Scan back for the last well-formed
-            # JSON object. Remove when upstream merges the fix.
             import re
             ret = None
             for _m in reversed(list(re.finditer(r"^\s*\{", proc_result.stdout, re.MULTILINE))):
