@@ -1,5 +1,7 @@
+import io
 import json
 import sys
+from contextlib import redirect_stdout, redirect_stderr
 
 import qcengine
 
@@ -41,23 +43,25 @@ if __name__ == "__main__":
     with open(function_kwargs_file, "r") as f:
         function_kwargs = json.load(f)
 
-    if "procedure" in function_kwargs:
-        ret = qcengine.compute_procedure(**function_kwargs)
-    else:
-        ret = qcengine.compute(**function_kwargs)
+    # Redirect stdout/stderr to the string io objects. This can cause issues with how we return our json
+    with redirect_stdout(None), redirect_stderr(None):
+        if "procedure" in function_kwargs:
+            ret = qcengine.compute_procedure(**function_kwargs)
+        else:
+            ret = qcengine.compute(**function_kwargs)
 
-        # Hacky - handle keys in qcvars
-        if ret.success and ret.extras and "qcvars" in ret.extras:
-            # Make qcvars keys all lowercase
-            ret.extras["qcvars"] = {k.lower(): v for k, v in ret.extras["qcvars"].items()}
+            # Hacky - handle keys in qcvars
+            if ret.success and ret.extras and "qcvars" in ret.extras:
+                # Make qcvars keys all lowercase
+                ret.extras["qcvars"] = {k.lower(): v for k, v in ret.extras["qcvars"].items()}
 
-            # Remove any from qcvars that are in properties (but with underscores)
-            prop_dict = ret.properties.dict()
-            to_delete = [k for k in ret.extras["qcvars"].keys() if k.replace(" ", "_") in prop_dict.keys()]
-            for k in to_delete:
-                ret.extras["qcvars"].pop(k)
+                # Remove any from qcvars that are in properties (but with underscores)
+                prop_dict = ret.properties.dict()
+                to_delete = [k for k in ret.extras["qcvars"].keys() if k.replace(" ", "_") in prop_dict.keys()]
+                for k in to_delete:
+                    ret.extras["qcvars"].pop(k)
 
-            # Replace any names with underscores (and other modifications)
-            ret.extras["qcvars"] = {_qcvar_transitions.get(k, k): v for k, v in ret.extras["qcvars"].items()}
+                # Replace any names with underscores (and other modifications)
+                ret.extras["qcvars"] = {_qcvar_transitions.get(k, k): v for k, v in ret.extras["qcvars"].items()}
 
     print(json.dumps(ret.dict(encoding="json")))
