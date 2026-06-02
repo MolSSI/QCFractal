@@ -1,3 +1,4 @@
+from typing import Any
 from flask import jsonify, current_app, g
 
 from qcfractal.flask_app.api_v1.blueprint import api_v1
@@ -6,7 +7,7 @@ from qcfractal.flask_app.decorators import no_permission_required
 
 @api_v1.route("/ping", methods=["GET"])
 @no_permission_required()
-def ping():
+def ping() -> Any:
 
     user_id = g.user_id if "user_id" in g else None
 
