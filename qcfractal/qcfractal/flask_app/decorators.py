@@ -1,8 +1,9 @@
+import inspect
+import shutil
 import tempfile
 from functools import wraps
 from typing import Callable, Iterable, Optional
 
-import shutil
 from flask import g, request, current_app, Response
 from werkzeug.exceptions import BadRequest
 
@@ -11,6 +12,21 @@ from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.flask_app import storage_socket
 from qcportal.exceptions import AuthorizationFailure
 from qcportal.serialization import deserialize, serialize
+
+
+def _get_openapi_meta_dict(fn):
+    """
+    Accesses the openapi metadata for a function
+
+    This is required due to nested decorators. This attaches the info to the lowest-level function (via inspect.unwrap)
+    """
+
+    original = inspect.unwrap(fn)
+
+    if not hasattr(original, "__openapi_meta__"):
+        original.__openapi_meta__ = {}
+
+    return original.__openapi_meta__
 
 
 def _get_file_extension(filename, allowed_extensions = None):
@@ -90,6 +106,13 @@ def check_permissions(
     """
 
     def decorate(fn):
+
+        # Attach permissions information for openapi spec generation
+        openapi_meta = _get_openapi_meta_dict(fn)
+        openapi_meta["requested_resource"] = requested_resource
+        openapi_meta["requested_action"] = requested_action
+        openapi_meta["require_security"] = require_security
+
         @wraps(fn)
         def wrapper(*args, **kwargs):
 
@@ -175,6 +198,11 @@ def allow_uploads(allowed_file_extensions: Optional[Iterable[str]]) -> Callable:
     """
 
     def decorate(fn):
+
+        # Attach allowed upload info for openapi spec generation
+        openapi_meta = _get_openapi_meta_dict(fn)
+        openapi_meta["allowed_file_extensions"] = allowed_file_extensions
+
         @wraps(fn)
         def wrapper(*args, **kwargs):
             annotations = fn.__annotations__
