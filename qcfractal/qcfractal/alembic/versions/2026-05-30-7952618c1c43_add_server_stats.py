@@ -43,7 +43,6 @@ def upgrade():
                   INNER JOIN base_record br ON rch.record_id = br.id
          WHERE rch.status = 'complete'
            AND br.status = 'complete'
-           AND br.record_type = 'singlepoint'
          GROUP BY DATE(rch.modified_on)
     """))
 

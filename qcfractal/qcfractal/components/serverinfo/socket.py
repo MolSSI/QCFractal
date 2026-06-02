@@ -666,7 +666,6 @@ class ServerInfoSocket:
                     INNER JOIN base_record br ON rch.record_id = br.id
                 WHERE rch.status = 'complete'
                   AND br.status = 'complete'
-                  AND br.record_type = 'singlepoint'
                   AND rch.modified_on > (CURRENT_DATE - INTERVAL '3 days')
                 GROUP BY DATE(rch.modified_on)
             ON CONFLICT (date)
