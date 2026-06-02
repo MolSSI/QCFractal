@@ -1,24 +1,15 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Optional, Tuple, get_type_hints
+import inspect
+from copy import deepcopy
+from typing import Any, Dict, Iterable, List, Optional, Tuple, get_type_hints, TYPE_CHECKING
 
-import pydantic.v1 as pydantic
+if TYPE_CHECKING:
+    from flask import Flask
 
+import pydantic
 
-@dataclass(frozen=True)
-class OpenAPIRouteInfo:
-    path: str
-    methods: Tuple[str, ...]
-    view_func: Any
-    requested_resource: str
-    requested_action: str
-    require_security: bool
-    allowed_file_extensions: Optional[Tuple[str, ...]]
-
-
-_ROUTES: List[OpenAPIRouteInfo] = []
 
 
 _PATH_PARAM_RE = re.compile(r"<(?:(?P<converter>[^:]+):)?(?P<name>[^>]+)>")
@@ -36,16 +27,18 @@ class SchemaRegistry:
         root_name = f"OpenAPIRoot{self._root_counter}"
         self._root_counter += 1
 
-        root_model = pydantic.create_model(root_name, __root__=(tp, ...))
-        schema = pydantic.schema.schema([root_model], ref_prefix="#/components/schemas/")
-        definitions = schema.get("definitions", {})
-        root_schema = definitions.pop(root_name, None) or {}
+        root_adapter = pydantic.TypeAdapter(tp)
+        schema = root_adapter.json_schema(
+            mode="serialization",
+            ref_template="#/components/schemas/{model}",
+        )
+        definitions = schema.pop("$defs", {})
 
         for name, definition in definitions.items():
             if name not in self.components:
                 self.components[name] = definition
 
-        return root_schema
+        return schema
 
 
 def _normalize_path(rule: str) -> Tuple[str, List[Dict[str, Any]]]:
@@ -75,38 +68,6 @@ def _normalize_path(rule: str) -> Tuple[str, List[Dict[str, Any]]]:
     return normalized, params
 
 
-def _join_paths(prefix: Optional[str], rule: str) -> str:
-    if not prefix:
-        return rule
-    if rule == "/":
-        return prefix
-    return prefix.rstrip("/") + "/" + rule.lstrip("/")
-
-
-def register_route(
-    rule: str,
-    methods: Iterable[str],
-    view_func: Any,
-    url_prefix: Optional[str] = None,
-) -> None:
-    meta = getattr(view_func, "__openapi_meta__", None)
-    if not meta:
-        return
-
-    full_rule = _join_paths(url_prefix, rule)
-
-    info = OpenAPIRouteInfo(
-        path=full_rule,
-        methods=tuple(sorted({m.upper() for m in methods if m})),
-        view_func=view_func,
-        requested_resource=meta["requested_resource"],
-        requested_action=meta["requested_action"],
-        require_security=meta["require_security"],
-        allowed_file_extensions=meta["allowed_file_extensions"],
-    )
-    _ROUTES.append(info)
-
-
 def _query_parameters(model: Any, registry: SchemaRegistry) -> List[Dict[str, Any]]:
     if model is None:
         return []
@@ -115,13 +76,13 @@ def _query_parameters(model: Any, registry: SchemaRegistry) -> List[Dict[str, An
         return []
 
     params: List[Dict[str, Any]] = []
-    for name, field in model.__fields__.items():
-        schema = registry.schema_for_type(field.outer_type_)
+    for name, field in model.model_fields.items():
+        schema = registry.schema_for_type(field.annotation)
         params.append(
             {
                 "name": name,
                 "in": "query",
-                "required": field.required,
+                "required": field.is_required(),
                 "schema": schema,
             }
         )
@@ -130,7 +91,7 @@ def _query_parameters(model: Any, registry: SchemaRegistry) -> List[Dict[str, An
 
 def _request_body(
     body_model: Any,
-    allowed_file_extensions: Optional[Tuple[str, ...]],
+    allowed_file_extensions: Optional[Iterable[str]],
     registry: SchemaRegistry,
 ) -> Optional[Dict[str, Any]]:
     if body_model is None and not allowed_file_extensions:
@@ -146,6 +107,10 @@ def _request_body(
         if body_model is not None:
             properties["body_data"] = registry.schema_for_type(body_model)
 
+        required_properties = ["files"]
+        if body_model is not None:
+            required_properties.append("body_data")
+
         return {
             "required": True,
             "content": {
@@ -153,6 +118,7 @@ def _request_body(
                     "schema": {
                         "type": "object",
                         "properties": properties,
+                        "required": required_properties,
                     }
                 }
             },
@@ -170,33 +136,47 @@ def _request_body(
 
 
 def generate_openapi_spec(
+    app: Flask,
     title: str = "QCFractal API",
     version: str = "0.0.0",
 ) -> Dict[str, Any]:
     registry = SchemaRegistry()
     paths: Dict[str, Any] = {}
+    security_required = False
 
-    for route in _ROUTES:
-        path, path_params = _normalize_path(route.path)
+    for rule in app.url_map.iter_rules():
+        if rule.endpoint == "static":
+            continue
+
+        view_func = app.view_functions[rule.endpoint]
+
+        # Use inspect.unwrap to get the original function that has the metadata and annotations
+        unwrapped_view_func = inspect.unwrap(view_func)
+        meta = getattr(unwrapped_view_func, "__openapi_meta__", {})
+
+        requested_resource = meta.get("requested_resource")
+        require_security = meta.get("require_security", False)
+        allowed_file_extensions = meta.get("allowed_file_extensions")
+
+        path, path_params = _normalize_path(rule.rule)
         try:
-            hints = get_type_hints(route.view_func)
+            hints = get_type_hints(unwrapped_view_func)
         except Exception:
-            hints = route.view_func.__annotations__
+            hints = getattr(unwrapped_view_func, "__annotations__", {})
 
         body_model = hints.get("body_data")
         url_params_model = hints.get("url_params")
         response_model = hints.get("return")
 
         query_params = _query_parameters(url_params_model, registry)
-        request_body = _request_body(body_model, route.allowed_file_extensions, registry)
+        request_body = _request_body(body_model, allowed_file_extensions, registry)
 
-        for method in route.methods:
+        for method in rule.methods:
             if method in {"HEAD", "OPTIONS"}:
                 continue
 
             operation = {
-                "summary": route.view_func.__name__,
-                "tags": [route.requested_resource],
+                "summary": unwrapped_view_func.__name__,
                 "parameters": [*path_params, *query_params],
                 "responses": {
                     "200": {
@@ -204,6 +184,9 @@ def generate_openapi_spec(
                     }
                 },
             }
+
+            if requested_resource:
+                operation["tags"] = [requested_resource]
 
             if request_body is not None:
                 operation["requestBody"] = request_body
@@ -215,8 +198,9 @@ def generate_openapi_spec(
                     }
                 }
 
-            if route.require_security:
+            if require_security:
                 operation["security"] = [{"bearerAuth": []}]
+                security_required = True
 
             paths.setdefault(path, {})[method.lower()] = operation
 
@@ -226,13 +210,19 @@ def generate_openapi_spec(
         "paths": paths,
     }
 
-    if registry.components:
-        spec["components"] = {"schemas": registry.components}
-        spec["components"]["securitySchemes"] = {
-            "bearerAuth": {
-                "type": "http",
-                "scheme": "bearer",
+    if registry.components or security_required:
+        components: Dict[str, Any] = {}
+        if registry.components:
+            components["schemas"] = deepcopy(registry.components)
+
+        if security_required:
+            components["securitySchemes"] = {
+                "bearerAuth": {
+                    "type": "http",
+                    "scheme": "bearer",
+                }
             }
-        }
+
+        spec["components"] = components
 
     return spec

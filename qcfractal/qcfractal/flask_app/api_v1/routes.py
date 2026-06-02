@@ -3,6 +3,7 @@ from flask import jsonify, current_app, g
 
 from qcfractal.flask_app.api_v1.blueprint import api_v1
 from qcfractal.flask_app.decorators import no_permission_required
+from qcfractal.flask_app.openapi import generate_openapi_spec
 
 
 @api_v1.route("/ping", methods=["GET"])
@@ -26,42 +27,11 @@ def ping() -> Any:
     return jsonify(ret)
 
 
-@api_v1.route("/all_routes", methods=["GET"])
+@api_v1.route("/openapi_spec", methods=["GET"])
 @no_permission_required()
-def get_all_routes_v1():
+def get_all_routes_v1() -> dict[str, Any]:
     """
-    Returns a dictionary of all endpoints and their required permissions.
-
-    The return dictionary has keys as the endpoint name, and values representing
-    the required permissions (http method, target, resource, action)
+    Returns an openapi specification for all endpoints on this server
     """
-    permissions = {}
 
-    for rule in current_app.url_map.iter_rules():
-        endpoint = rule.endpoint
-        if endpoint == "static":
-            continue
-
-        view_func = current_app.view_functions[endpoint]
-        if not hasattr(view_func, "_has_permission_check"):
-            continue
-
-        if hasattr(view_func, "_permissions_required"):
-            resource, action = view_func._permissions_required
-        else:
-            resource, action = "none", "none"
-
-        # The required permissions
-        # http method, resource, action (read/write/modify/delete/etc)
-        for method in rule.methods:
-            if method.lower() in {"options", "head"}:
-                continue
-
-            permissions[str(rule)] = {
-                "endpoint": endpoint,
-                "method": method.lower(),
-                "resource": resource,
-                "action": action,
-            }
-
-    return jsonify(permissions)
+    return generate_openapi_spec(current_app)
