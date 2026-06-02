@@ -218,6 +218,17 @@ class PortalClient(PortalClientBase):
         # Request the info, and store here for later use
         return self.make_request("get", "api/v1/information", Dict[str, Any])
 
+    def get_server_openapi_spec(self) -> Dict[str, Any]:
+        """Request the OpenAPI specification for the server
+
+        Returns
+        -------
+        :
+            OpenAPI specification.
+        """
+
+        return self.make_request("get", "api/v1/openapi_spec", Dict[str, Any])
+
     def get_server_stats(self) -> List[ServerStatsEntry]:
         """Request statistics about the server
 
