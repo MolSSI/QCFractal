@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { PortalClientProvider } from "./PortalClient.tsx";
 import { AuthProvider } from "./Auth.tsx";
-const SandboxPage  = lazy(() => import("./pages/Sandbox.tsx"));
+const SandboxPage = lazy(() => import("./pages/Sandbox.tsx"));
 const HomePage = lazy(() => import("./pages/Home.tsx"));
 const LoginPage = lazy(() => import("./pages/Login"));
 const MainLayout = lazy(() => import("./layouts/MainLayout"));
@@ -14,11 +14,18 @@ const Manager = lazy(() => import("./pages/Manager.tsx"));
 const ManagerList = lazy(() => import("./pages/ManagerList.tsx"));
 const InternalJobList = lazy(() => import("./pages/InternalJobList.tsx"));
 const ServerErrorList = lazy(() => import("./pages/ServerErrorList.tsx"));
+const ServerStats = lazy(() => import("./pages/ServerStats.tsx"));
 const Dataset = lazy(() => import("./pages/Dataset.tsx"));
 const DatasetList = lazy(() => import("./pages/DatasetList.tsx"));
-const UserProfile = lazy(() => import("./pages/UserProfile.tsx").then(m => ({ default: m.UserProfile })));
-const UserList = lazy(() => import("./pages/UserList.tsx").then(m => ({ default: m.UserList })));
-const AddProjectRecord = lazy(() => import("./components/AddProjectRecord.tsx"));
+const UserProfile = lazy(() =>
+  import("./pages/UserProfile.tsx").then((m) => ({ default: m.UserProfile })),
+);
+const UserList = lazy(() =>
+  import("./pages/UserList.tsx").then((m) => ({ default: m.UserList })),
+);
+const AddProjectRecord = lazy(
+  () => import("./components/AddProjectRecord.tsx"),
+);
 const ThemePlaygroundPage = lazy(() => import("./pages/ThemePlayground.tsx"));
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PreferencesProvider } from "./PreferencesProvider.tsx";
@@ -55,12 +62,21 @@ function App() {
                       <Route element={<MainLayout />}>
                         <Route path="/" element={<HomePage />} />
                         <Route path="/sandbox" element={<SandboxPage />} />
-                        <Route path="/themeplayground" element={<ThemePlaygroundPage />} />
+                        <Route
+                          path="/themeplayground"
+                          element={<ThemePlaygroundPage />}
+                        />
                         <Route path="/me" element={<UserProfile />} />
                         <Route path="/users" element={<UserList />} />
-                        <Route path="/users/:userName" element={<UserProfile />} />
+                        <Route
+                          path="/users/:userName"
+                          element={<UserProfile />}
+                        />
                         <Route path="/projects" element={<ProjectList />} />
-                        <Route path="/projects/:projectId" element={<Project />} />
+                        <Route
+                          path="/projects/:projectId"
+                          element={<Project />}
+                        />
                         <Route
                           path="/projects/:projectId/records/:recordId"
                           element={<Record />}
@@ -71,14 +87,24 @@ function App() {
                           element={<AddProjectRecord />}
                         />
                         <Route path="/managers" element={<ManagerList />} />
-                        <Route path="/internal_jobs" element={<InternalJobList />} />
-                        <Route path="/server_errors" element={<ServerErrorList />} />
+                        <Route
+                          path="/internal_jobs"
+                          element={<InternalJobList />}
+                        />
+                        <Route
+                          path="/server_errors"
+                          element={<ServerErrorList />}
+                        />
+                        <Route path="/server_stats" element={<ServerStats />} />
                         <Route
                           path="/managers/:managerName"
                           element={<Manager />}
                         />
                         <Route path="/datasets" element={<DatasetList />} />
-                        <Route path="/datasets/:datasetId" element={<Dataset />} />
+                        <Route
+                          path="/datasets/:datasetId"
+                          element={<Dataset />}
+                        />
                       </Route>
                     </Route>
                   </Routes>
