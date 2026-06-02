@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any
 
 from flask import current_app, g
 
@@ -6,6 +6,7 @@ from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
 from qcfractal.flask_app.decorators import check_permissions, serialization
 from qcportal.exceptions import LimitExceededError
+from qcportal.metadata_models import InsertMetadata
 from qcportal.reaction import (
     ReactionDatasetSpecification,
     ReactionDatasetNewEntry,
@@ -23,7 +24,7 @@ from qcportal.utils import calculate_limit
 @api_v1.route("/records/reaction/bulkCreate", methods=["POST"])
 @check_permissions("records", "add")
 @serialization()
-def add_reaction_records_v1(body_data: ReactionAddBody):
+def add_reaction_records_v1(body_data: ReactionAddBody) -> tuple[InsertMetadata, list[int | None]]:
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_records
     if len(body_data.stoichiometries) > limit:
         raise LimitExceededError(f"Cannot add {len(body_data.stoichiometries)} reaction records - limit is {limit}")
@@ -41,14 +42,14 @@ def add_reaction_records_v1(body_data: ReactionAddBody):
 @api_v1.route("/records/reaction/<int:record_id>/components", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_reaction_components_v1(record_id: int):
+def get_reaction_components_v1(record_id: int) -> list[dict[str, Any]]:
     return storage_socket.records.reaction.get_components(record_id)
 
 
 @api_v1.route("/records/reaction/query", methods=["POST"])
 @check_permissions("records", "read")
 @serialization()
-def query_reaction_v1(body_data: ReactionQueryFilters):
+def query_reaction_v1(body_data: ReactionQueryFilters) -> list[int]:
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
     body_data.limit = calculate_limit(max_limit, body_data.limit)
 
@@ -63,19 +64,21 @@ def query_reaction_v1(body_data: ReactionQueryFilters):
 @api_v1.route("/datasets/reaction/<int:dataset_id>/specifications", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def add_reaction_dataset_specifications_v1(dataset_id: int, body_data: List[ReactionDatasetSpecification]):
+def add_reaction_dataset_specifications_v1(
+    dataset_id: int, body_data: list[ReactionDatasetSpecification]
+) -> InsertMetadata:
     return storage_socket.datasets.reaction.add_specifications(dataset_id, body_data)
 
 
 @api_v1.route("/datasets/reaction/<int:dataset_id>/entries/bulkCreate", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def add_reaction_dataset_entries_v1(dataset_id: int, body_data: List[ReactionDatasetNewEntry]):
+def add_reaction_dataset_entries_v1(dataset_id: int, body_data: list[ReactionDatasetNewEntry]) -> InsertMetadata:
     return storage_socket.datasets.reaction.add_entries(dataset_id, new_entries=body_data)
 
 
 @api_v1.route("/datasets/reaction/<int:dataset_id>/background_add_entries", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def background_add_reaction_dataset_entries_v1(dataset_id: int, body_data: List[ReactionDatasetNewEntry]):
+def background_add_reaction_dataset_entries_v1(dataset_id: int, body_data: list[ReactionDatasetNewEntry]) -> int:
     return storage_socket.datasets.reaction.background_add_entries(dataset_id, new_entries=body_data)

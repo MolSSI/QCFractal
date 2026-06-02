@@ -1,9 +1,11 @@
+from typing import Any
 from flask import current_app
 
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.compute_v1.blueprint import compute_v1
 from qcfractal.flask_app.decorators import check_permissions, serialization
 from qcportal.exceptions import LimitExceededError
+from qcportal.metadata_models import TaskReturnMetadata
 from qcportal.tasks import TaskClaimBody, TaskReturnBody
 from qcportal.utils import calculate_limit
 
@@ -13,7 +15,7 @@ from qcportal.utils import calculate_limit
 @compute_v1.route("/tasks/claim", methods=["POST"])
 @check_permissions("tasks", "claim")
 @serialization()
-def claim_tasks_v1(body_data: TaskClaimBody):
+def claim_tasks_v1(body_data: TaskClaimBody) -> list[dict[str, Any]]:
     """Claims tasks from the task queue"""
 
     # check here, but also in the socket
@@ -30,7 +32,7 @@ def claim_tasks_v1(body_data: TaskClaimBody):
 @compute_v1.route("/tasks/return", methods=["POST"])
 @check_permissions("tasks", "return")
 @serialization()
-def return_tasks_v1(body_data: TaskReturnBody):
+def return_tasks_v1(body_data: TaskReturnBody) -> TaskReturnMetadata:
     """Return finished tasks"""
 
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.manager_tasks_claim

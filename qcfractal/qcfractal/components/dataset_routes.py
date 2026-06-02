@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Any
 
 from flask import current_app, g
 
@@ -6,6 +6,8 @@ from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
 from qcfractal.flask_app.decorators import check_permissions, serialization
 from qcportal.base_models import ProjURLParameters
+from qcportal.record_models import RecordStatusEnum
+from qcportal.metadata_models import InsertCountsMetadata, DeleteMetadata
 from qcportal.dataset_models import (
     DatasetAddBody,
     DatasetQueryModel,
@@ -32,14 +34,14 @@ from qcportal.exceptions import LimitExceededError
 @api_v1.route("/datasets", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def list_dataset_v1():
+def list_dataset_v1() -> list[dict[str, Any]]:
     return storage_socket.datasets.list()
 
 
 @api_v1.route("/datasets/<int:dataset_id>", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def get_general_dataset_v1(dataset_id: int, url_params: ProjURLParameters):
+def get_general_dataset_v1(dataset_id: int, url_params: ProjURLParameters) -> dict[str, Any]:
     with storage_socket.session_scope(True) as session:
         ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
         ds_socket = storage_socket.datasets.get_socket(ds_type)
@@ -56,7 +58,7 @@ def get_general_dataset_v1(dataset_id: int, url_params: ProjURLParameters):
 @api_v1.route("/datasets/query", methods=["POST"])
 @check_permissions("datasets", "read")
 @serialization()
-def query_general_dataset_v1(body_data: DatasetQueryModel):
+def query_general_dataset_v1(body_data: DatasetQueryModel) -> dict[str, Any]:
     with storage_socket.session_scope(True) as session:
         dataset_id = storage_socket.datasets.lookup_id(body_data.dataset_type, body_data.dataset_name, session=session)
         ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
@@ -67,7 +69,7 @@ def query_general_dataset_v1(body_data: DatasetQueryModel):
 @api_v1.route("/datasets/queryrecords", methods=["POST"])
 @check_permissions("datasets", "read")
 @serialization()
-def query_dataset_records_v1(body_data: DatasetQueryRecords):
+def query_dataset_records_v1(body_data: DatasetQueryRecords) -> list[dict[str, Any]]:
     return storage_socket.datasets.query_dataset_records(
         record_id=body_data.record_id, dataset_type=body_data.dataset_type
     )
@@ -76,7 +78,7 @@ def query_dataset_records_v1(body_data: DatasetQueryRecords):
 @api_v1.route("/datasets/<int:dataset_id>", methods=["DELETE"])
 @check_permissions("datasets", "delete")
 @serialization()
-def delete_dataset_v1(dataset_id: int, url_params: DatasetDeleteParams):
+def delete_dataset_v1(dataset_id: int, url_params: DatasetDeleteParams) -> None:
     storage_socket.datasets.delete(dataset_id, url_params.delete_records)
 
 
@@ -94,7 +96,7 @@ def delete_dataset_v1(dataset_id: int, url_params: DatasetDeleteParams):
 @api_v1.route("/datasets/<string:dataset_type>", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def add_dataset_v1(dataset_type: str, body_data: DatasetAddBody):
+def add_dataset_v1(dataset_type: str, body_data: DatasetAddBody) -> int:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.add(
         name=body_data.name,
@@ -116,7 +118,7 @@ def add_dataset_v1(dataset_type: str, body_data: DatasetAddBody):
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def get_dataset_v1(dataset_type: str, dataset_id: int, url_params: ProjURLParameters):
+def get_dataset_v1(dataset_type: str, dataset_id: int, url_params: ProjURLParameters) -> dict[str, Any]:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.get(
         dataset_id,
@@ -128,7 +130,7 @@ def get_dataset_v1(dataset_type: str, dataset_id: int, url_params: ProjURLParame
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/status", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def get_dataset_status_v1(dataset_type: str, dataset_id: int):
+def get_dataset_status_v1(dataset_type: str, dataset_id: int) -> dict[str, dict[RecordStatusEnum, int]]:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.status(dataset_id)
 
@@ -136,14 +138,14 @@ def get_dataset_status_v1(dataset_type: str, dataset_id: int):
 @api_v1.route("/datasets/<int:dataset_id>/status", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def get_base_dataset_status_v1(dataset_id: int):
+def get_base_dataset_status_v1(dataset_id: int) -> dict[str, dict[RecordStatusEnum, int]]:
     return storage_socket.datasets.status(dataset_id)
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/detailed_status", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def get_dataset_detailed_status_v1(dataset_type: str, dataset_id: int):
+def get_dataset_detailed_status_v1(dataset_type: str, dataset_id: int) -> list[tuple[str, str, RecordStatusEnum]]:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.detailed_status(dataset_id)
 
@@ -151,7 +153,7 @@ def get_dataset_detailed_status_v1(dataset_type: str, dataset_id: int):
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/status_by_tag", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def get_dataset_status_by_tag_v1(dataset_type: str, dataset_id: int):
+def get_dataset_status_by_tag_v1(dataset_type: str, dataset_id: int) -> dict[RecordStatusEnum, int]:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.status_by_compute_tag(dataset_id)
 
@@ -159,7 +161,7 @@ def get_dataset_status_by_tag_v1(dataset_type: str, dataset_id: int):
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/record_count", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def get_dataset_record_count_v1(dataset_type: str, dataset_id: int):
+def get_dataset_record_count_v1(dataset_type: str, dataset_id: int) -> int:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.get_record_count(dataset_id)
 
@@ -167,7 +169,7 @@ def get_dataset_record_count_v1(dataset_type: str, dataset_id: int):
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/computed_properties", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def get_dataset_computed_properties_v1(dataset_type: str, dataset_id: int):
+def get_dataset_computed_properties_v1(dataset_type: str, dataset_id: int) -> dict[str, list[str]]:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.get_computed_properties(dataset_id)
 
@@ -178,7 +180,7 @@ def get_dataset_computed_properties_v1(dataset_type: str, dataset_id: int):
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>", methods=["PATCH"])
 @check_permissions("datasets", "modify")
 @serialization()
-def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, body_data: DatasetModifyMetadata):
+def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, body_data: DatasetModifyMetadata) -> None:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.update_metadata(dataset_id, new_metadata=body_data)
 
@@ -189,7 +191,7 @@ def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, body_data: Da
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/create_view", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def create_dataset_view_v1(dataset_type: str, dataset_id: int, body_data: DatasetCreateViewBody):
+def create_dataset_view_v1(dataset_type: str, dataset_id: int, body_data: DatasetCreateViewBody) -> int:
     return storage_socket.datasets.add_create_view_attachment_job(
         dataset_id,
         dataset_type,
@@ -208,7 +210,7 @@ def create_dataset_view_v1(dataset_type: str, dataset_id: int, body_data: Datase
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/submit", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubmitBody):
+def submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubmitBody) -> InsertCountsMetadata:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.submit(
         dataset_id,
@@ -224,7 +226,7 @@ def submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubm
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/background_submit", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def background_submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubmitBody):
+def background_submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubmitBody) -> int:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.background_submit(
         dataset_id,
@@ -243,7 +245,7 @@ def background_submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specification_names", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def fetch_dataset_specification_names_v1(dataset_type: str, dataset_id: int):
+def fetch_dataset_specification_names_v1(dataset_type: str, dataset_id: int) -> list[str]:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.fetch_specification_names(dataset_id)
 
@@ -251,7 +253,7 @@ def fetch_dataset_specification_names_v1(dataset_type: str, dataset_id: int):
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def fetch_all_dataset_specifications_v1(dataset_type: str, dataset_id: int):
+def fetch_all_dataset_specifications_v1(dataset_type: str, dataset_id: int) -> dict[str, Any]:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.fetch_specifications(dataset_id)
 
@@ -259,7 +261,7 @@ def fetch_all_dataset_specifications_v1(dataset_type: str, dataset_id: int):
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkFetch", methods=["POST"])
 @check_permissions("datasets", "read")
 @serialization()
-def fetch_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchSpecificationBody):
+def fetch_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchSpecificationBody) -> dict[str, Any]:
     # use the entry limit I guess?
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_dataset_entries
 
@@ -277,7 +279,7 @@ def fetch_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_dat
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkDelete", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def delete_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: DatasetDeleteStrBody):
+def delete_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: DatasetDeleteStrBody) -> DeleteMetadata:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.delete_specifications(dataset_id, body_data.names, body_data.delete_records)
 
@@ -285,7 +287,7 @@ def delete_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_da
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications", methods=["PATCH"])
 @check_permissions("datasets", "modify")
 @serialization()
-def rename_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: Dict[str, str]):
+def rename_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: dict[str, str]) -> None:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.rename_specifications(dataset_id, body_data)
 
@@ -296,7 +298,7 @@ def rename_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_da
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entry_names", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def fetch_dataset_entry_names_v1(dataset_type: str, dataset_id: int):
+def fetch_dataset_entry_names_v1(dataset_type: str, dataset_id: int) -> list[str]:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.fetch_entry_names(dataset_id)
 
@@ -304,7 +306,7 @@ def fetch_dataset_entry_names_v1(dataset_type: str, dataset_id: int):
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkDelete", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def delete_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetDeleteStrBody):
+def delete_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetDeleteStrBody) -> DeleteMetadata:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.delete_entries(dataset_id, body_data.names, body_data.delete_records)
 
@@ -312,7 +314,7 @@ def delete_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dat
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkFetch", methods=["POST"])
 @check_permissions("datasets", "read")
 @serialization()
-def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchEntryBody):
+def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchEntryBody) -> dict[str, Any]:
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_dataset_entries
 
     if len(body_data.names) > limit:
@@ -329,7 +331,7 @@ def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Data
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/background_add_entries", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def background_add_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubmitBody):
+def background_add_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubmitBody) -> int:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.background_submit(
         dataset_id,
@@ -345,7 +347,7 @@ def background_add_entries_v1(dataset_type: str, dataset_id: int, body_data: Dat
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entries", methods=["PATCH"])
 @check_permissions("datasets", "modify")
 @serialization()
-def rename_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dict[str, str]):
+def rename_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: dict[str, str]) -> None:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.rename_entries(dataset_id, body_data)
 
@@ -353,7 +355,7 @@ def rename_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dic
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/entries/modify", methods=["PATCH"])
 @check_permissions("datasets", "modify")
 @serialization()
-def modify_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetModifyEntryBody):
+def modify_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetModifyEntryBody) -> None:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.modify_entries(
         dataset_id, body_data.attribute_map, body_data.comment_map, body_data.overwrite_attributes
@@ -366,7 +368,7 @@ def modify_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dat
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkFetch", methods=["POST"])
 @check_permissions("datasets", "read")
 @serialization()
-def fetch_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchRecordsBody):
+def fetch_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchRecordsBody) -> list[tuple[str, str, int]]:
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
 
     n_requested = len(body_data.entry_names) * len(body_data.specification_names)
@@ -386,7 +388,7 @@ def fetch_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Data
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkDelete", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def remove_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRemoveRecordsBody):
+def remove_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRemoveRecordsBody) -> DeleteMetadata:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.remove_records(
         dataset_id,
@@ -402,7 +404,7 @@ def remove_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Dat
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/records", methods=["PATCH"])
 @check_permissions("datasets", "modify")
 @serialization()
-def modify_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRecordModifyBody):
+def modify_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRecordModifyBody) -> None:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.modify_records(
         dataset_id,
@@ -419,7 +421,7 @@ def modify_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Dat
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/records/revert", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def revert_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRecordRevertBody):
+def revert_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRecordRevertBody) -> None:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.revert_records(
         dataset_id,
@@ -435,14 +437,14 @@ def revert_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Dat
 @api_v1.route("/datasets/<int:dataset_id>/internal_jobs/<int:job_id>", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def get_dataset_internal_job_v1(dataset_id: int, job_id: int):
+def get_dataset_internal_job_v1(dataset_id: int, job_id: int) -> dict[str, Any]:
     return storage_socket.datasets.get_internal_job(dataset_id, job_id)
 
 
 @api_v1.route("/datasets/<int:dataset_id>/internal_jobs", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def list_dataset_internal_jobs_v1(dataset_id: int, url_params: DatasetGetInternalJobParams):
+def list_dataset_internal_jobs_v1(dataset_id: int, url_params: DatasetGetInternalJobParams) -> list[dict[str, Any]]:
     return storage_socket.datasets.list_internal_jobs(dataset_id, status=url_params.status)
 
 
@@ -452,14 +454,14 @@ def list_dataset_internal_jobs_v1(dataset_id: int, url_params: DatasetGetInterna
 @api_v1.route("/datasets/<int:dataset_id>/attachments", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def fetch_dataset_attachments_v1(dataset_id: int):
+def fetch_dataset_attachments_v1(dataset_id: int) -> list[dict[str, Any]]:
     return storage_socket.datasets.get_attachments(dataset_id)
 
 
 @api_v1.route("/datasets/<int:dataset_id>/attachments/<int:attachment_id>", methods=["DELETE"])
 @check_permissions("datasets", "modify")
 @serialization()
-def delete_dataset_attachment_v1(dataset_id: int, attachment_id: int):
+def delete_dataset_attachment_v1(dataset_id: int, attachment_id: int) -> None:
     return storage_socket.datasets.delete_attachment(dataset_id, attachment_id)
 
 
@@ -469,7 +471,7 @@ def delete_dataset_attachment_v1(dataset_id: int, attachment_id: int):
 @api_v1.route("/datasets/<int:dataset_id>/contributed_values", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def fetch_dataset_contributed_values_v1(dataset_id: int):
+def fetch_dataset_contributed_values_v1(dataset_id: int) -> list[dict[str, Any]]:
     return storage_socket.datasets.get_contributed_values(dataset_id)
 
 
@@ -479,7 +481,7 @@ def fetch_dataset_contributed_values_v1(dataset_id: int):
 @api_v1.route("/datasets/clone", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def clone_dataset_v1(body_data: DatasetCloneBody):
+def clone_dataset_v1(body_data: DatasetCloneBody) -> int:
     with storage_socket.session_scope(True) as session:
         ds_type = storage_socket.datasets.lookup_type(body_data.source_dataset_id, session=session)
         ds_socket = storage_socket.datasets.get_socket(ds_type)
@@ -489,7 +491,7 @@ def clone_dataset_v1(body_data: DatasetCloneBody):
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/copy_from", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def copy_from_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetCopyFromBody):
+def copy_from_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetCopyFromBody) -> None:
     # the dataset_id in the URI is the destination dataset
     # (ie, the user has a dataset, then copies FROM another dataset
     with storage_socket.session_scope(True) as session:
