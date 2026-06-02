@@ -1,6 +1,26 @@
 Release Notes
 =============
 
+0.65 / 2026-06-02
+-----------------
+
+A few more bugfixes and cleanup. This is a small release before the much more consequential
+v0.70 release (which will be the first with full python 3.14 and pydantic v2 compatibility).
+That release is tentatively scheduled for later this month.
+
+In the meantime, this fixes a few issues that have cropped up, and also adds a few features.
+
+Notable PRs:
+
+- (:pr:`997`) Fix unfriendly errors with project link_dataset/link_record
+- (:pr:`998`) Fix bug in reset logic caused by dictionary comprehension (:contrib:`vlita`)
+- (:pr:`1003`) Add handling of extra_executor_options for all executor types
+- (:pr:`1005`) Add more querying ability for records (including querying which project a record belongs to)
+- (:pr:`1007`) Implement some server stats tracking
+- (:pr:`1008`) Add ability to create torsiondrive dataset entries from an optimization dataset
+- (:pr:`1011`) Swallow/ignore stdout/stderr from qcenging to prevent json parsing issues
+
+
 0.64 / 2026-03-04
 -----------------
 
