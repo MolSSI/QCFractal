@@ -13,6 +13,7 @@ import ComputerIcon from "@mui/icons-material/Computer";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
+import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import { NavLink, useLocation } from "react-router-dom";
 import FeedbackIcon from "@mui/icons-material/Feedback";
 import { useAuth } from "../Auth.tsx";
@@ -24,18 +25,31 @@ const mainListItems: {
   icon: ReactElement;
   path: string;
   target?: string;
-  requiredPermissions?: [string, string]
+  requiredPermissions?: [string, string];
 }[] = [
   { text: "Home", icon: <HomeRoundedIcon />, path: "/" },
   { text: "Projects", icon: <AccountTreeIcon />, path: "/projects" },
   { text: "Datasets", icon: <FormatListBulletedIcon />, path: "/datasets" },
   { text: "Compute", icon: <ComputerIcon />, path: "/managers" },
-  { text: "Users", icon: <PeopleRoundedIcon />, path: "/users",
-    requiredPermissions: ["users", "read"]},
-  { text: "Internal Jobs", icon: <WorkHistoryIcon />, path: "/internal_jobs",
-    requiredPermissions: ["internal_jobs", "read"]},
-  { text: "Server Errors", icon: <BugReportIcon />, path: "/server_errors",
-    requiredPermissions: ["server_errors", "read"]},
+  {
+    text: "Users",
+    icon: <PeopleRoundedIcon />,
+    path: "/users",
+    requiredPermissions: ["users", "read"],
+  },
+  {
+    text: "Internal Jobs",
+    icon: <WorkHistoryIcon />,
+    path: "/internal_jobs",
+    requiredPermissions: ["internal_jobs", "read"],
+  },
+  { text: "Server Stats", icon: <QueryStatsIcon />, path: "/server_stats" },
+  {
+    text: "Server Errors",
+    icon: <BugReportIcon />,
+    path: "/server_errors",
+    requiredPermissions: ["server_errors", "read"],
+  },
 ];
 
 const bottomListItems: {
@@ -44,8 +58,8 @@ const bottomListItems: {
   path: string;
   target?: string;
 }[] = [
-//  { text: "Sandbox", icon: <CarpenterIcon />, path: "/sandbox" },
-//  { text: "Theme Playground", icon: <CarpenterIcon />, path: "/themeplayground" },
+  //  { text: "Sandbox", icon: <CarpenterIcon />, path: "/sandbox" },
+  //  { text: "Theme Playground", icon: <CarpenterIcon />, path: "/themeplayground" },
 ];
 
 if (feedbackUrl) {
@@ -65,13 +79,13 @@ export default function MenuContent({ onNavigate }: MenuContentProps) {
   const location = useLocation();
   const { has_permission } = useAuth();
 
-  const filteredMainListItems = mainListItems.filter(item => {
+  const filteredMainListItems = mainListItems.filter((item) => {
     if (item.requiredPermissions) {
       const [resource, action] = item.requiredPermissions;
       return has_permission(resource, action);
     }
     return true;
-  })
+  });
 
   return (
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}>
@@ -90,7 +104,7 @@ export default function MenuContent({ onNavigate }: MenuContentProps) {
               <ListItemText primary={item.text} />
             </ListItemButton>
           </ListItem>
-          ))}
+        ))}
       </List>
       <List dense>
         {bottomListItems.map((item, index) => (

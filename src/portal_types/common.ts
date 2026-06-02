@@ -113,6 +113,20 @@ export type Manager = {
   active_memory: number;
 };
 
+export type ServerStatsRecordCountDetails = Record<
+  string,
+  Partial<Record<RecordStatus, number>>
+>;
+
+export type ServerStatsEntry = {
+  date: string;
+  record_count: number;
+  cpu_hours: number;
+  record_count_details: ServerStatsRecordCountDetails;
+  database_size: number;
+  timestamp: string;
+};
+
 export type QueryProjModelBase = {
   limit?: number;
   cursor?: number;
@@ -335,7 +349,12 @@ export type ProjectAttachment = Attachment & {
   tags: string[];
 };
 
-export type InternalJobStatusEnum = "complete" | "waiting" | "running" | "error" | "cancelled";
+export type InternalJobStatusEnum =
+  | "complete"
+  | "waiting"
+  | "running"
+  | "error"
+  | "cancelled";
 
 export type InternalJob = {
   id: number;
