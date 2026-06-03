@@ -7529,6 +7529,90 @@
         ]
       }
     },
+    "/api/v1/datasets/torsiondrive/{dataset_id}/entries/addFrom": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dataset_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dataset_id": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Dataset Id"
+                  },
+                  "dataset_name": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Dataset Name"
+                  },
+                  "dataset_type": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Dataset Type"
+                  },
+                  "specification_name": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Specification Name"
+                  }
+                },
+                "title": "TorsiondriveDatasetEntriesFrom",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "summary": "add_torsiondrive_dataset_entries_from_v1",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
     "/api/v1/datasets/torsiondrive/{dataset_id}/entries/bulkCreate": {
       "post": {
         "parameters": [
@@ -12551,6 +12635,55 @@
           }
         },
         "summary": "query_general_project_v1",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/querydatasets": {
+      "post": {
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "dataset_id": {
+                    "items": {
+                      "type": "integer"
+                    },
+                    "title": "Dataset Id",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "dataset_id"
+                ],
+                "title": "ProjectQueryDatasets",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "query_project_datasets_v1",
         "tags": [
           "projects"
         ]
