@@ -273,6 +273,41 @@ class ProjectSocket:
                 for x in ret
             ]
 
+
+    def query_project_datasets(
+            self,
+            dataset_id: Iterable[int],
+            *,
+            session: Optional[Session] = None,
+    ):
+        """
+        Query which projects the specified datasets belong to
+
+        This returns a dictionary containing the project id, project name, and the
+        name of the record in the project
+        """
+
+        stmt = select(
+            ProjectDatasetORM.dataset_id,
+            ProjectDatasetORM.project_id,
+            ProjectORM.name,
+            ProjectDatasetORM.name,
+        )
+        stmt = stmt.join(ProjectORM, ProjectORM.id == ProjectDatasetORM.project_id)
+        stmt = stmt.where(ProjectDatasetORM.dataset_id.in_(dataset_id))
+
+        with self.root_socket.optional_session(session, True) as session:
+            ret = session.execute(stmt).all()
+            return [
+                {
+                    "record_id": x[0],
+                    "project_id": x[1],
+                    "project_name": x[2],
+                    "dataset_name": x[3],
+                }
+                for x in ret
+            ]
+
     #################################
     # Status and General Info
     #################################

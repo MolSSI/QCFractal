@@ -8,6 +8,7 @@ from qcportal.project_models import (
     ProjectAddBody,
     ProjectQueryModel,
     ProjectQueryRecords,
+    ProjectQueryDatasets,
     ProjectDeleteParams,
     ProjectDatasetAddBody,
     ProjectRecordAddBody,
@@ -46,6 +47,13 @@ def query_general_project_v1(body_data: ProjectQueryModel):
 @serialization()
 def query_project_records_v1(body_data: ProjectQueryRecords):
     return storage_socket.projects.query_project_records(record_id=body_data.record_id)
+
+
+@api_v1.route("/projects/querydatasets", methods=["POST"])
+@check_permissions("projects", "read")
+@serialization()
+def query_project_datasets_v1(body_data: ProjectQueryDatasets):
+    return storage_socket.projects.query_project_datasets(dataset_id=body_data.dataset_id)
 
 
 @api_v1.route("/projects/<int:project_id>", methods=["DELETE"])

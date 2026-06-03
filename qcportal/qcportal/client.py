@@ -98,6 +98,7 @@ from .project_models import (
     ProjectDeleteParams,
     ProjectQueryModel,
     ProjectQueryRecords,
+    ProjectQueryDatasets,
 )
 
 from .record_models import (
@@ -312,6 +313,10 @@ class PortalClient(PortalClientBase):
     def query_project_records(self, record_id: Union[int, Iterable[int]]):
         body = ProjectQueryRecords(record_id=make_list(record_id))
         return self.make_request("post", f"api/v1/projects/queryrecords", List[Dict], body=body)
+
+    def query_project_datasets(self, dataset_id: Union[int, Iterable[int]]):
+        body = ProjectQueryDatasets(dataset_id=make_list(dataset_id))
+        return self.make_request("post", f"api/v1/projects/querydatasets", List[Dict], body=body)
 
     ##############################################################
     # Datasets
