@@ -542,11 +542,11 @@ export default function ServerStats() {
           <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
             Notes
           </Typography>
-          <Typography color="white" component={"p"} sx={{mb: 2}}>
+          <Typography component={"p"} sx={{mb: 2}}>
             CPU time is an estimate based on the number of cores multiplied by the walltime, which is not completely accurate.
             This also risks double counting CPU time if reported by both parent records (for example, optimizations) and child records (trajectories).
           </Typography>
-          <Typography color="white" component={"p"}>
+          <Typography component={"p"}>
             Record counts and CPU  time may also be inaccurate for instances with lots of churn related to deleting old records.
           </Typography>
         </Paper>
