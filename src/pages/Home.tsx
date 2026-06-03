@@ -101,25 +101,37 @@ const HomePage: React.FC = () => {
             <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
               <li>
                 <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                  2026-04-28
+                  2026-06-03
                 </Typography>
                 <ul>
                   <li>
-                    <strong>Added:</strong> Lookup by project or dataset id/name
+                    <strong>Added:</strong> Dataset relationship button and
+                    dialog
                   </li>
                   <li>
-                    <strong>Added:</strong> Record relationship dialog
+                    <strong>Improved:</strong> Parent projects are now displayed
+                    in the record relationship dialog
                   </li>
                 </ul>
               </li>
               <li>
                 <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                  2026-04-27
+                  2026-06-02
                 </Typography>
                 <ul>
                   <li>
-                    <strong>Added:</strong> User info page (and user
-                    modification)
+                    <strong>Added:</strong> Server statistics page
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                  2026-05-20
+                </Typography>
+                <ul>
+                  <li>
+                    <strong>Improved:</strong> Enhanced performance for large
+                    output files with virtual scrolling and debouncing
                   </li>
                 </ul>
               </li>
@@ -136,6 +148,40 @@ const HomePage: React.FC = () => {
                 <AccordionDetails sx={{ pt: 0 }}>
                   <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
                     <li>
+                      <strong>2026-04-29</strong>
+                      <ul>
+                        <li>
+                          <strong>Added:</strong> User management list for
+                          administrators
+                        </li>
+                        <li>
+                          <strong>Improved:</strong> Administrator profile now
+                          includes extra management options
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-04-28</strong>
+                      <ul>
+                        <li>
+                          <strong>Added:</strong> Lookup by project or dataset
+                          id/name
+                        </li>
+                        <li>
+                          <strong>Added:</strong> Record relationship dialog
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-04-27</strong>
+                      <ul>
+                        <li>
+                          <strong>Added:</strong> User info page (and user
+                          modification)
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
                       <strong>2026-04-13</strong>
                       <ul>
                         <li>
