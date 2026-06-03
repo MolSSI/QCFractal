@@ -145,6 +145,9 @@ class ProjectDatasetMetadata(BaseModel):
 class ProjectQueryRecords(RestModelBase):
     record_id: list[int]
 
+class ProjectQueryDatasets(RestModelBase):
+    dataset_id: list[int]
+
 class Project(BaseModel):
 
     model_config = ConfigDict(extra="forbid", validate_assignment=True, frozen=False)

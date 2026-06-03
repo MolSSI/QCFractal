@@ -372,3 +372,37 @@ def test_project_client_query_records(snowflake_client: PortalClient):
     proj1.unlink_records([r1.id])
     proj_records = snowflake_client.query_records(project_id=proj1.id)
     assert len(list(proj_records)) == 0
+
+    qr = snowflake_client.query_project_records(r1.id)
+    assert len(qr) == 0
+
+
+def test_project_client_query_datasets(snowflake_client: PortalClient):
+    proj1 = snowflake_client.add_project(
+        "test project",
+    )
+
+    # Another project for testing
+    proj2 = snowflake_client.add_project(
+        "test project 2",
+    )
+
+    ds1 = proj1.add_dataset("singlepoint", "test dataset 1")
+    ds2 = proj2.add_dataset("singlepoint", "test dataset 2")
+
+    # Query which project contains a dataset
+    qr = snowflake_client.query_project_datasets(ds2.id)
+    assert len(qr) == 1
+    assert qr[0]["project_id"] == proj2.id
+    assert qr[0]["record_id"] == ds2.id
+    assert qr[0]["project_name"] == proj2.name
+    assert qr[0]["dataset_name"] == "test dataset 2"
+
+    # Other projects
+    proj_records = snowflake_client.query_records(project_id=proj1.id+proj2.id+1)
+    assert len(list(proj_records)) == 0
+
+    # Remove/unlink the record from the dataset
+    proj1.unlink_datasets([ds1.id])
+    qr = snowflake_client.query_project_datasets(ds1.id)
+    assert len(qr) == 0
