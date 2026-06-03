@@ -9,6 +9,7 @@ import {
   Grid,
   IconButton,
   Paper,
+  Stack,
   Tab,
   Tabs,
   Tooltip,
@@ -17,6 +18,7 @@ import {
 import RefreshIcon from "@mui/icons-material/Refresh";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
+import { DatasetRelationshipButton } from "../components/DatasetRelationshipDialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import DatasetStatusTable from "../components/dataset_components/DatasetStatusTable";
 import DatasetActions from "../components/dataset_components/DatasetActions";
@@ -361,13 +363,14 @@ export default function Dataset() {
                   {datasetData.tagline}
                 </Typography>
               </Box>
-              <Box sx={{ ml: "auto" }}>
+              <Stack spacing={1} alignItems="flex-end" sx={{ ml: "auto" }}>
                 <Tooltip title="Refresh dataset information">
                   <IconButton onClick={handleRefresh} color="primary">
                     <RefreshIcon />
                   </IconButton>
                 </Tooltip>
-              </Box>
+                <DatasetRelationshipButton datasetId={datasetIdNumber!} />
+              </Stack>
             </Box>
           </Grid>
           {/* Summary stats: for example, Specifications, Entries */}
@@ -453,7 +456,7 @@ export default function Dataset() {
           </Grid>
 
           {/* Status section */}
-          <Grid size={6}>
+          <Grid size={12}>
             <Paper elevation={2}>
               <Box p={2} borderBottom={1} borderColor="divider">
                 <Typography variant="h6" fontWeight="bold">
