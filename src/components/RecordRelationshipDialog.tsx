@@ -49,6 +49,21 @@ const RecordRelationshipDialog: React.FC<RecordRelationshipDialogProps> = ({
     enabled: open,
   });
 
+  // Query for projects
+  const {
+    data: projects,
+    isLoading: projectsLoading,
+    error: projectsError,
+  } = useQuery({
+    queryKey: ["record-projects", recordId],
+    queryFn: () =>
+      makeRequest<any[]>("POST", "/api/v1/projects/queryrecords", {
+        record_id: [recordId],
+      }),
+    enabled: open,
+  });
+  console.log("Projects query status:", { projects });
+
   // Query for parent records
   const {
     data: parents,
@@ -147,6 +162,59 @@ const RecordRelationshipDialog: React.FC<RecordRelationshipDialogProps> = ({
             ) : datasets && datasets.length === 0 ? (
               <Typography variant="body2" color="text.secondary">
                 This record is not part of any datasets.
+              </Typography>
+            ) : null}
+          </Box>
+
+          <Divider />
+
+          {/* Projects Section */}
+          <Box>
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+              Projects
+            </Typography>
+            {projectsLoading ? (
+              <CircularProgress size={24} />
+            ) : projectsError ? (
+              <Typography color="error">Error loading projects</Typography>
+            ) : projects && projects.length > 0 ? (
+              <List dense>
+                {projects.map((proj, index) => (
+                  <ListItem key={index} disableGutters>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      alignItems="flex-start"
+                      width="100%"
+                    >
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Typography
+                          variant="subtitle1"
+                          fontWeight="bold"
+                          component="div"
+                        >
+                          <MuiLink
+                            to={`/projects/${proj.project_id}`}
+                            target="_blank"
+                          >
+                            [{proj.project_id}] {proj.project_name}
+                          </MuiLink>
+                        </Typography>
+                        <List dense sx={{ py: 0 }}>
+                          <ListItem disableGutters sx={{ py: 0 }}>
+                            <Typography variant="body2">
+                              <strong>Record Name:</strong> {proj.record_name}
+                            </Typography>
+                          </ListItem>
+                        </List>
+                      </Box>
+                    </Stack>
+                  </ListItem>
+                ))}
+              </List>
+            ) : projects && projects.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                This record is not part of any projects.
               </Typography>
             ) : null}
           </Box>
