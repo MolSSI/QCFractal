@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
 
-    <script src="../../../_static/documentation_options.js?v=f021f781"></script>
+    <script src="../../../_static/documentation_options.js?v=2a07e955"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.64.post38+g0e4079ab8" />
+  <meta name="docsearch:version" content="0.65.post58+g8bf386967" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -458,19 +458,17 @@
   <h1>Source code for qcportal.reaction.record_models</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">root_validator</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">Field</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">root_validator</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="n">Field</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">model_validator</span><span class="p">,</span> <span class="n">Field</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.base_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RestModelBase</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.molecules</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_included</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.cache</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_records_with_cache</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.common_types</span><span class="w"> </span><span class="kn">import</span> <span class="n">LowerStr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.molecules</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseRecord</span><span class="p">,</span> <span class="n">RecordAddBodyBase</span><span class="p">,</span> <span class="n">RecordQueryFilters</span><span class="p">,</span> <span class="n">compare_base_records</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_included</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..optimization.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationRecord</span><span class="p">,</span> <span class="n">OptimizationSpecification</span><span class="p">,</span> <span class="n">compare_optimization_records</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..singlepoint.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span><span class="p">,</span> <span class="n">SinglepointRecord</span><span class="p">,</span> <span class="n">compare_singlepoint_records</span>
 
@@ -481,40 +479,31 @@
     <span class="c1"># NOTE: If we add keywords, update the dataset additional_keywords tests and add extra = Extra.forbid.</span>
     <span class="c1"># The current setup is needed for those tests (to allow for testing additional_keywords)</span>
     <span class="c1"># is needed</span>
-<div class="viewcode-block" id="ReactionKeywords.Config">
-<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionKeywords.Config">[docs]</a>
-    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-        <span class="k">pass</span></div>
-</div>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">()</span></div>
 
-        <span class="c1"># extra = Extra.forbid</span>
 
 
 <div class="viewcode-block" id="ReactionSpecification">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionSpecification">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ReactionSpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<div class="viewcode-block" id="ReactionSpecification.Config">
-<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionSpecification.Config">[docs]</a>
-    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
 
+    <span class="n">program</span><span class="p">:</span> <span class="n">LowerStr</span> <span class="o">=</span> <span class="s2">&quot;reaction&quot;</span>
 
-    <span class="n">program</span><span class="p">:</span> <span class="n">constr</span><span class="p">(</span><span class="n">to_lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">=</span> <span class="s2">&quot;reaction&quot;</span>
-
-    <span class="n">singlepoint_specification</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">QCSpecification</span><span class="p">]</span>
-    <span class="n">optimization_specification</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OptimizationSpecification</span><span class="p">]</span>
+    <span class="n">singlepoint_specification</span><span class="p">:</span> <span class="n">QCSpecification</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">optimization_specification</span><span class="p">:</span> <span class="n">OptimizationSpecification</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="n">keywords</span><span class="p">:</span> <span class="n">ReactionKeywords</span>
 
 <div class="viewcode-block" id="ReactionSpecification.required_spec">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionSpecification.required_spec">[docs]</a>
-    <span class="nd">@root_validator</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">required_spec</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
-        <span class="n">qc_spec</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;singlepoint_specification&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">opt_spec</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optimization_specification&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">required_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">qc_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">singlepoint_specification</span>
+        <span class="n">opt_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_specification</span>
         <span class="k">if</span> <span class="n">qc_spec</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">opt_spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;singlepoint_specification or optimization_specification must be specified&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">v</span></div>
+        <span class="k">return</span> <span class="bp">self</span></div>
 </div>
 
 
@@ -524,7 +513,7 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">ReactionInput</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;reaction&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;reaction&quot;</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">ReactionSpecification</span>
-    <span class="n">stoichiometries</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">]]]</span></div>
+    <span class="n">stoichiometries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">Molecule</span><span class="p">]]</span></div>
 
 
 
@@ -532,7 +521,7 @@
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionMultiInput">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ReactionMultiInput</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">ReactionSpecification</span>
-    <span class="n">stoichiometries</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">]]]]</span></div>
+    <span class="n">stoichiometries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">Molecule</span><span class="p">]]]</span></div>
 
 
 
@@ -546,38 +535,34 @@
 <div class="viewcode-block" id="ReactionQueryFilters">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionQueryFilters">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ReactionQueryFilters</span><span class="p">(</span><span class="n">RecordQueryFilters</span><span class="p">):</span>
-    <span class="n">program</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">qc_program</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">constr</span><span class="p">(</span><span class="n">to_lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">qc_method</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">constr</span><span class="p">(</span><span class="n">to_lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">qc_basis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">constr</span><span class="p">(</span><span class="n">to_lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)]]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">optimization_program</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">constr</span><span class="p">(</span><span class="n">to_lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">molecule_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">program</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">qc_program</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LowerStr</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">qc_method</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LowerStr</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">qc_basis</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LowerStr</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">optimization_program</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LowerStr</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">molecule_id</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 
 <div class="viewcode-block" id="ReactionComponentMeta">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionComponentMeta">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ReactionComponentMeta</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<div class="viewcode-block" id="ReactionComponentMeta.Config">
-<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionComponentMeta.Config">[docs]</a>
-    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
-
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
 
     <span class="n">molecule_id</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">coefficient</span><span class="p">:</span> <span class="nb">float</span>
-    <span class="n">singlepoint_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
-    <span class="n">optimization_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">singlepoint_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">optimization_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
 
-    <span class="n">molecule</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]</span></div>
+    <span class="n">molecule</span><span class="p">:</span> <span class="n">Molecule</span> <span class="o">|</span> <span class="kc">None</span></div>
 
 
 
 <div class="viewcode-block" id="ReactionComponent">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionComponent">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ReactionComponent</span><span class="p">(</span><span class="n">ReactionComponentMeta</span><span class="p">):</span>
-    <span class="n">singlepoint_record</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SinglepointRecord</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">optimization_record</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OptimizationRecord</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">singlepoint_record</span><span class="p">:</span> <span class="n">SinglepointRecord</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">optimization_record</span><span class="p">:</span> <span class="n">OptimizationRecord</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 
@@ -587,22 +572,22 @@
     <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;reaction&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;reaction&quot;</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">ReactionSpecification</span>
 
-    <span class="n">total_energy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">total_energy</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
 
     <span class="c1">######################################################</span>
     <span class="c1"># Fields not always included when fetching the record</span>
     <span class="c1">######################################################</span>
-    <span class="n">components_meta_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ReactionComponentMeta</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;components&quot;</span><span class="p">)</span>
+    <span class="n">components_meta_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ReactionComponentMeta</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;components&quot;</span><span class="p">)</span>
 
     <span class="c1">##############################################</span>
     <span class="c1"># Fields with child records</span>
     <span class="c1"># (generally not received from the server)</span>
     <span class="c1">##############################################</span>
-    <span class="n">component_records_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ReactionComponent</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;component_records&quot;</span><span class="p">)</span>
+    <span class="n">component_records_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ReactionComponent</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;component_records&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ReactionRecord.propagate_client">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionRecord.propagate_client">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">base_url_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">base_url_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
         <span class="n">BaseRecord</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">base_url_prefix</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_records_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -668,7 +653,7 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">r</span><span class="o">.</span><span class="n">component_records_</span> <span class="o">=</span> <span class="p">[]</span>
                     <span class="k">for</span> <span class="n">cm</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">components_meta_</span><span class="p">:</span>
-                        <span class="n">rc</span> <span class="o">=</span> <span class="n">ReactionComponent</span><span class="p">(</span><span class="o">**</span><span class="n">cm</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+                        <span class="n">rc</span> <span class="o">=</span> <span class="n">ReactionComponent</span><span class="p">(</span><span class="o">**</span><span class="n">cm</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
 
                         <span class="k">if</span> <span class="n">rc</span><span class="o">.</span><span class="n">singlepoint_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                             <span class="n">rc</span><span class="o">.</span><span class="n">singlepoint_record</span> <span class="o">=</span> <span class="n">sp_map</span><span class="p">[</span><span class="n">rc</span><span class="o">.</span><span class="n">singlepoint_id</span><span class="p">]</span>
@@ -687,19 +672,19 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">components_meta_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
                 <span class="s2">&quot;get&quot;</span><span class="p">,</span>
                 <span class="sa">f</span><span class="s2">&quot;api/v1/records/reaction/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/components&quot;</span><span class="p">,</span>
-                <span class="n">List</span><span class="p">[</span><span class="n">ReactionComponentMeta</span><span class="p">],</span>
+                <span class="nb">list</span><span class="p">[</span><span class="n">ReactionComponentMeta</span><span class="p">],</span>
             <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">fetch_children</span><span class="p">([</span><span class="s2">&quot;components&quot;</span><span class="p">])</span>
 
 <div class="viewcode-block" id="ReactionRecord.get_cache_dict">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionRecord.get_cache_dict">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_cache_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;component_records_&quot;</span><span class="p">},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_cache_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;component_records_&quot;</span><span class="p">},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">components</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReactionComponent</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">components</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ReactionComponent</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_records_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_components</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_records_</span></div>

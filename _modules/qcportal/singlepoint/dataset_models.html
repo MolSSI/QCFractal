@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
 
-    <script src="../../../_static/documentation_options.js?v=f021f781"></script>
+    <script src="../../../_static/documentation_options.js?v=2a07e955"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.64.post38+g0e4079ab8" />
+  <meta name="docsearch:version" content="0.65.post58+g8bf386967" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -456,18 +456,15 @@
                 <article class="bd-article">
                   
   <h1>Source code for qcportal.singlepoint.dataset_models</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Iterable</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">root_validator</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">root_validator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">model_validator</span><span class="p">,</span> <span class="n">ConfigDict</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.dataset_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.internal_jobs</span><span class="w"> </span><span class="kn">import</span> <span class="n">InternalJob</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.metadata_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">InsertMetadata</span><span class="p">,</span> <span class="n">InsertCountsMetadata</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.molecules</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.internal_jobs</span><span class="w"> </span><span class="kn">import</span> <span class="n">InternalJob</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">SinglepointRecord</span><span class="p">,</span>
     <span class="n">QCSpecification</span><span class="p">,</span>
@@ -477,18 +474,15 @@
 <div class="viewcode-block" id="SinglepointDatasetNewEntry">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetNewEntry">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SinglepointDatasetNewEntry</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<div class="viewcode-block" id="SinglepointDatasetNewEntry.Config">
-<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetNewEntry.Config">[docs]</a>
-    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
 
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">molecule</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Molecule</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
-    <span class="n">additional_keywords</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">attributes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">comment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">local_results</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">molecule</span><span class="p">:</span> <span class="n">Molecule</span> <span class="o">|</span> <span class="nb">int</span>
+    <span class="n">additional_keywords</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">attributes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">comment</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">local_results</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 
@@ -502,31 +496,25 @@
 <div class="viewcode-block" id="SinglepointDatasetSpecification">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SinglepointDatasetSpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<div class="viewcode-block" id="SinglepointDatasetSpecification.Config">
-<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetSpecification.Config">[docs]</a>
-    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
 
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">QCSpecification</span>
-    <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 
 <div class="viewcode-block" id="SinglepointDatasetRecordItem">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetRecordItem">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SinglepointDatasetRecordItem</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<div class="viewcode-block" id="SinglepointDatasetRecordItem.Config">
-<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetRecordItem.Config">[docs]</a>
-    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
 
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
 
     <span class="n">entry_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">specification_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">record_id</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">record</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SinglepointRecord</span><span class="p">]</span></div>
+    <span class="n">record</span><span class="p">:</span> <span class="n">SinglepointRecord</span> <span class="o">|</span> <span class="kc">None</span></div>
 
 
 
@@ -534,24 +522,24 @@
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetEntriesFrom">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SinglepointDatasetEntriesFrom</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 
-    <span class="n">dataset_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">dataset_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">dataset_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">specification_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">dataset_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">dataset_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">specification_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="SinglepointDatasetEntriesFrom.validate_input">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetEntriesFrom.validate_input">[docs]</a>
-    <span class="nd">@root_validator</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">validate_input</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Dataset id must be specified, or dataset type and name</span>
-        <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dataset_id&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dataset_type&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dataset_name&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either dataset_id or dataset_type and dataset_name must be specified.&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dataset_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;optimization&quot;</span> <span class="ow">and</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;specification_name&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span> <span class="o">==</span> <span class="s2">&quot;optimization&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">specification_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;specification_name must be given for obtaining entries from an optimization dataset&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">values</span></div>
+        <span class="k">return</span> <span class="bp">self</span></div>
 </div>
 
 
@@ -571,7 +559,7 @@
 <div class="viewcode-block" id="SinglepointDataset.add_specification">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset.add_specification">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_specification</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">specification</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">specification</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InsertMetadata</span><span class="p">:</span>
         <span class="n">spec</span> <span class="o">=</span> <span class="n">SinglepointDatasetSpecification</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">specification</span><span class="o">=</span><span class="n">specification</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_specifications</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span></div>
@@ -579,16 +567,14 @@
 
 <div class="viewcode-block" id="SinglepointDataset.add_entries">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset.add_entries">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_entries</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">SinglepointDatasetNewEntry</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SinglepointDatasetNewEntry</span><span class="p">]]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InsertMetadata</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">SinglepointDatasetNewEntry</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SinglepointDatasetNewEntry</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">InsertMetadata</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_entries</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SinglepointDataset.background_add_entries">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset.background_add_entries">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">background_add_entries</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">SinglepointDatasetNewEntry</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SinglepointDatasetNewEntry</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">SinglepointDatasetNewEntry</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SinglepointDatasetNewEntry</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InternalJob</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_background_add_entries</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span></div>
 
@@ -598,10 +584,10 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">add_entry</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">molecule</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Molecule</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-        <span class="n">additional_keywords</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">attributes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">comment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">molecule</span><span class="p">:</span> <span class="n">Molecule</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">additional_keywords</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">attributes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">comment</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">additional_keywords</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">additional_keywords</span> <span class="o">=</span> <span class="p">{}</span>
@@ -623,10 +609,10 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">add_entries_from</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">dataset_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">dataset_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">dataset_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">specification_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dataset_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dataset_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">specification_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InsertCountsMetadata</span><span class="p">:</span>
         <span class="n">body</span> <span class="o">=</span> <span class="n">SinglepointDatasetEntriesFrom</span><span class="p">(</span>
             <span class="n">dataset_type</span><span class="o">=</span><span class="n">dataset_type</span><span class="p">,</span>

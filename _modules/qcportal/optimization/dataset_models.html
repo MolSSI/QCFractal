@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
 
-    <script src="../../../_static/documentation_options.js?v=f021f781"></script>
+    <script src="../../../_static/documentation_options.js?v=2a07e955"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.64.post38+g0e4079ab8" />
+  <meta name="docsearch:version" content="0.65.post58+g8bf386967" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -456,17 +456,14 @@
                 <article class="bd-article">
                   
   <h1>Source code for qcportal.optimization.dataset_models</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Iterable</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.dataset_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDataset</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.metadata_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">InsertMetadata</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.internal_jobs</span><span class="w"> </span><span class="kn">import</span> <span class="n">InternalJob</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.metadata_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">InsertMetadata</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.molecules</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationRecord</span><span class="p">,</span> <span class="n">OptimizationSpecification</span>
 
@@ -474,17 +471,14 @@
 <div class="viewcode-block" id="OptimizationDatasetNewEntry">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OptimizationDatasetNewEntry</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<div class="viewcode-block" id="OptimizationDatasetNewEntry.Config">
-<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.Config">[docs]</a>
-    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
 
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">initial_molecule</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Molecule</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
-    <span class="n">additional_keywords</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">attributes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">comment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">initial_molecule</span><span class="p">:</span> <span class="n">Molecule</span> <span class="o">|</span> <span class="nb">int</span>
+    <span class="n">additional_keywords</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">attributes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">comment</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 
@@ -498,31 +492,23 @@
 <div class="viewcode-block" id="OptimizationDatasetSpecification">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetSpecification">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OptimizationDatasetSpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<div class="viewcode-block" id="OptimizationDatasetSpecification.Config">
-<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetSpecification.Config">[docs]</a>
-    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
-
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">OptimizationSpecification</span>
-    <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 
 <div class="viewcode-block" id="OptimizationDatasetRecordItem">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OptimizationDatasetRecordItem</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<div class="viewcode-block" id="OptimizationDatasetRecordItem.Config">
-<a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem.Config">[docs]</a>
-    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">Extra</span><span class="o">.</span><span class="n">forbid</span></div>
-
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
 
     <span class="n">entry_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">specification_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">record_id</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">record</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OptimizationRecord</span><span class="p">]</span></div>
+    <span class="n">record</span><span class="p">:</span> <span class="n">OptimizationRecord</span> <span class="o">|</span> <span class="kc">None</span></div>
 
 
 
@@ -541,7 +527,7 @@
 <div class="viewcode-block" id="OptimizationDataset.add_specification">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset.add_specification">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_specification</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">specification</span><span class="p">:</span> <span class="n">OptimizationSpecification</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">specification</span><span class="p">:</span> <span class="n">OptimizationSpecification</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InsertMetadata</span><span class="p">:</span>
         <span class="n">spec</span> <span class="o">=</span> <span class="n">OptimizationDatasetSpecification</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">specification</span><span class="o">=</span><span class="n">specification</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_specifications</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span></div>
@@ -550,7 +536,7 @@
 <div class="viewcode-block" id="OptimizationDataset.add_entries">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset.add_entries">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_entries</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">OptimizationDatasetNewEntry</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">OptimizationDatasetNewEntry</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">OptimizationDatasetNewEntry</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">OptimizationDatasetNewEntry</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InsertMetadata</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_entries</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span></div>
 
@@ -558,7 +544,7 @@
 <div class="viewcode-block" id="OptimizationDataset.background_add_entries">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.dataset_models.OptimizationDataset.background_add_entries">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">background_add_entries</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">OptimizationDatasetNewEntry</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">OptimizationDatasetNewEntry</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">OptimizationDatasetNewEntry</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">OptimizationDatasetNewEntry</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InternalJob</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_background_add_entries</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span></div>
 
@@ -568,10 +554,10 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">add_entry</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">initial_molecule</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Molecule</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-        <span class="n">additional_keywords</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">attributes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">comment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">initial_molecule</span><span class="p">:</span> <span class="n">Molecule</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">additional_keywords</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">attributes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">comment</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">additional_keywords</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">additional_keywords</span> <span class="o">=</span> <span class="p">{}</span>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
 
-    <script src="../../../_static/documentation_options.js?v=f021f781"></script>
+    <script src="../../../_static/documentation_options.js?v=2a07e955"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Singlepoint Records" href="singlepoint.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.64.post38+g0e4079ab8" />
+  <meta name="docsearch:version" content="0.65.post58+g8bf386967" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -566,7 +566,9 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>Protocols regarding the manipulation of a Optimization output data.</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>trajectory</strong> (<a class="reference internal" href="#qcportal.optimization.record_models.TrajectoryProtocolEnum" title="qcportal.optimization.record_models.TrajectoryProtocolEnum"><em>TrajectoryProtocolEnum</em></a>)</p>
@@ -577,40 +579,43 @@
 <span class="sig-name descname"><span class="pre">trajectory</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.optimization.record_models.TrajectoryProtocolEnum" title="qcportal.optimization.record_models.TrajectoryProtocolEnum"><span class="pre">TrajectoryProtocolEnum</span></a></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationProtocols.trajectory" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationProtocols.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationProtocols.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationSpecification">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">OptimizationSpecification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">program</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qc_specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keywords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">OptimizationProtocols(trajectory=&lt;TrajectoryProtocolEnum.all:</span> <span class="pre">'all'&gt;)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/record_models.html#OptimizationSpecification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationSpecification" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">OptimizationSpecification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">program</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qc_specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keywords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/record_models.html#OptimizationSpecification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationSpecification" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>An OptimizationSpecification as stored on the server</p>
 <p>This is the same as the input specification, with a few ids added</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>program</strong> (<em>ConstrainedStrValue</em>)</p></li>
+<li><p><strong>program</strong> (<em>Annotated</em><em>[</em><em>str</em><em>, </em><em>StringConstraints</em><em>(</em><em>strip_whitespace=None</em><em>, </em><em>to_upper=None</em><em>, </em><em>to_lower=True</em><em>, </em><em>strict=None</em><em>, </em><em>min_length=None</em><em>, </em><em>max_length=None</em><em>, </em><em>pattern=None</em><em>, </em><em>ascii_only=None</em><em>)</em><em>]</em>)</p></li>
 <li><p><strong>qc_specification</strong> (<a class="reference internal" href="singlepoint.html#qcportal.singlepoint.record_models.QCSpecification" title="qcportal.singlepoint.record_models.QCSpecification"><em>QCSpecification</em></a>)</p></li>
-<li><p><strong>keywords</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>keywords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
 <li><p><strong>protocols</strong> (<a class="reference internal" href="#qcportal.optimization.record_models.OptimizationProtocols" title="qcportal.optimization.record_models.OptimizationProtocols"><em>OptimizationProtocols</em></a>)</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py class">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationSpecification.Config">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Config</span></span><a class="reference internal" href="../../../_modules/qcportal/optimization/record_models.html#OptimizationSpecification.Config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationSpecification.Config" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationSpecification.Config.extra">
-<span class="sig-name descname"><span class="pre">extra</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationSpecification.Config.extra" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationSpecification.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid'}</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationSpecification.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationSpecification.program">
-<span class="sig-name descname"><span class="pre">program</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">constr</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">)</span></span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationSpecification.program" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">program</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">LowerStr</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationSpecification.program" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -620,7 +625,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationSpecification.keywords">
-<span class="sig-name descname"><span class="pre">keywords</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationSpecification.keywords" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">keywords</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationSpecification.keywords" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -637,40 +642,42 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">OptimizationRecord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'optimization'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_service</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manager_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_on</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modified_on</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">creator_user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_history</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">service</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">native_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_molecule_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_molecule_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_molecule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_molecule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/record_models.html#OptimizationRecord"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">OptimizationRecord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'optimization'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_service</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manager_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_on</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modified_on</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">creator_user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_history</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">service</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">native_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_molecule_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_molecule_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_molecule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_molecule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/record_models.html#OptimizationRecord"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRecord</span></code></a></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_url_prefix</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>base_url_prefix</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>id</strong> (<em>int</em>)</p></li>
 <li><p><strong>record_type</strong> (<em>Literal</em><em>[</em><em>'optimization'</em><em>]</em>)</p></li>
 <li><p><strong>is_service</strong> (<em>bool</em>)</p></li>
 <li><p><strong>name</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>description</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>tags</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>properties</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>extras</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>tags</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>properties</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>extras</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
 <li><p><strong>status</strong> (<a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a>)</p></li>
 <li><p><strong>manager_name</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>created_on</strong> (<em>datetime</em>)</p></li>
 <li><p><strong>modified_on</strong> (<em>datetime</em>)</p></li>
 <li><p><strong>creator_user</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>compute_history</strong> (<em>List</em><em>[</em><a class="reference internal" href="base_record_models.html#qcportal.record_models.ComputeHistory" title="qcportal.record_models.ComputeHistory"><em>ComputeHistory</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>compute_history</strong> (<em>list</em><em>[</em><a class="reference internal" href="base_record_models.html#qcportal.record_models.ComputeHistory" title="qcportal.record_models.ComputeHistory"><em>ComputeHistory</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>task</strong> (<a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><em>RecordTask</em></a><em> | </em><em>None</em>)</p></li>
 <li><p><strong>service</strong> (<a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><em>RecordService</em></a><em> | </em><em>None</em>)</p></li>
-<li><p><strong>comments</strong> (<em>List</em><em>[</em><a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordComment" title="qcportal.record_models.RecordComment"><em>RecordComment</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>native_files</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="base_record_models.html#qcportal.record_models.NativeFile" title="qcportal.record_models.NativeFile"><em>NativeFile</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>comments</strong> (<em>list</em><em>[</em><a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordComment" title="qcportal.record_models.RecordComment"><em>RecordComment</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>native_files</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="base_record_models.html#qcportal.record_models.NativeFile" title="qcportal.record_models.NativeFile"><em>NativeFile</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>specification</strong> (<a class="reference internal" href="#qcportal.optimization.record_models.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><em>OptimizationSpecification</em></a>)</p></li>
 <li><p><strong>initial_molecule_id</strong> (<em>int</em>)</p></li>
 <li><p><strong>final_molecule_id</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>energies</strong> (<em>List</em><em>[</em><em>float</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>energies</strong> (<em>list</em><em>[</em><em>float</em><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>initial_molecule</strong> (<em>Molecule</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>final_molecule</strong> (<em>Molecule</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>trajectory_ids</strong> (<em>List</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>trajectory_records</strong> (<em>List</em><em>[</em><a class="reference internal" href="singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><em>SinglepointRecord</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>trajectory_ids</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>trajectory_records</strong> (<em>list</em><em>[</em><a class="reference internal" href="singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><em>SinglepointRecord</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -696,7 +703,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.energies">
-<span class="sig-name descname"><span class="pre">energies</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.energies" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">energies</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.energies" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -711,12 +718,12 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.trajectory_ids_">
-<span class="sig-name descname"><span class="pre">trajectory_ids_</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory_ids_" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">trajectory_ids_</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory_ids_" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.trajectory_records_">
-<span class="sig-name descname"><span class="pre">trajectory_records_</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><span class="pre">SinglepointRecord</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory_records_" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">trajectory_records_</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><span class="pre">SinglepointRecord</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory_records_" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -741,7 +748,7 @@ excludes those children.</p>
 <p>kwargs are passed directly to the pydantic <cite>dict()</cite> function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+<dd class="field-odd"><p>dict[str, <em>Any</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -758,7 +765,7 @@ excludes those children.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.trajectory">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">trajectory</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><span class="pre">SinglepointRecord</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">trajectory</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><span class="pre">SinglepointRecord</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -784,52 +791,31 @@ excludes those children.</p>
 </dl>
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.Config">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.Config" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.Config.allow_mutation">
-<span class="sig-name descname"><span class="pre">allow_mutation</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.Config.allow_mutation" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.Config.extra">
-<span class="sig-name descname"><span class="pre">extra</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.Config.extra" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.Config.validate_assignment">
-<span class="sig-name descname"><span class="pre">validate_assignment</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.Config.validate_assignment" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.children_errors">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">children_errors</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><span class="pre">BaseRecord</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.children_errors" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">children_errors</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><span class="pre">BaseRecord</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.children_errors" title="Link to this definition">#</a></dt>
 <dd><p>Returns errored child records</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.children_status">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">children_status</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><span class="pre">RecordStatusEnum</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.children_status" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">children_status</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><span class="pre">RecordStatusEnum</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.children_status" title="Link to this definition">#</a></dt>
 <dd><p>Returns a dictionary of the status of all children of this record</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.comments">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">comments</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordComment" title="qcportal.record_models.RecordComment"><span class="pre">RecordComment</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.comments" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">comments</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordComment" title="qcportal.record_models.RecordComment"><span class="pre">RecordComment</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.comments" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.compute_history">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">compute_history</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base_record_models.html#qcportal.record_models.ComputeHistory" title="qcportal.record_models.ComputeHistory"><span class="pre">ComputeHistory</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.compute_history" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">compute_history</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base_record_models.html#qcportal.record_models.ComputeHistory" title="qcportal.record_models.ComputeHistory"><span class="pre">ComputeHistory</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.compute_history" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.error">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">error</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.error" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">error</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.error" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -882,14 +868,38 @@ that can span multiple records</p>
 <span class="sig-name descname"><span class="pre">get_waiting_reason</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.get_waiting_reason" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+<dd class="field-odd"><p>dict[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'frozen':</span> <span class="pre">False,</span> <span class="pre">'serialize_by_alias':</span> <span class="pre">True,</span> <span class="pre">'validate_assignment':</span> <span class="pre">True,</span> <span class="pre">'validate_by_alias':</span> <span class="pre">True,</span> <span class="pre">'validate_by_name':</span> <span class="pre">True}</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.model_post_init">
+<span class="sig-name descname"><span class="pre">model_post_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.model_post_init" title="Link to this definition">#</a></dt>
+<dd><p>This function is meant to behave like a BaseModel method to initialize private attributes.</p>
+<p>It takes context as an argument since that’s what pydantic-core passes when calling it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<em>BaseModel</em>) – The BaseModel instance.</p></li>
+<li><p><strong>context</strong> (<em>Any</em>) – The context.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.native_files">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">native_files</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base_record_models.html#qcportal.record_models.NativeFile" title="qcportal.record_models.NativeFile"><span class="pre">NativeFile</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.native_files" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">native_files</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base_record_models.html#qcportal.record_models.NativeFile" title="qcportal.record_models.NativeFile"><span class="pre">NativeFile</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.native_files" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -1026,79 +1036,71 @@ that can span multiple records</p>
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">OptimizationQueryFilters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cursor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manager_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">history_manager_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">child_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_before</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modified_before</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modified_after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">creator_user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">program</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qc_program</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qc_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qc_basis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_molecule_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_molecule_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/record_models.html#OptimizationQueryFilters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordQueryFilters" title="qcportal.record_models.RecordQueryFilters"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordQueryFilters</span></code></a></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>cursor</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>record_id</strong> (<em>List</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>record_type</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>manager_name</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>history_manager_name</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>status</strong> (<em>List</em><em>[</em><a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>dataset_id</strong> (<em>List</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>project_id</strong> (<em>List</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>parent_id</strong> (<em>List</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>child_id</strong> (<em>List</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>record_id</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>record_type</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>manager_name</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>history_manager_name</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>status</strong> (<em>list</em><em>[</em><a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>dataset_id</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>project_id</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>parent_id</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>child_id</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>created_before</strong> (<em>datetime</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>created_after</strong> (<em>datetime</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>modified_before</strong> (<em>datetime</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>modified_after</strong> (<em>datetime</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>creator_user</strong> (<em>List</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>program</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>qc_program</strong> (<em>List</em><em>[</em><em>ConstrainedStrValue</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>qc_method</strong> (<em>List</em><em>[</em><em>ConstrainedStrValue</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>qc_basis</strong> (<em>List</em><em>[</em><em>ConstrainedStrValue</em><em> | </em><em>None</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>initial_molecule_id</strong> (<em>List</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>final_molecule_id</strong> (<em>List</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>creator_user</strong> (<em>list</em><em>[</em><em>int</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>program</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>qc_program</strong> (<em>list</em><em>[</em><em>Annotated</em><em>[</em><em>str</em><em>, </em><em>StringConstraints</em><em>(</em><em>strip_whitespace=None</em><em>, </em><em>to_upper=None</em><em>, </em><em>to_lower=True</em><em>, </em><em>strict=None</em><em>, </em><em>min_length=None</em><em>, </em><em>max_length=None</em><em>, </em><em>pattern=None</em><em>, </em><em>ascii_only=None</em><em>)</em><em>]</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>qc_method</strong> (<em>list</em><em>[</em><em>Annotated</em><em>[</em><em>str</em><em>, </em><em>StringConstraints</em><em>(</em><em>strip_whitespace=None</em><em>, </em><em>to_upper=None</em><em>, </em><em>to_lower=True</em><em>, </em><em>strict=None</em><em>, </em><em>min_length=None</em><em>, </em><em>max_length=None</em><em>, </em><em>pattern=None</em><em>, </em><em>ascii_only=None</em><em>)</em><em>]</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>qc_basis</strong> (<em>list</em><em>[</em><em>Annotated</em><em>[</em><em>str</em><em>, </em><em>StringConstraints</em><em>(</em><em>strip_whitespace=None</em><em>, </em><em>to_upper=None</em><em>, </em><em>to_lower=True</em><em>, </em><em>strict=None</em><em>, </em><em>min_length=None</em><em>, </em><em>max_length=None</em><em>, </em><em>pattern=None</em><em>, </em><em>ascii_only=None</em><em>)</em><em>] </em><em>| </em><em>None</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>initial_molecule_id</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>final_molecule_id</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationQueryFilters.program">
-<span class="sig-name descname"><span class="pre">program</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.program" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">program</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.program" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationQueryFilters.qc_program">
-<span class="sig-name descname"><span class="pre">qc_program</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">constr</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.qc_program" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">qc_program</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">LowerStr</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.qc_program" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationQueryFilters.qc_method">
-<span class="sig-name descname"><span class="pre">qc_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">constr</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.qc_method" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">qc_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">LowerStr</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.qc_method" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationQueryFilters.qc_basis">
-<span class="sig-name descname"><span class="pre">qc_basis</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">constr</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">)</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.qc_basis" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">qc_basis</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">LowerStr</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.qc_basis" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationQueryFilters.initial_molecule_id">
-<span class="sig-name descname"><span class="pre">initial_molecule_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.initial_molecule_id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">initial_molecule_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.initial_molecule_id" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationQueryFilters.final_molecule_id">
-<span class="sig-name descname"><span class="pre">final_molecule_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.final_molecule_id" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationQueryFilters.Config">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.Config" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationQueryFilters.Config.extra">
-<span class="sig-name descname"><span class="pre">extra</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.Config.extra" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">final_molecule_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.final_molecule_id" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationQueryFilters.Config.validate_assignment">
-<span class="sig-name descname"><span class="pre">validate_assignment</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.Config.validate_assignment" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationQueryFilters.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1198,7 +1200,9 @@ that can span multiple records</p>
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">OptimizationInput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'optimization'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_molecule</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/record_models.html#OptimizationInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationInput" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1223,20 +1227,10 @@ that can span multiple records</p>
 <span class="sig-name descname"><span class="pre">initial_molecule</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationInput.initial_molecule" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationInput.Config">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationInput.Config" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationInput.Config.extra">
-<span class="sig-name descname"><span class="pre">extra</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationInput.Config.extra" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationInput.Config.validate_assignment">
-<span class="sig-name descname"><span class="pre">validate_assignment</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationInput.Config.validate_assignment" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationInput.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationInput.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
 </dd></dl>
 
 </dd></dl>
@@ -1246,12 +1240,14 @@ that can span multiple records</p>
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">OptimizationMultiInput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_molecules</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/record_models.html#OptimizationMultiInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationMultiInput" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>specification</strong> (<a class="reference internal" href="#qcportal.optimization.record_models.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><em>OptimizationSpecification</em></a>)</p></li>
-<li><p><strong>initial_molecules</strong> (<em>List</em><em>[</em><em>int</em><em> | </em><em>Molecule</em><em>]</em>)</p></li>
+<li><p><strong>initial_molecules</strong> (<em>list</em><em>[</em><em>int</em><em> | </em><em>Molecule</em><em>]</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -1262,23 +1258,13 @@ that can span multiple records</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationMultiInput.initial_molecules">
-<span class="sig-name descname"><span class="pre">initial_molecules</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationMultiInput.initial_molecules" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationMultiInput.Config">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationMultiInput.Config" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationMultiInput.Config.extra">
-<span class="sig-name descname"><span class="pre">extra</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationMultiInput.Config.extra" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">initial_molecules</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationMultiInput.initial_molecules" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationMultiInput.Config.validate_assignment">
-<span class="sig-name descname"><span class="pre">validate_assignment</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationMultiInput.Config.validate_assignment" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationMultiInput.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationMultiInput.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
 </dd></dl>
 
 </dd></dl>
@@ -1288,32 +1274,24 @@ that can span multiple records</p>
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">OptimizationAddBody</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_molecules</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_priority</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_existing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/record_models.html#OptimizationAddBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationAddBody" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordAddBodyBase" title="qcportal.record_models.RecordAddBodyBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordAddBodyBase</span></code></a>, <a class="reference internal" href="#qcportal.optimization.record_models.OptimizationMultiInput" title="qcportal.optimization.record_models.OptimizationMultiInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationMultiInput</span></code></a></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>specification</strong> (<a class="reference internal" href="#qcportal.optimization.record_models.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><em>OptimizationSpecification</em></a>)</p></li>
-<li><p><strong>initial_molecules</strong> (<em>List</em><em>[</em><em>int</em><em> | </em><em>Molecule</em><em>]</em>)</p></li>
-<li><p><strong>compute_tag</strong> (<em>ConstrainedStrValue</em>)</p></li>
+<li><p><strong>initial_molecules</strong> (<em>list</em><em>[</em><em>int</em><em> | </em><em>Molecule</em><em>]</em>)</p></li>
+<li><p><strong>compute_tag</strong> (<em>Annotated</em><em>[</em><em>str</em><em>, </em><em>StringConstraints</em><em>(</em><em>strip_whitespace=None</em><em>, </em><em>to_upper=None</em><em>, </em><em>to_lower=True</em><em>, </em><em>strict=None</em><em>, </em><em>min_length=None</em><em>, </em><em>max_length=None</em><em>, </em><em>pattern=None</em><em>, </em><em>ascii_only=None</em><em>)</em><em>]</em>)</p></li>
 <li><p><strong>compute_priority</strong> (<a class="reference internal" href="base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>)</p></li>
 <li><p><strong>find_existing</strong> (<em>bool</em>)</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py class">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationAddBody.Config">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationAddBody.Config" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationAddBody.Config.extra">
-<span class="sig-name descname"><span class="pre">extra</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationAddBody.Config.extra" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationAddBody.Config.validate_assignment">
-<span class="sig-name descname"><span class="pre">validate_assignment</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationAddBody.Config.validate_assignment" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationAddBody.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationAddBody.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1361,27 +1339,24 @@ that can span multiple records</p>
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">OptimizationDatasetNewEntry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_molecule</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_keywords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/dataset_models.html#OptimizationDatasetNewEntry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<em>str</em>)</p></li>
 <li><p><strong>initial_molecule</strong> (<em>Molecule</em><em> | </em><em>int</em>)</p></li>
-<li><p><strong>additional_keywords</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
-<li><p><strong>attributes</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>additional_keywords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>attributes</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
 <li><p><strong>comment</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py class">
-<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.Config">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Config</span></span><a class="reference internal" href="../../../_modules/qcportal/optimization/dataset_models.html#OptimizationDatasetNewEntry.Config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.Config" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.Config.extra">
-<span class="sig-name descname"><span class="pre">extra</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.Config.extra" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
+<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid'}</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1396,12 +1371,12 @@ that can span multiple records</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.additional_keywords">
-<span class="sig-name descname"><span class="pre">additional_keywords</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.additional_keywords" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">additional_keywords</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.additional_keywords" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.attributes">
-<span class="sig-name descname"><span class="pre">attributes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.attributes" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">attributes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.attributes" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -1416,14 +1391,16 @@ that can span multiple records</p>
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">OptimizationDatasetEntry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_molecule</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_keywords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/dataset_models.html#OptimizationDatasetEntry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetEntry" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry" title="qcportal.optimization.dataset_models.OptimizationDatasetNewEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationDatasetNewEntry</span></code></a></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<em>str</em>)</p></li>
 <li><p><strong>initial_molecule</strong> (<em>Molecule</em>)</p></li>
-<li><p><strong>additional_keywords</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
-<li><p><strong>attributes</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>additional_keywords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>attributes</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
 <li><p><strong>comment</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
@@ -1433,15 +1410,10 @@ that can span multiple records</p>
 <span class="sig-name descname"><span class="pre">initial_molecule</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Molecule</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetEntry.initial_molecule" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDatasetEntry.Config">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetEntry.Config" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDatasetEntry.Config.extra">
-<span class="sig-name descname"><span class="pre">extra</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetEntry.Config.extra" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
+<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDatasetEntry.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid'}</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetEntry.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1471,7 +1443,9 @@ that can span multiple records</p>
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">OptimizationDatasetSpecification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/dataset_models.html#OptimizationDatasetSpecification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetSpecification" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1481,15 +1455,10 @@ that can span multiple records</p>
 </ul>
 </dd>
 </dl>
-<dl class="py class">
-<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDatasetSpecification.Config">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Config</span></span><a class="reference internal" href="../../../_modules/qcportal/optimization/dataset_models.html#OptimizationDatasetSpecification.Config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetSpecification.Config" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDatasetSpecification.Config.extra">
-<span class="sig-name descname"><span class="pre">extra</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetSpecification.Config.extra" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
+<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDatasetSpecification.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid'}</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetSpecification.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1511,10 +1480,12 @@ that can span multiple records</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDatasetRecordItem">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">OptimizationDatasetRecordItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/dataset_models.html#OptimizationDatasetRecordItem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">OptimizationDatasetRecordItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/dataset_models.html#OptimizationDatasetRecordItem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1525,15 +1496,10 @@ that can span multiple records</p>
 </ul>
 </dd>
 </dl>
-<dl class="py class">
-<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDatasetRecordItem.Config">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Config</span></span><a class="reference internal" href="../../../_modules/qcportal/optimization/dataset_models.html#OptimizationDatasetRecordItem.Config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem.Config" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDatasetRecordItem.Config.extra">
-<span class="sig-name descname"><span class="pre">extra</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem.Config.extra" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
+<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDatasetRecordItem.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid'}</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1560,29 +1526,31 @@ that can span multiple records</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDataset">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">OptimizationDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'optimization'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tagline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extras</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_compute_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_compute_priority</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">creator_user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contributed_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attachments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_fetch_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/dataset_models.html#OptimizationDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">OptimizationDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'optimization'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tagline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extras</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_compute_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_compute_priority</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">creator_user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contributed_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attachments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_fetch_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/qcportal/optimization/dataset_models.html#OptimizationDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_record_models.html#qcportal.dataset_models.BaseDataset" title="qcportal.dataset_models.BaseDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataset</span></code></a></p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>client</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="../clients.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><em>PortalClient</em></a><em>]</em>)</p></li>
-<li><p><strong>base_url_prefix</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
-<li><p><strong>cache_data</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="../clients.html#qcportal.cache.DatasetCache" title="qcportal.cache.DatasetCache"><em>DatasetCache</em></a><em>]</em>)</p></li>
+<li><p><strong>client</strong> (<a class="reference internal" href="../clients.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><em>PortalClient</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>base_url_prefix</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>cache_data</strong> (<a class="reference internal" href="../clients.html#qcportal.cache.DatasetCache" title="qcportal.cache.DatasetCache"><em>DatasetCache</em></a><em> | </em><em>None</em>)</p></li>
 <li><p><strong>id</strong> (<em>int</em>)</p></li>
 <li><p><strong>dataset_type</strong> (<em>Literal</em><em>[</em><em>'optimization'</em><em>]</em>)</p></li>
 <li><p><strong>name</strong> (<em>str</em>)</p></li>
 <li><p><strong>description</strong> (<em>str</em>)</p></li>
 <li><p><strong>tagline</strong> (<em>str</em>)</p></li>
-<li><p><strong>tags</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p></li>
-<li><p><strong>provenance</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
-<li><p><strong>extras</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>tags</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>provenance</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>extras</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
 <li><p><strong>default_compute_tag</strong> (<em>str</em>)</p></li>
 <li><p><strong>default_compute_priority</strong> (<a class="reference internal" href="base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>)</p></li>
 <li><p><strong>creator_user</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>contributed_values</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="base_record_models.html#qcportal.dataset_models.ContributedValues" title="qcportal.dataset_models.ContributedValues"><em>ContributedValues</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>attachments</strong> (<em>List</em><em>[</em><a class="reference internal" href="base_record_models.html#qcportal.dataset_models.DatasetAttachment" title="qcportal.dataset_models.DatasetAttachment"><em>DatasetAttachment</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>contributed_values</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="base_record_models.html#qcportal.dataset_models.ContributedValues" title="qcportal.dataset_models.ContributedValues"><em>ContributedValues</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>attachments</strong> (<em>list</em><em>[</em><a class="reference internal" href="base_record_models.html#qcportal.dataset_models.DatasetAttachment" title="qcportal.dataset_models.DatasetAttachment"><em>DatasetAttachment</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>auto_fetch_missing</strong> (<em>bool</em>)</p></li>
 </ul>
 </dd>
@@ -1643,33 +1611,12 @@ that can span multiple records</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<em>str</em>)</p></li>
 <li><p><strong>initial_molecule</strong> (<em>Molecule</em><em> | </em><em>int</em>)</p></li>
-<li><p><strong>additional_keywords</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>attributes</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>additional_keywords</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>attributes</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>comment</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDataset.Config">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.Config" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDataset.Config.allow_mutation">
-<span class="sig-name descname"><span class="pre">allow_mutation</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.Config.allow_mutation" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDataset.Config.extra">
-<span class="sig-name descname"><span class="pre">extra</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forbid'</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.Config.extra" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDataset.Config.validate_assignment">
-<span class="sig-name descname"><span class="pre">validate_assignment</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.Config.validate_assignment" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py method">
@@ -1684,7 +1631,7 @@ that can span multiple records</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDataset.attachments">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">attachments</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base_record_models.html#qcportal.dataset_models.DatasetAttachment" title="qcportal.dataset_models.DatasetAttachment"><span class="pre">DatasetAttachment</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.attachments" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">attachments</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="base_record_models.html#qcportal.dataset_models.DatasetAttachment" title="qcportal.dataset_models.DatasetAttachment"><span class="pre">DatasetAttachment</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.attachments" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1738,12 +1685,12 @@ that can span multiple records</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>value_call</strong> (<em>Callable</em>) – Function to call on each record to extract the desired value. Must return a scalar value or
 a sequence of values if ‘unpack’ is set to True.</p></li>
-<li><p><strong>value_names</strong> (<em>Union</em><em>[</em><em>Sequence</em><em>[</em><em>str</em><em>]</em><em>, </em><em>str</em><em>]</em>) – Column name(s) for the extracted value(s). If a string is provided and multiple values are
+<li><p><strong>value_names</strong> (<em>str</em><em> | </em><em>Sequence</em><em>[</em><em>str</em><em>]</em>) – Column name(s) for the extracted value(s). If a string is provided and multiple values are
 returned by ‘value_call’, columns are named by appending an index to this string. If a list
 of strings is provided, it must match the length of the sequence returned by ‘value_call’.
 Default is “value”.</p></li>
-<li><p><strong>entry_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Entry names to filter records. If not provided, considers all entries.</p></li>
-<li><p><strong>specification_names</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Specification names to filter records. If not provided, considers all specifications.</p></li>
+<li><p><strong>entry_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Entry names to filter records. If not provided, considers all entries.</p></li>
+<li><p><strong>specification_names</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Specification names to filter records. If not provided, considers all specifications.</p></li>
 <li><p><strong>unpack</strong> (<em>bool</em>) – If True, unpack the sequence of values returned by ‘value_call’ into separate columns.
 Default is False.</p></li>
 </ul>
@@ -1777,7 +1724,7 @@ same number of values for each record if unpack is True.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDataset.contributed_values">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">contributed_values</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base_record_models.html#qcportal.dataset_models.ContributedValues" title="qcportal.dataset_models.ContributedValues"><span class="pre">ContributedValues</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.contributed_values" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">contributed_values</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="base_record_models.html#qcportal.dataset_models.ContributedValues" title="qcportal.dataset_models.ContributedValues"><span class="pre">ContributedValues</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.contributed_values" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1843,7 +1790,7 @@ for completion if desired. The job will run server side without user interaction
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>description</strong> (<em>str</em>) – Optional string describing the view file</p></li>
-<li><p><strong>provenance</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Dictionary with any metadata or other information about the view. Information regarding
+<li><p><strong>provenance</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Dictionary with any metadata or other information about the view. Information regarding
 the options used to create the view will be added.</p></li>
 <li><p><strong>status</strong> (<em>Iterable</em><em>[</em><a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>) – List of statuses to include. Default is to include records with any status</p></li>
 <li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – List of specific record fields to include in the export. Default is to include most fields</p></li>
@@ -1925,7 +1872,7 @@ in the view file.</p></li>
 <span class="sig-name descname"><span class="pre">detailed_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.detailed_status" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>List</em>[<em>Tuple</em>[str, str, <a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a>]]</p>
+<dd class="field-odd"><p>list[tuple[str, str, <a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a>]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1967,7 +1914,7 @@ filename determined by what is stored on the server.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDataset.entry_names">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">entry_names</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.entry_names" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">entry_names</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.entry_names" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -2143,16 +2090,16 @@ If the record does not exist for the specified entry and specification, it retur
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>entry_name</strong> (<em>str</em>) – The name of the entry for which the record is to be retrieved.</p></li>
 <li><p><strong>specification_name</strong> (<em>str</em>) – The name of the specification for which the record is to be retrieved.</p></li>
-<li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Additional fields to include in the fetched record, by default None.</p></li>
-<li><p><strong>fetch_updated</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, fetches updated records from the server if they have been modified, by default True.</p></li>
-<li><p><strong>force_refetch</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, forces a refetch of the record from the server, ignoring the local cache, by default False.</p></li>
+<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the fetched record, by default None.</p></li>
+<li><p><strong>fetch_updated</strong> (<em>bool</em>) – If True, fetches updated records from the server if they have been modified, by default True.</p></li>
+<li><p><strong>force_refetch</strong> (<em>bool</em>) – If True, forces a refetch of the record from the server, ignoring the local cache, by default False.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The calculation record associated with the specified entry and specification, or None if it does not exist.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Optional[<a class="reference internal" href="base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord">BaseRecord</a>]</p>
+<dd class="field-odd"><p><a class="reference internal" href="base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord">BaseRecord</a> | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2234,7 +2181,7 @@ is not correct.</p>
 <dd class="field-odd"><p><strong>status</strong> (<a class="reference internal" href="../internal_jobs.html#qcportal.internal_jobs.models.InternalJobStatusEnum" title="qcportal.internal_jobs.models.InternalJobStatusEnum"><em>InternalJobStatusEnum</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="../internal_jobs.html#qcportal.internal_jobs.models.InternalJobStatusEnum" title="qcportal.internal_jobs.models.InternalJobStatusEnum"><em>InternalJobStatusEnum</em></a><em>] </em><em>| </em><em>None</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>List</em>[<a class="reference internal" href="../internal_jobs.html#qcportal.internal_jobs.models.InternalJob" title="qcportal.internal_jobs.models.InternalJob"><em>InternalJob</em></a>]</p>
+<dd class="field-even"><p>list[<a class="reference internal" href="../internal_jobs.html#qcportal.internal_jobs.models.InternalJob" title="qcportal.internal_jobs.models.InternalJob"><em>InternalJob</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2246,8 +2193,32 @@ is not correct.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDataset.metadata">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">metadata</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.metadata" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">metadata</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.metadata" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDataset.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'frozen':</span> <span class="pre">False,</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDataset.model_post_init">
+<span class="sig-name descname"><span class="pre">model_post_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.model_post_init" title="Link to this definition">#</a></dt>
+<dd><p>This function is meant to behave like a BaseModel method to initialize private attributes.</p>
+<p>It takes context as an argument since that’s what pydantic-core passes when calling it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<em>BaseModel</em>) – The BaseModel instance.</p></li>
+<li><p><strong>context</strong> (<em>Any</em>) – The context.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDataset.modify_entries">
@@ -2256,9 +2227,9 @@ is not correct.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>attribute_map</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>] </em><em>| </em><em>None</em>) – A dictionary mapping entry names to their updated attributes.
+<li><p><strong>attribute_map</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>] </em><em>| </em><em>None</em>) – A dictionary mapping entry names to their updated attributes.
 Each entry name maps to a dictionary of attribute key-value pairs to be updated.</p></li>
-<li><p><strong>comment_map</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>] </em><em>| </em><em>None</em>) – A dictionary mapping entry names to their updated comments.</p></li>
+<li><p><strong>comment_map</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>] </em><em>| </em><em>None</em>) – A dictionary mapping entry names to their updated comments.</p></li>
 <li><p><strong>overwrite_attributes</strong> (<em>bool</em>) – If True, existing attributes for the specified entries will be completely
 replaced by the provided attributes in <code class="docutils literal notranslate"><span class="pre">attribute_map</span></code>. If False, only the
 specified attributes will be updated, leaving others unchanged.</p></li>
@@ -2376,7 +2347,7 @@ by a submit without duplicate checking.</p>
 It ensures that the dataset is not a view and is online before proceeding with the renaming.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name_map</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – A dictionary mapping old entry names to new entry names.
+<dd class="field-odd"><p><strong>name_map</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – A dictionary mapping old entry names to new entry names.
 Entries where the old name is the same as the new name
 are ignored.</p>
 </dd>
@@ -2469,7 +2440,7 @@ are ignored.</p>
 <span class="sig-name descname"><span class="pre">set_extras</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_extras</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.set_extras" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>new_extras</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>new_extras</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2489,7 +2460,7 @@ are ignored.</p>
 <span class="sig-name descname"><span class="pre">set_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_metadata</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.set_metadata" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>new_metadata</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>new_metadata</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2509,7 +2480,7 @@ are ignored.</p>
 <span class="sig-name descname"><span class="pre">set_provenance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_provenance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.set_provenance" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>new_provenance</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>new_provenance</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2529,7 +2500,7 @@ are ignored.</p>
 <span class="sig-name descname"><span class="pre">set_tags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_tags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.set_tags" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>new_tags</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>new_tags</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2546,7 +2517,7 @@ are ignored.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDataset.specification_names">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">specification_names</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.specification_names" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">specification_names</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.specification_names" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -2559,7 +2530,7 @@ are ignored.</p>
 <span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.status" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+<dd class="field-odd"><p>dict[str, <em>Any</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2569,7 +2540,7 @@ are ignored.</p>
 <span class="sig-name descname"><span class="pre">status_by_compute_tag</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.status_by_compute_tag" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>List</em>[<em>Tuple</em>[str, <a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a>, int]]</p>
+<dd class="field-odd"><p>list[tuple[str, <a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a>, int]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2779,13 +2750,11 @@ records created for those that don’t match. If False, new records will always 
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationProtocols"><code class="docutils literal notranslate"><span class="pre">OptimizationProtocols</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationProtocols.trajectory"><code class="docutils literal notranslate"><span class="pre">OptimizationProtocols.trajectory</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationProtocols.model_config"><code class="docutils literal notranslate"><span class="pre">OptimizationProtocols.model_config</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationSpecification"><code class="docutils literal notranslate"><span class="pre">OptimizationSpecification</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationSpecification.Config"><code class="docutils literal notranslate"><span class="pre">OptimizationSpecification.Config</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationSpecification.Config.extra"><code class="docutils literal notranslate"><span class="pre">OptimizationSpecification.Config.extra</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationSpecification.model_config"><code class="docutils literal notranslate"><span class="pre">OptimizationSpecification.model_config</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationSpecification.program"><code class="docutils literal notranslate"><span class="pre">OptimizationSpecification.program</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationSpecification.qc_specification"><code class="docutils literal notranslate"><span class="pre">OptimizationSpecification.qc_specification</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationSpecification.keywords"><code class="docutils literal notranslate"><span class="pre">OptimizationSpecification.keywords</span></code></a></li>
@@ -2810,12 +2779,6 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.trajectory</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory_element"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.trajectory_element()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.to_qcschema_result"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.to_qcschema_result()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.Config"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.Config</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.Config.allow_mutation"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.Config.allow_mutation</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.Config.extra"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.Config.extra</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.Config.validate_assignment"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.Config.validate_assignment</span></code></a></li>
-</ul>
-</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.children_errors"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.children_errors</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.children_status"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.children_status</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.comments"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.comments</span></code></a></li>
@@ -2825,6 +2788,8 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.fetch_children_multi"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.fetch_children_multi()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.get_subclass"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.get_subclass()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.get_waiting_reason"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.get_waiting_reason()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.model_config"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.model_config</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.model_post_init"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.model_post_init()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.native_files"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.native_files</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.offline"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.offline</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.provenance"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.provenance</span></code></a></li>
@@ -2859,11 +2824,7 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.qc_basis"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.qc_basis</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.initial_molecule_id"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.initial_molecule_id</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.final_molecule_id"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.final_molecule_id</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.Config"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.Config</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.Config.extra"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.Config.extra</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.Config.validate_assignment"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.Config.validate_assignment</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.model_config"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.model_config</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.parse_dates"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.parse_dates()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.validate_lists"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.validate_lists()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.record_id"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.record_id</span></code></a></li>
@@ -2888,29 +2849,17 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationInput.record_type"><code class="docutils literal notranslate"><span class="pre">OptimizationInput.record_type</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationInput.specification"><code class="docutils literal notranslate"><span class="pre">OptimizationInput.specification</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationInput.initial_molecule"><code class="docutils literal notranslate"><span class="pre">OptimizationInput.initial_molecule</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationInput.Config"><code class="docutils literal notranslate"><span class="pre">OptimizationInput.Config</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationInput.Config.extra"><code class="docutils literal notranslate"><span class="pre">OptimizationInput.Config.extra</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationInput.Config.validate_assignment"><code class="docutils literal notranslate"><span class="pre">OptimizationInput.Config.validate_assignment</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationInput.model_config"><code class="docutils literal notranslate"><span class="pre">OptimizationInput.model_config</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationMultiInput"><code class="docutils literal notranslate"><span class="pre">OptimizationMultiInput</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationMultiInput.specification"><code class="docutils literal notranslate"><span class="pre">OptimizationMultiInput.specification</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationMultiInput.initial_molecules"><code class="docutils literal notranslate"><span class="pre">OptimizationMultiInput.initial_molecules</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationMultiInput.Config"><code class="docutils literal notranslate"><span class="pre">OptimizationMultiInput.Config</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationMultiInput.Config.extra"><code class="docutils literal notranslate"><span class="pre">OptimizationMultiInput.Config.extra</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationMultiInput.Config.validate_assignment"><code class="docutils literal notranslate"><span class="pre">OptimizationMultiInput.Config.validate_assignment</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationMultiInput.model_config"><code class="docutils literal notranslate"><span class="pre">OptimizationMultiInput.model_config</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationAddBody"><code class="docutils literal notranslate"><span class="pre">OptimizationAddBody</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationAddBody.Config"><code class="docutils literal notranslate"><span class="pre">OptimizationAddBody.Config</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationAddBody.Config.extra"><code class="docutils literal notranslate"><span class="pre">OptimizationAddBody.Config.extra</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationAddBody.Config.validate_assignment"><code class="docutils literal notranslate"><span class="pre">OptimizationAddBody.Config.validate_assignment</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationAddBody.model_config"><code class="docutils literal notranslate"><span class="pre">OptimizationAddBody.model_config</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationAddBody.compute_tag"><code class="docutils literal notranslate"><span class="pre">OptimizationAddBody.compute_tag</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationAddBody.compute_priority"><code class="docutils literal notranslate"><span class="pre">OptimizationAddBody.compute_priority</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationAddBody.find_existing"><code class="docutils literal notranslate"><span class="pre">OptimizationAddBody.find_existing</span></code></a></li>
@@ -2920,10 +2869,7 @@ records created for those that don’t match. If False, new records will always 
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.compare_optimization_records"><code class="docutils literal notranslate"><span class="pre">compare_optimization_records()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetNewEntry</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.Config"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetNewEntry.Config</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.Config.extra"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetNewEntry.Config.extra</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.model_config"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetNewEntry.model_config</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.name"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetNewEntry.name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.initial_molecule"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetNewEntry.initial_molecule</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetNewEntry.additional_keywords"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetNewEntry.additional_keywords</span></code></a></li>
@@ -2933,10 +2879,7 @@ records created for those that don’t match. If False, new records will always 
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetEntry"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetEntry</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetEntry.initial_molecule"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetEntry.initial_molecule</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetEntry.Config"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetEntry.Config</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetEntry.Config.extra"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetEntry.Config.extra</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetEntry.model_config"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetEntry.model_config</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetEntry.name"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetEntry.name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetEntry.additional_keywords"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetEntry.additional_keywords</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetEntry.attributes"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetEntry.attributes</span></code></a></li>
@@ -2944,20 +2887,14 @@ records created for those that don’t match. If False, new records will always 
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetSpecification"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetSpecification</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetSpecification.Config"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetSpecification.Config</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetSpecification.Config.extra"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetSpecification.Config.extra</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetSpecification.model_config"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetSpecification.model_config</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetSpecification.name"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetSpecification.name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetSpecification.specification"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetSpecification.specification</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetSpecification.description"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetSpecification.description</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetRecordItem</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem.Config"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetRecordItem.Config</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem.Config.extra"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetRecordItem.Config.extra</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem.model_config"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetRecordItem.model_config</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem.entry_name"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetRecordItem.entry_name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem.specification_name"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetRecordItem.specification_name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDatasetRecordItem.record_id"><code class="docutils literal notranslate"><span class="pre">OptimizationDatasetRecordItem.record_id</span></code></a></li>
@@ -2970,12 +2907,6 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.add_entries"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.add_entries()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.background_add_entries"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.background_add_entries()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.add_entry"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.add_entry()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.Config"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.Config</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.Config.allow_mutation"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.Config.allow_mutation</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.Config.extra"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.Config.extra</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.Config.validate_assignment"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.Config.validate_assignment</span></code></a></li>
-</ul>
-</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.assert_is_not_view"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.assert_is_not_view()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.assert_online"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.assert_online()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.attachments"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.attachments</span></code></a></li>
@@ -3017,6 +2948,8 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.list_internal_jobs"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.list_internal_jobs()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.list_views"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.list_views()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.metadata"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.metadata</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.model_config"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.model_config</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.model_post_init"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.model_post_init()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.modify_entries"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.modify_entries()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.modify_records"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.modify_records()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.offline"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.offline</span></code></a></li>

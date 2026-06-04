@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
 
-    <script src="../../_static/documentation_options.js?v=f021f781"></script>
+    <script src="../../_static/documentation_options.js?v=2a07e955"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.64.post38+g0e4079ab8" />
+  <meta name="docsearch:version" content="0.65.post58+g8bf386967" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -464,25 +464,17 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Any</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlparse</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">apsw</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">msgpack</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">chunk_iterable</span>
-
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pydantic</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.v1.json</span><span class="w"> </span><span class="kn">import</span> <span class="n">pydantic_encoder</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">pydantic</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.json</span><span class="w"> </span><span class="kn">import</span> <span class="n">pydantic_encoder</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">zstandard</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.serialization</span><span class="w"> </span><span class="kn">import</span> <span class="n">serialize</span><span class="p">,</span> <span class="n">deserialize</span><span class="p">,</span> <span class="n">_msgpack_encode</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">chunk_iterable</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecordStatusEnum</span>
@@ -518,8 +510,7 @@
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.decompress_from_cache">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">decompress_from_cache</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
     <span class="n">decompressed_data</span> <span class="o">=</span> <span class="n">zstandard</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-    <span class="n">deserialized_data</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">decompressed_data</span><span class="p">,</span> <span class="s2">&quot;msgpack&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">parse_obj_as</span><span class="p">(</span><span class="n">value_type</span><span class="p">,</span> <span class="n">deserialized_data</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">decompressed_data</span><span class="p">,</span> <span class="s2">&quot;msgpack&quot;</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span></div>
 
 
 
@@ -551,16 +542,14 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_create_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            CREATE TABLE IF NOT EXISTS records (</span>
-<span class="sd">                id INTEGER PRIMARY KEY,</span>
-<span class="sd">                status TEXT NOT NULL,</span>
-<span class="sd">                modified_on DECIMAL NOT NULL,</span>
-<span class="sd">                record BLOB NOT NULL</span>
-<span class="sd">            )</span>
-<span class="sd">            &quot;&quot;&quot;</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            CREATE TABLE IF NOT EXISTS records (</span>
+<span class="s2">                id INTEGER PRIMARY KEY,</span>
+<span class="s2">                status TEXT NOT NULL,</span>
+<span class="s2">                modified_on DECIMAL NOT NULL,</span>
+<span class="s2">                record BLOB NOT NULL</span>
+<span class="s2">            )</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;CREATE INDEX IF NOT EXISTS records_status ON records (status)&quot;</span><span class="p">)</span>
 
@@ -574,7 +563,7 @@
 
 <div class="viewcode-block" id="RecordCache.get_record">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache.get_record">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">record_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">record_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_RECORD_T</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT record FROM records WHERE id = ?&quot;</span>
 
         <span class="n">record_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">record_id</span><span class="p">,))</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
@@ -590,7 +579,7 @@
 
 <div class="viewcode-block" id="RecordCache.get_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache.get_records">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">record_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">record_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">]:</span>
         <span class="n">all_records</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">_query_chunk_size</span><span class="p">):</span>
@@ -611,7 +600,7 @@
 
 <div class="viewcode-block" id="RecordCache.get_existing_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.RecordCache.get_existing_records">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_existing_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_existing_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">record_id_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">_query_chunk_size</span><span class="p">):</span>
             <span class="n">record_id_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">record_id_batch</span><span class="p">))</span>
@@ -701,45 +690,37 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_create_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">RecordCache</span><span class="o">.</span><span class="n">_create_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            CREATE TABLE IF NOT EXISTS metadata (</span>
-<span class="sd">                key TEXT PRIMARY KEY,</span>
-<span class="sd">                value BLOB NOT NULL</span>
-<span class="sd">            )</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            CREATE TABLE IF NOT EXISTS metadata (</span>
+<span class="s2">                key TEXT PRIMARY KEY,</span>
+<span class="s2">                value BLOB NOT NULL</span>
+<span class="s2">            )</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            CREATE TABLE IF NOT EXISTS dataset_entries (</span>
-<span class="sd">                name TEXT PRIMARY KEY,</span>
-<span class="sd">                entry BLOB NOT NULL</span>
-<span class="sd">            )</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            CREATE TABLE IF NOT EXISTS dataset_entries (</span>
+<span class="s2">                name TEXT PRIMARY KEY,</span>
+<span class="s2">                entry BLOB NOT NULL</span>
+<span class="s2">            )</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            CREATE TABLE IF NOT EXISTS dataset_specifications (</span>
-<span class="sd">                name TEXT PRIMARY KEY,</span>
-<span class="sd">                specification BLOB NOT NULL</span>
-<span class="sd">            )</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            CREATE TABLE IF NOT EXISTS dataset_specifications (</span>
+<span class="s2">                name TEXT PRIMARY KEY,</span>
+<span class="s2">                specification BLOB NOT NULL</span>
+<span class="s2">            )</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            CREATE TABLE IF NOT EXISTS dataset_records (</span>
-<span class="sd">                entry_name TEXT NOT NULL,</span>
-<span class="sd">                specification_name TEXT NOT NULL,</span>
-<span class="sd">                record_id INTEGER NOT NULL,</span>
-<span class="sd">                PRIMARY KEY (entry_name, specification_name),</span>
-<span class="sd">                FOREIGN KEY (entry_name) REFERENCES dataset_entries(name) ON DELETE CASCADE ON UPDATE CASCADE,</span>
-<span class="sd">                FOREIGN KEY (specification_name) REFERENCES dataset_specifications(name) ON DELETE CASCADE ON UPDATE CASCADE</span>
-<span class="sd">            )</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            CREATE TABLE IF NOT EXISTS dataset_records (</span>
+<span class="s2">                entry_name TEXT NOT NULL,</span>
+<span class="s2">                specification_name TEXT NOT NULL,</span>
+<span class="s2">                record_id INTEGER NOT NULL,</span>
+<span class="s2">                PRIMARY KEY (entry_name, specification_name),</span>
+<span class="s2">                FOREIGN KEY (entry_name) REFERENCES dataset_entries(name) ON DELETE CASCADE ON UPDATE CASCADE,</span>
+<span class="s2">                FOREIGN KEY (specification_name) REFERENCES dataset_specifications(name) ON DELETE CASCADE ON UPDATE CASCADE</span>
+<span class="s2">            )</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;CREATE INDEX IF NOT EXISTS dataset_records_entry_name ON dataset_records (entry_name)&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
@@ -752,7 +733,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">get_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT value FROM metadata WHERE key = ?&quot;</span>
         <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">key</span><span class="p">,))</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;msgpack&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;msgpack&quot;</span><span class="p">,</span> <span class="n">Any</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DatasetCache.entry_exists">
@@ -764,14 +745,14 @@
 
 <div class="viewcode-block" id="DatasetCache.get_entry_names">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_entry_names">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_entry_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_entry_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT name FROM dataset_entries&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()]</span></div>
 
 
 <div class="viewcode-block" id="DatasetCache.get_entry">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_entry">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseModel</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT entry FROM dataset_entries WHERE name=?&quot;</span>
         <span class="n">entry_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,))</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">entry_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -781,7 +762,7 @@
 
 <div class="viewcode-block" id="DatasetCache.get_entries">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_entries">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]:</span>
         <span class="n">all_entries</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">names_batch</span> <span class="ow">in</span> <span class="n">chunk_iterable</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">_query_chunk_size</span><span class="p">):</span>
             <span class="n">name_param</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">names_batch</span><span class="p">))</span>
@@ -844,7 +825,7 @@
 
 <div class="viewcode-block" id="DatasetCache.get_specification_names">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_specification_names">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_specification_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_specification_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT name FROM dataset_specifications&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()]</span></div>
 
@@ -861,7 +842,7 @@
 
 <div class="viewcode-block" id="DatasetCache.get_all_specifications">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_all_specifications">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_all_specifications</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_all_specifications</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]:</span>
         <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;SELECT specification FROM dataset_specifications&quot;</span>
         <span class="n">spec_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">decompress_from_cache</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specification_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">spec_data</span><span class="p">]</span></div>
@@ -869,7 +850,7 @@
 
 <div class="viewcode-block" id="DatasetCache.get_specifications">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_specifications">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_specifications</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_specifications</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]:</span>
         <span class="n">name_param</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">))</span>
 
         <span class="n">stmt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;SELECT specification FROM dataset_specifications WHERE name IN (</span><span class="si">{</span><span class="n">name_param</span><span class="si">}</span><span class="s2">)&quot;&quot;&quot;</span>
@@ -930,7 +911,7 @@
 
 <div class="viewcode-block" id="DatasetCache.get_dataset_record">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_dataset_record">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_dataset_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entry_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">specification_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dataset_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entry_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">specification_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_RECORD_T</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">stmt</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;SELECT r.record FROM records r</span>
 <span class="s2">                  INNER JOIN dataset_records dr ON r.id = dr.record_id</span>
 <span class="s2">                  WHERE dr.entry_name=? and dr.specification_name=?&quot;&quot;&quot;</span>
@@ -951,8 +932,8 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-        <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">_RECORD_T</span><span class="p">]]:</span>
+        <span class="n">status</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">_RECORD_T</span><span class="p">]]:</span>
         <span class="n">specification_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">specification_names</span><span class="p">))</span>
         <span class="n">all_records</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -985,7 +966,7 @@
 
 <div class="viewcode-block" id="DatasetCache.update_dataset_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.update_dataset_records">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">update_dataset_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_info</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_dataset_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_info</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
 
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="p">:</span>
@@ -1013,9 +994,7 @@
 
 <div class="viewcode-block" id="DatasetCache.delete_dataset_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.delete_dataset_records">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">delete_dataset_records</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">entry_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">specification_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
-    <span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_dataset_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entry_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">specification_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_writable</span><span class="p">()</span>
 
         <span class="n">all_params</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1045,8 +1024,8 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-        <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">]]:</span>
+        <span class="n">status</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">]]:</span>
         <span class="n">all_info</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">specification_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">specification_names</span><span class="p">))</span>
 
@@ -1083,7 +1062,7 @@
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.get_existing_dataset_records">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_existing_dataset_records</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">entry_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">specification_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
         <span class="n">specification_params</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;?&quot;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">specification_names</span><span class="p">))</span>
 
         <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1106,7 +1085,7 @@
 <div class="viewcode-block" id="PortalCache">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.PortalCache">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">PortalCache</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">parsed_url</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">server_uri</span><span class="p">)</span>
 
         <span class="c1"># Should work as a reasonable fingerprint?</span>
@@ -1170,7 +1149,7 @@
 
 <div class="viewcode-block" id="PortalCache.vacuum">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.PortalCache.vacuum">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">vacuum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">vacuum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_disk</span><span class="p">:</span>
             <span class="c1"># TODO</span>
             <span class="k">return</span></div>
@@ -1199,7 +1178,7 @@
     <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot find appropriate metadata in cache file </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="n">d</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;msgpack&quot;</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;msgpack&quot;</span><span class="p">,</span> <span class="n">Any</span><span class="p">)</span>
     <span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">d</span></div>
 
@@ -1208,14 +1187,14 @@
 <div class="viewcode-block" id="get_records_with_cache">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.cache.get_records_with_cache">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_records_with_cache</span><span class="p">(</span>
-    <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PortalClient</span><span class="p">],</span>
+    <span class="n">client</span><span class="p">:</span> <span class="n">PortalClient</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">base_url_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">record_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RecordCache</span><span class="p">],</span>
+    <span class="n">record_cache</span><span class="p">:</span> <span class="n">RecordCache</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">record_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">],</span>
     <span class="n">record_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
-    <span class="n">include</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">include</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">force_fetch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">_RECORD_T</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper function for obtaining child records either from the cache or from the server</span>
 

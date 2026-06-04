@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
 
-    <script src="../../_static/documentation_options.js?v=f021f781"></script>
+    <script src="../../_static/documentation_options.js?v=2a07e955"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Server administration via client and API" href="../monitoring.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.64.post38+g0e4079ab8" />
+  <meta name="docsearch:version" content="0.65.post58+g8bf386967" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -611,13 +611,13 @@ validated to form a valid model.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>type</strong> (<em>Literal</em><em>[</em><em>'slurm'</em><em>]</em>)</p></li>
-<li><p><strong>compute_tags</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p></li>
-<li><p><strong>worker_init</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>compute_tags</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>worker_init</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
 <li><p><strong>scratch_directory</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>bind_address</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>cores_per_worker</strong> (<em>int</em>)</p></li>
 <li><p><strong>memory_per_worker</strong> (<em>float</em>)</p></li>
-<li><p><strong>extra_executor_options</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>extra_executor_options</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
 <li><p><strong>environments</strong> (<em>PackageEnvironmentSettings</em>)</p></li>
 <li><p><strong>walltime</strong> (<em>Annotated</em><em>[</em><em>str</em><em>, </em><em>BeforeValidator</em><em>(</em><em>func=~qcfractalcompute.config._walltime_must_be_str</em><em>, </em><em>json_schema_input_type=PydanticUndefined</em><em>)</em><em>]</em>)</p></li>
 <li><p><strong>exclusive</strong> (<em>bool</em>)</p></li>
@@ -625,7 +625,7 @@ validated to form a valid model.</p>
 <li><p><strong>account</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>workers_per_node</strong> (<em>int</em>)</p></li>
 <li><p><strong>max_nodes</strong> (<em>int</em>)</p></li>
-<li><p><strong>scheduler_options</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>scheduler_options</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -666,7 +666,7 @@ validated to form a valid model.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.scheduler_options">
-<span class="sig-name descname"><span class="pre">scheduler_options</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.scheduler_options" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">scheduler_options</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.scheduler_options" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -729,20 +729,20 @@ validated to form a valid model.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>type</strong> (<em>Literal</em><em>[</em><em>'torque'</em><em>]</em>)</p></li>
-<li><p><strong>compute_tags</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p></li>
-<li><p><strong>worker_init</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>compute_tags</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>worker_init</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
 <li><p><strong>scratch_directory</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>bind_address</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>cores_per_worker</strong> (<em>int</em>)</p></li>
 <li><p><strong>memory_per_worker</strong> (<em>float</em>)</p></li>
-<li><p><strong>extra_executor_options</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>extra_executor_options</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
 <li><p><strong>environments</strong> (<em>PackageEnvironmentSettings</em>)</p></li>
 <li><p><strong>walltime</strong> (<em>Annotated</em><em>[</em><em>str</em><em>, </em><em>BeforeValidator</em><em>(</em><em>func=~qcfractalcompute.config._walltime_must_be_str</em><em>, </em><em>json_schema_input_type=PydanticUndefined</em><em>)</em><em>]</em>)</p></li>
 <li><p><strong>account</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>queue</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>workers_per_node</strong> (<em>int</em>)</p></li>
 <li><p><strong>max_nodes</strong> (<em>int</em>)</p></li>
-<li><p><strong>scheduler_options</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>scheduler_options</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -778,7 +778,7 @@ validated to form a valid model.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.scheduler_options">
-<span class="sig-name descname"><span class="pre">scheduler_options</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.scheduler_options" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">scheduler_options</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.scheduler_options" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -841,13 +841,13 @@ validated to form a valid model.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>type</strong> (<em>Literal</em><em>[</em><em>'lsf'</em><em>]</em>)</p></li>
-<li><p><strong>compute_tags</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p></li>
-<li><p><strong>worker_init</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>compute_tags</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>worker_init</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
 <li><p><strong>scratch_directory</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>bind_address</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>cores_per_worker</strong> (<em>int</em>)</p></li>
 <li><p><strong>memory_per_worker</strong> (<em>float</em>)</p></li>
-<li><p><strong>extra_executor_options</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>extra_executor_options</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
 <li><p><strong>environments</strong> (<em>PackageEnvironmentSettings</em>)</p></li>
 <li><p><strong>walltime</strong> (<em>Annotated</em><em>[</em><em>str</em><em>, </em><em>BeforeValidator</em><em>(</em><em>func=~qcfractalcompute.config._walltime_must_be_str</em><em>, </em><em>json_schema_input_type=PydanticUndefined</em><em>)</em><em>]</em>)</p></li>
 <li><p><strong>project</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
@@ -856,7 +856,7 @@ validated to form a valid model.</p>
 <li><p><strong>max_nodes</strong> (<em>int</em>)</p></li>
 <li><p><strong>request_by_nodes</strong> (<em>bool</em>)</p></li>
 <li><p><strong>bsub_redirection</strong> (<em>bool</em>)</p></li>
-<li><p><strong>scheduler_options</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>scheduler_options</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -902,7 +902,7 @@ validated to form a valid model.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.scheduler_options">
-<span class="sig-name descname"><span class="pre">scheduler_options</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.scheduler_options" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">scheduler_options</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.scheduler_options" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -990,13 +990,13 @@ validated to form a valid model.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>type</strong> (<em>Literal</em><em>[</em><em>'local'</em><em>]</em>)</p></li>
-<li><p><strong>compute_tags</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p></li>
-<li><p><strong>worker_init</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>compute_tags</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>worker_init</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
 <li><p><strong>scratch_directory</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>bind_address</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>cores_per_worker</strong> (<em>int</em>)</p></li>
 <li><p><strong>memory_per_worker</strong> (<em>float</em>)</p></li>
-<li><p><strong>extra_executor_options</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>extra_executor_options</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
 <li><p><strong>environments</strong> (<em>PackageEnvironmentSettings</em>)</p></li>
 <li><p><strong>max_workers</strong> (<em>int</em>)</p></li>
 </ul>
