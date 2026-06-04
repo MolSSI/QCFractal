@@ -7,7 +7,6 @@ import io
 import json
 import logging
 from typing import TYPE_CHECKING, Any
-import torsiondrive.td_api
 import sqlalchemy.orm.attributes
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select, func

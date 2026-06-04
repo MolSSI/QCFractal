@@ -1,5 +1,4 @@
 from __future__ import annotations
-import geometric.nifty
 
 import importlib
 import json
@@ -385,8 +384,6 @@ class NEBRecordSocket(BaseRecordSocket):
                 qc_spec = opt_spec["qc_specification"]
             qc_spec["driver"] = "hessian"
 
-        # TODO - remove after geometric converted to v2
-        chain = [Molecule(**x.model_dump()) for x in chain]
         meta, sp_ids = self.root_socket.records.singlepoint.add(
             chain,
             QCSpecification(**qc_spec),
