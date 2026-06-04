@@ -11,6 +11,7 @@ from socket import gethostname
 from typing import TYPE_CHECKING
 
 import psycopg2.extensions
+import pydantic_core
 from sqlalchemy import select, delete, update, and_, or_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
@@ -19,7 +20,6 @@ from qcfractal.components.auth.db_models import UserIDMapSubquery
 from qcfractal.db_socket.helpers import get_query_proj_options
 from qcportal.exceptions import MissingDataError
 from qcportal.internal_jobs.models import InternalJobStatusEnum, InternalJobQueryFilters
-from qcportal.serialization import encode_to_json
 from qcportal.utils import now_at_utc
 from .db_models import InternalJobORM
 from .status import JobProgress, CancelledJobException, JobRunnerStoppingException
@@ -362,7 +362,7 @@ class InternalJobSocket:
             job_orm.status = InternalJobStatusEnum.complete
             job_orm.progress = 100
             job_orm.progress_description = "Complete"
-            job_orm.result = encode_to_json(result)
+            job_orm.result = pydantic_core.to_jsonable_python(result)
 
         # Job itself is being cancelled
         except CancelledJobException:

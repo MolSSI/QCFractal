@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import Tuple, Dict, Any
 
+from pydantic import TypeAdapter
+
+from qcportal.common_types import QCPortalBytes
 from qcportal.compression import CompressionEnum, compress, decompress
 from qcportal.exceptions import MissingDataError
 from qcportal.record_models import RecordStatusEnum, OutputTypeEnum
@@ -24,7 +26,7 @@ if TYPE_CHECKING:
 def build_extras_properties(result: AllResultTypes) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     # Gets rid of numpy arrays
     # Include any of these fields - not all may exist, but pydantic is lenient
-    result_dict = result.dict(include={"return_result", "properties", "extras"}, encoding="json")
+    result_dict = result.model_dump(include={"return_result", "properties", "extras"}, mode="json")
 
     new_prop = {}
 
@@ -109,7 +111,7 @@ def compute_history_orms_from_qcportal_record(result: AllQCPortalRecordTypes) ->
         history_orm.modified_on = ch.modified_on
 
         if ch.provenance is not None:
-            history_orm.provenance = ch.provenance.dict()
+            history_orm.provenance = ch.provenance.model_dump()
         else:
             history_orm.provenance = None
 
@@ -138,7 +140,7 @@ def compute_history_orm_from_schema_v1(result: AllSchemaV1ResultTypes) -> Record
     """
     history_orm = RecordComputeHistoryORM()
     history_orm.status = RecordStatusEnum.complete if result.success else RecordStatusEnum.error
-    history_orm.provenance = result.provenance.dict()
+    history_orm.provenance = result.provenance.model_dump()
     history_orm.modified_on = now_at_utc()
 
     # Get the compressed outputs if they exist
@@ -146,11 +148,13 @@ def compute_history_orm_from_schema_v1(result: AllSchemaV1ResultTypes) -> Record
 
     if compressed_output is not None:
         for output_type, data_dict in compressed_output.items():
+            # Handle various ways we send raw bytes over the wire
+            output_bytes = TypeAdapter(QCPortalBytes).validate_python(data_dict["data"])
             out_orm = OutputStoreORM(
                 output_type=output_type,
                 compression_type=data_dict["compression_type"],
                 compression_level=data_dict["compression_level"],
-                data=data_dict["data"],
+                data=output_bytes,
             )
 
             history_orm.outputs[output_type] = out_orm
@@ -163,7 +167,7 @@ def compute_history_orm_from_schema_v1(result: AllSchemaV1ResultTypes) -> Record
             stderr_orm = create_output_orm(OutputTypeEnum.stderr, result.stderr)
             history_orm.outputs["stderr"] = stderr_orm
         if result.error is not None:
-            error_orm = create_output_orm(OutputTypeEnum.error, result.error.dict())
+            error_orm = create_output_orm(OutputTypeEnum.error, result.error.model_dump())
             history_orm.outputs["error"] = error_orm
 
     return history_orm
@@ -202,16 +206,18 @@ def native_files_orms_from_schema_v1(result: AllSchemaV1ResultTypes) -> Dict[str
         native_files = {}
         for name, nf_data in compressed_nf.items():
             # nf_data is a dictionary with keys 'data', 'compression_type', "compression_level"
+            # Handle various ways we send raw bytes over the wire
+            nf_bytes = TypeAdapter(QCPortalBytes).validate_python(nf_data["data"])
             nf_orm = NativeFileORM(
                 name=name,
                 compression_type=nf_data["compression_type"],
                 compression_level=nf_data["compression_level"],
-                data=nf_data["data"],
+                data=nf_bytes,
             )
             native_files[name] = nf_orm
 
         return native_files
-    elif "native_files" in result.__fields__:  # Not compressed, but part of result
+    elif "native_files" in type(result).model_fields:  # Not compressed, but part of result
         native_files = {}
         for name, nf_data in result.native_files.items():
 

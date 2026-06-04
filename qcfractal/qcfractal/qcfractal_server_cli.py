@@ -65,7 +65,7 @@ def dump_config(qcf_config: FractalConfig, indent: int = 0) -> str:
     """
 
     s = "-" * 80 + "\n"
-    cfg_str = yaml.dump(qcf_config.dict())
+    cfg_str = yaml.dump(qcf_config.model_dump())
     s += textwrap.indent(cfg_str, " " * indent)
     s += "-" * 80
     return s

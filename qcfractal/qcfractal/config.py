@@ -2,14 +2,12 @@
 The global qcfractal config file specification.
 """
 
-from __future__ import annotations
-
 import logging
-import re
 import os
+import re
 import secrets
 import tempfile
-from typing import Optional, Dict, Union, List, Any
+from typing import Any
 
 import yaml
 from psycopg2.extensions import make_dsn, parse_dsn
@@ -21,7 +19,7 @@ from qcfractal.port_util import find_open_port
 from qcportal.utils import duration_to_seconds, update_nested_dict
 
 
-def _make_abs_path(path: Optional[str], base_folder: str, default_filename: Optional[str]) -> Optional[str]:
+def _make_abs_path(path: str | None, base_folder: str, default_filename: str | None) -> str | None:
     # No path specified, no default
     if path is None and default_filename is None:
         return None
@@ -39,12 +37,12 @@ def _make_abs_path(path: Optional[str], base_folder: str, default_filename: Opti
 
 
 def make_uri_string(
-    host: Optional[str],
-    port: Optional[Union[int, str]],
-    username: Optional[str],
-    password: Optional[str],
-    dbname: Optional[str],
-    query: Optional[Dict[str, str]],
+    host: str | None,
+    port: int | str | None,
+    username: str | None,
+    password: str | None,
+    dbname: str | None,
+    query: dict[str, str] | None,
 ) -> str:
     username = username if username is not None else ""
     password = ":" + password if password is not None else ""
@@ -74,7 +72,7 @@ class DatabaseConfig(QCFConfigBase):
         description="The base folder to use as the default for some options (logs, etc). Default is the location of the config file.",
     )
 
-    full_uri: Optional[str] = Field(
+    full_uri: str | None = Field(
         None, description="Full connection URI. This overrides host,username,password,port, etc"
     )
 
@@ -89,7 +87,7 @@ class DatabaseConfig(QCFConfigBase):
     database_name: str = Field("qcfractal_default", description="The database name to connect to.")
     username: str = Field(..., description="The database username to connect with")
     password: str = Field(..., description="The database password to connect with")
-    query: Dict[str, Union[str, int]] = Field(
+    query: dict[str, str | int] = Field(
         {}, description="Extra connection query parameters at the end of the URL string"
     )
 
@@ -98,17 +96,17 @@ class DatabaseConfig(QCFConfigBase):
         description="If True, QCFractal will control the database instance. If False, you must start and manage the database yourself",
     )
 
-    data_directory: Optional[str] = Field(
+    data_directory: str | None = Field(
         None,
         description="Location to place the database if own == True. Default is [base_folder]/database if we own the database",
     )
-    logfile: Optional[str] = Field(
+    logfile: str | None = Field(
         None,
         description="Path to a file to use as the database logfile (if own == True). Default is [base_folder]/qcfractal_database.log",
     )
 
     echo_sql: bool = Field(False, description="[ADVANCED] output raw SQL queries being run")
-    pg_tool_dir: Optional[str] = Field(
+    pg_tool_dir: str | None = Field(
         None,
         description="Directory containing Postgres tools such as psql and pg_ctl (ie, /usr/bin, or /usr/lib/postgresql/13/bin). If not specified, an attempt to find them will be made. This field is only required if autodetection fails and own == True",
     )
@@ -252,10 +250,10 @@ class WebAPIConfig(QCFConfigBase):
     user_session_cookie_name: str = Field(
         "qcf_session", description="Name to use for a session cookie (for browser-based sessions)"
     )
-    user_session_cookie_domain: Optional[str] = Field(
+    user_session_cookie_domain: str | None = Field(
         None, description="Domain to use for the user-session cookie (for browser-based sessions)"
     )
-    user_session_cookie_samesite: Optional[str] = Field(
+    user_session_cookie_samesite: str | None = Field(
         None, description="Set the SameSite flag for the user-session cookie (for browser-based sessions)"
     )
     user_session_cookie_partitioned: bool = Field(
@@ -268,10 +266,10 @@ class WebAPIConfig(QCFConfigBase):
         False, description="Use Secure flag for the user-session cookie (for browser-based sessions)"
     )
 
-    extra_flask_options: Optional[Dict[str, Any]] = Field(
+    extra_flask_options: dict[str, Any] | None = Field(
         None, description="Any additional options to pass directly to flask"
     )
-    extra_waitress_options: Optional[Dict[str, Any]] = Field(
+    extra_waitress_options: dict[str, Any] | None = Field(
         None, description="Any additional options to pass directly to the waitress serve function"
     )
 
@@ -298,9 +296,9 @@ class S3Config(QCFConfigBase):
     enabled: bool = False
     verify: bool = True
     passthrough: bool = False
-    endpoint_url: Optional[str] = Field(None, description="S3 endpoint URL")
-    access_key_id: Optional[str] = Field(None, description="AWS/S3 access key")
-    secret_access_key: Optional[str] = Field(None, description="AWS/S3 secret key")
+    endpoint_url: str | None = Field(None, description="S3 endpoint URL")
+    access_key_id: str | None = Field(None, description="AWS/S3 access key")
+    secret_access_key: str | None = Field(None, description="AWS/S3 secret key")
 
     bucket_map: S3BucketMap = Field(
         default_factory=S3BucketMap, description="Configuration for where to store various files"
@@ -321,10 +319,10 @@ class CORSconfig(QCFConfigBase):
     """
 
     enabled: bool = False
-    origins: List[str] = Field([])
+    origins: list[str] = Field([])
     supports_credentials: bool = False
-    headers: List[str] = Field([])
-    methods: List[str] = Field([])
+    headers: list[str] = Field([])
+    methods: list[str] = Field([])
 
 
 class FractalConfig(BaseSettings):
@@ -337,7 +335,7 @@ class FractalConfig(BaseSettings):
         description="The base directory to use as the default for some options (logs, etc). Default is the location of the config file.",
     )
 
-    temporary_dir: Optional[str] = Field(
+    temporary_dir: str | None = Field(
         None,
         description="Temporary directory to use for things such as view creation. If None, uses system default. This may require a lot of space!",
     )
@@ -358,7 +356,7 @@ class FractalConfig(BaseSettings):
     )
 
     # Logging and profiling
-    logfile: Optional[str] = Field(
+    logfile: str | None = Field(
         None,
         description="Path to a file to use for server logging. If not specified, logs will be printed to standard output",
     )
@@ -397,13 +395,13 @@ class FractalConfig(BaseSettings):
         0, description="How far back to keep access logs (in days or as a duration string). 0 means keep all"
     )
 
-    # maxmind_account_id: Optional[int] = Field(None, description="Account ID for MaxMind GeoIP2 service")
-    maxmind_license_key: Optional[str] = Field(
+    # maxmind_account_id: int | None = Field(None, description="Account ID for MaxMind GeoIP2 service")
+    maxmind_license_key: str | None = Field(
         None,
         description="License key for MaxMind GeoIP2 service. If provided, the GeoIP2 database will be downloaded and updated automatically",
     )
 
-    geoip2_dir: Optional[str] = Field(
+    geoip2_dir: str | None = Field(
         None,
         description="Directory containing the Maxmind GeoIP2 Cities file (GeoLite2-City.mmdb) Defaults to [base_folder]/geoip2. This directory will be created if needed.",
     )
@@ -421,11 +419,11 @@ class FractalConfig(BaseSettings):
     )
 
     # Homepage settings
-    homepage_redirect_url: Optional[str] = Field(None, description="Redirect to this URL when going to the root path")
-    homepage_directory: Optional[str] = Field(None, description="Use this directory to serve the homepage")
+    homepage_redirect_url: str | None = Field(None, description="Redirect to this URL when going to the root path")
+    homepage_directory: str | None = Field(None, description="Use this directory to serve the homepage")
 
     # File uploads
-    upload_directory: Optional[str] = Field(None, description="Directory to store user-uploaded files for processing")
+    upload_directory: str | None = Field(None, description="Directory to store user-uploaded files for processing")
 
     # Other settings blocks
     database: DatabaseConfig = Field(..., description="Configuration of the settings for the database")
@@ -511,12 +509,12 @@ class FractalConfig(BaseSettings):
         return env_settings, dotenv_settings, init_settings, file_secret_settings
 
 
-def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, Any]] = None) -> FractalConfig:
+def read_configuration(file_paths: list[str], extra_config: dict[str, Any] | None = None) -> FractalConfig:
     """
     Reads QCFractal configuration from YAML files
     """
     logger = logging.getLogger(__name__)
-    config_data: Dict[str, Any] = {}
+    config_data: dict[str, Any] = {}
 
     # Read all the files, in order
     for path in file_paths:
@@ -606,4 +604,4 @@ def write_initial_configuration(file_path: str, full_config: bool = True):
         }
 
     with open(file_path, "x") as f:
-        yaml.dump(default_config.dict(include=include), f, sort_keys=False)
+        yaml.dump(default_config.model_dump(include=include), f, sort_keys=False)

@@ -4,20 +4,12 @@ Tests for the auto-reset logic, specifically for the dictionary comprehension bu
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-import pytest
-
-from qcelemental.models import ComputeError, FailedOperation
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.components.singlepoint.testing_helpers import load_procedure_data
 from qcfractalcompute.compress import compress_result
+from qcportal.qcschema_v1 import ComputeError, FailedOperation
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
-
-if TYPE_CHECKING:
-    from qcfractal.db_socket import SQLAlchemySocket
-    from sqlalchemy.orm.session import Session
 
 
 def test_reset_logic_dict_comprehension_bug(postgres_server, pytestconfig):
@@ -71,7 +63,7 @@ def test_reset_logic_dict_comprehension_bug(postgres_server, pytestconfig):
             assert len(tasks) == 1
             storage_socket.tasks.update_finished(
                 activated_manager_name.fullname,
-                {tasks[0]["id"]: compress_result(fop_bad_state.dict())}
+                {tasks[0]["id"]: compress_result(fop_bad_state.model_dump())}
             )
             session.expire(rec)
             assert rec.status == RecordStatusEnum.waiting
@@ -88,7 +80,7 @@ def test_reset_logic_dict_comprehension_bug(postgres_server, pytestconfig):
                 assert len(tasks) == 1
                 storage_socket.tasks.update_finished(
                     activated_manager_name.fullname,
-                    {tasks[0]["id"]: compress_result(fop_too_many.dict())}
+                    {tasks[0]["id"]: compress_result(fop_too_many.model_dump())}
                 )
                 session.expire(rec)
             

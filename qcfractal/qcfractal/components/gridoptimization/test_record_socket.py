@@ -3,11 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-
 from qcarchivetesting import load_molecule_data, test_users
 from qcfractal.components.gridoptimization.record_db_models import GridoptimizationRecordORM
 from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
-from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service
 from qcportal.auth import UserInfo
 from qcportal.gridoptimization import (
@@ -19,6 +17,7 @@ from qcportal.optimization import OptimizationSpecification, OptimizationProtoco
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 from qcportal.utils import now_at_utc
+
 from .testing_helpers import (
     compare_gridoptimization_specs,
     test_specs,
@@ -271,7 +270,7 @@ def test_gridoptimization_socket_insert_full_qcportal_record(secure_snowflake: Q
 
     for test_name in test_names:
         initial_record = load_record_data(test_name)
-        initial_record_copy = initial_record.copy(deep=True)
+        initial_record_copy = initial_record.model_copy(deep=True)
 
         # Need a full copy of results - they can get mutated
         with storage_socket.session_scope() as session:

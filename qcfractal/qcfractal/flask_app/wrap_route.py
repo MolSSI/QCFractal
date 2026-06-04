@@ -1,15 +1,9 @@
 import shutil
 import tempfile
+from collections.abc import Callable, Iterable
 from functools import wraps
-from typing import Callable, Optional, Iterable
 
-from flask import current_app
-
-try:
-    import pydantic.v1 as pydantic
-except ImportError:
-    import pydantic
-from flask import request, g, Response
+from flask import current_app, request, g, Response
 from werkzeug.exceptions import BadRequest
 
 from qcfractal.flask_app import storage_socket
@@ -31,7 +25,7 @@ def wrap_global_route(
     requested_resource,
     requested_action,
     require_security: bool = False,
-    allowed_file_extensions: Optional[Iterable[str]] = None,
+    allowed_file_extensions: Iterable[str] | None = None,
 ) -> Callable:
     """
     Decorator that wraps a Flask route function, providing useful functionality
@@ -122,8 +116,7 @@ def wrap_global_route(
                     raise BadRequest("Expected body, but it is empty")
 
                 try:
-                    deserialized_data = deserialize(body_data, content_type)
-                    kwargs["body_data"] = pydantic.parse_obj_as(body_model, deserialized_data)
+                    kwargs["body_data"] = deserialize(body_data, content_type, body_model)
                 except Exception as e:
                     raise BadRequest("Invalid body: " + str(e))
 

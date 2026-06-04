@@ -19,7 +19,7 @@ common_opt_spec = OptimizationSpecification(
     program="optprog2",
     keywords={"k": "value"},
     protocols=OptimizationProtocols(trajectory="none"),
-    qc_specification=common_sp_spec.copy(),
+    qc_specification=common_sp_spec.model_copy(),
 )
 
 
@@ -98,7 +98,7 @@ def test_reaction_socket_add_specification_diff_1(spec_test_runner):
         optimization_specification=common_opt_spec,
     )
 
-    spec2 = spec1.copy(update={"optimization_specification": None})
+    spec2 = spec1.model_copy(update={"optimization_specification": None})
     spec_test_runner("reaction", spec1, spec2, False)
 
 
@@ -111,7 +111,7 @@ def test_reaction_socket_add_specification_diff_2(spec_test_runner):
         optimization_specification=common_opt_spec,
     )
 
-    spec2 = spec1.copy(update={"singlepoint_specification": None})
+    spec2 = spec1.model_copy(update={"singlepoint_specification": None})
     spec_test_runner("reaction", spec1, spec2, False)
 
 
@@ -143,8 +143,8 @@ def test_reaction_socket_add_specification_diff_4(spec_test_runner):
         optimization_specification=common_opt_spec,
     )
 
-    qc_spec = spec1.singlepoint_specification.copy(update={"basis": "sto-3g"})
-    spec2 = spec1.copy(update={"singlepoint_specification": qc_spec})
+    qc_spec = spec1.singlepoint_specification.model_copy(update={"basis": "sto-3g"})
+    spec2 = spec1.model_copy(update={"singlepoint_specification": qc_spec})
     spec_test_runner("reaction", spec1, spec2, False)
 
 
@@ -157,7 +157,7 @@ def test_reaction_socket_add_specification_diff_5(spec_test_runner):
         optimization_specification=common_opt_spec,
     )
 
-    qc_spec = spec1.optimization_specification.qc_specification.copy(update={"basis": "sto-3g"})
-    opt_spec = spec1.optimization_specification.copy(update={"qc_specification": qc_spec})
-    spec2 = spec1.copy(update={"optimization_specification": opt_spec})
+    qc_spec = spec1.optimization_specification.qc_specification.model_copy(update={"basis": "sto-3g"})
+    opt_spec = spec1.optimization_specification.model_copy(update={"qc_specification": qc_spec})
+    spec2 = spec1.model_copy(update={"optimization_specification": opt_spec})
     spec_test_runner("reaction", spec1, spec2, False)

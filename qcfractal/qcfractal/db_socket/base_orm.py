@@ -11,11 +11,7 @@ from sqlalchemy.orm import as_declarative
 
 if TYPE_CHECKING:
     from typing import Any, TypeVar, Type, Dict, Optional, Iterable, Union
-
-    try:
-        from pydantic.v1 import BaseModel
-    except ImportError:
-        from pydantic import BaseModel
+    from pydantic import BaseModel
 
     _T = TypeVar("_T")
 
@@ -36,7 +32,7 @@ class BaseORM:
         if isinstance(model_data, dict):
             return cls(**model_data)
         else:
-            return cls(**model_data.dict())
+            return cls(**model_data.model_dump())
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         """

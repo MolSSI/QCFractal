@@ -1,13 +1,8 @@
-from __future__ import annotations
-
 from enum import Enum
-from typing import Optional, List
 
-try:
-    from pydantic.v1 import BaseModel, Field, validator, constr, Extra
-except ImportError:
-    from pydantic import BaseModel, Field, validator, constr, Extra
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
+from ..common_types import Max128Str
 from ..exceptions import InvalidPasswordError, InvalidUsernameError, InvalidGroupnameError
 
 
@@ -67,14 +62,14 @@ class GroupInfo(BaseModel):
     Information about a group
     """
 
-    class Config:
-        extra = Extra.forbid
-
-    id: Optional[int] = Field(None, description="ID of the group")
+    id: int | None = Field(None, description="ID of the group")
     groupname: str = Field(..., description="The name of the group")
     description: str = Field("", description="Text description of the group")
 
-    @validator("groupname", pre=True)
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("groupname", mode="before")
+    @classmethod
     def _valid_groupname(cls, v):
         """Makes sure the groupname is a valid string"""
 
@@ -90,24 +85,23 @@ class UserInfo(BaseModel):
     Information about a user
     """
 
-    class Config:
-        validate_assignment = True
-        extra = Extra.forbid
-
     # id may be None when used for initial creation
-    id: Optional[int] = Field(None, allow_mutation=False, description="The id of the user")
+    id: int | None = Field(None, frozen=True, description="The id of the user")
     auth_type: AuthTypeEnum = Field(
-        AuthTypeEnum.password, allow_mutation=False, description="Type of authentication the user uses"
+        AuthTypeEnum.password, frozen=True, description="Type of authentication the user uses"
     )
-    username: str = Field(..., allow_mutation=False, description="The username of this user")
+    username: str = Field(..., frozen=True, description="The username of this user")
     role: str = Field(..., description="The role this user belongs to")
-    groups: List[str] = Field([], description="Groups this user belongs to")
+    groups: list[str] = Field([], description="Groups this user belongs to")
     enabled: bool = Field(..., description="Whether this user is enabled or not")
-    fullname: constr(max_length=128) = Field("", description="The full name or description of the user")
-    organization: constr(max_length=128) = Field("", description="The organization the user belongs to")
-    email: constr(max_length=128) = Field("", description="The email address for the user")
+    fullname: Max128Str = Field("", description="The full name or description of the user")
+    organization: Max128Str = Field("", description="The organization the user belongs to")
+    email: Max128Str = Field("", description="The email address for the user")
 
-    @validator("username", pre=True)
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("username", mode="before")
+    @classmethod
     def _valid_username(cls, v):
         """Makes sure the username is a valid string"""
 
@@ -117,7 +111,8 @@ class UserInfo(BaseModel):
         except Exception as e:
             raise ValueError(str(e))
 
-    @validator("groups")
+    @field_validator("groups", mode="after")
+    @classmethod
     def _valid_groupnames(cls, v):
         """Makes sure the groupnames are valid strings"""
 

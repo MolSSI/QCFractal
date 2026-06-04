@@ -1,23 +1,21 @@
 from __future__ import annotations
 
 import json
-from typing import List, Optional, Tuple, Union, Dict, Iterable, Sequence, Any
+from collections.abc import Iterable, Sequence
+from typing import Any, Literal
 
-try:
-    from pydantic.v1 import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
-except ImportError:
-    from pydantic import BaseModel, Field, Extra, root_validator, constr, validator, PrivateAttr
-from typing_extensions import Literal
+from pydantic import BaseModel, Field, ConfigDict, model_validator, field_validator, PrivateAttr
 
 from qcportal.base_models import RestModelBase
+from qcportal.cache import get_records_with_cache
+from qcportal.common_types import LowerStr
 from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters, compare_base_records
-from qcportal.cache import get_records_with_cache
 from qcportal.utils import recursive_normalizer, is_included
 from ..optimization.record_models import OptimizationSpecification, OptimizationRecord, compare_optimization_records
 
 
-def serialize_key(key: Union[str, Sequence[int]]) -> str:
+def serialize_key(key: str | Sequence[int]) -> str:
     """
     Serializes the key used to map to optimization calculations
 
@@ -35,7 +33,7 @@ def serialize_key(key: Union[str, Sequence[int]]) -> str:
     return json.dumps(key)
 
 
-def deserialize_key(key: str) -> Union[str, Tuple[int, ...]]:
+def deserialize_key(key: str) -> str | tuple[int, ...]:
     """
     Deserializes the key used to map to optimization calculations
 
@@ -51,70 +49,68 @@ class TorsiondriveKeywords(BaseModel):
     Options for torsiondrive calculations
     """
 
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
-    dihedrals: List[Tuple[int, int, int, int]] = Field(
+    dihedrals: list[tuple[int, int, int, int]] = Field(
         [],
         description="The list of dihedrals to select for the TorsionDrive operation. Each entry is a tuple of integers "
         "of for particle indices.",
     )
-    grid_spacing: List[int] = Field(
+    grid_spacing: list[int] = Field(
         [],
         description="List of grid spacing for dihedral scan in degrees. Multiple values will be mapped to each "
         "dihedral angle.",
     )
-    dihedral_ranges: Optional[List[Tuple[int, int]]] = Field(
+    dihedral_ranges: list[tuple[int, int]] | None = Field(
         None,
         description="A list of dihedral range limits as a pair (lower, upper). "
         "Each range corresponds to the dihedrals in input.",
     )
-    energy_decrease_thresh: Optional[float] = Field(
+    energy_decrease_thresh: float | None = Field(
         None,
         description="The threshold of the smallest energy decrease amount to trigger activating optimizations from "
         "grid point.",
     )
-    energy_upper_limit: Optional[float] = Field(
+    energy_upper_limit: float | None = Field(
         None,
         description="The threshold if the energy of a grid point that is higher than the current global minimum, to "
         "start new optimizations, in unit of a.u. I.e. if energy_upper_limit = 0.05, current global "
         "minimum energy is -9.9 , then a new task starting with energy -9.8 will be skipped.",
     )
 
-    @root_validator
+    @model_validator(mode="before")
+    @classmethod
     def normalize(cls, values):
         return recursive_normalizer(values)
 
 
 class TorsiondriveSpecification(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
-    program: constr(to_lower=True) = "torsiondrive"
+    program: LowerStr = "torsiondrive"
     optimization_specification: OptimizationSpecification
     keywords: TorsiondriveKeywords
 
 
 class TorsiondriveOptimization(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     optimization_id: int
     key: str
     position: int
-    energy: Optional[float] = None
+    energy: float | None = None
 
 
 class TorsiondriveInput(RestModelBase):
     record_type: Literal["torsiondrive"] = "torsiondrive"
     specification: TorsiondriveSpecification
-    initial_molecules: List[Union[int, Molecule]]
+    initial_molecules: list[int | Molecule]
     as_service: bool
 
 
 class TorsiondriveMultiInput(RestModelBase):
     specification: TorsiondriveSpecification
-    initial_molecules: List[List[Union[int, Molecule]]]
+    initial_molecules: list[list[int | Molecule]]
     as_service: bool
 
 
@@ -123,14 +119,15 @@ class TorsiondriveAddBody(RecordAddBodyBase, TorsiondriveMultiInput):
 
 
 class TorsiondriveQueryFilters(RecordQueryFilters):
-    program: Optional[List[str]] = None
-    optimization_program: Optional[List[str]]
-    qc_program: Optional[List[constr(to_lower=True)]] = None
-    qc_method: Optional[List[constr(to_lower=True)]] = None
-    qc_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
-    initial_molecule_id: Optional[List[int]] = None
+    program: list[str] | None = None
+    optimization_program: list[str] | None
+    qc_program: list[LowerStr] | None = None
+    qc_method: list[LowerStr] | None = None
+    qc_basis: list[LowerStr | None] | None = None
+    initial_molecule_id: list[int] | None = None
 
-    @validator("qc_basis")
+    @field_validator("qc_basis")
+    @classmethod
     def _convert_basis(cls, v):
         # Convert empty string to None
         # Lowercasing is handled by constr
@@ -147,21 +144,21 @@ class TorsiondriveRecord(BaseRecord):
     ######################################################
     # Fields not always included when fetching the record
     ######################################################
-    initial_molecules_ids_: Optional[List[int]] = Field(None, alias="initial_molecules_ids")
-    initial_molecules_: Optional[List[Molecule]] = Field(None, alias="initial_molecules")
+    initial_molecules_ids_: list[int] | None = Field(None, alias="initial_molecules_ids")
+    initial_molecules_: list[Molecule] | None = Field(None, alias="initial_molecules")
 
-    optimizations_: Optional[List[TorsiondriveOptimization]] = Field(None, alias="optimizations")
-    minimum_optimizations_: Optional[Dict[str, int]] = Field(None, alias="minimum_optimizations")
+    optimizations_: list[TorsiondriveOptimization] | None = Field(None, alias="optimizations")
+    minimum_optimizations_: dict[str, int] | None = Field(None, alias="minimum_optimizations")
 
     ##############################################
     # Fields with child records
     # (generally not received from the server)
     ##############################################
-    optimization_records_: Optional[Dict[str, List[OptimizationRecord]]] = Field(None, alias="optimization_records")
+    optimization_records_: dict[str, list[OptimizationRecord]] | None = Field(None, alias="optimization_records")
 
     # Actual mapping, with tuples as keys. These will point to the same lists & records as above
-    _optimization_map: Optional[Dict[Any, List[OptimizationRecord]]] = PrivateAttr(None)
-    _minimum_optimization_map: Optional[Dict[Any, OptimizationRecord]] = PrivateAttr(None)
+    _optimization_map: dict[Any, list[OptimizationRecord]] | None = PrivateAttr(None)
+    _minimum_optimization_map: dict[Any, OptimizationRecord] | None = PrivateAttr(None)
 
     @classmethod
     def _fetch_children_multi(
@@ -241,7 +238,7 @@ class TorsiondriveRecord(BaseRecord):
 
             r.propagate_client(r._client, base_url_prefix)
 
-    def propagate_client(self, client, base_url_prefix: Optional[str]):
+    def propagate_client(self, client, base_url_prefix: str | None):
         BaseRecord.propagate_client(self, client, base_url_prefix)
 
         if self.optimization_records_ is not None:
@@ -260,7 +257,7 @@ class TorsiondriveRecord(BaseRecord):
             self.initial_molecules_ids_ = self._client.make_request(
                 "get",
                 f"api/v1/records/torsiondrive/{self.id}/initial_molecules",
-                List[int],
+                list[int],
             )
 
         self.initial_molecules_ = self._client.get_molecules(self.initial_molecules_ids_)
@@ -271,7 +268,7 @@ class TorsiondriveRecord(BaseRecord):
             self.optimizations_ = self._client.make_request(
                 "get",
                 f"api/v1/records/torsiondrive/{self.id}/optimizations",
-                List[TorsiondriveOptimization],
+                list[TorsiondriveOptimization],
             )
 
         self.fetch_children(["optimizations"])
@@ -282,22 +279,22 @@ class TorsiondriveRecord(BaseRecord):
             self.minimum_optimizations_ = self._client.make_request(
                 "get",
                 f"api/v1/records/torsiondrive/{self.id}/minimum_optimizations",
-                Dict[str, int],
+                dict[str, int],
             )
 
         self.fetch_children(["minimum_optimizations"])
 
-    def get_cache_dict(self, **kwargs) -> Dict[str, Any]:
-        return self.dict(exclude={"optimization_records_"}, **kwargs)
+    def get_cache_dict(self, **kwargs) -> dict[str, Any]:
+        return self.model_dump(exclude={"optimization_records_"}, **kwargs)
 
     @property
-    def initial_molecules(self) -> List[Molecule]:
+    def initial_molecules(self) -> list[Molecule]:
         if self.initial_molecules_ is None:
             self._fetch_initial_molecules()
         return self.initial_molecules_
 
     @property
-    def optimizations(self) -> Dict[str, List[OptimizationRecord]]:
+    def optimizations(self) -> dict[str, list[OptimizationRecord]]:
         if self.optimization_records_ is None:
             self._fetch_optimizations()
 
@@ -307,7 +304,7 @@ class TorsiondriveRecord(BaseRecord):
         return self._optimization_map
 
     @property
-    def minimum_optimizations(self) -> Dict[Tuple[float, ...], OptimizationRecord]:
+    def minimum_optimizations(self) -> dict[tuple[float, ...], OptimizationRecord]:
         if (
             self._minimum_optimization_map is None
             and self.minimum_optimizations_ is not None
@@ -327,7 +324,7 @@ class TorsiondriveRecord(BaseRecord):
         return self._minimum_optimization_map
 
     @property
-    def final_energies(self) -> Dict[Tuple[float, ...], float]:
+    def final_energies(self) -> dict[tuple[float, ...], float]:
         return {k: v.energies[-1] for k, v in self.minimum_optimizations.items() if v.energies}
 
 

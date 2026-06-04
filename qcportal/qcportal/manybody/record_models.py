@@ -1,16 +1,14 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from enum import Enum
-from typing import List, Union, Optional, Dict, Any, Iterable
+from typing import Any, Literal
 
-try:
-    from pydantic.v1 import BaseModel, Extra, validator, constr, Field
-except ImportError:
-    from pydantic import BaseModel, Extra, validator, constr, Field
-from typing_extensions import Literal
+from pydantic import BaseModel, ConfigDict, Field
 
 from qcportal.base_models import RestModelBase
 from qcportal.cache import get_records_with_cache
+from qcportal.common_types import LowerStr
 from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters, compare_base_records
 from qcportal.singlepoint.record_models import (
@@ -27,32 +25,30 @@ class BSSECorrectionEnum(str, Enum):
 
 
 class ManybodyKeywords(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     return_total_data: bool = False
 
 
 class ManybodySpecification(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
-    program: constr(to_lower=True) = "qcmanybody"
-    levels: Dict[Union[int, Literal["supersystem"]], QCSpecification]
-    bsse_correction: List[BSSECorrectionEnum]
+    program: LowerStr = "qcmanybody"
+    levels: dict[int | Literal["supersystem"], QCSpecification]
+    bsse_correction: list[BSSECorrectionEnum]
     keywords: ManybodyKeywords = Field(ManybodyKeywords())
-    protocols: Dict[str, Any] = Field(default_factory=dict)
+    protocols: dict[str, Any] = Field(default_factory=dict)
 
 
 class ManybodyInput(RestModelBase):
     record_type: Literal["manybody"] = "manybody"
     specification: ManybodySpecification
-    initial_molecule: Union[int, Molecule]
+    initial_molecule: int | Molecule
 
 
 class ManybodyMultiInput(RestModelBase):
     specification: ManybodySpecification
-    initial_molecules: List[Union[int, Molecule]]
+    initial_molecules: list[int | Molecule]
 
 
 class ManybodyAddBody(RecordAddBodyBase, ManybodyMultiInput):
@@ -60,27 +56,26 @@ class ManybodyAddBody(RecordAddBodyBase, ManybodyMultiInput):
 
 
 class ManybodyQueryFilters(RecordQueryFilters):
-    program: Optional[List[str]] = None
-    qc_program: Optional[List[constr(to_lower=True)]] = None
-    qc_method: Optional[List[constr(to_lower=True)]] = None
-    qc_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
-    initial_molecule_id: Optional[List[int]] = None
+    program: list[str] | None = None
+    qc_program: list[LowerStr] | None = None
+    qc_method: list[LowerStr] | None = None
+    qc_basis: list[LowerStr | None] | None = None
+    initial_molecule_id: list[int] | None = None
 
 
 class ManybodyClusterMeta(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     molecule_id: int
     mc_level: str
-    fragments: List[int]
-    basis: List[int]
-    singlepoint_id: Optional[int]
-    molecule: Optional[Molecule] = None
+    fragments: list[int]
+    basis: list[int]
+    singlepoint_id: int | None
+    molecule: Molecule | None = None
 
 
 class ManybodyCluster(ManybodyClusterMeta):
-    singlepoint_record: Optional[SinglepointRecord] = None
+    singlepoint_record: SinglepointRecord | None = None
 
 
 class ManybodyRecord(BaseRecord):
@@ -92,16 +87,16 @@ class ManybodyRecord(BaseRecord):
     ######################################################
     # Fields not always included when fetching the record
     ######################################################
-    initial_molecule_: Optional[Molecule] = Field(None, alias="initial_molecule")
-    clusters_meta_: Optional[List[ManybodyClusterMeta]] = Field(None, alias="clusters")
+    initial_molecule_: Molecule | None = Field(None, alias="initial_molecule")
+    clusters_meta_: list[ManybodyClusterMeta] | None = Field(None, alias="clusters")
 
     ##############################################
     # Fields with child records
     # (generally not received from the server)
     ##############################################
-    cluster_records_: Optional[List[ManybodyCluster]] = Field(None, alias="cluster_records")
+    cluster_records_: list[ManybodyCluster] | None = Field(None, alias="cluster_records")
 
-    def propagate_client(self, client, base_url_prefix: Optional[str]):
+    def propagate_client(self, client, base_url_prefix: str | None):
         BaseRecord.propagate_client(self, client, base_url_prefix)
 
         if self.cluster_records_ is not None:
@@ -146,7 +141,7 @@ class ManybodyRecord(BaseRecord):
                 else:
                     r.cluster_records_ = []
                     for cm in r.clusters_meta_:
-                        cluster = ManybodyCluster(**cm.dict())
+                        cluster = ManybodyCluster(**cm.model_dump())
 
                         if cluster.singlepoint_id is not None:
                             cluster.singlepoint_record = sp_map[cluster.singlepoint_id]
@@ -165,13 +160,13 @@ class ManybodyRecord(BaseRecord):
             self.clusters_meta_ = self._client.make_request(
                 "get",
                 f"api/v1/records/manybody/{self.id}/clusters",
-                List[ManybodyClusterMeta],
+                list[ManybodyClusterMeta],
             )
 
         self.fetch_children(["clusters"])
 
-    def get_cache_dict(self, **kwargs) -> Dict[str, Any]:
-        return self.dict(exclude={"cluster_records_"}, **kwargs)
+    def get_cache_dict(self, **kwargs) -> dict[str, Any]:
+        return self.model_dump(exclude={"cluster_records_"}, **kwargs)
 
     @property
     def initial_molecule(self) -> Molecule:
@@ -180,7 +175,7 @@ class ManybodyRecord(BaseRecord):
         return self.initial_molecule_
 
     @property
-    def clusters(self) -> List[ManybodyCluster]:
+    def clusters(self) -> list[ManybodyCluster]:
         if self.cluster_records_ is None:
             self._fetch_clusters()
         return self.cluster_records_

@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-
 import qcportal.dataset_testing_helpers as ds_helpers
 from qcarchivetesting import load_molecule_data
 from qcportal.dataset_testing_helpers import dataset_submit_test_client
@@ -109,7 +108,7 @@ def record_compare(rec, ent, spec):
     assert set(x.get_hash() for x in rec.initial_chain) <= set(x.get_hash() for x in ent.initial_chain)
 
     # Merge optimization keywords
-    merged_spec = spec.dict()
+    merged_spec = spec.model_dump()
     merged_spec["singlepoint_specification"]["keywords"].update(ent.additional_singlepoint_keywords)
     merged_spec["keywords"].update(ent.additional_keywords)
 

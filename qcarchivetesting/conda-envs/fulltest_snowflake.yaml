@@ -17,7 +17,7 @@ dependencies:
   - pydantic-settings
   - zstandard
   - apsw>=3.42
-  - qcelemental>=0.30,<0.70a0
+  - qcelemental>=0.50.2,<0.70a0
   - tabulate
   - tqdm
   - pandas
@@ -42,12 +42,12 @@ dependencies:
 
   # QCFractal Services
   - torsiondrive
-  - qcmanybody
+  - qcmanybody>=0.7.1
   - geometric>=1.1.1
 
   # Worker codes below
-  - qcengine>=0.34,<0.70a0
-  - psi4>=1.9.1
+  - qcengine>=0.50,<0.70a0
+  - psi4>=1.10.1
   - rdkit
 
   # Testing packages

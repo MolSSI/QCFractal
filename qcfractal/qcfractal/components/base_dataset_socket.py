@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Tuple, Optional, Sequence, Iterable, Any, Union, Dict, List
 
+import pydantic_core
 from sqlalchemy import select, func, text, delete, and_, literal
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
@@ -20,7 +21,6 @@ from qcportal.dataset_models import DatasetModifyMetadata
 from qcportal.exceptions import MissingDataError, AlreadyExistsError, UserReportableError
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata, DeleteMetadata, UpdateMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
-from qcportal.serialization import encode_to_json
 from qcportal.utils import chunk_iterable, now_at_utc
 
 
@@ -846,7 +846,7 @@ class BaseDatasetSocket:
                 f"datasets.add_entry_dicts",
                 {
                     "dataset_id": dataset_id,
-                    "entry_dicts": encode_to_json(new_entries),
+                    "entry_dicts": pydantic_core.to_jsonable_python(new_entries),
                 },
                 user_id=None,
                 unique_name=False,

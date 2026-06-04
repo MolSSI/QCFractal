@@ -2,21 +2,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Tuple, Optional, Dict, List, Union, Any
 
-try:
-    import pydantic.v1 as pydantic
-except ImportError:
-    import pydantic
-from qcarchivetesting.helpers import read_procedure_data, read_record_data, find_test_data
-from qcelemental.models import (
+import pydantic
+
+from qcarchivetesting.helpers import find_test_data
+from qcarchivetesting.helpers import read_procedure_data, read_record_data
+from qcfractal.components.reaction.record_db_models import ReactionRecordORM
+from qcfractal.testing_helpers import run_service
+from qcportal.qcschema_v1 import (
     Molecule,
     FailedOperation,
     ComputeError,
     AtomicResult as QCEl_AtomicResult,
     OptimizationResult as QCEl_OptimizationResult,
 )
-
-from qcfractal.components.reaction.record_db_models import ReactionRecordORM
-from qcfractal.testing_helpers import run_service
 from qcportal.reaction import ReactionSpecification, ReactionKeywords, ReactionRecord
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, RecordTask
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
@@ -86,9 +84,11 @@ def load_procedure_data(
     data = read_procedure_data(name)
 
     return (
-        pydantic.parse_obj_as(ReactionSpecification, data["specification"]),
-        pydantic.parse_obj_as(List[Tuple[float, Molecule]], data["stoichiometry"]),
-        pydantic.parse_obj_as(Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult]], data["results"]),
+        pydantic.TypeAdapter(ReactionSpecification).validate_python(data["specification"]),
+        pydantic.TypeAdapter(List[Tuple[float, Molecule]]).validate_python(data["stoichiometry"]),
+        pydantic.TypeAdapter(Dict[str, Union[QCEl_AtomicResult, QCEl_OptimizationResult]]).validate_python(
+            data["results"]
+        ),
     )
 
 

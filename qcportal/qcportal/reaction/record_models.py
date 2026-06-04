@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-from typing import List, Union, Optional, Tuple, Iterable, Dict, Any
+from collections.abc import Iterable
+from typing import Any, Literal
 
-try:
-    from pydantic.v1 import BaseModel, Extra, root_validator, constr, Field
-except ImportError:
-    from pydantic import BaseModel, Extra, root_validator, constr, Field
-from typing_extensions import Literal
+from pydantic import BaseModel, ConfigDict, model_validator, Field
 
 from qcportal.base_models import RestModelBase
-from qcportal.molecules import Molecule
-from qcportal.utils import is_included
 from qcportal.cache import get_records_with_cache
+from qcportal.common_types import LowerStr
+from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters, compare_base_records
+from qcportal.utils import is_included
 from ..optimization.record_models import OptimizationRecord, OptimizationSpecification, compare_optimization_records
 from ..singlepoint.record_models import QCSpecification, SinglepointRecord, compare_singlepoint_records
 
@@ -21,40 +19,37 @@ class ReactionKeywords(BaseModel):
     # NOTE: If we add keywords, update the dataset additional_keywords tests and add extra = Extra.forbid.
     # The current setup is needed for those tests (to allow for testing additional_keywords)
     # is needed
-    class Config:
-        pass
-        # extra = Extra.forbid
+    model_config = ConfigDict()
 
 
 class ReactionSpecification(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
-    program: constr(to_lower=True) = "reaction"
+    program: LowerStr = "reaction"
 
-    singlepoint_specification: Optional[QCSpecification]
-    optimization_specification: Optional[OptimizationSpecification]
+    singlepoint_specification: QCSpecification | None = None
+    optimization_specification: OptimizationSpecification | None = None
 
     keywords: ReactionKeywords
 
-    @root_validator
-    def required_spec(cls, v):
-        qc_spec = v.get("singlepoint_specification", None)
-        opt_spec = v.get("optimization_specification", None)
+    @model_validator(mode="after")
+    def required_spec(self):
+        qc_spec = self.singlepoint_specification
+        opt_spec = self.optimization_specification
         if qc_spec is None and opt_spec is None:
             raise ValueError("singlepoint_specification or optimization_specification must be specified")
-        return v
+        return self
 
 
 class ReactionInput(RestModelBase):
     record_type: Literal["reaction"] = "reaction"
     specification: ReactionSpecification
-    stoichiometries: List[Tuple[float, Union[int, Molecule]]]
+    stoichiometries: list[tuple[float, int | Molecule]]
 
 
 class ReactionMultiInput(RestModelBase):
     specification: ReactionSpecification
-    stoichiometries: List[List[Tuple[float, Union[int, Molecule]]]]
+    stoichiometries: list[list[tuple[float, int | Molecule]]]
 
 
 class ReactionAddBody(RecordAddBodyBase, ReactionMultiInput):
@@ -62,49 +57,48 @@ class ReactionAddBody(RecordAddBodyBase, ReactionMultiInput):
 
 
 class ReactionQueryFilters(RecordQueryFilters):
-    program: Optional[List[str]] = None
-    qc_program: Optional[List[constr(to_lower=True)]] = None
-    qc_method: Optional[List[constr(to_lower=True)]] = None
-    qc_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
-    optimization_program: Optional[List[constr(to_lower=True)]] = None
-    molecule_id: Optional[List[int]] = None
+    program: list[str] | None = None
+    qc_program: list[LowerStr] | None = None
+    qc_method: list[LowerStr] | None = None
+    qc_basis: list[LowerStr | None] | None = None
+    optimization_program: list[LowerStr] | None = None
+    molecule_id: list[int] | None = None
 
 
 class ReactionComponentMeta(BaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     molecule_id: int
     coefficient: float
-    singlepoint_id: Optional[int]
-    optimization_id: Optional[int]
+    singlepoint_id: int | None
+    optimization_id: int | None
 
-    molecule: Optional[Molecule]
+    molecule: Molecule | None
 
 
 class ReactionComponent(ReactionComponentMeta):
-    singlepoint_record: Optional[SinglepointRecord] = None
-    optimization_record: Optional[OptimizationRecord] = None
+    singlepoint_record: SinglepointRecord | None = None
+    optimization_record: OptimizationRecord | None = None
 
 
 class ReactionRecord(BaseRecord):
     record_type: Literal["reaction"] = "reaction"
     specification: ReactionSpecification
 
-    total_energy: Optional[float]
+    total_energy: float | None
 
     ######################################################
     # Fields not always included when fetching the record
     ######################################################
-    components_meta_: Optional[List[ReactionComponentMeta]] = Field(None, alias="components")
+    components_meta_: list[ReactionComponentMeta] | None = Field(None, alias="components")
 
     ##############################################
     # Fields with child records
     # (generally not received from the server)
     ##############################################
-    component_records_: Optional[List[ReactionComponent]] = Field(None, alias="component_records")
+    component_records_: list[ReactionComponent] | None = Field(None, alias="component_records")
 
-    def propagate_client(self, client, base_url_prefix: Optional[str]):
+    def propagate_client(self, client, base_url_prefix: str | None):
         BaseRecord.propagate_client(self, client, base_url_prefix)
 
         if self.component_records_ is not None:
@@ -169,7 +163,7 @@ class ReactionRecord(BaseRecord):
                 else:
                     r.component_records_ = []
                     for cm in r.components_meta_:
-                        rc = ReactionComponent(**cm.dict())
+                        rc = ReactionComponent(**cm.model_dump())
 
                         if rc.singlepoint_id is not None:
                             rc.singlepoint_record = sp_map[rc.singlepoint_id]
@@ -188,16 +182,16 @@ class ReactionRecord(BaseRecord):
             self.components_meta_ = self._client.make_request(
                 "get",
                 f"api/v1/records/reaction/{self.id}/components",
-                List[ReactionComponentMeta],
+                list[ReactionComponentMeta],
             )
 
         self.fetch_children(["components"])
 
-    def get_cache_dict(self, **kwargs) -> Dict[str, Any]:
-        return self.dict(exclude={"component_records_"}, **kwargs)
+    def get_cache_dict(self, **kwargs) -> dict[str, Any]:
+        return self.model_dump(exclude={"component_records_"}, **kwargs)
 
     @property
-    def components(self) -> List[ReactionComponent]:
+    def components(self) -> list[ReactionComponent]:
         if self.component_records_ is None:
             self._fetch_components()
         return self.component_records_

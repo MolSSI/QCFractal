@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from qcelemental.models import AtomicResult as QCEl_AtomicResult
 from sqlalchemy import select, or_
 from sqlalchemy.orm import lazyload, joinedload, defer, undefer, defaultload, load_only, selectinload
 
@@ -12,6 +11,7 @@ from qcportal.compression import CompressionEnum, compress
 from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.molecules import Molecule
+from qcportal.qcschema_v1 import AtomicResult as QCEl_AtomicResult
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.serialization import convert_numpy_recursive
 from qcportal.singlepoint import (
@@ -103,7 +103,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         Convert a QCElemental wavefunction into a wavefunction ORM
         """
 
-        wfn_dict = wavefunction.dict(encoding="json")
+        wfn_dict = wavefunction.model_dump(mode="json")
         cdata, ctype, clevel = compress(wfn_dict, CompressionEnum.zstd)
 
         return WavefunctionORM(compression_type=ctype, compression_level=clevel, data=cdata)
@@ -175,11 +175,11 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
             qc_spec = QCSpecification(
                 program=result.provenance.creator.lower(),
-                driver=result.driver,
+                driver=result.driver.value,
                 method=result.model.method,
                 basis=result.model.basis,
                 keywords=result.keywords,
-                protocols=result.protocols,
+                protocols=result.protocols.model_dump(exclude_unset=True),
             )
             qc_specs.append(qc_spec)
 
@@ -233,7 +233,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         to_add = []
 
         for qc_spec in qc_specs:
-            protocols_dict = qc_spec.protocols.dict(exclude_defaults=True, exclude_unset=True)
+            protocols_dict = qc_spec.protocols.model_dump(exclude_defaults=True, exclude_unset=True)
 
             # TODO - if error_correction is manually specified as the default, then it will be an empty dict
             if "error_correction" in protocols_dict:
@@ -244,7 +244,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                 if len(erc) == 0:
                     protocols_dict.pop("error_correction")
 
-            qc_spec_dict = qc_spec.dict(exclude={"basis", "protocols"})
+            qc_spec_dict = qc_spec.model_dump(exclude={"basis", "protocols"})
             qc_spec_dict["basis"] = "" if qc_spec.basis is None else qc_spec.basis
             qc_spec_dict["protocols"] = protocols_dict
             qc_spec_hash = hash_dict(qc_spec_dict)
