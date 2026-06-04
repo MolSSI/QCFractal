@@ -142,38 +142,15 @@ export default function ServerStats() {
   const latestEntry =
     sortedStats.length > 0 ? sortedStats[sortedStats.length - 1] : undefined;
 
-  const totalCpuHours =
-    chartData.length > 0
-      ? chartData[chartData.length - 1].cumulativeCpuHours
-      : 0;
-
-  const cumulativeDetails =
-    useMemo<qcpTypes.ServerStatsRecordCountDetails>(() => {
-      const details: qcpTypes.ServerStatsRecordCountDetails = {};
-
-      for (const entry of sortedStats) {
-        for (const [recordType, statuses] of Object.entries(
-          entry.record_count_details ?? {},
-        )) {
-          if (!details[recordType]) {
-            details[recordType] = {};
-          }
-
-          for (const [statusName, count] of Object.entries(statuses ?? {})) {
-            const typedStatus = statusName as qcpTypes.RecordStatus;
-            details[recordType][typedStatus] =
-              (details[recordType][typedStatus] ?? 0) + count;
-          }
-        }
-      }
-
-      return details;
-    }, [sortedStats]);
+  const currentDetails = useMemo<qcpTypes.ServerStatsRecordCountDetails>(
+    () => latestEntry?.record_count_details ?? {},
+    [latestEntry],
+  );
 
   const breakdownStatuses = useMemo(() => {
     const discoveredStatuses = new Set<string>();
 
-    Object.values(cumulativeDetails).forEach((statuses) => {
+    Object.values(currentDetails).forEach((statuses) => {
       Object.keys(statuses ?? {}).forEach((statusName) => {
         discoveredStatuses.add(statusName);
       });
@@ -199,10 +176,10 @@ export default function ServerStats() {
 
       return preferredA - preferredB;
     });
-  }, [cumulativeDetails]);
+  }, [currentDetails]);
 
   const breakdownRows = useMemo<BreakdownRow[]>(() => {
-    return Object.entries(cumulativeDetails)
+    return Object.entries(currentDetails)
       .sort(([typeA], [typeB]) => typeA.localeCompare(typeB))
       .map(([recordType, statuses]) => {
         const total = breakdownStatuses.reduce(
@@ -222,7 +199,7 @@ export default function ServerStats() {
           total,
         };
       });
-  }, [breakdownStatuses, cumulativeDetails]);
+  }, [breakdownStatuses, currentDetails]);
 
   const breakdownTotals = useMemo(() => {
     const totals = Object.fromEntries(
@@ -244,13 +221,16 @@ export default function ServerStats() {
     }
 
     return [
-      { label: "Estimated CPU hours", value: formatCpuHours(totalCpuHours) },
+      {
+        label: "Estimated CPU hours",
+        value: formatCpuHours(latestEntry.cpu_hours),
+      },
       {
         label: "Database size",
         value: formatSize(latestEntry.database_size),
       },
     ];
-  }, [latestEntry, totalCpuHours]);
+  }, [latestEntry]);
 
   const recordSeriesKey =
     plotMode === "cumulative" ? "cumulativeRecordCount" : "dailyRecordCount";
