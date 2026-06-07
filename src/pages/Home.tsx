@@ -90,8 +90,8 @@ const HomePage: React.FC = () => {
   return (
     <Box width="100%" sx={{ p: 2 }}>
       <Alert severity="info" sx={{ mb: 3 }}>
-        This webapp is under development and is still an alpha version.
-        If you have any questions or comments, contact the developers
+        This webapp is under development and is still an alpha version. If you
+        have any questions or comments, contact the developers
         {feedbackUrl && (
           <>
             {" "}
@@ -123,6 +123,17 @@ const HomePage: React.FC = () => {
             <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
               <li>
                 <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                  2026-06-07
+                </Typography>
+                <ul>
+                  <li>
+                    <strong>Added:</strong> API Access Page
+                    dialog
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
                   2026-06-03
                 </Typography>
                 <ul>
@@ -146,17 +157,6 @@ const HomePage: React.FC = () => {
                   </li>
                 </ul>
               </li>
-              <li>
-                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                  2026-05-20
-                </Typography>
-                <ul>
-                  <li>
-                    <strong>Improved:</strong> Enhanced performance for large
-                    output files with virtual scrolling and debouncing
-                  </li>
-                </ul>
-              </li>
 
               <Accordion
                 variant="outlined"
@@ -169,6 +169,21 @@ const HomePage: React.FC = () => {
                 </AccordionSummary>
                 <AccordionDetails sx={{ pt: 0 }}>
                   <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
+                    <li>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: "bold" }}
+                      >
+                        2026-05-20
+                      </Typography>
+                      <ul>
+                        <li>
+                          <strong>Improved:</strong> Enhanced performance for
+                          large output files with virtual scrolling and
+                          debouncing
+                        </li>
+                      </ul>
+                    </li>
                     <li>
                       <strong>2026-04-29</strong>
                       <ul>
