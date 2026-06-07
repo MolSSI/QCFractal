@@ -3,6 +3,7 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Alert,
   Box,
   Divider,
   Link as MuiLink,
@@ -26,6 +27,8 @@ import LoadingIndicator from "../components/LoadingIndicator";
 import { usePageTitle } from "../UsePageTitle.ts";
 import { RecordTypeChip } from "../components/RecordTypeChip.tsx";
 import StatusChip from "../components/StatusChip.tsx";
+
+const feedbackUrl: string = import.meta.env.VITE_FEEDBACK_URL;
 
 const HomePage: React.FC = () => {
   usePageTitle("Home");
@@ -86,6 +89,25 @@ const HomePage: React.FC = () => {
 
   return (
     <Box width="100%" sx={{ p: 2 }}>
+      <Alert severity="info" sx={{ mb: 3 }}>
+        This webapp is under development and is still an alpha version.
+        If you have any questions or comments, contact the developers
+        {feedbackUrl && (
+          <>
+            {" "}
+            or visit the{" "}
+            <MuiLink
+              component="a"
+              href={feedbackUrl}
+              target="_blank"
+              rel="noopener"
+            >
+              feedback form
+            </MuiLink>
+            .
+          </>
+        )}
+      </Alert>
       <Typography variant="h4" gutterBottom>
         Welcome to QCArchive
       </Typography>
