@@ -1,4 +1,4 @@
-import { styled, useColorScheme } from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 import Avatar from "@mui/material/Avatar";
 import MuiDrawer, { drawerClasses } from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
@@ -13,6 +13,7 @@ import { Link, useLocation } from "react-router-dom";
 import Chip from "@mui/material/Chip";
 import qcarchiveLogo from "../assets/qcarchive_logo.svg";
 import qcarchiveLogoInverted from "../assets/qcarchive_logo_inverted.svg";
+import { useResolvedColorMode } from "../shared-theme/useResolvedColorMode";
 
 const drawerWidth = 240;
 
@@ -33,8 +34,7 @@ interface SideMenuProps {
 }
 
 function DrawerContents({ onNavigate }: { onNavigate?: () => void }) {
-  const { mode, systemMode } = useColorScheme();
-  const resolvedMode = (systemMode || mode) as "light" | "dark";
+  const resolvedMode = useResolvedColorMode();
   const { userInfo, logout } = useAuth();
   const location = useLocation();
   const loginPath = `/login?redirect=${encodeURIComponent(location.pathname + location.search)}`;

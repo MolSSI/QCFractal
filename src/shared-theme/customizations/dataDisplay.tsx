@@ -197,9 +197,10 @@ export const dataDisplayCustomizations: Components<Theme> = {
       root: ({ theme }) => ({
         "& .MuiTableCell-root": {
           fontWeight: 600,
-          borderBottom: `1px solid ${
-            theme.palette.mode === "dark" ? gray[700] : gray[200]
-          }`,
+          borderBottom: `1px solid ${gray[200]}`,
+          ...theme.applyStyles("dark", {
+            borderBottom: `1px solid ${gray[700]}`,
+          }),
         },
       }),
     },
