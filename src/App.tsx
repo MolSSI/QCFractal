@@ -17,6 +17,7 @@ const ServerErrorList = lazy(() => import("./pages/ServerErrorList.tsx"));
 const ServerStats = lazy(() => import("./pages/ServerStats.tsx"));
 const Dataset = lazy(() => import("./pages/Dataset.tsx"));
 const DatasetList = lazy(() => import("./pages/DatasetList.tsx"));
+const ApiInfo = lazy(() => import("./pages/./APIInfo"));
 const UserProfile = lazy(() =>
   import("./pages/UserProfile.tsx").then((m) => ({ default: m.UserProfile })),
 );
@@ -105,6 +106,7 @@ function App() {
                           path="/datasets/:datasetId"
                           element={<Dataset />}
                         />
+                        <Route path="/api_access" element={<ApiInfo />} />
                       </Route>
                     </Route>
                   </Routes>

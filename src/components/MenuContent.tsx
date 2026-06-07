@@ -14,6 +14,7 @@ import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
+import CodeIcon from "@mui/icons-material/Code";
 import { NavLink, useLocation } from "react-router-dom";
 import FeedbackIcon from "@mui/icons-material/Feedback";
 import { useAuth } from "../Auth.tsx";
@@ -44,6 +45,7 @@ const mainListItems: {
     requiredPermissions: ["internal_jobs", "read"],
   },
   { text: "Server Stats", icon: <QueryStatsIcon />, path: "/server_stats" },
+  { text: "API Access", icon: <CodeIcon />, path: "/api_access" },
   {
     text: "Server Errors",
     icon: <BugReportIcon />,
