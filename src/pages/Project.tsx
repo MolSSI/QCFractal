@@ -60,7 +60,7 @@ export default function Project() {
     enabled: projectIdNumber !== null && !Number.isNaN(projectIdNumber),
   });
 
-  const pageTitle = projectData ? `Project ${projectId}: ${projectData.name}` : `Proejct ${projectId}`;
+  const pageTitle = projectData ? `Project ${projectId}: ${projectData.name}` : `Project ${projectId}`;
   usePageTitle(pageTitle);
 
   const {
@@ -173,7 +173,7 @@ export default function Project() {
                   <Typography variant="h6" fontWeight="bold" gutterBottom>
                     Description
                   </Typography>
-                  <Typography variant="body1" component={"p"}>
+                  <Typography variant="body1" component={"div"}>
                     <MarkdownContent>{projectData.description.trim()}</MarkdownContent>
                   </Typography>
 

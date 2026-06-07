@@ -412,7 +412,7 @@ export default function Dataset() {
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                   Description
                 </Typography>
-                <Typography variant="body1" component={"p"}>
+                <Typography variant="body1" component={"div"}>
                   <MarkdownContent>{datasetData.description.trim()}</MarkdownContent>
                 </Typography>
 
