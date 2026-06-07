@@ -16,6 +16,23 @@ const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
   },
 }));
 
+const staticBreadcrumbLabels: Record<string, string> = {
+  api_access: "API Access",
+};
+
+function formatBreadcrumbLabel(segment: string) {
+  const staticLabel = staticBreadcrumbLabels[segment];
+  if (staticLabel) {
+    return staticLabel;
+  }
+
+  return segment
+    .split(/[_-]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export default function NavbarBreadcrumbs() {
   const location = useLocation();
 
@@ -60,7 +77,7 @@ export default function NavbarBreadcrumbs() {
         } else if (pathnames[index - 1] === "datasets") {
           label = `Dataset ${value}`;
         } else {
-          label = value.charAt(0).toUpperCase() + value.slice(1);
+          label = formatBreadcrumbLabel(value);
         }
 
         return isLast ? (
