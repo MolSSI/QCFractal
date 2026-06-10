@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
 
-    <script src="../../../_static/documentation_options.js?v=526e9446"></script>
+    <script src="../../../_static/documentation_options.js?v=f2f14341"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post70+ge8c24b533" />
+  <meta name="docsearch:version" content="0.65.post82+gf45c2d815" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -482,7 +482,18 @@
 <span class="sd">    The state of an external file</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">dataset_attachment</span> <span class="o">=</span> <span class="s2">&quot;dataset_attachment&quot;</span></div>
+    <span class="n">dataset_attachment</span> <span class="o">=</span> <span class="s2">&quot;dataset_attachment&quot;</span>
+    <span class="n">project_attachment</span> <span class="o">=</span> <span class="s2">&quot;project_attachment&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="ExternalFileUploadBase">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/external_files.html#qcportal.external_files.models.ExternalFileUploadBase">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ExternalFileUploadBase</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">provenance</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span></div>
+
 
 
 
