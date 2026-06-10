@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from qcarchivetesting import load_molecule_data, test_users
+
+from qcarchivetesting import load_molecule_data
 from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
 from qcfractal.testing_helpers import run_service
 from qcportal.auth import UserInfo
@@ -12,7 +13,6 @@ from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords, compare_torsiondrive_records
 from qcportal.utils import now_at_utc
-
 from .testing_helpers import (
     compare_torsiondrive_specs,
     test_specs,
@@ -372,7 +372,7 @@ def test_torsiondrive_socket_insert_full_qcportal_record(secure_snowflake: QCATe
     ]
 
     storage_socket = secure_snowflake.get_storage_socket()
-    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    client = secure_snowflake.user_client("submit_user")
     user_id = client.get_user().id
 
     for test_name in test_names:

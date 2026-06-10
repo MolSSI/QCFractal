@@ -14,7 +14,7 @@ from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcportal import PortalClient
 from qcportal.managers import ManagerName
 from qcportal.utils import update_nested_dict
-from .helpers import geoip_path, geoip_filename, ip_tests_enabled, test_users
+from .helpers import geoip_path, geoip_filename, ip_tests_enabled
 from .testing_classes import QCATestingPostgresServer, QCATestingSnowflake, _activated_manager_programs
 
 
@@ -174,7 +174,7 @@ def secure_snowflake_allow_read(session_secure_snowflake_allow_read):
 
 @pytest.fixture(scope="function")
 def submitter_client(secure_snowflake):
-    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    client = secure_snowflake.user_client("submit_user")
     yield client
 
 

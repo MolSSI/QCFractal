@@ -1,16 +1,13 @@
 from typing import Optional, Tuple, Union, Dict, Any
 
-from flask import current_app, g
-
+from flask import g
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
-from qcfractal.flask_app.wrap_route import wrap_global_route
+from qcfractal.flask_app.decorators import check_permissions, serialization
 from qcportal.auth import UserInfo, GroupInfo
 from qcportal.exceptions import (
-    SecurityNotEnabledError,
     UserManagementError,
     AuthorizationFailure,
-    AuthenticationFailure,
 )
 
 ###################################################################
@@ -48,57 +45,36 @@ def is_same_user(username_or_id: Union[int, str]) -> bool:
     return False
 
 
-def assert_security_enabled():
-    if not current_app.config["QCFRACTAL_CONFIG"].enable_security:
-        raise SecurityNotEnabledError("This functionality is not available if security is not enabled on the server")
-
-
-# TODO - may not be needed after changing RBAC/ABAC framework
-# can be removed after proper/more granular permissions are implemented
-def assert_logged_in():
-    if g.get("user_id", None) is None:
-        raise AuthenticationFailure("Login is required")
-
-
-def assert_admin():
-    if g.get("role", None) != "admin":
-        raise AuthorizationFailure("Forbidden: Admin access is required")
-
-
 #################################
 # Groups
 #################################
 
 
 @api_v1.route("/groups", methods=["GET"])
-@wrap_global_route("groups", "read", True)
+@check_permissions("groups", "read", True)
+@serialization()
 def list_groups_v1():
-    assert_security_enabled()
-    assert_logged_in()
     return storage_socket.groups.list()
 
 
 @api_v1.route("/groups", methods=["POST"])
-@wrap_global_route("groups", "add", True)
+@check_permissions("groups", "add", True)
+@serialization()
 def add_group_v1(body_data: GroupInfo):
-    assert_security_enabled()
-    assert_logged_in()
     return storage_socket.groups.add(body_data)
 
 
 @api_v1.route("/groups/<groupname_or_id>", methods=["GET"])
-@wrap_global_route("groups", "read", True)
+@check_permissions("groups", "read", True)
+@serialization()
 def get_group_v1(groupname_or_id: Union[int, str]):
-    assert_security_enabled()
-    assert_logged_in()
     return storage_socket.groups.get(groupname_or_id)
 
 
 @api_v1.route("/groups/<groupname_or_id>", methods=["DELETE"])
-@wrap_global_route("groups", "delete", True)
+@check_permissions("groups", "delete", True)
+@serialization()
 def delete_group_v1(groupname_or_id: Union[int, str]):
-    assert_security_enabled()
-    assert_logged_in()
     return storage_socket.groups.delete(groupname_or_id)
 
 
@@ -108,72 +84,45 @@ def delete_group_v1(groupname_or_id: Union[int, str]):
 
 
 @api_v1.route("/users", methods=["GET"])
-@wrap_global_route("users", "read", True)
+@check_permissions("users", "read", True)
+@serialization()
 def list_users_v1():
-    assert_security_enabled()
-    assert_logged_in()
-    assert_admin()
     return storage_socket.users.list()
 
 
 @api_v1.route("/users", methods=["POST"])
-@wrap_global_route("users", "add", True)
+@check_permissions("users", "add", True)
+@serialization()
 def add_user_v1(body_data: Tuple[UserInfo, Optional[str]]):
-    assert_security_enabled()
-    assert_logged_in()
-
     user_info, password = body_data
     return storage_socket.users.add(user_info, password)
 
 
 @api_v1.route("/users/<username_or_id>", methods=["GET"])
-@wrap_global_route("users", "read", True)
+@check_permissions("users", "read", True)
+@serialization()
 def get_user_v1(username_or_id: Union[int, str]):
-    assert_security_enabled()
-    assert_logged_in()
-
-    # admin can do all
-    if g.role == "admin" or is_same_user(username_or_id):
-        return storage_socket.users.get(username_or_id)
-
-    raise AuthorizationFailure("Cannot get user information: Forbidden")
+    return storage_socket.users.get(username_or_id)
 
 
 @api_v1.route("/me", methods=["GET"])
-@wrap_global_route("me", "read", True)
+@check_permissions("me", "read", True)
+@serialization()
 def get_my_user_v1():
-    assert_security_enabled()
-    assert_logged_in()
-
     return storage_socket.users.get(g.user_id)
 
 
 @api_v1.route("/users", methods=["PATCH"])
-@wrap_global_route("users", "modify", True)
+@check_permissions("users", "modify", True)
+@serialization()
 def modify_user_v1(body_data: UserInfo):
-    assert_security_enabled()
-    assert_logged_in()
-
-    if g.role == "admin":
-        return storage_socket.users.modify(body_data, as_admin=True)
-
-    if body_data.id is None or body_data.username is None:
-        raise UserManagementError("Cannot modify user: id or username is missing")
-
-    # Users can only modify themselves, and only certain fields
-    # This checks id and name to make sure this user is only modifying themselves
-    if is_same_user(body_data.id) and is_same_user(body_data.username):
-        return storage_socket.users.modify(body_data, as_admin=False)
-
-    raise AuthorizationFailure("Cannot modify user: Forbidden")
+    return storage_socket.users.modify(body_data, as_admin=True)
 
 
 @api_v1.route("/me", methods=["PATCH"])
-@wrap_global_route("me", "modify", True)
+@check_permissions("me", "modify", True)
+@serialization()
 def modify_my_user_v1(body_data: UserInfo):
-    assert_security_enabled()
-    assert_logged_in()
-
     if body_data.id is None or body_data.username is None:
         raise UserManagementError("Cannot modify user: id or username is missing")
 
@@ -184,36 +133,23 @@ def modify_my_user_v1(body_data: UserInfo):
 
 
 @api_v1.route("/users/<username_or_id>/password", methods=["PUT"])
-@wrap_global_route("users", "modify", True)
+@check_permissions("users", "modify", True)
+@serialization()
 def change_password_v1(username_or_id: Union[int, str], body_data: Optional[str]):
-    assert_security_enabled()
-    assert_logged_in()
-
-    if g.role == "admin":
-        return storage_socket.users.change_password(username_or_id, password=body_data)
-
-    # This checks id or name to make sure this user is only modifying themselves
-    if is_same_user(username_or_id):
-        return storage_socket.users.change_password(username_or_id, password=body_data)
-
-    raise AuthorizationFailure("Cannot change password: Forbidden")
+    return storage_socket.users.change_password(username_or_id, password=body_data)
 
 
 @api_v1.route("/me/password", methods=["PUT"])
-@wrap_global_route("me", "modify", True)
+@check_permissions("me", "modify", True)
+@serialization()
 def change_my_password_v1(body_data: Optional[str]):
-    assert_security_enabled()
-    assert_logged_in()
-
     return storage_socket.users.change_password(g.user_id, password=body_data)
 
 
 @api_v1.route("/users/<username_or_id>", methods=["DELETE"])
-@wrap_global_route("users", "delete", True)
+@check_permissions("users", "delete", True)
+@serialization()
 def delete_user_v1(username_or_id: Union[int, str]):
-    assert_security_enabled()
-    assert_logged_in()
-
     if is_same_user(username_or_id):
         raise UserManagementError("Cannot delete your own user")
 
@@ -224,44 +160,30 @@ def delete_user_v1(username_or_id: Union[int, str]):
 # User preferences management
 ###########################
 @api_v1.route("/users/<username_or_id>/preferences", methods=["GET"])
-@wrap_global_route("users", "read", True)
+@check_permissions("users", "read", True)
+@serialization()
 def get_user_preferences_v1(username_or_id: Union[int, str]):
-    assert_security_enabled()
-    assert_logged_in()
-
-    if g.role == "admin" or is_same_user(username_or_id):
-        return storage_socket.users.get_preferences(g.user_id)
-    else:
-        raise AuthorizationFailure("Cannot get user preferences: Forbidden")
+    return storage_socket.users.get_preferences(username_or_id)
 
 
 @api_v1.route("/me/preferences", methods=["GET"])
-@wrap_global_route("me", "read", True)
+@check_permissions("me", "read", True)
+@serialization()
 def get_my_preferences_v1():
-    assert_security_enabled()
-    assert_logged_in()
-
     return storage_socket.users.get_preferences(g.user_id)
 
 
 @api_v1.route("/users/<username_or_id>/preferences", methods=["PUT"])
-@wrap_global_route("users", "modify", True)
+@check_permissions("users", "modify", True)
+@serialization()
 def set_user_preferences_v1(username_or_id: Union[int, str], body_data: Dict[str, Any]):
-    assert_security_enabled()
-    assert_logged_in()
-
-    if g.role == "admin" or is_same_user(username_or_id):
-        return storage_socket.users.set_preferences(g.user_id, body_data)
-    else:
-        raise AuthorizationFailure("Cannot set user preferences: Forbidden")
+    return storage_socket.users.set_preferences(username_or_id, body_data)
 
 
 @api_v1.route("/me/preferences", methods=["PUT"])
-@wrap_global_route("me", "modify", True)
+@check_permissions("me", "modify", True)
+@serialization()
 def set_my_preferences_v1(body_data: Dict[str, Any]):
-    assert_security_enabled()
-    assert_logged_in()
-
     return storage_socket.users.set_preferences(g.user_id, body_data)
 
 
@@ -269,31 +191,21 @@ def set_my_preferences_v1(body_data: Dict[str, Any]):
 # User session management
 ###########################
 @api_v1.route("/sessions", methods=["GET"])
-@wrap_global_route("users", "read", True)
+@check_permissions("users", "read", True)
+@serialization()
 def list_all_user_sessions_v1():
-    assert_security_enabled()
-    assert_logged_in()
-    assert_admin()
-
     return storage_socket.auth.list_all_user_sessions()
 
 
 @api_v1.route("/users/<username_or_id>/sessions", methods=["GET"])
-@wrap_global_route("users", "read", True)
+@check_permissions("users", "read", True)
+@serialization()
 def list_user_sessions_v1(username_or_id: Union[int, str]):
-    assert_security_enabled()
-    assert_logged_in()
-
-    if g.role == "admin" or is_same_user(username_or_id):
-        return storage_socket.auth.list_user_sessions(g.user_id)
-
-    raise AuthorizationFailure("Cannot list user sessions: Forbidden")
+    return storage_socket.auth.list_user_sessions(username_or_id)
 
 
 @api_v1.route("/me/sessions", methods=["GET"])
-@wrap_global_route("me", "read", True)
+@check_permissions("me", "read", True)
+@serialization()
 def list_my_sessions_v1():
-    assert_security_enabled()
-    assert_logged_in()
-
     return storage_socket.auth.list_user_sessions(g.user_id)
