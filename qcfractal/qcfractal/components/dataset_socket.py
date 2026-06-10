@@ -9,6 +9,7 @@ from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import with_polymorphic
 
+from qcfractal.components.auth.db_models import UserORM
 from qcfractal.components.base_dataset_socket import BaseDatasetSocket
 from qcfractal.components.dataset_db_models import (
     BaseDatasetORM,
@@ -229,10 +230,13 @@ class DatasetSocket:
                 BaseDatasetORM.dataset_type,
                 BaseDatasetORM.name,
                 BaseDatasetORM.tagline,
+                BaseDatasetORM.tags,
                 BaseDatasetORM.description,
                 func.coalesce(DatasetRecordCountORM.record_count, 0),
+                UserORM.username,
             )
             stmt = stmt.join(DatasetRecordCountORM, DatasetRecordCountORM.dataset_id == BaseDatasetORM.id, isouter=True)
+            stmt = stmt.join(UserORM, UserORM.id == BaseDatasetORM.creator_user_id, isouter=True)
             stmt = stmt.order_by(BaseDatasetORM.id.asc())
             r = session.execute(stmt).all()
 
@@ -242,8 +246,11 @@ class DatasetSocket:
                     "dataset_type": x[1],
                     "dataset_name": x[2],
                     "tagline": x[3],
-                    "description": x[4],
-                    "record_count": x[5],
+                    "tags": x[4],
+                    "description": x[5],
+                    "record_count": x[6],
+                    "creator_user": x[7],
+                    "owner_user": x[7], # Same as creator_user for now
                 }
                 for x in r
             ]

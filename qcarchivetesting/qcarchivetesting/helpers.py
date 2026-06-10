@@ -26,6 +26,8 @@ ip_testdata_path = os.path.join(_my_path, "MaxMind-DB", "source-data", "GeoIP2-C
 
 ip_tests_enabled = os.path.exists(geoip_path) and os.path.exists(ip_testdata_path) and geoip2_found
 
+s3_tests_enabled = "QCFTEST_S3_ENDPOINT" in os.environ
+
 testconfig_path = os.path.join(_my_path, "config_files")
 migrationdata_path = os.path.join(_my_path, "migration_data")
 

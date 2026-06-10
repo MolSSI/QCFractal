@@ -98,6 +98,7 @@ from .project_models import (
     ProjectDeleteParams,
     ProjectQueryModel,
     ProjectQueryRecords,
+    ProjectQueryDatasets,
 )
 
 from .record_models import (
@@ -313,6 +314,10 @@ class PortalClient(PortalClientBase):
         body = ProjectQueryRecords(record_id=make_list(record_id))
         return self.make_request("post", f"api/v1/projects/queryrecords", List[Dict], body=body)
 
+    def query_project_datasets(self, dataset_id: Union[int, Iterable[int]]):
+        body = ProjectQueryDatasets(dataset_id=make_list(dataset_id))
+        return self.make_request("post", f"api/v1/projects/querydatasets", List[Dict], body=body)
+
     ##############################################################
     # Datasets
     ##############################################################
@@ -322,6 +327,7 @@ class PortalClient(PortalClientBase):
     def list_datasets_table(self) -> str:
         ds_list = self.list_datasets()
 
+        # Listing includes descriptions, but we don't put them in the table
         # older servers don't have record_count
         if all("record_count" in x for x in ds_list):
             headers = ["id", "type", "record_count", "name"]

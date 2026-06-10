@@ -177,6 +177,7 @@ class ProjectSocket:
                 ProjectORM.name,
                 ProjectORM.tagline,
                 ProjectORM.tags,
+                ProjectORM.description,
                 func.coalesce(record_count_cte.c.record_count, 0),
                 func.coalesce(dataset_count_cte.c.dataset_count, 0),
                 UserORM.username,
@@ -193,9 +194,11 @@ class ProjectSocket:
                     "project_name": x[1],
                     "tagline": x[2],
                     "tags": x[3],
-                    "record_count": x[4],
-                    "dataset_count": x[5],
-                    "owner_user": x[6],
+                    "description": x[4],
+                    "record_count": x[5],
+                    "dataset_count": x[6],
+                    "creator_user": x[7], # Same as owner_user for now
+                    "owner_user": x[7],
                 }
                 for x in r
             ]
@@ -269,6 +272,41 @@ class ProjectSocket:
                     "project_id": x[1],
                     "project_name": x[2],
                     "record_name": x[3],
+                }
+                for x in ret
+            ]
+
+
+    def query_project_datasets(
+            self,
+            dataset_id: Iterable[int],
+            *,
+            session: Optional[Session] = None,
+    ):
+        """
+        Query which projects the specified datasets belong to
+
+        This returns a dictionary containing the project id, project name, and the
+        name of the record in the project
+        """
+
+        stmt = select(
+            ProjectDatasetORM.dataset_id,
+            ProjectDatasetORM.project_id,
+            ProjectORM.name,
+            ProjectDatasetORM.name,
+        )
+        stmt = stmt.join(ProjectORM, ProjectORM.id == ProjectDatasetORM.project_id)
+        stmt = stmt.where(ProjectDatasetORM.dataset_id.in_(dataset_id))
+
+        with self.root_socket.optional_session(session, True) as session:
+            ret = session.execute(stmt).all()
+            return [
+                {
+                    "record_id": x[0],
+                    "project_id": x[1],
+                    "project_name": x[2],
+                    "dataset_name": x[3],
                 }
                 for x in ret
             ]
@@ -759,7 +797,9 @@ class ProjectSocket:
         attachment_type: ProjectAttachmentType,
         file_path: str,
         file_name: str,
-        description: Optional[str],
+        description: str,
+        tags: list[str],
+        provenance: dict[str, Any],
         *,
         job_progress: Optional[JobProgress] = None,
         session: Optional[Session] = None,
@@ -783,6 +823,10 @@ class ProjectSocket:
             recommended to the user by default.
         description
             An optional description of the file
+        tags
+            A list of tags to associate with the attachment.
+        provenance
+            An optional dictionary containing provenance information for the file.
         job_progress
             Object used to track progress if this function is being run in a background job
         session
@@ -805,6 +849,8 @@ class ProjectSocket:
                 attachment_type=attachment_type,
                 file_name=file_name,
                 description=description,
+                tags=tags,
+                provenance=provenance,
             )
 
             file_id = self.root_socket.external_files.add_file(

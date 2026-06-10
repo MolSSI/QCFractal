@@ -9,6 +9,7 @@ from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum
 from qcportal.singlepoint import SinglepointDatasetNewEntry
 from qcportal.singlepoint.record_models import QCSpecification, SinglepointProtocols
+from qcarchivetesting import s3_tests_enabled
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
@@ -147,3 +148,9 @@ def test_singlepoint_dataset_model_iterate_updated(snowflake_client: PortalClien
 def test_singlepoint_dataset_model_modify_records(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
     ds_helpers.run_dataset_model_modify_records(ds, test_entries, test_specs[0])
+
+
+@pytest.mark.skipif(not s3_tests_enabled, reason="S3 tests not enabled")
+def test_singlepoint_dataset_model_create_view(dataset_submit_test_client: PortalClient, tmp_path_factory):
+    ds = dataset_submit_test_client.add_dataset("singlepoint", "Test dataset")
+    ds_helpers.run_dataset_model_view(ds, test_entries, test_specs[0], entry_extra_compare, tmp_path_factory)

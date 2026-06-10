@@ -149,9 +149,8 @@ def test_internal_jobs_socket_run_serial(storage_socket: SQLAlchemySocket, sessi
         job_1 = session.get(InternalJobORM, id_1)
         job_2 = session.get(InternalJobORM, id_2)
         job_3 = session.get(InternalJobORM, id_3)
-        assert job_1.status == InternalJobStatusEnum.running
-        assert job_2.status == InternalJobStatusEnum.waiting
-        assert job_3.status == InternalJobStatusEnum.running
+        assert (job_1.status, job_2.status, job_3.status) == (
+            InternalJobStatusEnum.running, InternalJobStatusEnum.waiting, InternalJobStatusEnum.running)
 
     finally:
         end_event.set()
