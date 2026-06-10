@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING
 
-import botocore
 import pytest
 
 from qcarchivetesting.helpers import _my_path, s3_tests_enabled
@@ -16,6 +15,9 @@ test_file_path = os.path.join(_my_path, "molecule_data", "test_archive_1.tar.gz"
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+
+if s3_tests_enabled:
+    import botocore
 
 
 # Adding/getting is generally tested elsewhere (with various client model tests). But
