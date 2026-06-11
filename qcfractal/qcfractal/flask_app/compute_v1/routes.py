@@ -1,3 +1,4 @@
+from typing import Any
 from qcfractal.flask_app.compute_v1.blueprint import compute_v1
 from qcfractal.flask_app.decorators import check_permissions, serialization
 from qcfractal.flask_app.helpers import get_public_server_information
@@ -6,5 +7,5 @@ from qcfractal.flask_app.helpers import get_public_server_information
 @compute_v1.route("/information", methods=["GET"])
 @check_permissions("information", "read")
 @serialization()
-def get_information():
+def get_information() -> dict[str, Any]:
     return get_public_server_information()

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any
 
 from flask import current_app, g
 
@@ -7,11 +7,14 @@ from qcfractal.flask_app.api_v1.blueprint import api_v1
 from qcfractal.flask_app.decorators import check_permissions, serialization
 from qcportal.base_models import ProjURLParameters, CommonBulkGetBody
 from qcportal.exceptions import LimitExceededError
+from qcportal.metadata_models import DeleteMetadata, UpdateMetadata
+from qcportal.compression import CompressionEnum
 from qcportal.record_models import (
     RecordModifyBody,
     RecordQueryFilters,
     RecordDeleteBody,
     RecordRevertBody,
+    RecordStatusEnum,
 )
 
 
@@ -25,21 +28,21 @@ from qcportal.record_models import (
 @api_v1.route("/records/query", methods=["POST"])
 @check_permissions("records", "read")
 @serialization()
-def query_records_v1(body_data: RecordQueryFilters):
+def query_records_v1(body_data: RecordQueryFilters) -> list[int]:
     return storage_socket.records.query(body_data)
 
 
 @api_v1.route("/records/revert", methods=["POST"])
 @check_permissions("records", "modify")
 @serialization()
-def revert_records_v1(body_data: RecordRevertBody):
+def revert_records_v1(body_data: RecordRevertBody) -> UpdateMetadata:
     return storage_socket.records.revert_generic(body_data.record_ids, body_data.revert_status)
 
 
 @api_v1.route("/records", methods=["PATCH"])
 @check_permissions("records", "modify")
 @serialization()
-def modify_records_v1(body_data: RecordModifyBody):
+def modify_records_v1(body_data: RecordModifyBody) -> UpdateMetadata:
     return storage_socket.records.modify_generic(
         body_data.record_ids,
         g.user_id,
@@ -53,14 +56,14 @@ def modify_records_v1(body_data: RecordModifyBody):
 @api_v1.route("/records/<int:record_id>", methods=["DELETE"])
 @check_permissions("records", "delete")
 @serialization()
-def delete_records_v1(record_id: int):
+def delete_records_v1(record_id: int) -> DeleteMetadata:
     return storage_socket.records.delete([record_id], soft_delete=True, delete_children=True)
 
 
 @api_v1.route("/records/bulkDelete", methods=["POST"])
 @check_permissions("records", "delete")
 @serialization()
-def bulk_delete_records_v1(body_data: RecordDeleteBody):
+def bulk_delete_records_v1(body_data: RecordDeleteBody) -> DeleteMetadata:
     return storage_socket.records.delete(
         body_data.record_ids, soft_delete=body_data.soft_delete, delete_children=body_data.delete_children
     )
@@ -69,7 +72,7 @@ def bulk_delete_records_v1(body_data: RecordDeleteBody):
 @api_v1.route("/records/<int:record_id>/waiting_reason", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_record_waiting_reason_v1(record_id: int):
+def get_record_waiting_reason_v1(record_id: int) -> dict[str, Any]:
     return storage_socket.records.get_waiting_reason(record_id)
 
 
@@ -83,7 +86,7 @@ def get_record_waiting_reason_v1(record_id: int):
 @api_v1.route("/records/<int:record_id>", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_records_v1(record_id: int, url_params: ProjURLParameters, record_type: Optional[str] = None):
+def get_records_v1(record_id: int, url_params: ProjURLParameters, record_type: str | None = None) -> dict[str, Any]:
     if record_type is None:
         return storage_socket.records.get([record_id], url_params.include, url_params.exclude)[0]
     else:
@@ -95,7 +98,7 @@ def get_records_v1(record_id: int, url_params: ProjURLParameters, record_type: O
 @api_v1.route("/records/bulkGet", methods=["POST"])
 @check_permissions("records", "read")
 @serialization()
-def bulk_get_records_v1(body_data: CommonBulkGetBody, record_type: Optional[str] = None):
+def bulk_get_records_v1(body_data: CommonBulkGetBody, record_type: str | None = None) -> list[dict[str, Any] | None]:
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
     if len(body_data.ids) > limit:
         raise LimitExceededError(f"Cannot get {len(body_data.ids)} records - limit is {limit}")
@@ -113,7 +116,7 @@ def bulk_get_records_v1(body_data: CommonBulkGetBody, record_type: Optional[str]
 @api_v1.route("/records/<int:record_id>", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_general_records_v1(record_id: int, url_params: ProjURLParameters, record_type: Optional[str] = None):
+def get_general_records_v1(record_id: int, url_params: ProjURLParameters, record_type: str | None = None) -> dict[str, Any]:
     # Getting is handled a little differently. If no type specified, use the more generic version
     # in the upper-level record socket
     if record_type is None:
@@ -136,7 +139,7 @@ def get_general_records_v1(record_id: int, url_params: ProjURLParameters, record
 @api_v1.route("/records/<string:record_type>/<int:record_id>/comments", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_record_comments_v1(record_id: int, record_type: str):
+def get_record_comments_v1(record_id: int, record_type: str) -> list[dict[str, Any]]:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_comments(record_id)
 
@@ -144,7 +147,7 @@ def get_record_comments_v1(record_id: int, record_type: str):
 @api_v1.route("/records/<string:record_type>/<int:record_id>/task", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_record_task_v1(record_id: int, record_type: str):
+def get_record_task_v1(record_id: int, record_type: str) -> dict[str, Any] | None:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_task(record_id)
 
@@ -152,7 +155,7 @@ def get_record_task_v1(record_id: int, record_type: str):
 @api_v1.route("/records/<string:record_type>/<int:record_id>/service", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_record_service_v1(record_id: int, record_type: str):
+def get_record_service_v1(record_id: int, record_type: str) -> dict[str, Any] | None:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_service(record_id)
 
@@ -160,7 +163,7 @@ def get_record_service_v1(record_id: int, record_type: str):
 @api_v1.route("/records/<string:record_type>/<int:record_id>/compute_history", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_record_history_v1(record_id: int, record_type: str):
+def get_record_history_v1(record_id: int, record_type: str) -> list[dict[str, Any]]:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_all_compute_history(record_id)
 
@@ -168,7 +171,7 @@ def get_record_history_v1(record_id: int, record_type: str):
 @api_v1.route("/records/<string:record_type>/<int:record_id>/compute_history/<int:history_id>", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_record_history_single_v1(record_id: int, history_id: int, record_type: str):
+def get_record_history_single_v1(record_id: int, history_id: int, record_type: str) -> dict[str, Any]:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_single_compute_history(record_id, history_id)
 
@@ -176,7 +179,7 @@ def get_record_history_single_v1(record_id: int, history_id: int, record_type: s
 @api_v1.route("/records/<string:record_type>/<int:record_id>/compute_history/<int:history_id>/outputs", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_record_outputs_v1(record_id: int, history_id: int, record_type: str):
+def get_record_outputs_v1(record_id: int, history_id: int, record_type: str) -> dict[str, dict[str, Any]]:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_all_output_metadata(record_id, history_id)
 
@@ -187,7 +190,7 @@ def get_record_outputs_v1(record_id: int, history_id: int, record_type: str):
 )
 @check_permissions("records", "read")
 @serialization()
-def get_record_outputs_single_v1(record_id: int, history_id: int, output_type: str, record_type: str):
+def get_record_outputs_single_v1(record_id: int, history_id: int, output_type: str, record_type: str) -> dict[str, Any]:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_single_output_metadata(record_id, history_id, output_type)
 
@@ -198,7 +201,7 @@ def get_record_outputs_single_v1(record_id: int, history_id: int, output_type: s
 )
 @check_permissions("records", "read")
 @serialization()
-def get_record_outputs_data_v1(record_id: int, history_id: int, output_type: str, record_type: str):
+def get_record_outputs_data_v1(record_id: int, history_id: int, output_type: str, record_type: str) -> tuple[bytes, CompressionEnum]:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_single_output_rawdata(record_id, history_id, output_type)
 
@@ -209,7 +212,7 @@ def get_record_outputs_data_v1(record_id: int, history_id: int, output_type: str
 )
 @check_permissions("records", "read")
 @serialization()
-def get_record_outputs_uncompressed_data_v1(record_id: int, history_id: int, output_type: str, record_type: str):
+def get_record_outputs_uncompressed_data_v1(record_id: int, history_id: int, output_type: str, record_type: str) -> Any:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_single_output_uncompressed(record_id, history_id, output_type)
 
@@ -217,7 +220,7 @@ def get_record_outputs_uncompressed_data_v1(record_id: int, history_id: int, out
 @api_v1.route("/records/<string:record_type>/<int:record_id>/native_files", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_record_native_files_v1(record_id: int, record_type: str):
+def get_record_native_files_v1(record_id: int, record_type: str) -> dict[str, dict[str, Any]]:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_all_native_files_metadata(record_id)
 
@@ -225,7 +228,7 @@ def get_record_native_files_v1(record_id: int, record_type: str):
 @api_v1.route("/records/<string:record_type>/<int:record_id>/native_files/<string:name>", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_record_native_file_single_v1(record_id: int, name: str, record_type: str):
+def get_record_native_file_single_v1(record_id: int, name: str, record_type: str) -> dict[str, Any]:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_single_native_file_metadata(record_id, name)
 
@@ -233,7 +236,7 @@ def get_record_native_file_single_v1(record_id: int, name: str, record_type: str
 @api_v1.route("/records/<string:record_type>/<int:record_id>/native_files/<string:name>/data", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_record_native_file_data_v1(record_id: int, name: str, record_type: str):
+def get_record_native_file_data_v1(record_id: int, name: str, record_type: str) -> tuple[bytes, CompressionEnum]:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_single_native_file_rawdata(record_id, name)
 
@@ -243,7 +246,7 @@ def get_record_native_file_data_v1(record_id: int, name: str, record_type: str):
 )
 @check_permissions("records", "read")
 @serialization()
-def get_record_native_file_uncompressed_data_v1(record_id: int, name: str, record_type: str):
+def get_record_native_file_uncompressed_data_v1(record_id: int, name: str, record_type: str) -> Any:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_single_native_file_uncompressed(record_id, name)
 
@@ -251,7 +254,7 @@ def get_record_native_file_uncompressed_data_v1(record_id: int, name: str, recor
 @api_v1.route("/records/<string:record_type>/<int:record_id>/children_status", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_record_children_status_v1(record_id: int, record_type: str):
+def get_record_children_status_v1(record_id: int, record_type: str) -> dict[RecordStatusEnum, int]:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_children_status(record_id)
 
@@ -259,6 +262,6 @@ def get_record_children_status_v1(record_id: int, record_type: str):
 @api_v1.route("/records/<string:record_type>/<int:record_id>/children_errors", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_record_children_errors_v1(record_id: int, record_type: str):
+def get_record_children_errors_v1(record_id: int, record_type: str) -> list[int]:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_children_errors(record_id)

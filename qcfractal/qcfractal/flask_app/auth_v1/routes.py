@@ -1,3 +1,4 @@
+from typing import Any
 from flask import jsonify, g
 from flask_jwt_extended import (
     jwt_required,
@@ -20,14 +21,14 @@ from qcfractal.flask_app.helpers import (
 
 @auth_v1.route("/login", methods=["POST"])
 @no_permission_required()
-def login():
+def login() -> tuple[Any, int]:
     access_token, refresh_token = login_and_get_jwt(get_refresh_token=True)
     return jsonify(msg="Login succeeded!", access_token=access_token, refresh_token=refresh_token), 200
 
 
 @auth_v1.route("/session_login", methods=["POST"])
 @no_permission_required()
-def user_session_login():
+def user_session_login() -> tuple[Any, int]:
     user_info = login_user_session()
     response = jsonify(
         msg="Login succeeded!",
@@ -41,7 +42,7 @@ def user_session_login():
 
 @auth_v1.route("/session_logout", methods=["POST"])
 @no_permission_required()
-def user_session_logout():
+def user_session_logout() -> tuple[Any, int]:
     logout_user_session()
     response = jsonify(msg="Logout successful!")
     return response, 200
@@ -50,7 +51,7 @@ def user_session_logout():
 @auth_v1.route("/refresh", methods=["POST"])
 @no_permission_required()
 @jwt_required(refresh=True)
-def refresh():
+def refresh() -> tuple[Any, int]:
     user_id = get_jwt_identity()
 
     user_info = storage_socket.auth.verify(user_id)
@@ -65,7 +66,7 @@ def refresh():
 
 @auth_v1.route("/allowed", methods=["GET"])
 @no_permission_required()
-def get_allowed_actions():
+def get_allowed_actions() -> tuple[Any, int]:
     all_endpoints = get_all_endpoints()
     all_actions = {"READ", "WRITE", "DELETE"}
 

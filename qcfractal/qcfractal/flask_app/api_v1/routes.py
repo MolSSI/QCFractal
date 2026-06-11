@@ -1,12 +1,14 @@
+from typing import Any
 from flask import jsonify, current_app, g
 
 from qcfractal.flask_app.api_v1.blueprint import api_v1
 from qcfractal.flask_app.decorators import no_permission_required
+from qcfractal.flask_app.openapi import generate_openapi_spec
 
 
 @api_v1.route("/ping", methods=["GET"])
 @no_permission_required()
-def ping():
+def ping() -> Any:
 
     user_id = g.user_id if "user_id" in g else None
 
@@ -27,7 +29,7 @@ def ping():
 
 @api_v1.route("/all_routes", methods=["GET"])
 @no_permission_required()
-def get_all_routes_v1():
+def get_all_routes_v1() -> dict[str, Any]:
     """
     Returns a dictionary of all endpoints and their required permissions.
 
@@ -64,3 +66,13 @@ def get_all_routes_v1():
             }
 
     return jsonify(permissions)
+
+
+@api_v1.route("/openapi_spec", methods=["GET"])
+@no_permission_required()
+def get_openapi_spec_v1() -> dict[str, Any]:
+    """
+    Returns an openapi specification for all endpoints on this server
+    """
+
+    return generate_openapi_spec(current_app)

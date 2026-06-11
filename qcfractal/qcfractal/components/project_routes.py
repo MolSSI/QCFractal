@@ -1,3 +1,5 @@
+from typing import Any
+
 from flask import g
 
 from qcfractal.flask_app import storage_socket
@@ -5,6 +7,7 @@ from qcfractal.flask_app.api_v1.blueprint import api_v1
 from qcfractal.flask_app.decorators import check_permissions, serialization, allow_uploads
 from qcportal.base_models import ProjURLParameters
 from qcportal.exceptions import SingleFileRequiredError
+from qcportal.metadata_models import InsertCountsMetadata
 from qcportal.project_models import (
     ProjectAddBody,
     ProjectQueryModel,
@@ -20,26 +23,27 @@ from qcportal.project_models import (
     ProjectUnlinkRecordsBody,
     ProjectAttachmentUploadBody,
 )
+from qcportal.record_models import RecordStatusEnum
 
 
 @api_v1.route("/projects", methods=["GET"])
 @check_permissions("projects", "read")
 @serialization()
-def list_project_v1():
+def list_project_v1() -> list[dict[str, Any]]:
     return storage_socket.projects.list()
 
 
 @api_v1.route("/projects/<int:project_id>", methods=["GET"])
 @check_permissions("projects", "read")
 @serialization()
-def get_project_v1(project_id: int, url_params: ProjURLParameters):
+def get_project_v1(project_id: int, url_params: ProjURLParameters) -> dict[str, Any] | None:
     return storage_socket.projects.get(project_id, url_params.include, url_params.exclude)
 
 
 @api_v1.route("/projects/query", methods=["POST"])
 @check_permissions("projects", "read")
 @serialization()
-def query_general_project_v1(body_data: ProjectQueryModel):
+def query_general_project_v1(body_data: ProjectQueryModel) -> dict[str, Any] | None:
     with storage_socket.session_scope(True) as session:
         project_id = storage_socket.projects.lookup_id(body_data.project_name, session=session)
         return storage_socket.projects.get(project_id, body_data.include, body_data.exclude, session=session)
@@ -47,21 +51,21 @@ def query_general_project_v1(body_data: ProjectQueryModel):
 @api_v1.route("/projects/queryrecords", methods=["POST"])
 @check_permissions("projects", "read")
 @serialization()
-def query_project_records_v1(body_data: ProjectQueryRecords):
+def query_project_records_v1(body_data: ProjectQueryRecords) -> list[dict[str, Any]]:
     return storage_socket.projects.query_project_records(record_id=body_data.record_id)
 
 
 @api_v1.route("/projects/querydatasets", methods=["POST"])
 @check_permissions("projects", "read")
 @serialization()
-def query_project_datasets_v1(body_data: ProjectQueryDatasets):
+def query_project_datasets_v1(body_data: ProjectQueryDatasets) -> list[dict[str, Any]]:
     return storage_socket.projects.query_project_datasets(dataset_id=body_data.dataset_id)
 
 
 @api_v1.route("/projects/<int:project_id>", methods=["DELETE"])
 @check_permissions("projects", "delete")
 @serialization()
-def delete_project_v1(project_id: int, url_params: ProjectDeleteParams):
+def delete_project_v1(project_id: int, url_params: ProjectDeleteParams) -> None:
     return storage_socket.projects.delete_project(
         project_id,
         delete_records=url_params.delete_records,
@@ -76,7 +80,7 @@ def delete_project_v1(project_id: int, url_params: ProjectDeleteParams):
 @api_v1.route("/projects", methods=["POST"])
 @check_permissions("projects", "add")
 @serialization()
-def add_project_v1(body_data: ProjectAddBody):
+def add_project_v1(body_data: ProjectAddBody) -> int:
     return storage_socket.projects.add(
         name=body_data.name,
         description=body_data.description,
@@ -96,21 +100,21 @@ def add_project_v1(body_data: ProjectAddBody):
 @api_v1.route("/projects/<int:project_id>/status", methods=["GET"])
 @check_permissions("projects", "read")
 @serialization()
-def get_project_status_v1(project_id: int):
+def get_project_status_v1(project_id: int) -> dict[str, dict[RecordStatusEnum, int]]:
     return storage_socket.projects.status(project_id)
 
 
 @api_v1.route("/projects/<int:project_id>/record_metadata", methods=["GET"])
 @check_permissions("projects", "read")
 @serialization()
-def get_project_record_metadata_v1(project_id: int):
+def get_project_record_metadata_v1(project_id: int) -> list[dict[str, Any]]:
     return storage_socket.projects.get_record_metadata(project_id)
 
 
 @api_v1.route("/projects/<int:project_id>/dataset_metadata", methods=["GET"])
 @check_permissions("projects", "read")
 @serialization()
-def get_project_dataset_metadata_v1(project_id: int):
+def get_project_dataset_metadata_v1(project_id: int) -> list[dict[str, Any]]:
     return storage_socket.projects.get_dataset_metadata(project_id)
 
 
@@ -120,7 +124,7 @@ def get_project_dataset_metadata_v1(project_id: int):
 @api_v1.route("/projects/<int:project_id>/datasets", methods=["POST"])
 @check_permissions("projects", "modify")
 @serialization()
-def add_project_dataset_v1(project_id: int, body_data: ProjectDatasetAddBody):
+def add_project_dataset_v1(project_id: int, body_data: ProjectDatasetAddBody) -> int:
     return storage_socket.projects.add_dataset(
         project_id=project_id,
         dataset_type=body_data.dataset_type,
@@ -140,7 +144,7 @@ def add_project_dataset_v1(project_id: int, body_data: ProjectDatasetAddBody):
 @api_v1.route("/projects/<int:project_id>/datasets/link", methods=["POST"])
 @check_permissions("projects", "modify")
 @serialization()
-def project_link_dataset_v1(project_id: int, body_data: ProjectLinkDatasetBody):
+def project_link_dataset_v1(project_id: int, body_data: ProjectLinkDatasetBody) -> None:
     return storage_socket.projects.link_dataset(
         project_id=project_id,
         dataset_id=body_data.dataset_id,
@@ -154,7 +158,7 @@ def project_link_dataset_v1(project_id: int, body_data: ProjectLinkDatasetBody):
 @api_v1.route("/projects/<int:project_id>/datasets/unlink", methods=["POST"])
 @check_permissions("projects", "modify")
 @serialization()
-def project_unlink_datasets_v1(project_id: int, body_data: ProjectUnlinkDatasetsBody):
+def project_unlink_datasets_v1(project_id: int, body_data: ProjectUnlinkDatasetsBody) -> None:
     return storage_socket.projects.unlink_datasets(
         project_id=project_id,
         dataset_ids=body_data.dataset_ids,
@@ -166,7 +170,7 @@ def project_unlink_datasets_v1(project_id: int, body_data: ProjectUnlinkDatasets
 @api_v1.route("/projects/<int:project_id>/datasets/<int:dataset_id>", methods=["GET"])
 @check_permissions("projects", "read")
 @serialization()
-def get_project_dataset_v1(project_id: int, dataset_id: int):
+def get_project_dataset_v1(project_id: int, dataset_id: int) -> dict[str, Any]:
     return storage_socket.projects.get_dataset(project_id, dataset_id)
 
 
@@ -176,7 +180,7 @@ def get_project_dataset_v1(project_id: int, dataset_id: int):
 @api_v1.route("/projects/<int:project_id>/records", methods=["POST"])
 @check_permissions("projects", "modify")
 @serialization()
-def add_project_record_v1(project_id: int, body_data: ProjectRecordAddBody):
+def add_project_record_v1(project_id: int, body_data: ProjectRecordAddBody) -> tuple[InsertCountsMetadata, int]:
     return storage_socket.projects.add_record(
         project_id,
         name=body_data.name,
@@ -193,7 +197,7 @@ def add_project_record_v1(project_id: int, body_data: ProjectRecordAddBody):
 @api_v1.route("/projects/<int:project_id>/records/import", methods=["POST"])
 @check_permissions("projects", "modify")
 @serialization()
-def import_project_record_v1(project_id: int, body_data: ProjectRecordImportBody):
+def import_project_record_v1(project_id: int, body_data: ProjectRecordImportBody) -> int:
     return storage_socket.projects.import_record(
         project_id,
         name=body_data.name,
@@ -207,7 +211,7 @@ def import_project_record_v1(project_id: int, body_data: ProjectRecordImportBody
 @api_v1.route("/projects/<int:project_id>/records/link", methods=["POST"])
 @check_permissions("projects", "modify")
 @serialization()
-def project_link_record_v1(project_id: int, body_data: ProjectLinkRecordBody):
+def project_link_record_v1(project_id: int, body_data: ProjectLinkRecordBody) -> None:
     return storage_socket.projects.link_record(
         project_id=project_id,
         record_id=body_data.record_id,
@@ -220,7 +224,7 @@ def project_link_record_v1(project_id: int, body_data: ProjectLinkRecordBody):
 @api_v1.route("/projects/<int:project_id>/records/unlink", methods=["POST"])
 @check_permissions("projects", "modify")
 @serialization()
-def project_unlink_records_v1(project_id: int, body_data: ProjectUnlinkRecordsBody):
+def project_unlink_records_v1(project_id: int, body_data: ProjectUnlinkRecordsBody) -> None:
     return storage_socket.projects.unlink_records(
         project_id=project_id,
         record_ids=body_data.record_ids,
@@ -231,7 +235,7 @@ def project_unlink_records_v1(project_id: int, body_data: ProjectUnlinkRecordsBo
 @api_v1.route("/projects/<int:project_id>/records/<int:record_id>", methods=["GET"])
 @check_permissions("projects", "read")
 @serialization()
-def get_project_record_v1(project_id: int, record_id: int, url_params: ProjURLParameters):
+def get_project_record_v1(project_id: int, record_id: int, url_params: ProjURLParameters) -> dict[str, Any]:
     return storage_socket.projects.get_record(
         project_id, record_id, include=url_params.include, exclude=url_params.exclude
     )
@@ -254,14 +258,14 @@ def get_project_record_v1(project_id: int, record_id: int, url_params: ProjURLPa
 @api_v1.route("/projects/<int:project_id>/attachments", methods=["GET"])
 @check_permissions("projects", "read")
 @serialization()
-def fetch_project_attachments_v1(project_id: int):
+def fetch_project_attachments_v1(project_id: int) -> list[dict[str, Any]]:
     return storage_socket.projects.get_attachments(project_id)
 
 
 @api_v1.route("/projects/<int:project_id>/attachments/<int:attachment_id>", methods=["DELETE"])
 @check_permissions("projects", "modify")
 @serialization()
-def delete_project_attachment_v1(project_id: int, attachment_id: int):
+def delete_project_attachment_v1(project_id: int, attachment_id: int) -> None:
     return storage_socket.projects.delete_attachment(project_id, attachment_id)
 
 
@@ -269,7 +273,7 @@ def delete_project_attachment_v1(project_id: int, attachment_id: int):
 @check_permissions("projects", "modify")
 @serialization()
 @allow_uploads(allowed_file_extensions=None)
-def upload_project_attachment_v1(project_id: int, body_data: ProjectAttachmentUploadBody, files: list[tuple[str, str]]):
+def upload_project_attachment_v1(project_id: int, body_data: ProjectAttachmentUploadBody, files: list[tuple[str, str]]) -> int:
     if len(files) != 1:
         raise SingleFileRequiredError("Exactly one file must be uploaded for project attachments")
 

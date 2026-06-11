@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, Dict, Any
+from typing import Any
 
 from flask import g
 from qcfractal.flask_app import storage_socket
@@ -26,7 +26,7 @@ from qcportal.exceptions import (
 ###################################################################
 
 
-def is_same_user(username_or_id: Union[int, str]) -> bool:
+def is_same_user(username_or_id: int | str) -> bool:
     assert isinstance(username_or_id, (int, str))
 
     if isinstance(username_or_id, str) and username_or_id.isdecimal():
@@ -53,28 +53,28 @@ def is_same_user(username_or_id: Union[int, str]) -> bool:
 @api_v1.route("/groups", methods=["GET"])
 @check_permissions("groups", "read", True)
 @serialization()
-def list_groups_v1():
+def list_groups_v1() -> list[dict[str, Any]]:
     return storage_socket.groups.list()
 
 
 @api_v1.route("/groups", methods=["POST"])
 @check_permissions("groups", "add", True)
 @serialization()
-def add_group_v1(body_data: GroupInfo):
+def add_group_v1(body_data: GroupInfo) -> None:
     return storage_socket.groups.add(body_data)
 
 
 @api_v1.route("/groups/<groupname_or_id>", methods=["GET"])
 @check_permissions("groups", "read", True)
 @serialization()
-def get_group_v1(groupname_or_id: Union[int, str]):
+def get_group_v1(groupname_or_id: int | str) -> dict[str, Any]:
     return storage_socket.groups.get(groupname_or_id)
 
 
 @api_v1.route("/groups/<groupname_or_id>", methods=["DELETE"])
 @check_permissions("groups", "delete", True)
 @serialization()
-def delete_group_v1(groupname_or_id: Union[int, str]):
+def delete_group_v1(groupname_or_id: int | str) -> None:
     return storage_socket.groups.delete(groupname_or_id)
 
 
@@ -86,14 +86,14 @@ def delete_group_v1(groupname_or_id: Union[int, str]):
 @api_v1.route("/users", methods=["GET"])
 @check_permissions("users", "read", True)
 @serialization()
-def list_users_v1():
+def list_users_v1() -> list[dict[str, Any]]:
     return storage_socket.users.list()
 
 
 @api_v1.route("/users", methods=["POST"])
 @check_permissions("users", "add", True)
 @serialization()
-def add_user_v1(body_data: Tuple[UserInfo, Optional[str]]):
+def add_user_v1(body_data: tuple[UserInfo, str | None]) -> None:
     user_info, password = body_data
     return storage_socket.users.add(user_info, password)
 
@@ -101,28 +101,28 @@ def add_user_v1(body_data: Tuple[UserInfo, Optional[str]]):
 @api_v1.route("/users/<username_or_id>", methods=["GET"])
 @check_permissions("users", "read", True)
 @serialization()
-def get_user_v1(username_or_id: Union[int, str]):
+def get_user_v1(username_or_id: int | str) -> dict[str, Any]:
     return storage_socket.users.get(username_or_id)
 
 
 @api_v1.route("/me", methods=["GET"])
 @check_permissions("me", "read", True)
 @serialization()
-def get_my_user_v1():
+def get_my_user_v1() -> dict[str, Any]:
     return storage_socket.users.get(g.user_id)
 
 
 @api_v1.route("/users", methods=["PATCH"])
 @check_permissions("users", "modify", True)
 @serialization()
-def modify_user_v1(body_data: UserInfo):
+def modify_user_v1(body_data: UserInfo) -> None:
     return storage_socket.users.modify(body_data, as_admin=True)
 
 
 @api_v1.route("/me", methods=["PATCH"])
 @check_permissions("me", "modify", True)
 @serialization()
-def modify_my_user_v1(body_data: UserInfo):
+def modify_my_user_v1(body_data: UserInfo) -> None:
     if body_data.id is None or body_data.username is None:
         raise UserManagementError("Cannot modify user: id or username is missing")
 
@@ -135,21 +135,21 @@ def modify_my_user_v1(body_data: UserInfo):
 @api_v1.route("/users/<username_or_id>/password", methods=["PUT"])
 @check_permissions("users", "modify", True)
 @serialization()
-def change_password_v1(username_or_id: Union[int, str], body_data: Optional[str]):
+def change_password_v1(username_or_id: int | str, body_data: str | None) -> None:
     return storage_socket.users.change_password(username_or_id, password=body_data)
 
 
 @api_v1.route("/me/password", methods=["PUT"])
 @check_permissions("me", "modify", True)
 @serialization()
-def change_my_password_v1(body_data: Optional[str]):
+def change_my_password_v1(body_data: str | None) -> None:
     return storage_socket.users.change_password(g.user_id, password=body_data)
 
 
 @api_v1.route("/users/<username_or_id>", methods=["DELETE"])
 @check_permissions("users", "delete", True)
 @serialization()
-def delete_user_v1(username_or_id: Union[int, str]):
+def delete_user_v1(username_or_id: int | str) -> None:
     if is_same_user(username_or_id):
         raise UserManagementError("Cannot delete your own user")
 
@@ -162,28 +162,28 @@ def delete_user_v1(username_or_id: Union[int, str]):
 @api_v1.route("/users/<username_or_id>/preferences", methods=["GET"])
 @check_permissions("users", "read", True)
 @serialization()
-def get_user_preferences_v1(username_or_id: Union[int, str]):
+def get_user_preferences_v1(username_or_id: int | str) -> dict[str, Any]:
     return storage_socket.users.get_preferences(username_or_id)
 
 
 @api_v1.route("/me/preferences", methods=["GET"])
 @check_permissions("me", "read", True)
 @serialization()
-def get_my_preferences_v1():
+def get_my_preferences_v1() -> dict[str, Any]:
     return storage_socket.users.get_preferences(g.user_id)
 
 
 @api_v1.route("/users/<username_or_id>/preferences", methods=["PUT"])
 @check_permissions("users", "modify", True)
 @serialization()
-def set_user_preferences_v1(username_or_id: Union[int, str], body_data: Dict[str, Any]):
+def set_user_preferences_v1(username_or_id: int | str, body_data: dict[str, Any]) -> None:
     return storage_socket.users.set_preferences(username_or_id, body_data)
 
 
 @api_v1.route("/me/preferences", methods=["PUT"])
 @check_permissions("me", "modify", True)
 @serialization()
-def set_my_preferences_v1(body_data: Dict[str, Any]):
+def set_my_preferences_v1(body_data: dict[str, Any]) -> None:
     return storage_socket.users.set_preferences(g.user_id, body_data)
 
 
@@ -193,19 +193,19 @@ def set_my_preferences_v1(body_data: Dict[str, Any]):
 @api_v1.route("/sessions", methods=["GET"])
 @check_permissions("users", "read", True)
 @serialization()
-def list_all_user_sessions_v1():
+def list_all_user_sessions_v1() -> list[dict[str, Any]]:
     return storage_socket.auth.list_all_user_sessions()
 
 
 @api_v1.route("/users/<username_or_id>/sessions", methods=["GET"])
 @check_permissions("users", "read", True)
 @serialization()
-def list_user_sessions_v1(username_or_id: Union[int, str]):
+def list_user_sessions_v1(username_or_id: int | str) -> list[dict[str, Any]]:
     return storage_socket.auth.list_user_sessions(username_or_id)
 
 
 @api_v1.route("/me/sessions", methods=["GET"])
 @check_permissions("me", "read", True)
 @serialization()
-def list_my_sessions_v1():
+def list_my_sessions_v1() -> list[dict[str, Any]]:
     return storage_socket.auth.list_user_sessions(g.user_id)
