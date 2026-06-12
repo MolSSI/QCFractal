@@ -14,6 +14,8 @@ export type DatasetViewState = {
   recordView: DatasetRecordViewState;
 };
 
+export const DATASET_RECORDS_TAB_INDEX = 2;
+
 type SavedDatasetPageState = DatasetViewState & {
   datasetId: string;
 };
@@ -79,6 +81,23 @@ export function createSavedDatasetPageState(
     datasetId,
     tabValue: viewState.tabValue,
     recordView: { ...viewState.recordView },
+  };
+}
+
+export function createDatasetRecordsLocationState(
+  datasetId: string,
+  entryFilter: string,
+  specFilter: string,
+): DatasetLocationState {
+  return {
+    datasetPageState: createSavedDatasetPageState(datasetId, {
+      tabValue: DATASET_RECORDS_TAB_INDEX,
+      recordView: {
+        ...createDefaultRecordViewState(),
+        entryFilter,
+        specFilter,
+      },
+    }),
   };
 }
 

@@ -21,6 +21,7 @@ import { usePortalClient } from "../PortalClient.tsx";
 import * as qcpTypes from "../PortalTypes";
 import StatusChip from "./StatusChip.tsx";
 import RecordTypeChip from "./RecordTypeChip.tsx";
+import { createDatasetRecordsLocationState } from "./dataset_components/DatasetViewState.tsx";
 
 interface RecordRelationshipDialogProps {
   recordId: number;
@@ -133,7 +134,11 @@ const RecordRelationshipDialog: React.FC<RecordRelationshipDialogProps> = ({
                         >
                           <MuiLink
                             to={`/datasets/${ds.dataset_id}`}
-                            target="_blank"
+                            state={createDatasetRecordsLocationState(
+                              String(ds.dataset_id),
+                              ds.entry_name,
+                              ds.specification_name,
+                            )}
                           >
                             [{ds.dataset_id}] {ds.dataset_name}
                           </MuiLink>

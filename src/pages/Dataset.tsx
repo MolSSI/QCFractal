@@ -31,6 +31,7 @@ import MarkdownContent from "../components/MarkdownContent";
 import {
   areDatasetViewStatesEqual,
   createDefaultDatasetViewState,
+  DATASET_RECORDS_TAB_INDEX,
   createSavedDatasetPageState,
   DatasetLocationState,
   DatasetRecordViewState,
@@ -38,8 +39,6 @@ import {
   getSavedDatasetViewState,
 } from "../components/dataset_components/DatasetViewState.tsx";
 import { FavoriteButton } from "../components/FavoriteButton.tsx";
-
-const RECORDS_TAB_INDEX = 2;
 
 function TabPanel(props: {
   children?: React.ReactNode;
@@ -188,7 +187,7 @@ export default function Dataset() {
     status: qcpTypes.RecordStatus,
   ) => {
     setViewState((currentViewState) => ({
-      tabValue: RECORDS_TAB_INDEX,
+      tabValue: DATASET_RECORDS_TAB_INDEX,
       recordView: {
         ...currentViewState.recordView,
         page: 0,
