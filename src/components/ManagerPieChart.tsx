@@ -24,6 +24,7 @@ export const ManagerPieChart: React.FC<ManagerPieChartProps> = ({
       ) : (
         <PieChart
           height={200}
+          sx={{ width: "100%" }}
           colors={["blue", "green", "red", "orange"]}
           series={[
             {
