@@ -69,9 +69,6 @@ const STATUS_LABELS: Partial<Record<qcpTypes.RecordStatus, string>> = {
 const statusLabel = (s: qcpTypes.RecordStatus) =>
   STATUS_LABELS[s] ?? s.charAt(0).toUpperCase() + s.slice(1);
 
-// Number of per-record compute_history requests to run in parallel.
-const COMPUTE_HISTORY_CONCURRENCY = 10;
-
 interface ManagerTaskHistoryProps {
   managerName: string;
 }
@@ -84,10 +81,8 @@ export const ManagerTaskHistory: React.FC<ManagerTaskHistoryProps> = ({
   // "All tasks on this manager" — every compute attempt this manager made, at
   // the attempt level (a record can be run/failed multiple times), so the
   // counts match the manager's success/failure tallies. This is expensive: a
-  // slow history_manager_name query plus a compute_history fetch per record,
-  // so it only runs on demand when the user clicks "Load All Tasks". There is
-  // no record cap; the per-record fetches run in bounded-concurrency batches so
-  // this scales to managers with arbitrarily many records.
+  // slow history_manager_name query, so it only runs on demand when the user
+  // clicks "Load All Tasks".
   const [historyEnabled, setHistoryEnabled] = React.useState(false);
 
   const {
@@ -107,40 +102,21 @@ export const ManagerTaskHistory: React.FC<ManagerTaskHistoryProps> = ({
       if (recordIds.length === 0) {
         return [];
       }
+      // Pull the records together with their full compute_history in a single
+      // bulk call (include ["*", "compute_history"]), then keep only the
+      // attempts made by this manager. This avoids a separate per-record
+      // history request.
       const records = await makeRequest<qcpTypes.BaseRecord[]>(
         "POST",
         `api/v1/records/bulkGet`,
         {
           ids: recordIds,
+          include: ["*", "compute_history"],
         },
       );
-      // Fetch each record's compute history, keeping only the attempts made by
-      // this manager. Run in fixed-size batches so we never fire thousands of
-      // requests at once for very large managers.
-      const histories: {
-        record: qcpTypes.BaseRecord;
-        entries: qcpTypes.ComputeHistory[];
-      }[] = [];
-      for (let i = 0; i < records.length; i += COMPUTE_HISTORY_CONCURRENCY) {
-        const batch = records.slice(i, i + COMPUTE_HISTORY_CONCURRENCY);
-        const batchResults = await Promise.all(
-          batch.map((r) =>
-            makeRequest<qcpTypes.ComputeHistory[]>(
-              "GET",
-              `api/v1/records/${r.record_type}/${r.id}/compute_history`,
-            )
-              .then((entries) => ({ record: r, entries }))
-              .catch(() => ({
-                record: r,
-                entries: [] as qcpTypes.ComputeHistory[],
-              })),
-          ),
-        );
-        histories.push(...batchResults);
-      }
       const runs: ManagerRun[] = [];
-      for (const { record, entries } of histories) {
-        for (const e of entries) {
+      for (const record of records) {
+        for (const e of record.compute_history ?? []) {
           if (e.manager_name === managerName) {
             runs.push({
               key: `h-${e.id}`,
@@ -252,9 +228,7 @@ export const ManagerTaskHistory: React.FC<ManagerTaskHistoryProps> = ({
         <Stack spacing={1} alignItems="flex-start">
           <Typography variant="body2" color="text.secondary">
             Lists every compute attempt this manager has made (each run of a
-            record, not just currently claimed ones), so counts match the
-            manager's success/failure tallies. This is a heavy query and can
-            take a minute or more.
+            record) This is a heavy query and can take a minute or more.
           </Typography>
           <Button variant="outlined" onClick={() => setHistoryEnabled(true)}>
             Load All Tasks
