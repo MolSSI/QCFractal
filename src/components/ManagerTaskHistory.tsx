@@ -26,23 +26,36 @@ import { RecordTypeChip } from "./RecordTypeChip.tsx";
 import { StatusChip } from "./StatusChip.tsx";
 import { dateStringToLocalTime } from "../Utils.ts";
 
-// A single compute attempt (run) made by this manager on a record.
+// A single compute attempt (run) made by this manager on a record. Finished
+// attempts come from compute_history (with a historyId); currently-running
+// tasks have no history entry yet, so historyId is undefined for those.
 type ManagerRun = {
-  historyId: number;
+  key: string;
+  historyId?: number;
   recordId: number;
   recordType: qcpTypes.RecordType;
   status: string;
   modifiedOn: string;
 };
 
+// Filter order: the three primary pie-chart buckets first (active, success,
+// failed), then the remaining statuses.
 const RECORD_STATUSES: qcpTypes.RecordStatus[] = [
-  "complete",
-  "waiting",
   "running",
+  "complete",
   "error",
+  "waiting",
   "cancelled",
   "deleted",
   "invalid",
+];
+
+// The primary buckets are always shown (even at 0) so they line up with the
+// pie chart; the rest only appear when present in the data.
+const ALWAYS_SHOWN_STATUSES: qcpTypes.RecordStatus[] = [
+  "running",
+  "complete",
+  "error",
 ];
 
 // Display names consistent with the manager pie chart ("active", "success",
@@ -130,6 +143,7 @@ export const ManagerTaskHistory: React.FC<ManagerTaskHistoryProps> = ({
         for (const e of entries) {
           if (e.manager_name === managerName) {
             runs.push({
+              key: `h-${e.id}`,
               historyId: e.id,
               recordId: record.id,
               recordType: record.record_type,
@@ -137,6 +151,35 @@ export const ManagerTaskHistory: React.FC<ManagerTaskHistoryProps> = ({
               modifiedOn: e.modified_on,
             });
           }
+        }
+      }
+      // Currently-running tasks claimed by this manager have no finished
+      // compute_history entry yet, so fetch them separately and add a row for
+      // each in-progress run.
+      const runningIds = await makeRequest<number[]>(
+        "POST",
+        `api/v1/records/query`,
+        {
+          manager_name: [managerName],
+          status: ["running"],
+        },
+      );
+      if (runningIds.length > 0) {
+        const runningRecords = await makeRequest<qcpTypes.BaseRecord[]>(
+          "POST",
+          `api/v1/records/bulkGet`,
+          {
+            ids: runningIds,
+          },
+        );
+        for (const record of runningRecords) {
+          runs.push({
+            key: `r-${record.id}`,
+            recordId: record.id,
+            recordType: record.record_type,
+            status: record.status,
+            modifiedOn: record.modified_on,
+          });
         }
       }
       runs.sort((a, b) => (a.modifiedOn < b.modifiedOn ? 1 : -1));
@@ -192,10 +235,12 @@ export const ManagerTaskHistory: React.FC<ManagerTaskHistoryProps> = ({
             >
               <MenuItem value="all">All ({historyAttempts.length})</MenuItem>
               {RECORD_STATUSES.filter(
-                (s) => (historyStatusCounts[s] ?? 0) > 0,
+                (s) =>
+                  ALWAYS_SHOWN_STATUSES.includes(s) ||
+                  (historyStatusCounts[s] ?? 0) > 0,
               ).map((s) => (
                 <MenuItem key={s} value={s}>
-                  {statusLabel(s)} ({historyStatusCounts[s]})
+                  {statusLabel(s)} ({historyStatusCounts[s] ?? 0})
                 </MenuItem>
               ))}
             </Select>
@@ -276,7 +321,7 @@ export const ManagerTaskHistory: React.FC<ManagerTaskHistoryProps> = ({
                       historyPage * historyRowsPerPage + historyRowsPerPage,
                     )
                     .map((run) => (
-                      <TableRow key={run.historyId}>
+                      <TableRow key={run.key}>
                         <TableCell>
                           <MuiLink
                             to={`/records/${run.recordId}`}
