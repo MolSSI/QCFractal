@@ -232,6 +232,12 @@ export const ManagerTaskHistory: React.FC<ManagerTaskHistoryProps> = ({
 
       {historyEnabled && historyStatus === "success" && historyAttempts && (
         <>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Note: these counts may differ from the chart above. The chart is a
+            running tally of every task the manager has ever returned, while
+            this list is rebuilt from records that still exist — deleted records
+            are counted in the chart but not shown here.
+          </Typography>
           <TableContainer component={Paper} variant="outlined">
             <Table size="small">
               <TableHead>
