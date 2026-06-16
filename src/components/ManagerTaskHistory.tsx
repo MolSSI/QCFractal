@@ -19,6 +19,7 @@ import {
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { usePortalClient } from "../PortalClient.tsx";
+import { useAuth } from "../Auth.tsx";
 import * as qcpTypes from "../PortalTypes.ts";
 import LoadingIndicator from "./LoadingIndicator.tsx";
 import ErrorIndicator from "./ErrorIndicator.tsx";
@@ -77,6 +78,15 @@ export const ManagerTaskHistory: React.FC<ManagerTaskHistoryProps> = ({
   managerName,
 }) => {
   const { makeRequest } = usePortalClient();
+  const { serverInfo } = useAuth();
+
+  // The server caps how many records bulkGet will return in one request, so
+  // requests have to be batched to this size. Mirror the dataset records page:
+  // fall back to 1 if unset, and never exceed 200.
+  const maxRecordsPerRequest = Math.max(
+    1,
+    Math.min(serverInfo.api_limits.get_records || 1, 200),
+  );
 
   // "All tasks on this manager" — every compute attempt this manager made, at
   // the attempt level (a record can be run/failed multiple times), so the
@@ -90,11 +100,34 @@ export const ManagerTaskHistory: React.FC<ManagerTaskHistoryProps> = ({
     data: historyAttempts,
     error: historyError,
   } = useQuery({
-    queryKey: ["managerHistoryAttempts", managerName],
+    queryKey: ["managerHistoryAttempts", managerName, maxRecordsPerRequest],
     queryFn: async (): Promise<ManagerRun[]> => {
+      // The server limits how many records a single bulkGet may return, so
+      // fetch them in batches of maxRecordsPerRequest and concatenate.
+      const bulkGetInBatches = async (
+        ids: number[],
+        include?: string[],
+      ): Promise<qcpTypes.BaseRecord[]> => {
+        const records: qcpTypes.BaseRecord[] = [];
+        for (let i = 0; i < ids.length; i += maxRecordsPerRequest) {
+          const recordIdBatch = ids.slice(i, i + maxRecordsPerRequest);
+          const body: { ids: number[]; include?: string[] } = {
+            ids: recordIdBatch,
+          };
+          if (include) body.include = include;
+          const recordsBatch = await makeRequest<qcpTypes.BaseRecord[]>(
+            "POST",
+            "api/v1/records/bulkGet",
+            body,
+          );
+          records.push(...recordsBatch);
+        }
+        return records;
+      };
+
       const recordIds = await makeRequest<number[]>(
         "POST",
-        `api/v1/records/query`,
+        "api/v1/records/query",
         {
           history_manager_name: [managerName],
         },
@@ -102,18 +135,13 @@ export const ManagerTaskHistory: React.FC<ManagerTaskHistoryProps> = ({
       if (recordIds.length === 0) {
         return [];
       }
-      // Pull the records together with their full compute_history in a single
-      // bulk call (include ["*", "compute_history"]), then keep only the
-      // attempts made by this manager. This avoids a separate per-record
-      // history request.
-      const records = await makeRequest<qcpTypes.BaseRecord[]>(
-        "POST",
-        `api/v1/records/bulkGet`,
-        {
-          ids: recordIds,
-          include: ["*", "compute_history"],
-        },
-      );
+      // Pull the records together with their full compute_history (include
+      // ["*", "compute_history"]), then keep only the attempts made by this
+      // manager. This avoids a separate per-record history request.
+      const records = await bulkGetInBatches(recordIds, [
+        "*",
+        "compute_history",
+      ]);
       const runs: ManagerRun[] = [];
       for (const record of records) {
         for (const e of record.compute_history ?? []) {
@@ -134,20 +162,14 @@ export const ManagerTaskHistory: React.FC<ManagerTaskHistoryProps> = ({
       // each in-progress run.
       const runningIds = await makeRequest<number[]>(
         "POST",
-        `api/v1/records/query`,
+        "api/v1/records/query",
         {
           manager_name: [managerName],
           status: ["running"],
         },
       );
       if (runningIds.length > 0) {
-        const runningRecords = await makeRequest<qcpTypes.BaseRecord[]>(
-          "POST",
-          `api/v1/records/bulkGet`,
-          {
-            ids: runningIds,
-          },
-        );
+        const runningRecords = await bulkGetInBatches(runningIds);
         for (const record of runningRecords) {
           runs.push({
             key: `r-${record.id}`,
