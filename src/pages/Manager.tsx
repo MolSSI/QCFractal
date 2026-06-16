@@ -25,6 +25,7 @@ import ErrorIndicator from "../components/ErrorIndicator.tsx";
 import { RecordTypeChip } from "../components/RecordTypeChip.tsx";
 import { StatusChip } from "../components/StatusChip.tsx";
 import { ManagerPieChart } from "../components/ManagerPieChart.tsx";
+import { ManagerTaskHistory } from "../components/ManagerTaskHistory.tsx";
 import { dateStringToLocalTime } from "../Utils.ts";
 
 export default function Manager() {
@@ -293,6 +294,10 @@ export default function Manager() {
                 )}
               </>
             )}
+          </Grid>
+
+          <Grid size={12}>
+            <ManagerTaskHistory managerName={managerName} />
           </Grid>
         </Grid>
       )}
