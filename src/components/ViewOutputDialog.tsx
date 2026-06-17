@@ -27,6 +27,8 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
+import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
 import { useQuery } from "@tanstack/react-query";
 import { usePortalClient } from "../PortalClient.tsx";
 import * as qcpTypes from "../PortalTypes";
@@ -223,6 +225,13 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
 
   const lines = useMemo(() => plainText.split("\n"), [plainText]);
 
+  // Longest line drives a stable content width so the horizontal scrollbar
+  // reflects the full output rather than only the currently visible lines.
+  const maxLineLength = useMemo(
+    () => lines.reduce((max, line) => Math.max(max, line.length), 0),
+    [lines],
+  );
+
   // Pre-compute all match positions by line using the deferred search value.
   // Runs only when deferredSearch changes (not on every keystroke).
   const matchPositions = useMemo((): MatchPosition[] => {
@@ -266,6 +275,14 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
     }
   }, [open, effectiveKey]);
 
+  // Focus the output container once its content loads so arrow/page keys scroll
+  // immediately without requiring a click first.
+  useEffect(() => {
+    if (outputContentStatus === "success" && scrollContainerRef.current) {
+      scrollContainerRef.current.focus({ preventScroll: true });
+    }
+  }, [outputContentStatus, effectiveKey]);
+
   // Scroll the virtual container so the current match is centered in the viewport.
   // No DOM refs to marks needed — we know exactly which line the match is on.
   useEffect(() => {
@@ -290,6 +307,51 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
     setScrollTop(0);
     onClose();
   }, [initialKey, onClose]);
+
+  const handleScrollToTop = useCallback(() => {
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  const handleScrollToBottom = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, []);
+
+  // Keyboard scrolling for the output container. A plain scrollable <div> only
+  // responds to arrow keys when it holds focus, and even then the virtualized
+  // content can confuse native key handling — so we move scrollTop explicitly.
+  const handleContainerKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const page = el.clientHeight * 0.9;
+    let delta: number | null = null;
+    switch (e.key) {
+      case "ArrowDown":
+        delta = LINE_HEIGHT * 3;
+        break;
+      case "ArrowUp":
+        delta = -LINE_HEIGHT * 3;
+        break;
+      case "PageDown":
+        delta = page;
+        break;
+      case "PageUp":
+        delta = -page;
+        break;
+      case "Home":
+        e.preventDefault();
+        el.scrollTo({ top: 0 });
+        return;
+      case "End":
+        e.preventDefault();
+        el.scrollTo({ top: el.scrollHeight });
+        return;
+      default:
+        return;
+    }
+    e.preventDefault();
+    el.scrollTop += delta;
+  }, []);
 
   const handleCopy = useCallback(async () => {
     if (!plainText) return;
@@ -510,10 +572,33 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
               </Tabs>
 
               {/* Virtual scroll output container */}
+              <Box sx={{ flex: 1, position: "relative", display: "flex", overflow: "hidden" }}>
               <Box
                 ref={scrollContainerRef}
+                tabIndex={0}
                 onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
-                sx={{ flex: 1, overflow: "auto", position: "relative" }}
+                onKeyDown={handleContainerKeyDown}
+                sx={{
+                  flex: 1,
+                  overflow: "auto",
+                  position: "relative",
+                  outline: "none",
+                  // Force always-visible, grabbable scrollbars. macOS overlay
+                  // scrollbars are hidden until you actively scroll; styling the
+                  // pseudo-elements opts into persistent classic scrollbars so the
+                  // horizontal bar is discoverable when lines are wider than the view.
+                  "&::-webkit-scrollbar": { width: 12, height: 12 },
+                  "&::-webkit-scrollbar-thumb": {
+                    backgroundColor: "rgba(128,128,128,0.5)",
+                    borderRadius: "6px",
+                    border: "2px solid transparent",
+                    backgroundClip: "content-box",
+                  },
+                  "&::-webkit-scrollbar-thumb:hover": {
+                    backgroundColor: "rgba(128,128,128,0.8)",
+                  },
+                  "&::-webkit-scrollbar-corner": { backgroundColor: "transparent" },
+                }}
               >
                 {outputContentStatus === "pending" && <LoadingIndicator />}
                 {outputContentStatus === "error" && (
@@ -528,8 +613,15 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
                         position: "absolute",
                         top: firstLine * LINE_HEIGHT,
                         left: 0,
-                        right: 0,
                         px: 2,
+                        boxSizing: "border-box",
+                        fontFamily: "monospace",
+                        fontSize: "0.85rem",
+                        // Width tracks the longest line (in monospace `ch` units) so
+                        // the container's scrollWidth exceeds its width only when the
+                        // content is actually wider — showing the scrollbar on demand.
+                        minWidth: "100%",
+                        width: `calc(${maxLineLength}ch + 32px)`,
                       }}
                     >
                       {lines.slice(firstLine, lastLine + 1).map((line, i) => {
@@ -561,6 +653,50 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
                     </Box>
                   </Box>
                 )}
+              </Box>
+
+              {/* Floating scroll-to-top / scroll-to-bottom buttons */}
+              {outputContentStatus === "success" && outputContentData && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    bottom: 16,
+                    right: 16,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
+                  }}
+                >
+                  <Tooltip title="Scroll to top" placement="left">
+                    <IconButton
+                      size="small"
+                      onClick={handleScrollToTop}
+                      aria-label="Scroll to top"
+                      sx={{
+                        bgcolor: "background.paper",
+                        boxShadow: 2,
+                        "&:hover": { bgcolor: "action.hover" },
+                      }}
+                    >
+                      <VerticalAlignTopIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Scroll to bottom" placement="left">
+                    <IconButton
+                      size="small"
+                      onClick={handleScrollToBottom}
+                      aria-label="Scroll to bottom"
+                      sx={{
+                        bgcolor: "background.paper",
+                        boxShadow: 2,
+                        "&:hover": { bgcolor: "action.hover" },
+                      }}
+                    >
+                      <VerticalAlignBottomIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              )}
               </Box>
             </Box>
           )}
