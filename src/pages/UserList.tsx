@@ -1,12 +1,10 @@
 import React, { useMemo, useState } from "react";
 import {
-  Avatar,
   Box,
   Chip,
   Grid,
   Link as MuiLink,
   Paper,
-  Stack,
   Table,
   TableBody,
   TableCell,
@@ -26,28 +24,17 @@ import ErrorIndicator from "../components/ErrorIndicator";
 import { RoleChip } from "../components/RoleChip";
 import { usePageTitle } from "../UsePageTitle.ts";
 
-function getInitials(fullname?: string, username?: string): string {
-  if (fullname) {
-    const parts = fullname.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    return parts[0][0]?.toUpperCase() ?? "?";
-  }
-  return (username ?? "?").slice(0, 2).toUpperCase();
-}
-
 const UserRow: React.FC<{ user: qcpTypes.UserInfo }> = ({ user }) => {
-  const initials = getInitials(user.fullname, user.username);
   return (
     <TableRow hover>
       <TableCell>
-        <Stack direction="row" spacing={1.5} alignItems="center">
-          <Avatar sx={{ width: 32, height: 32, fontSize: "0.75rem", bgcolor: "primary.main" }}>
-            {initials}
-          </Avatar>
-          <MuiLink to={`/users/${user.username}`} variant="body2" sx={{ fontWeight: "bold" }}>
-            {user.username}
-          </MuiLink>
-        </Stack>
+        <MuiLink
+          to={`/users/${user.username}`}
+          variant="body2"
+          sx={{ color: "common.white", textDecoration: "underline" }}
+        >
+          {user.username}
+        </MuiLink>
       </TableCell>
       <TableCell>
         <Typography variant="body2">{user.fullname ?? "—"}</Typography>
@@ -66,9 +53,9 @@ const UserRow: React.FC<{ user: qcpTypes.UserInfo }> = ({ user }) => {
           variant="outlined"
         />
       </TableCell>
-      <TableCell>
+      {/* <TableCell>
         <Chip label={user.auth_type} size="small" variant="outlined" />
-      </TableCell>
+      </TableCell> */}
     </TableRow>
   );
 };
@@ -148,7 +135,6 @@ const UserList: React.FC = () => {
                     <TableCell>Email</TableCell>
                     <TableCell>Role</TableCell>
                     <TableCell>Status</TableCell>
-                    <TableCell>Auth</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>

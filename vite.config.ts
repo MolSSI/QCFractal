@@ -15,6 +15,10 @@ export default defineConfig(({ mode }) => {
               target: proxyTarget,
               changeOrigin: true,
             },
+            "/auth": {
+              target: proxyTarget,
+              changeOrigin: true,
+            },
           },
         }
       : undefined,
