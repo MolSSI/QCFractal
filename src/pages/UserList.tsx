@@ -22,6 +22,7 @@ import * as qcpTypes from "../PortalTypes";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
 import { RoleChip } from "../components/RoleChip";
+import { GroupsPanel } from "../components/GroupsPanel";
 import { usePageTitle } from "../UsePageTitle.ts";
 
 const UserRow: React.FC<{ user: qcpTypes.UserInfo }> = ({ user }) => {
@@ -114,6 +115,7 @@ const UserList: React.FC = () => {
     <Grid container spacing={2} width="100%">
       <Grid size={12}>
         <Typography variant="h4" marginBottom={3}>Users</Typography>
+        <GroupsPanel users={users} />
         <Box width="30%" mb={2}>
           <TextField
             fullWidth
