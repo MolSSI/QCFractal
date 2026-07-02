@@ -15,14 +15,19 @@ import {
   DialogContentText,
   DialogTitle,
   Divider,
+  IconButton,
+  InputAdornment,
   MenuItem,
   Paper,
   Select,
   Stack,
   Switch,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import CheckIcon from "@mui/icons-material/Check";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePortalClient } from "../PortalClient";
 import { useAuth } from "../Auth";
@@ -196,6 +201,137 @@ const ChangePasswordForm: React.FC<{ username: string; onClose: () => void }> = 
         </Stack>
       </Box>
     </Box>
+  );
+};
+
+// Generate a strong random password using the Web Crypto API.
+function generatePassword(length = 20): string {
+  const charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*";
+  const values = new Uint32Array(length);
+  crypto.getRandomValues(values);
+  return Array.from(values, (v) => charset[v % charset.length]).join("");
+}
+
+// Admin-only: reset another user's password to a freshly generated one.
+// The generated password is revealed once inside the dialog so the admin can
+// copy it and hand it to the user; it cannot be retrieved again afterwards.
+const AdminResetPasswordRow: React.FC<{ username: string }> = ({ username }) => {
+  const { makeRequest } = usePortalClient();
+  const [open, setOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const mutation = useMutation<string, Error, void>({
+    mutationFn: async () => {
+      const pw = generatePassword();
+      await makeRequest<void>("PUT", `api/v1/users/${username}/password`, pw as unknown as object);
+      return pw;
+    },
+    onSuccess: (pw) => setNewPassword(pw),
+  });
+
+  const handleClose = () => {
+    setOpen(false);
+    // Reset state after the dialog's close transition so it doesn't flicker.
+    setTimeout(() => {
+      setNewPassword(null);
+      setCopied(false);
+      mutation.reset();
+    }, 200);
+  };
+
+  const handleCopy = async () => {
+    if (!newPassword) return;
+    try {
+      await navigator.clipboard.writeText(newPassword);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard may be unavailable (e.g. non-secure context); the admin can
+      // still select the text manually.
+    }
+  };
+
+  return (
+    <>
+      <FieldRow
+        label="Password"
+        action={
+          <Button size="small" variant="text" onClick={() => setOpen(true)}>
+            Reset password
+          </Button>
+        }
+      >
+        <Typography variant="body2" color="text.secondary">
+          ••••••••
+        </Typography>
+      </FieldRow>
+
+      <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+        {newPassword === null ? (
+          <>
+            <DialogTitle>Reset password?</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                This generates a new random password for <strong>{username}</strong> and
+                invalidates their current one. The new password is shown only once.
+              </DialogContentText>
+              {mutation.isError && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {mutation.error.message}
+                </Alert>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleClose} disabled={mutation.isPending}>
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => mutation.mutate()}
+                disabled={mutation.isPending}
+              >
+                {mutation.isPending ? <CircularProgress size={16} /> : "Reset password"}
+              </Button>
+            </DialogActions>
+          </>
+        ) : (
+          <>
+            <DialogTitle>New password for {username}</DialogTitle>
+            <DialogContent>
+              <DialogContentText sx={{ mb: 2 }}>
+                Copy this password and send it to the user. It will not be shown again.
+              </DialogContentText>
+              <TextField
+                value={newPassword}
+                fullWidth
+                size="small"
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    sx: { fontFamily: "monospace" },
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Tooltip title={copied ? "Copied" : "Copy"}>
+                          <IconButton onClick={handleCopy} edge="end" size="small">
+                            {copied ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
+                          </IconButton>
+                        </Tooltip>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button variant="contained" onClick={handleClose}>
+                Done
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
+    </>
   );
 };
 
@@ -604,6 +740,10 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
                   <ChangePasswordForm username={userData.username} onClose={() => setShowPasswordForm(false)} />
                 )}
               </Box>
+            )}
+
+            {!isOwnProfile && canManageUsers && userData.auth_type === "password" && (
+              <AdminResetPasswordRow username={userData.username} />
             )}
 
             <FieldRow label="Authentication">
