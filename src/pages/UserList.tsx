@@ -108,7 +108,7 @@ const UserList: React.FC = () => {
     { severity: "success" | "error"; message: string } | undefined
   >();
 
-  usePageTitle("Users");
+  usePageTitle("User Management");
 
   const canModifyUsers = has_permission("users", "modify");
 
@@ -231,7 +231,7 @@ const UserList: React.FC = () => {
   return (
     <Grid container spacing={2} width="100%">
       <Grid size={12}>
-        <Typography variant="h4" marginBottom={3}>Users</Typography>
+        <Typography variant="h4" marginBottom={3}>User Management</Typography>
         <GroupsPanel users={users} />
         <Box width="30%" mb={2}>
           <TextField
