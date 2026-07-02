@@ -238,11 +238,16 @@ const UserList: React.FC = () => {
             fullWidth
             variant="outlined"
             size="small"
-            label="Filter users"
+            label="Search users by username"
             value={filter}
             onChange={(e) => { setFilter(e.target.value); setPage(0); }}
           />
         </Box>
+        {selectable && selectedCount === 0 && (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Tip: select one or more users to batch-assign them to a group.
+          </Typography>
+        )}
         {selectable && selectedCount > 0 && (
           <Paper
             variant="outlined"
