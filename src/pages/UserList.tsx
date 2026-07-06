@@ -100,6 +100,7 @@ const UserList: React.FC = () => {
   const { has_permission } = useAuth();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "enabled" | "disabled">("all");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -129,13 +130,16 @@ const UserList: React.FC = () => {
   const filtered = useMemo(() => {
     if (!users) return [];
     const q = filter.toLowerCase();
-    return users.filter(
-      (u) =>
+    return users.filter((u) => {
+      if (statusFilter === "enabled" && !u.enabled) return false;
+      if (statusFilter === "disabled" && u.enabled) return false;
+      return (
         u.username.toLowerCase().includes(q) ||
         (u.fullname ?? "").toLowerCase().includes(q) ||
-        (u.email ?? "").toLowerCase().includes(q),
-    );
-  }, [users, filter]);
+        (u.email ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [users, filter, statusFilter]);
 
   const selectable = canModifyUsers && (groups?.length ?? 0) > 0;
 
@@ -233,15 +237,31 @@ const UserList: React.FC = () => {
       <Grid size={12}>
         <Typography variant="h4" marginBottom={3}>User Management</Typography>
         <GroupsPanel users={users} />
-        <Box width="30%" mb={2}>
+        <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
           <TextField
-            fullWidth
             variant="outlined"
             size="small"
             label="Search users by username"
             value={filter}
             onChange={(e) => { setFilter(e.target.value); setPage(0); }}
+            sx={{ width: "30%", minWidth: 220 }}
           />
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel id="status-filter-label">Status</InputLabel>
+            <Select
+              labelId="status-filter-label"
+              label="Status"
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value as "all" | "enabled" | "disabled");
+                setPage(0);
+              }}
+            >
+              <MenuItem value="all">All</MenuItem>
+              <MenuItem value="enabled">Active</MenuItem>
+              <MenuItem value="disabled">Disabled</MenuItem>
+            </Select>
+          </FormControl>
         </Box>
         {selectable && selectedCount === 0 && (
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
