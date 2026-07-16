@@ -18,6 +18,7 @@ const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
 
 const staticBreadcrumbLabels: Record<string, string> = {
   api_access: "API Access",
+  users: "User Management",
 };
 
 function formatBreadcrumbLabel(segment: string) {

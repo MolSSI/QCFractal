@@ -4,6 +4,8 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
+import ListSubheader from "@mui/material/ListSubheader";
+import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
@@ -32,8 +34,19 @@ const mainListItems: {
   { text: "Projects", icon: <AccountTreeIcon />, path: "/projects" },
   { text: "Datasets", icon: <FormatListBulletedIcon />, path: "/datasets" },
   { text: "Compute", icon: <ComputerIcon />, path: "/managers" },
+  { text: "Server Stats", icon: <QueryStatsIcon />, path: "/server_stats" },
+  { text: "API Access", icon: <CodeIcon />, path: "/api_access" },
+];
+
+const adminListItems: {
+  text: string;
+  icon: ReactElement;
+  path: string;
+  target?: string;
+  requiredPermissions?: [string, string];
+}[] = [
   {
-    text: "Users",
+    text: "User Management",
     icon: <PeopleRoundedIcon />,
     path: "/users",
     requiredPermissions: ["users", "read"],
@@ -44,8 +57,6 @@ const mainListItems: {
     path: "/internal_jobs",
     requiredPermissions: ["internal_jobs", "read"],
   },
-  { text: "Server Stats", icon: <QueryStatsIcon />, path: "/server_stats" },
-  { text: "API Access", icon: <CodeIcon />, path: "/api_access" },
   {
     text: "Server Errors",
     icon: <BugReportIcon />,
@@ -81,13 +92,16 @@ export default function MenuContent({ onNavigate }: MenuContentProps) {
   const location = useLocation();
   const { has_permission } = useAuth();
 
-  const filteredMainListItems = mainListItems.filter((item) => {
+  const permitted = (item: { requiredPermissions?: [string, string] }) => {
     if (item.requiredPermissions) {
       const [resource, action] = item.requiredPermissions;
       return has_permission(resource, action);
     }
     return true;
-  });
+  };
+
+  const filteredMainListItems = mainListItems.filter(permitted);
+  const filteredAdminListItems = adminListItems.filter(permitted);
 
   return (
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}>
@@ -107,6 +121,39 @@ export default function MenuContent({ onNavigate }: MenuContentProps) {
             </ListItemButton>
           </ListItem>
         ))}
+
+        {filteredAdminListItems.length > 0 && (
+          <>
+            <Divider sx={{ my: 1 }} />
+            <ListSubheader
+              disableSticky
+              sx={{
+                bgcolor: "transparent",
+                lineHeight: "2rem",
+                fontSize: "0.68rem",
+                letterSpacing: 1.4,
+                textTransform: "uppercase",
+              }}
+            >
+              Admin
+            </ListSubheader>
+            {filteredAdminListItems.map((item, index) => (
+              <ListItem key={index} disablePadding sx={{ display: "block" }}>
+                <ListItemButton
+                  component={NavLink}
+                  to={item.path}
+                  selected={location.pathname === item.path}
+                  target={item.target ? item.target : ""}
+                  onClick={onNavigate}
+                  sx={{ cursor: "pointer" }}
+                >
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.text} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </>
+        )}
       </List>
       <List dense>
         {bottomListItems.map((item, index) => (
