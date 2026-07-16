@@ -70,6 +70,29 @@ export function stripAnsi(text: string): string {
 
 }
 
+/**
+ * Given a number of CPU hours, return a human-friendly larger time span
+ * (e.g. "3.2 days" or "1.5 years") chosen based on magnitude.
+ * Returns undefined if the value is too small to warrant a larger unit.
+ */
+export function formatCpuHoursSpan(cpuHours: number): string | undefined {
+  if (!Number.isFinite(cpuHours) || cpuHours < 24) {
+    return undefined;
+  }
+
+  const days = cpuHours / 24;
+  const years = days / 365;
+
+  const format = (value: number, unit: string): string => {
+    const rounded = value.toLocaleString(undefined, {
+      maximumFractionDigits: value >= 100 ? 0 : 1,
+    });
+    return `${rounded} ${value === 1 ? unit : `cpu ${unit}s`}`;
+  };
+
+  return years >= 1 ? format(years, "year") : format(days, "day");
+}
+
 export function formatSize(bytes: number): string {
   if (bytes === 0) return "0 Bytes";
   const k = 1024;
