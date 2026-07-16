@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LineChart } from "@mui/x-charts/LineChart";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -22,7 +22,11 @@ import { usePageTitle } from "../UsePageTitle.ts";
 import * as qcpTypes from "../PortalTypes.ts";
 import LoadingIndicator from "../components/LoadingIndicator.tsx";
 import ErrorIndicator from "../components/ErrorIndicator.tsx";
-import { dateStringToLocalTime, formatSize } from "../Utils.ts";
+import {
+  dateStringToLocalTime,
+  formatCpuHoursSpan,
+  formatSize,
+} from "../Utils.ts";
 
 type PlotMode = "cumulative" | "daily";
 
@@ -36,7 +40,7 @@ type ChartRow = {
 
 type SummaryRow = {
   label: string;
-  value: string;
+  value: ReactNode;
 };
 
 type BreakdownRow = {
@@ -215,22 +219,41 @@ export default function ServerStats() {
     return totals;
   }, [breakdownRows, breakdownStatuses]);
 
+  const totalCpuHours = useMemo(
+    () => sortedStats.reduce((acc, entry) => acc + entry.cpu_hours, 0),
+    [sortedStats],
+  );
+
   const summaryRows = useMemo<SummaryRow[]>(() => {
     if (!latestEntry) {
       return [];
     }
 
+    const cpuHoursSpan = formatCpuHoursSpan(totalCpuHours);
+
     return [
       {
         label: "Estimated CPU hours",
-        value: formatCpuHours(latestEntry.cpu_hours),
+        value: (
+          <>
+            {formatCpuHours(totalCpuHours)}
+            {cpuHoursSpan && (
+              <Box
+                component="span"
+                sx={{ ml: 1.5, color: "text.secondary" }}
+              >
+                ({cpuHoursSpan})
+              </Box>
+            )}
+          </>
+        ),
       },
       {
         label: "Database size",
         value: formatSize(latestEntry.database_size),
       },
     ];
-  }, [latestEntry]);
+  }, [latestEntry, totalCpuHours]);
 
   const recordSeriesKey =
     plotMode === "cumulative" ? "cumulativeRecordCount" : "dailyRecordCount";
