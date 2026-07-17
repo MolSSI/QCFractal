@@ -122,7 +122,7 @@ class NEBAddBody(RecordAddBodyBase, NEBMultiInput):
 
 
 class NEBQueryFilters(RecordQueryFilters):
-    program: list[str] | None = "geometric"
+    program: list[str] | None = None
     qc_program: list[LowerStr] | None = None
     qc_method: list[LowerStr] | None = None
     qc_basis: list[LowerStr | None] | None = None
