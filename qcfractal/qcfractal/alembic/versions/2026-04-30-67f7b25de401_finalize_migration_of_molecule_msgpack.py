@@ -15,6 +15,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql import table, column, select, update
+from tqdm import tqdm
 
 # revision identifiers, used by Alembic.
 revision = "67f7b25de401"
@@ -77,6 +78,19 @@ def upgrade():
     bind = op.get_bind()
     session = Session(bind=bind)
 
+    # Count how many molecules still need migrating so we can show a proper progress bar
+    total_to_migrate = session.execute(
+        select(sa.func.count()).select_from(mol_table).where(mol_table.c._migrated_status.is_(None))
+    ).scalar_one()
+
+    print("-"*80)
+    print("Performing final migration of molecule table")
+    print("Total molecules to migrate:", total_to_migrate)
+    if total_to_migrate > 50000:
+        print("WARNING: This migration may take a long time for large numbers of molecules (100,000+). Please be patient.")
+
+    progress = tqdm(total=total_to_migrate, desc="Migrating molecules", unit=" mol")
+
     while True:
         results = session.execute(
             select(mol_table).where(mol_table.c._migrated_status.is_(None)).limit(1000)
@@ -108,6 +122,12 @@ def upgrade():
         session.execute(update(mol_table).where(mol_table.c.id == sa.bindparam("mol_id")), all_updates)
         session.flush()
 
+        progress.update(len(results))
+
+    progress.close()
+
+    print("Moving molecule columns. This may take a long time for large numbers. Please be patient.")
+
     # Delete old columns and move temporary columns
     op.drop_column("molecule", "symbols")
     op.drop_column("molecule", "geometry")
@@ -137,6 +157,7 @@ def upgrade():
     )
 
     op.drop_column("molecule", "_migrated_status")
+    print("DONE")
 
 
 def downgrade():
