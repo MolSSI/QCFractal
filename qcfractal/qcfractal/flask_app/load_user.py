@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from flask import session, g
-from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity, get_jwt
+from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 from jwt.exceptions import ExpiredSignatureError
 from werkzeug.exceptions import InternalServerError
 
@@ -10,7 +10,7 @@ from qcportal.exceptions import AuthorizationFailure, AuthenticationFailure
 from qcportal.utils import time_based_cache
 
 
-@time_based_cache(seconds=3, maxsize=256)
+@time_based_cache(seconds=5, maxsize=256)
 def _cached_verify(user_id: int):
     return storage_socket.auth.verify(user_id=user_id)
 
@@ -42,12 +42,15 @@ def load_logged_in_user():
                 # user_id is stored in the JWT as a string
                 user_id = int(user_id)
 
-                # Get from JWT in header
-                # TODO - some of these may not be None in the future
-                claims = get_jwt()
-                username = claims.get("username", None)
-                role = claims.get("role", None)
-                groups = claims.get("groups", [])
+                # Re-verify the user against the database rather than trusting the
+                # authorization attributes copied into the JWT. This ensures that
+                # disabling an account or changing its role/groups takes effect within
+                # the cache lifetime, rather than persisting until the token expires.
+                # The (short) cache keeps this from hitting the database on every request.
+                user_info = _cached_verify(user_id=user_id)
+                username = user_info.username
+                role = user_info.role
+                groups = user_info.groups
     except (AuthorizationFailure, AuthenticationFailure):
         raise
     except ExpiredSignatureError as e:
