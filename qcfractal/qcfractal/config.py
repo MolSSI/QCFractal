@@ -280,8 +280,8 @@ class WebAPIConfig(QCFConfigBase):
     jwt_secret_key: str
     """Secret key for web tokens. See documentation"""
 
-    jwt_access_token_expires: int = 60 * 60
-    """The time (in seconds) an access token is valid for. Default is 1 hour"""
+    jwt_access_token_expires: int = 15 * 60
+    """The time (in seconds) an access token is valid for. Default is 15 minutes"""
 
     jwt_refresh_token_expires: int = 60 * 60 * 24
     """The time (in seconds) a refresh token is valid for. Default is 1 day"""
