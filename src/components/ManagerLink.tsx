@@ -52,7 +52,11 @@ export const ManagerLink: React.FC<ManagerLinkProps> = ({ managerName }) => {
           >
             <CloseIcon fontSize="small" />
           </IconButton>
-          <ManagerFragment managerName={managerName} />
+          <ManagerFragment
+            managerName={managerName}
+            showViewButton
+            onNavigate={() => setManagerDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
     </>
