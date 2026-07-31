@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { usePageTitle } from "../UsePageTitle.ts";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Alert,
+  Autocomplete,
   Avatar,
   Box,
   Button,
@@ -14,14 +15,19 @@ import {
   DialogContentText,
   DialogTitle,
   Divider,
+  IconButton,
+  InputAdornment,
   MenuItem,
   Paper,
   Select,
   Stack,
   Switch,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import CheckIcon from "@mui/icons-material/Check";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePortalClient } from "../PortalClient";
 import { useAuth } from "../Auth";
@@ -63,105 +69,34 @@ const FieldRow: React.FC<{
   </Box>
 );
 
-// A row that can be toggled into an inline edit input
-const EditableFieldRow: React.FC<{
+// A text input row used while the page is in edit mode
+const EditTextRow: React.FC<{
   label: string;
-  value: string | undefined;
-  readOnly?: boolean;
-  validate?: (val: string) => string | undefined;
-  asyncValidate?: (val: string) => Promise<string | undefined>;
-  onSave: (val: string) => Promise<void>;
-}> = ({ label, value, readOnly, validate, asyncValidate, onSave }) => {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value ?? "");
-  const [saving, setSaving] = useState(false);
-  const [asyncError, setAsyncError] = useState<string | undefined>();
-  const [isChecking, setIsChecking] = useState(false);
-
-  const syncError = editing && draft.length > 0 ? validate?.(draft) : undefined;
-  const fieldError = syncError ?? asyncError;
-  const blocked = saving || !!fieldError || isChecking;
-
-  useEffect(() => {
-    if (!asyncValidate || !editing || draft === (value ?? "")) {
-      setAsyncError(undefined);
-      setIsChecking(false);
-      return;
-    }
-    setIsChecking(true);
-    setAsyncError(undefined);
-    const timer = setTimeout(async () => {
-      const err = await asyncValidate(draft);
-      setAsyncError(err);
-      setIsChecking(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [draft, asyncValidate, editing, value]);
-
-  const handleSave = async () => {
-    if (blocked) return;
-    setSaving(true);
-    try {
-      await onSave(draft);
-      setEditing(false);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setDraft(value ?? "");
-    setAsyncError(undefined);
-    setIsChecking(false);
-    setEditing(false);
-  };
-
-  if (editing) {
-    const helperText = fieldError ?? (isChecking ? "Checking…" : " ");
-    return (
-      <Box sx={{ display: "flex", alignItems: "center", px: 2.5, py: 1.25, gap: 1.5, minHeight: 52 }}>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ width: ROW_LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}
-        >
-          {label}
-        </Typography>
-        <TextField
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          size="small"
-          autoFocus
-          error={!!fieldError}
-          helperText={helperText}
-          onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") handleCancel(); }}
-          sx={{ maxWidth: 280 }}
-        />
-        <Button size="small" variant="contained" onClick={handleSave} disabled={blocked} sx={{ minWidth: 56 }}>
-          {saving ? <CircularProgress size={14} /> : "Save"}
-        </Button>
-        <Button size="small" onClick={handleCancel} disabled={saving}>
-          Cancel
-        </Button>
-      </Box>
-    );
-  }
-
-  return (
-    <FieldRow
-      label={label}
-      action={
-        !readOnly ? (
-          <Button size="small" variant="text" onClick={() => setEditing(true)}>
-            Edit
-          </Button>
-        ) : undefined
-      }
+  value: string;
+  onChange: (val: string) => void;
+  error?: string;
+  helperText?: string;
+  autoFocus?: boolean;
+}> = ({ label, value, onChange, error, helperText, autoFocus }) => (
+  <Box sx={{ display: "flex", alignItems: "flex-start", px: 2.5, py: 1.25, minHeight: 52 }}>
+    <Typography
+      variant="body2"
+      color="text.secondary"
+      sx={{ width: ROW_LABEL_WIDTH, flexShrink: 0, fontWeight: 500, mt: 1 }}
     >
-      <Typography variant="body2">{value || "—"}</Typography>
-    </FieldRow>
-  );
-};
+      {label}
+    </Typography>
+    <TextField
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      size="small"
+      autoFocus={autoFocus}
+      error={!!error}
+      helperText={error ?? helperText ?? " "}
+      sx={{ maxWidth: 320 }}
+    />
+  </Box>
+);
 
 // Inline change-password form (expands below the Password row)
 const ChangePasswordForm: React.FC<{ username: string; onClose: () => void }> = ({ username, onClose }) => {
@@ -269,54 +204,148 @@ const ChangePasswordForm: React.FC<{ username: string; onClose: () => void }> = 
   );
 };
 
+// Generate a strong random password using the Web Crypto API.
+function generatePassword(length = 20): string {
+  const charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*";
+  const values = new Uint32Array(length);
+  crypto.getRandomValues(values);
+  return Array.from(values, (v) => charset[v % charset.length]).join("");
+}
+
+// Admin-only: reset another user's password to a freshly generated one.
+// The generated password is revealed once inside the dialog so the admin can
+// copy it and hand it to the user; it cannot be retrieved again afterwards.
+const AdminResetPasswordRow: React.FC<{ username: string }> = ({ username }) => {
+  const { makeRequest } = usePortalClient();
+  const [open, setOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const mutation = useMutation<string, Error, void>({
+    mutationFn: async () => {
+      const pw = generatePassword();
+      await makeRequest<void>("PUT", `api/v1/users/${username}/password`, pw as unknown as object);
+      return pw;
+    },
+    onSuccess: (pw) => setNewPassword(pw),
+  });
+
+  const handleClose = () => {
+    setOpen(false);
+    // Reset state after the dialog's close transition so it doesn't flicker.
+    setTimeout(() => {
+      setNewPassword(null);
+      setCopied(false);
+      mutation.reset();
+    }, 200);
+  };
+
+  const handleCopy = async () => {
+    if (!newPassword) return;
+    try {
+      await navigator.clipboard.writeText(newPassword);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard may be unavailable (e.g. non-secure context); the admin can
+      // still select the text manually.
+    }
+  };
+
+  return (
+    <>
+      <FieldRow
+        label="Password"
+        action={
+          <Button size="small" variant="text" onClick={() => setOpen(true)}>
+            Reset password
+          </Button>
+        }
+      >
+        <Typography variant="body2" color="text.secondary">
+          ••••••••
+        </Typography>
+      </FieldRow>
+
+      <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+        {newPassword === null ? (
+          <>
+            <DialogTitle>Reset password?</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                This generates a new random password for <strong>{username}</strong> and
+                invalidates their current one. The new password is shown only once.
+              </DialogContentText>
+              {mutation.isError && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {mutation.error.message}
+                </Alert>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleClose} disabled={mutation.isPending}>
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => mutation.mutate()}
+                disabled={mutation.isPending}
+              >
+                {mutation.isPending ? <CircularProgress size={16} /> : "Reset password"}
+              </Button>
+            </DialogActions>
+          </>
+        ) : (
+          <>
+            <DialogTitle>New password for {username}</DialogTitle>
+            <DialogContent>
+              <DialogContentText sx={{ mb: 2 }}>
+                Copy this password and send it to the user. It will not be shown again.
+              </DialogContentText>
+              <TextField
+                value={newPassword}
+                fullWidth
+                size="small"
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    sx: { fontFamily: "monospace" },
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Tooltip title={copied ? "Copied" : "Copy"}>
+                          <IconButton onClick={handleCopy} edge="end" size="small">
+                            {copied ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
+                          </IconButton>
+                        </Tooltip>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button variant="contained" onClick={handleClose}>
+                Done
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
+    </>
+  );
+};
+
 // ─── Role select row (admin-only) ─────────────────────────────────────────────
 
 const ROLE_OPTIONS = ["admin", "maintain", "monitor", "submit", "read"];
 
-const RoleSelectRow: React.FC<{ value: string; onSave: (val: string) => Promise<void> }> = ({ value, onSave }) => {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value);
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await onSave(draft);
-      setEditing(false);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setDraft(value);
-    setEditing(false);
-  };
-
-  if (editing) {
-    return (
-      <Box sx={{ display: "flex", alignItems: "center", px: 2.5, py: 1.25, gap: 1.5, minHeight: 52 }}>
-        <Typography variant="body2" color="text.secondary" sx={{ width: ROW_LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}>
-          Role
-        </Typography>
-        <Select value={draft} onChange={(e) => setDraft(e.target.value)} size="small" sx={{ minWidth: 160 }}>
-          {ROLE_OPTIONS.map((r) => (
-            <MenuItem key={r} value={r}><RoleChip role={r} /></MenuItem>
-          ))}
-        </Select>
-        <Button size="small" variant="contained" onClick={handleSave} disabled={saving || draft === value} sx={{ minWidth: 56 }}>
-          {saving ? <CircularProgress size={14} /> : "Save"}
-        </Button>
-        <Button size="small" onClick={handleCancel} disabled={saving}>Cancel</Button>
-      </Box>
-    );
-  }
-
-  return (
-    <FieldRow label="Role" action={<Button size="small" variant="text" onClick={() => setEditing(true)}>Edit</Button>}>
-      <RoleChip role={value} />
-    </FieldRow>
-  );
+type Draft = {
+  fullname: string;
+  email: string;
+  organization: string;
+  role: string;
+  enabled: boolean;
+  groups: string[];
 };
 
 // ─── Section label ────────────────────────────────────────────────────────────
@@ -355,6 +384,12 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
+  // Page-level edit mode. `draft` holds the working copy while editing.
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | undefined>();
+  const editing = draft !== null;
+
   const patchMutation = useMutation<void, Error, qcpTypes.UserInfo>({
     mutationFn: (body) => makeRequest<void>("PATCH", canManageUsers ? "api/v1/users" : "api/v1/me", body),
     onSuccess: () => {
@@ -370,6 +405,13 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
       queryClient.invalidateQueries({ queryKey: ["listUsers"] });
       navigate("/users");
     },
+  });
+
+  // Available groups (admin-only) to populate the groups editor.
+  const { data: allGroups } = useQuery({
+    queryKey: ["listGroups"],
+    queryFn: () => makeRequest<{ groupname: string }[]>("GET", "api/v1/groups"),
+    enabled: canManageUsers,
   });
 
   if (status === "pending") {
@@ -388,35 +430,71 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
   }
   if (!userData) return null;
 
-  const saveField = async (
-    field: "fullname" | "organization" | "email" | "username" | "role",
-    value: string,
-  ) => {
-    await patchMutation.mutateAsync({
-      id: userData.id,
-      username: field === "username" ? value : userData.username,
-      role: field === "role" ? value : userData.role,
+  // Everyone can edit their own profile; admins can edit anyone's.
+  const canEdit = isOwnProfile || canManageUsers;
+  // Full name is the one field admins may not change on another user's profile.
+  const canEditName = isOwnProfile;
+
+  const startEditing = () => {
+    setSaveError(undefined);
+    setDraft({
+      fullname: userData.fullname ?? "",
+      email: userData.email ?? "",
+      organization: userData.organization ?? "",
+      role: userData.role,
       enabled: userData.enabled,
       groups: userData.groups,
-      auth_type: userData.auth_type,
-      fullname: field === "fullname" ? value || undefined : userData.fullname,
-      organization: field === "organization" ? value || undefined : userData.organization,
-      email: field === "email" ? value || undefined : userData.email,
     });
   };
 
-  const toggleEnabled = async () => {
-    await patchMutation.mutateAsync({
-      id: userData.id,
-      username: userData.username,
-      role: userData.role,
-      enabled: !userData.enabled,
-      groups: userData.groups,
-      auth_type: userData.auth_type,
-      fullname: userData.fullname,
-      organization: userData.organization,
-      email: userData.email,
-    });
+  const cancelEditing = () => {
+    setDraft(null);
+  };
+
+  const emailError =
+    editing && draft!.email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft!.email)
+      ? "Enter a valid email address"
+      : undefined;
+  const saveBlocked = saving || !!emailError;
+
+  const handleSave = async () => {
+    if (!draft || saveBlocked) return;
+    setSaving(true);
+    setSaveError(undefined);
+    try {
+      // A group must exist before it can be assigned. Create any group the admin
+      // typed that isn't already a known group.
+      if (canManageUsers) {
+        const existing = new Set(allGroups?.map((g) => g.groupname) ?? []);
+        const newGroups = draft.groups.filter((g) => !existing.has(g));
+        for (const groupname of newGroups) {
+          await makeRequest("POST", "api/v1/groups", { groupname });
+        }
+        if (newGroups.length > 0) {
+          queryClient.invalidateQueries({ queryKey: ["listGroups"] });
+        }
+      }
+      await patchMutation.mutateAsync({
+        id: userData.id,
+        // Username is immutable; always send the existing value.
+        username: userData.username,
+        // Only admins may change role/enabled; otherwise keep the existing values.
+        role: canManageUsers ? draft.role : userData.role,
+        enabled: canManageUsers ? draft.enabled : userData.enabled,
+        // Only admins may change group membership.
+        groups: canManageUsers ? draft.groups : userData.groups,
+        auth_type: userData.auth_type,
+        // Only the owner may change their own full name.
+        fullname: canEditName ? draft.fullname || undefined : userData.fullname,
+        organization: draft.organization || undefined,
+        email: draft.email || undefined,
+      });
+      setDraft(null);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save changes");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const initials = getInitials(userData.fullname, userData.username);
@@ -458,43 +536,81 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
 
       {/* ── Content ── */}
       <Box sx={{ pt: 3, pb: 5 }}>
+        {/* EDIT TOOLBAR */}
+        {canEdit && (
+          <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={1} mb={2}>
+            {editing ? (
+              <>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={handleSave}
+                  disabled={saveBlocked}
+                  sx={{ minWidth: 72 }}
+                >
+                  {saving ? <CircularProgress size={16} /> : "Save"}
+                </Button>
+                <Button size="small" onClick={cancelEditing} disabled={saving}>
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <Button variant="outlined" size="small" onClick={startEditing}>
+                Edit
+              </Button>
+            )}
+          </Stack>
+        )}
+        {editing && saveError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {saveError}
+          </Alert>
+        )}
+
         {/* PERSONAL */}
         <SectionLabel>Personal</SectionLabel>
         <Paper variant="outlined" sx={{ mt: 0.75, mb: 3 }}>
           <Stack divider={<Divider />}>
-            <EditableFieldRow
-              label="Full name"
-              value={userData.fullname}
-              readOnly={!isOwnProfile}
-              onSave={(val) => saveField("fullname", val)}
-            />
-            <EditableFieldRow
-              label="Username"
-              value={userData.username}
-              readOnly={!isOwnProfile}
-              asyncValidate={async (val) => {
-                try {
-                  await makeRequest("GET", `api/v1/users/${val}`);
-                  return "Username is already taken";
-                } catch {
-                  return undefined;
-                }
-              }}
-              onSave={(val) => saveField("username", val)}
-            />
-            <EditableFieldRow
-              label="Email"
-              value={userData.email}
-              readOnly={!isOwnProfile}
-              validate={(val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ? undefined : "Enter a valid email address"}
-              onSave={(val) => saveField("email", val)}
-            />
-            <EditableFieldRow
-              label="Organization"
-              value={userData.organization}
-              readOnly={!isOwnProfile}
-              onSave={(val) => saveField("organization", val)}
-            />
+            {editing && canEditName ? (
+              <EditTextRow
+                label="Full name"
+                value={draft!.fullname}
+                onChange={(val) => setDraft({ ...draft!, fullname: val })}
+                autoFocus
+              />
+            ) : (
+              <FieldRow label="Full name">
+                <Typography variant="body2">{userData.fullname || "—"}</Typography>
+              </FieldRow>
+            )}
+            {/* Username is the immutable identity key the modify endpoint keys on;
+                it cannot be renamed, so it is always read-only. */}
+            <FieldRow label="Username">
+              <Typography variant="body2">{userData.username}</Typography>
+            </FieldRow>
+            {editing ? (
+              <EditTextRow
+                label="Email"
+                value={draft!.email}
+                onChange={(val) => setDraft({ ...draft!, email: val })}
+                error={emailError}
+              />
+            ) : (
+              <FieldRow label="Email">
+                <Typography variant="body2">{userData.email || "—"}</Typography>
+              </FieldRow>
+            )}
+            {editing ? (
+              <EditTextRow
+                label="Organization"
+                value={draft!.organization}
+                onChange={(val) => setDraft({ ...draft!, organization: val })}
+              />
+            ) : (
+              <FieldRow label="Organization">
+                <Typography variant="body2">{userData.organization || "—"}</Typography>
+              </FieldRow>
+            )}
           </Stack>
         </Paper>
 
@@ -502,15 +618,35 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
         <SectionLabel>Account</SectionLabel>
         <Paper variant="outlined" sx={{ mt: 0.75 }}>
           <Stack divider={<Divider />}>
-            {canManageUsers ? (
-              <RoleSelectRow value={userData.role} onSave={(val) => saveField("role", val)} />
+            {editing && canManageUsers ? (
+              <Box sx={{ display: "flex", alignItems: "center", px: 2.5, py: 1.25, minHeight: 52 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ width: ROW_LABEL_WIDTH, flexShrink: 0, fontWeight: 500 }}
+                >
+                  Role
+                </Typography>
+                <Select
+                  value={draft!.role}
+                  onChange={(e) => setDraft({ ...draft!, role: e.target.value })}
+                  size="small"
+                  sx={{ minWidth: 160 }}
+                >
+                  {ROLE_OPTIONS.map((r) => (
+                    <MenuItem key={r} value={r}><RoleChip role={r} /></MenuItem>
+                  ))}
+                </Select>
+              </Box>
             ) : (
               <FieldRow label="Role">
                 <Stack direction="row" spacing={1} alignItems="center">
                   <RoleChip role={userData.role} />
-                  <Typography variant="caption" color="text.disabled">
-                    managed by your admin
-                  </Typography>
+                  {!canManageUsers && (
+                    <Typography variant="caption" color="text.disabled">
+                      managed by your admin
+                    </Typography>
+                  )}
                 </Stack>
               </FieldRow>
             )}
@@ -518,21 +654,58 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
             {canManageUsers && (
               <FieldRow label="Enabled">
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <Switch
-                    checked={userData.enabled}
-                    onChange={toggleEnabled}
-                    disabled={patchMutation.isPending}
-                    size="small"
-                  />
-                  <Typography variant="body2" color="text.secondary">
-                    {userData.enabled ? "Active" : "Disabled"}
-                  </Typography>
+                  {editing ? (
+                    <>
+                      <Switch
+                        checked={draft!.enabled}
+                        onChange={(e) => setDraft({ ...draft!, enabled: e.target.checked })}
+                        size="small"
+                      />
+                      <Typography variant="body2" color="text.secondary">
+                        {draft!.enabled ? "Active" : "Disabled"}
+                      </Typography>
+                    </>
+                  ) : (
+                    <Chip
+                      label={userData.enabled ? "Active" : "Disabled"}
+                      size="small"
+                      color={userData.enabled ? "success" : "default"}
+                      variant="outlined"
+                    />
+                  )}
                 </Stack>
               </FieldRow>
             )}
 
             <FieldRow label="Groups">
-              {userData.groups.length === 0 ? (
+              {editing && canManageUsers ? (
+                <Autocomplete
+                  multiple
+                  size="small"
+                  freeSolo
+                  autoSelect
+                  selectOnFocus
+                  clearOnBlur
+                  handleHomeEndKeys
+                  options={(allGroups?.map((g) => g.groupname) ?? []).filter(
+                    (g) => !draft!.groups.includes(g),
+                  )}
+                  value={draft!.groups}
+                  onChange={(_e, value) =>
+                    setDraft({
+                      ...draft!,
+                      // Trim, drop blanks, and de-duplicate typed/selected names.
+                      groups: Array.from(
+                        new Set(value.map((v) => v.trim()).filter(Boolean)),
+                      ),
+                    })
+                  }
+                  renderInput={(params) => (
+                    <TextField {...params} placeholder="Select or type to add a group" />
+                  )}
+                  sx={{ maxWidth: 360 }}
+                />
+              ) : userData.groups.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">—</Typography>
               ) : (
                 <Stack direction="row" spacing={0.5} flexWrap="wrap">
@@ -567,6 +740,10 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
                   <ChangePasswordForm username={userData.username} onClose={() => setShowPasswordForm(false)} />
                 )}
               </Box>
+            )}
+
+            {!isOwnProfile && canManageUsers && userData.auth_type === "password" && (
+              <AdminResetPasswordRow username={userData.username} />
             )}
 
             <FieldRow label="Authentication">

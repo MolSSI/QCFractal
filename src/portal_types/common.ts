@@ -25,6 +25,12 @@ export type UserInfo = {
   email?: string;
 };
 
+export type GroupInfo = {
+  id?: number;
+  groupname: string;
+  description?: string;
+};
+
 export type PingResults = {
   success: boolean;
   authorized: boolean;
