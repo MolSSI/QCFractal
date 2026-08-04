@@ -1,16 +1,19 @@
 import { usePortalClient } from "../PortalClient.tsx";
 import React from "react";
 import * as qcpTypes from "../PortalTypes";
-import { Chip, Grid, Stack, Typography } from "@mui/material";
+import { Button, Chip, Grid, Stack, Typography } from "@mui/material";
 import { dateStringToLocalTime } from "../Utils";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import LoadingIndicator from "./LoadingIndicator";
 import ErrorIndicator from "./ErrorIndicator";
 import { ManagerPieChart } from "./ManagerPieChart.tsx";
 
-export const ManagerFragment: React.FC<{ managerName: string }> = ({
-  managerName,
-}) => {
+export const ManagerFragment: React.FC<{
+  managerName: string;
+  showViewButton?: boolean;
+  onNavigate?: () => void;
+}> = ({ managerName, showViewButton = false, onNavigate }) => {
   const { makeRequest } = usePortalClient();
 
   const {
@@ -39,11 +42,24 @@ export const ManagerFragment: React.FC<{ managerName: string }> = ({
             <Typography variant="h6" fontWeight="bold">
               {managerData.name}
             </Typography>
-            <Chip
-              label={managerData.status}
-              color={managerData.status == "active" ? "success" : "default"}
-              sx={{ width: "fit-content", fontWeight: "bold" }}
-            />
+            <Stack direction="row" gap={2} alignItems="center">
+              <Chip
+                label={managerData.status}
+                color={managerData.status == "active" ? "success" : "default"}
+                sx={{ width: "fit-content", fontWeight: "bold" }}
+              />
+              {showViewButton && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  component={Link}
+                  to={`/managers/${managerData.name}`}
+                  onClick={onNavigate}
+                >
+                  Go to Manager Page
+                </Button>
+              )}
+            </Stack>
           </Stack>
         </Grid>
         <Grid size={6}>
