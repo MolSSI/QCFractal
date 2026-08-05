@@ -8,5 +8,6 @@ QCFractal Server User Guide
    setup
    configuration
    cli_admin
+   portal_admin
    monitoring
    managers/index
