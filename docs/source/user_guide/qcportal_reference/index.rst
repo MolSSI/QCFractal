@@ -9,6 +9,7 @@ QCPortal API Reference
    auth
    base_models
    molecules
+   projects
    metadata_models
    tasks_services
    internal_jobs

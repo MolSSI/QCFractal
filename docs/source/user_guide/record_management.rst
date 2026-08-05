@@ -156,7 +156,10 @@ If ``soft_delete=False`` ("hard delete"), then the record is deleted permanently
 
 .. important::
 
-  A record cannot be hard-deleted if it is being referenced somewhere (another record or a dataset).
+  A record cannot be hard-deleted if it is being referenced somewhere - another record, a dataset,
+  or a :doc:`project <projects/index>`. Such records are reported in the ``errors`` field of the
+  returned :class:`~qcportal.metadata_models.DeleteMetadata` rather than raising, so check it if it
+  matters.
 
 .. tab-set::
 
