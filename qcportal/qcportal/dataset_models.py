@@ -671,11 +671,11 @@ class BaseDataset(BaseModel):
         """
         Creates a view of this dataset on the server
 
-        This function will return an :class:`~qcportal.internal_jobs.InternalJob` which can be used to watch
+        This function will return an :class:`~qcportal.internal_jobs.models.InternalJob` which can be used to watch
         for completion if desired. The job will run server side without user interaction.
 
         Note the ID field of the object if you with to retrieve this internal job later
-        (via :meth:`get_internal_jobs` or
+        (via :meth:`~qcportal.dataset_models.BaseDataset.list_internal_jobs` or
         :meth:`PortalClient.get_internal_job <qcportal.client.PortalClient.get_internal_job>`)
 
         Parameters
@@ -698,7 +698,7 @@ class BaseDataset(BaseModel):
         Returns
         -------
         :
-            An :class:`~qcportal.internal_job.InternalJob` object which can be used to watch for completion.
+            An :class:`~qcportal.internal_jobs.models.InternalJob` object which can be used to watch for completion.
         """
 
         body = DatasetCreateViewBody(
@@ -1229,7 +1229,7 @@ class BaseDataset(BaseModel):
 
         Raises
         ------
-        AssertionError:
+        AssertionError
             If the dataset is a view or is not online.
         """
 
@@ -1270,7 +1270,7 @@ class BaseDataset(BaseModel):
 
         Raises
         ------
-        AssertionError:
+        AssertionError
             If the dataset is a view or if the client is offline.
         """
 
@@ -1310,7 +1310,7 @@ class BaseDataset(BaseModel):
 
         Raises
         ------
-        AssertionError:
+        AssertionError
             If the dataset is a view or not online.
         """
 
