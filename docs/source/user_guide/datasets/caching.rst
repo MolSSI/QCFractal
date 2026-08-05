@@ -122,7 +122,7 @@ Creating Views
 
 Views can be created on the server :meth:`~qcportal.dataset_models.BaseDataset.create_view`. This
 creates a background :ref:`internal job <dataset_internal_jobs>` which creates the view, and returns
-the :class:`~qcportal.internal_jobs.models.InternalJob>` object that can be used to query the progress.
+the :class:`~qcportal.internal_jobs.models.InternalJob` object that can be used to query the progress.
 
 
 .. tab-set::

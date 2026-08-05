@@ -222,9 +222,7 @@ Records that are ``waiting`` or ``running`` can be cancelled with
 be picked up by a compute manager.
 
 Cancelling can be undone with :meth:`~qcportal.client.PortalClient.uncancel_records`. If the record was ``running``
-before it was cancelled, with will go back to a ``waiting state``.
-
-Invalidation can be undone with :meth:`~qcportal.client.PortalClient.uncancel_records`.
+before it was cancelled, it will go back to a ``waiting`` state.
 
 .. tab-set::
 

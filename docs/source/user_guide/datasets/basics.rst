@@ -125,7 +125,7 @@ Dataset Metadata
 
 Datasets have some useful metadata and properties
 
-* **name**, **description**, **tagline**, **group**, and **tags** are user-defined metadata that categorize this dataset
+* **name**, **description**, **tagline**, and **tags** are user-defined metadata that categorize this dataset
   among the other datasets
 * **default_compute_tag** and **default_compute_priority** are the defaults used when submitting new computations (can be overridden
   in :meth:`~qcportal.dataset_models.BaseDataset.submit`, see :ref:`dataset_submission`).
@@ -290,7 +290,7 @@ You can obtain a full entry from its name with :meth:`~qcportal.dataset_models.B
 
     .. code-block:: py3
 
-      >>> print(ds.get_entry)
+      >>> print(ds.get_entry('H2'))
       OptimizationDatasetEntry(name='H2', initial_molecule=Molecule(name='H2', formula='H2', hash='7746e69'),
       additional_keywords={}, attributes={}, comment=None)
 

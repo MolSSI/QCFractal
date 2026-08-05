@@ -311,9 +311,9 @@ as values in the ``levels`` dictionary.
         # NOTE - we are querying by the program actually used in the singlepoint calculations here
         #        not the overarching manybody program
 
-        r_iter = client.query_manybodys(program='psi4',
+        r_iter = client.query_manybodys(qc_program='psi4',
                                         created_after='2024-03-21 12:34:56',
-                                        include=['**'])
+                                        include=['**'],
                                         limit=50)
         for r in r_iter:
             print(r.id)
