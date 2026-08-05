@@ -73,7 +73,7 @@ class NEBDatasetSocket(BaseDatasetSocket):
         session: Session,
         dataset_id: int,
         entry_orm: Iterable[NEBDatasetEntryORM],
-        spec_orm: Iterable[NEBDatasetSpecificationORM],
+        specification_orm: Iterable[NEBDatasetSpecificationORM],
         existing_records: Iterable[Tuple[str, str]],
         compute_tag: str,
         compute_priority: PriorityEnum,
@@ -84,7 +84,7 @@ class NEBDatasetSocket(BaseDatasetSocket):
         n_inserted = 0
         n_existing = 0
 
-        for spec in spec_orm:
+        for spec in specification_orm:
             neb_spec_obj = spec.specification.to_model(NEBSpecification)
             neb_spec_input_dict = neb_spec_obj.model_dump()
 

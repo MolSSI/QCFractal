@@ -71,7 +71,7 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
         session: Session,
         dataset_id: int,
         entry_orm: Iterable[GridoptimizationDatasetEntryORM],
-        spec_orm: Iterable[GridoptimizationDatasetSpecificationORM],
+        specification_orm: Iterable[GridoptimizationDatasetSpecificationORM],
         existing_records: Iterable[Tuple[str, str]],
         compute_tag: str,
         compute_priority: PriorityEnum,
@@ -82,7 +82,7 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
         n_inserted = 0
         n_existing = 0
 
-        for spec in spec_orm:
+        for spec in specification_orm:
             goopt_spec_obj = spec.specification.to_model(GridoptimizationSpecification)
             goopt_spec_input_dict = goopt_spec_obj.model_dump()
 

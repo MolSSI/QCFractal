@@ -73,7 +73,7 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
         session: Session,
         dataset_id: int,
         entry_orm: Iterable[TorsiondriveDatasetEntryORM],
-        spec_orm: Iterable[TorsiondriveDatasetSpecificationORM],
+        specification_orm: Iterable[TorsiondriveDatasetSpecificationORM],
         existing_records: Iterable[Tuple[str, str]],
         compute_tag: str,
         compute_priority: PriorityEnum,
@@ -84,7 +84,7 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
         n_inserted = 0
         n_existing = 0
 
-        for spec in spec_orm:
+        for spec in specification_orm:
             td_spec_obj = spec.specification.to_model(TorsiondriveSpecification)
             td_spec_input_dict = td_spec_obj.model_dump()
 

@@ -69,7 +69,7 @@ class ManybodyDatasetSocket(BaseDatasetSocket):
         session: Session,
         dataset_id: int,
         entry_orm: Iterable[ManybodyDatasetEntryORM],
-        spec_orm: Iterable[ManybodyDatasetSpecificationORM],
+        specification_orm: Iterable[ManybodyDatasetSpecificationORM],
         existing_records: Iterable[Tuple[str, str]],
         compute_tag: str,
         compute_priority: PriorityEnum,
@@ -85,7 +85,7 @@ class ManybodyDatasetSocket(BaseDatasetSocket):
         normal_entries = [x for x in entry_orm if not x.additional_singlepoint_keywords]
 
         # Normal entries - just let it rip
-        for spec in spec_orm:
+        for spec in specification_orm:
             new_normal_entries = [x for x in normal_entries if (x.name, spec.name) not in existing_records]
             molecule_ids = [x.initial_molecule_id for x in new_normal_entries]
 
@@ -109,7 +109,7 @@ class ManybodyDatasetSocket(BaseDatasetSocket):
             n_existing += meta.n_existing
 
         # Now the ones with additional keywords
-        for spec in spec_orm:
+        for spec in specification_orm:
             spec_obj = spec.specification.to_model(ManybodySpecification)
             spec_input_dict = spec_obj.model_dump()
 
