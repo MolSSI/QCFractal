@@ -48,6 +48,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     "sphinx.ext.extlinks",
+    "sphinx.ext.intersphinx",
     "sphinx_design",
 #    "sphinxcontrib.autodoc_pydantic",
     "sphinx_copybutton",
@@ -121,3 +122,18 @@ extlinks = {
     "pr": ("https://github.com/MolSSI/QCFractal/pull/%s", "PR %s"),
     "contrib": ("https://github.com/%s", "@%s"),
 }
+
+# -- intersphinx extension -------------------------------------------------
+
+# Lets type annotations pulled in by autodoc (datetime, Iterable, pydantic
+# BaseModel, and so on) link to the upstream documentation instead of
+# rendering as plain text.
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    # docs.pydantic.dev/latest redirects here; use the target directly
+    "pydantic": ("https://pydantic.dev/docs/validation/latest", None),
+    "qcelemental": ("https://molssi.github.io/QCElemental/dev", None),
+    "pandas": ("https://pandas.pydata.org/docs", None),
+}
+
+intersphinx_timeout = 30
