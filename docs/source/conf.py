@@ -50,24 +50,23 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx_design",
-#    "sphinxcontrib.autodoc_pydantic",
+    "sphinxcontrib.pydantic",
     "sphinx_copybutton",
     "myst_nb",
 ]
 
 # Some options
 add_module_names = False
-autoclass_content = "both"
 autodoc_typehints = "description"
+autodoc_class_signature = "separated"
 autodoc_default_options = {
     "members": True,
     "undoc-members": True,
     "inherited-members": "BaseModel,str,int,float,bool",
     "show-inheritance": True,
     "member-order": "bysource",
+    "exclude-members": "__new__",
 }
-#autodoc_pydantic_model_show_json = False
-#autodoc_pydantic_settings_show_json = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = [

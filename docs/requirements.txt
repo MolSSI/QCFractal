@@ -3,6 +3,7 @@ sphinx_design
 sphinx-copybutton
 pydata_sphinx_theme
 myst-nb
+sphinxcontrib-pydantic
 nglview
 -e ../qcportal
 -e ../qcfractalcompute
