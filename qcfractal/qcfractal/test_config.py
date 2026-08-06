@@ -1,7 +1,10 @@
 import copy
 import os
 
-from qcfractal.config import FractalConfig
+import pytest
+import yaml
+
+from qcfractal.config import FractalConfig, check_deprecated_env_vars, read_configuration
 
 _base_config = {
     "api": {
@@ -80,3 +83,64 @@ def test_config_tmpdir_create(tmp_path):
 
     assert cfg.temporary_dir == str(tmp_path / "qcatmpdir")
     assert os.path.exists(cfg.temporary_dir)
+
+
+@pytest.fixture
+def clean_qcf_env(monkeypatch):
+    """Removes any QCF_* variables inherited from the caller's environment"""
+    for key in list(os.environ):
+        if key.upper().startswith("QCF_"):
+            monkeypatch.delenv(key, raising=False)
+    return monkeypatch
+
+
+@pytest.mark.parametrize(
+    "old_var,expected_new",
+    [
+        ("QCF_DB_HOST", "QCF_DATABASE__HOST"),
+        ("QCF_API_PORT", "QCF_API__PORT"),
+        ("QCF_APILIMIT_GET_RECORDS", "QCF_API_LIMITS__GET_RECORDS"),
+        ("QCF_AUTORESET_ENABLED", "QCF_AUTO_RESET__ENABLED"),
+        ("QCF_S3_ENABLED", "QCF_S3__ENABLED"),
+        # Matching is case insensitive, since pydantic-settings reads env vars that way
+        ("qcf_db_host", "QCF_DATABASE__HOST"),
+    ],
+)
+def test_config_deprecated_env_vars(clean_qcf_env, old_var, expected_new):
+    clean_qcf_env.setenv(old_var, "some_value")
+
+    with pytest.raises(RuntimeError, match=f"Use {expected_new} instead"):
+        check_deprecated_env_vars()
+
+
+@pytest.mark.parametrize(
+    "env_var",
+    [
+        "QCF_LOGLEVEL",
+        "QCF_DATABASE__HOST",
+        "QCF_API__PORT",
+        # Begins with the deprecated QCF_API_ prefix, and used to be rejected because of
+        # it, which made api_limits impossible to set from the environment
+        "QCF_API_LIMITS__GET_RECORDS",
+        "QCF_AUTO_RESET__ENABLED",
+        "QCF_CORS__ENABLED",
+        "QCF_S3__ENABLED",
+    ],
+)
+def test_config_current_env_vars_not_deprecated(clean_qcf_env, env_var):
+    clean_qcf_env.setenv(env_var, "1")
+
+    check_deprecated_env_vars()  # must not raise
+
+
+def test_config_env_var_api_limits(clean_qcf_env, tmp_path):
+    """api_limits must be settable from the environment"""
+
+    config_path = tmp_path / "qcfractal_config.yaml"
+    with open(config_path, "w") as f:
+        yaml.safe_dump(_base_config, f)
+
+    clean_qcf_env.setenv("QCF_API_LIMITS__GET_RECORDS", "4321")
+    cfg = read_configuration([str(config_path)])
+
+    assert cfg.api_limits.get_records == 4321

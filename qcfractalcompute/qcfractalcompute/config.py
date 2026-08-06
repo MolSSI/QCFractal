@@ -47,7 +47,7 @@ def _walltime_must_be_str(w) -> str:
 
 
 class QCFComputeConfigBase(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
 
 class PackageEnvironmentSettings(QCFComputeConfigBase):
@@ -58,14 +58,14 @@ class PackageEnvironmentSettings(QCFComputeConfigBase):
     direct appropriate calculations to them.
     """
 
-    use_manager_environment: bool = Field(
-        True,
-        description="Use the environment that the manager is running in for computation. May be in addition to other environments",
-    )
-    conda: list[str] = Field([], description="List of conda environments to query for installed packages")
-    apptainer: list[str] = Field(
-        [], description="List of paths to apptainer/singularity files to query for installed packages"
-    )
+    use_manager_environment: bool = True
+    """Use the environment that the manager is running in for computation. May be in addition to other environments"""
+
+    conda: list[str] = []
+    """List of conda environments to query for installed packages"""
+
+    apptainer: list[str] = []
+    """List of paths to apptainer/singularity files to query for installed packages"""
 
 
 class ExecutorConfig(QCFComputeConfigBase):
@@ -154,67 +154,78 @@ class FractalServerSettings(QCFComputeConfigBase):
     to ensure its security.
     """
 
-    fractal_uri: str = Field(..., description="Full URI to the Fractal Server you want to connect to")
-    username: str | None = Field(
-        None,
-        description="Username to connect to the Fractal Server with. When not provided, a connection is attempted "
-        "as a guest user, which in most default Servers will be unable to return results.",
-    )
-    password: str | None = Field(
-        None, description="Password to authenticate to the Fractal Server with (alongside the `username`)"
-    )
-    verify: bool | None = Field(None, description="Use Server-side generated SSL certification or not.")
+    fractal_uri: str
+    """Full URI to the Fractal Server you want to connect to"""
+
+    username: str | None = None
+    """Username to connect to the Fractal Server with. When not provided, a connection is attempted as a guest user,
+    which in most default Servers will be unable to return results.
+    """
+
+    password: str | None = None
+    """Password to authenticate to the Fractal Server with (alongside the `username`)"""
+
+    verify: bool | None = None
+    """Use Server-side generated SSL certification or not."""
 
 
 class FractalComputeConfig(BaseSettings):
-    base_folder: str = Field(
-        ...,
-        description="The base folder to use as the default for some options (logs, etc). Default is the location of the config file.",
-    )
+    base_folder: str
+    """The base folder to use as the default for some options (logs, etc). Default is the location of the config
+    file.
+    """
 
-    cluster: str = Field(
-        ...,
-        description="Name of this scheduler to present to the Fractal Server. Descriptive names help the server "
-        "identify the manager resource and assists with debugging.",
-    )
+    cluster: str
+    """Name of this scheduler to present to the Fractal Server. Descriptive names help the server identify the
+    manager resource and assists with debugging.
+    """
+
     loglevel: str = "INFO"
-    logfile: str | None = Field(
-        None,
-        description="Full path to save a log file to, including the filename. If not provided, information will still "
-        "be reported to terminal, but not saved. When set, logger information is sent to this file.",
-    )
-    update_frequency: float = Field(
-        30,
-        description="Time between heartbeats/update checks between this Manager and the Fractal Server. The lower this "
-        "value, the shorter the intervals. If you have an unreliable network connection, consider "
-        "increasing this time as repeated, consecutive network failures will cause the Manager to shut "
-        "itself down to maintain integrity between it and the Fractal Server. Units of seconds",
-        gt=0,
-    )
-    update_frequency_jitter: float = Field(
-        0.1,
-        description="The update frequency will be modified by up to a certain amount for each request. The "
-        "update_frequency_jitter represents a fraction of the update_frequency to allow as a max. "
-        "Ie, update_frequency=60, and jitter=0.1, updates will happen between 54 and 66 seconds. "
-        "This helps with spreading out server load.",
-        ge=0,
-    )
+    logfile: str | None = None
+    """Full path to save a log file to, including the filename. If not provided, information will still be reported
+    to terminal, but not saved. When set, logger information is sent to this file.
+    """
 
-    max_idle_time: int | None = Field(
-        None,
-        description="Maximum consecutive time in seconds that the manager "
-        "should be allowed to run. If this is reached, the manager will shutdown.",
-    )
+    update_frequency: float = Field(30, gt=0)
+    """Time between heartbeats/update checks between this Manager and the Fractal Server. The lower this value, the
+    shorter the intervals. If you have an unreliable network connection, consider increasing this time as
+    repeated, consecutive network failures will cause the Manager to shut itself down to maintain integrity
+    between it and the Fractal Server. Units of seconds
+    """
+
+    update_frequency_jitter: float = Field(0.1, ge=0)
+    """The update frequency will be modified by up to a certain amount for each request. The update_frequency_jitter
+    represents a fraction of the update_frequency to allow as a max. Ie, update_frequency=60, and jitter=0.1,
+    updates will happen between 54 and 66 seconds. This helps with spreading out server load.
+    """
+
+    max_idle_time: int | None = None
+    """Maximum consecutive time in seconds that the manager should be allowed to run. If this is reached, the manager
+    will shutdown.
+    """
 
     parsl_run_dir: str = "parsl_run_dir"
+    """Directory for parsl to use for temporary files, submission scripts, etc
+    """
+
     parsl_usage_tracking: int = 0
+    """Set to 1-3 to send usage information to Parsl developers. This helps Parsl to collect
+    aggregate statistics on usage to better report to funding agencies. Recommended to help enable them
+    to keep working, but disabled by default for privacy reasons.
+    
+    See https://parsl.readthedocs.io/en/stable/userguide/advanced/usage_tracking.html
+    """
 
     server: FractalServerSettings = Field(...)
     environments: PackageEnvironmentSettings = Field(default_factory=PackageEnvironmentSettings)
     executors: dict[str, AllExecutorTypes] = Field(...)
 
     model_config = SettingsConfigDict(
-        extra="forbid", case_sensitive=False, env_prefix="QCF_COMPUTE_", env_nested_delimiter="__"
+        extra="forbid",
+        case_sensitive=False,
+        env_prefix="QCF_COMPUTE_",
+        env_nested_delimiter="__",
+        use_attribute_docstrings=True,
     )
 
     # Since we manually read the yaml files, the values passed into the init
