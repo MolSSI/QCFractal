@@ -455,7 +455,7 @@ Permissions
 Reading projects requires the ``read`` role; creating, modifying, and deleting them requires
 ``submit`` (or higher). As with records and datasets, these permissions are not scoped by
 ownership - a user with the ``submit`` role may modify or delete any project on the server, not
-only their own. See :ref:`server_admin_roles`.
+only their own. See :ref:`overview_roles`.
 
 
 .. _project_qcportal_api:

@@ -282,7 +282,7 @@ status code and the server's message.
 Common cases:
 
 - **401 / 403** - not logged in, or the role does not permit the operation. Check the username and
-  password in use, and see :ref:`server_admin_roles` for what each role allows
+  password in use, and see :ref:`overview_roles` for what each role allows
 - **404** - the record, dataset, or project does not exist. Many client methods accept
   ``missing_ok=True`` to return ``None`` instead of raising
 - **400** - the server rejected the request. The message is usually specific

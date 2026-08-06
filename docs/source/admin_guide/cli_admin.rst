@@ -247,8 +247,11 @@ Subcommands and options:
 
 Note on roles: the available roles are built into the server and cannot be customized.
 Valid values for ``--role`` are ``admin``, ``maintain``, ``monitor``, ``submit``, ``read``,
-``compute``, and ``anonymous``; anything else is rejected. See :ref:`server_admin_roles`
-for what each one permits.
+``compute``, and ``anonymous``; anything else is rejected. See
+:ref:`Users, Roles, and Groups <overview_roles>` for what each one permits.
+
+Groups have no CLI subcommand - manage them with a client
+(:meth:`~qcportal.client.PortalClient.add_group` and friends).
 
 backup
 ~~~~~~

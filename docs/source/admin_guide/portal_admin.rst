@@ -38,37 +38,14 @@ Users: add, list, enable/disable, change passwords, delete
 
 User objects are represented by :class:`~qcportal.auth.models.UserInfo`.
 
-.. _server_admin_roles:
-
-User roles
-^^^^^^^^^^
-
-Every user is assigned exactly one *role*, which determines what that user is permitted to do.
-The set of roles is built into the server and cannot be customized; assigning any other name
-raises an error.
-
-.. table::
-
-  ==============  =============================================================================
-   Role            Description
-  ==============  =============================================================================
-   ``admin``       Unrestricted access to everything, including user management
-   ``maintain``    Full access to records, datasets, projects, groups, logs and internal jobs.
-                   Can read users, but not create or modify them
-   ``monitor``     Read-only, and additionally can read access logs, server errors,
-                   and internal jobs
-   ``submit``      Read, add, modify and delete records, datasets and projects.
-                   The usual role for a working user
-   ``read``        Read-only access to records, datasets, projects and manager information
-   ``compute``     Reserved for compute managers claiming and returning tasks
-   ``anonymous``   Applied to unauthenticated access when ``allow_unauthenticated_read``
-                   is enabled
-  ==============  =============================================================================
+For what users, roles, and groups *are* - the list of roles and what each permits, what
+happens on a server with security disabled, and how unauthenticated access works - see
+:doc:`../overview/users_groups`. This section covers the administrative operations.
 
 .. note::
 
-  These roles are not scoped by ownership - a user with the ``submit`` role may modify or
-  delete any record or dataset on the server, not only the ones they created.
+  Roles are not scoped by ownership. A user with the ``submit`` role may modify or delete
+  any record or dataset on the server, not only the ones they created.
 
 List users and view details
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
