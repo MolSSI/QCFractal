@@ -6,6 +6,8 @@
 
 # Other packages
 import datetime
+import os
+import sys
 
 # Import the package for version info
 import qcfractal
@@ -16,9 +18,9 @@ import qcfractal
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+# Local extensions live in _ext (see the `config-table` directive used by the
+# configuration pages).
+sys.path.insert(0, os.path.abspath("_ext"))
 
 
 # -- Project information -----------------------------------------------------
@@ -53,6 +55,8 @@ extensions = [
     "sphinxcontrib.pydantic",
     "sphinx_copybutton",
     "myst_nb",
+    # Local, in _ext/
+    "configtable",
 ]
 
 # Some options
