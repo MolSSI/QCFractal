@@ -2209,7 +2209,7 @@ class PortalClient(PortalClientBase):
         This checks if the calculations already exist in the database. If so, it returns
         the existing id, otherwise it will insert it and return the new id.
 
-        This will add one record per set of molecules
+        This will add one record per reaction
 
         Parameters
         ----------
@@ -2235,7 +2235,7 @@ class PortalClient(PortalClientBase):
         -------
         :
             Metadata about the insertion, and a list of record ids. The ids will be in the
-            order of the input molecules
+            order of the input stoichiometries
         """
 
         if "tag" in kwargs:
@@ -2351,7 +2351,7 @@ class PortalClient(PortalClientBase):
         parent_id
             Query records that have a parent is in the given list
         child_id
-            Query records that have a child (optimization calculation) is in the given list
+            Query records that have a child (singlepoint or optimization calculation) is in the given list
         created_before
             Query records that were created before the given date/time
         created_after
@@ -2572,7 +2572,7 @@ class PortalClient(PortalClientBase):
         parent_id
             Query records that have a parent is in the given list
         child_id
-            Query records that have a child (optimization calculation) is in the given list
+            Query records that have a child (singlepoint calculation) is in the given list
         created_before
             Query records that were created before the given date/time
         created_after
@@ -2582,7 +2582,7 @@ class PortalClient(PortalClientBase):
         modified_after
             Query records that were modified after the given date/time
         program
-            Query records whose reaction program is in the given list
+            Query records whose manybody program is in the given list
         qc_program
             Query records whose qc program is in the given list
         qc_method
@@ -2651,21 +2651,24 @@ class PortalClient(PortalClientBase):
         This checks if the calculations already exist in the database. If so, it returns
         the existing id, otherwise it will insert it and return the new id.
 
-        This will add one record per set of molecules
+        This will add one record per initial chain
 
         Parameters
         ----------
         initial_chains
-            The initial chains to run the NEB calculations on . Each NEB calculation starts with a single
+            The initial chains to run the NEB calculations on. Each NEB calculation starts with a single
             chain (list of molecules), so this is a nested list
         program
             The program to run the neb computation with ("geometric")
         singlepoint_specification
             Specification of how each singlepoint (gradient/hessian) should be run
         optimization_specification
-            Specification of how any optimizations of the torsiondrive should be run
+            Specification of how the transition state optimization should be run, if one was requested
+            with the optimize_ts keyword. May be None. Note that this does not apply to the endpoint
+            optimizations requested with the optimize_endpoints keyword, which always use geometric
+            with the level of theory given in the singlepoint specification
         keywords
-            The torsiondrive keywords for the computation
+            The NEB keywords for the computation
         compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
@@ -2677,7 +2680,7 @@ class PortalClient(PortalClientBase):
         -------
         :
             Metadata about the insertion, and a list of record ids. The ids will be in the
-            order of the input molecules
+            order of the input chains
         """
 
         if "tag" in kwargs:
@@ -2795,7 +2798,7 @@ class PortalClient(PortalClientBase):
         parent_id
             Query records that have a parent is in the given list
         child_id
-            Query records that have a child (optimization calculation) is in the given list
+            Query records that have a child (singlepoint or optimization calculation) is in the given list
         created_before
             Query records that were created before the given date/time
         created_after
@@ -2805,7 +2808,7 @@ class PortalClient(PortalClientBase):
         modified_after
             Query records that were modified after the given date/time
         program
-            Query records whose torsiondrive program is in the given list
+            Query records whose neb program is in the given list
         qc_program
             Query records whose qc program is in the given list
         qc_method
