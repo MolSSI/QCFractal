@@ -226,6 +226,9 @@ If an entry with the same name already exists, it will be ignored.
 All arguments to this method are keyword-only. The source dataset is identified either by
 ``dataset_id``, or by both ``dataset_type`` and ``dataset_name`` together.
 
+Copying from another singlepoint dataset preserves the entries' ``additional_keywords``. Copying from
+an optimization dataset resets them to an empty dictionary, since an optimization entry has none.
+
 .. tab-set::
 
   .. tab-item:: PYTHON

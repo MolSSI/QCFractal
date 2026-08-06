@@ -722,6 +722,19 @@ class BaseDataset(BaseModel):
         return self._cache_data is not None and self._cache_data.read_only
 
     def status(self) -> dict[str, Any]:
+        """
+        Returns the status of the dataset's computations, broken down by specification
+
+        The status is computed on the server, and does not require downloading any records.
+
+        Returns
+        -------
+        :
+            A dictionary with specification names as keys. Each value is itself a dictionary
+            mapping record status to the number of records of the dataset with that status.
+            Statuses with no records are not present.
+        """
+
         self.assert_online()
 
         return self._client.make_request("get", f"{self._base_url}/status", dict[str, dict[RecordStatusEnum, int]])
@@ -748,6 +761,18 @@ class BaseDataset(BaseModel):
         print(self.status_table())
 
     def detailed_status(self) -> list[tuple[str, str, RecordStatusEnum]]:
+        """
+        Returns the status of every record of the dataset individually
+
+        Unlike :meth:`status`, nothing is grouped or counted - there is one entry per record.
+        This is what to use when you need to know *which* entries are in a particular state.
+
+        Returns
+        -------
+        :
+            A list of tuples (entry name, specification name, status), in no particular order
+        """
+
         self.assert_online()
 
         return self._client.make_request(
@@ -757,6 +782,21 @@ class BaseDataset(BaseModel):
         )
 
     def status_by_compute_tag(self) -> list[tuple[str, RecordStatusEnum, int]]:
+        """
+        Returns the status of the dataset's computations, broken down by compute tag
+
+        Only records that still have an entry in the task or service queue are counted. A record's
+        task is removed from the queue when it completes, so completed records do not appear here,
+        and these counts will not sum to the counts returned by :meth:`status`. In practice, this
+        function reports the waiting, running, and errored records of the dataset - that is, the
+        work that is still outstanding, and which compute tag it is queued under.
+
+        Returns
+        -------
+        :
+            A list of tuples (compute tag, status, number of records), in no particular order
+        """
+
         self.assert_online()
 
         return self._client.make_request(

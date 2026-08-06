@@ -122,6 +122,34 @@ class SinglepointDataset(BaseDataset):
         dataset_id: int | None = None,
         specification_name: str | None = None,
     ) -> InsertCountsMetadata:
+        """
+        Adds entries to this dataset by copying them from another dataset
+
+        The source dataset may be another singlepoint dataset, or an optimization dataset.
+        When copying from an optimization dataset, ``specification_name`` is required, and the
+        molecule of each new entry is the optimized (final) molecule of the corresponding record.
+        Entries whose record is not complete are skipped.
+
+        Entries whose name already exists in this dataset are ignored.
+
+        Parameters
+        ----------
+        dataset_type
+            Type of the dataset to copy entries from. Must be given together with ``dataset_name``
+        dataset_name
+            Name of the dataset to copy entries from. Must be given together with ``dataset_type``
+        dataset_id
+            ID of the dataset to copy entries from. May be given instead of the type and name
+        specification_name
+            Specification of the source dataset to take molecules from. Required when copying
+            from an optimization dataset, and unused otherwise
+
+        Returns
+        -------
+        :
+            Metadata about how many entries were added
+        """
+
         body = SinglepointDatasetEntriesFrom(
             dataset_type=dataset_type,
             dataset_name=dataset_name,
