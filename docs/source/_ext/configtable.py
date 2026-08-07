@@ -118,11 +118,13 @@ def _type_name(annotation: Any) -> str:
 def _default_text(field: Any) -> str:
     if field.is_required():
         return "*required*"
+    # A default_factory means the real default is built at runtime. Pydantic leaves
+    # .default as PydanticUndefined (not None) for these, so this has to be checked
+    # before looking at .default at all.
+    if getattr(field, "default_factory", None) is not None:
+        return "*see below*"
     default = field.default
     if default is None:
-        # A default_factory means the real default is built at runtime
-        if getattr(field, "default_factory", None) is not None:
-            return "*see below*"
         return "``null``"
     if isinstance(default, bool):
         return f"``{str(default).lower()}``"
