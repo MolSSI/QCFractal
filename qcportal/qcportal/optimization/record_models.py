@@ -46,9 +46,10 @@ class OptimizationProtocols(BaseModel):
     Protocols regarding the manipulation of a Optimization output data.
     """
 
-    trajectory: TrajectoryProtocolEnum = Field(
-        TrajectoryProtocolEnum.all, description=str(TrajectoryProtocolEnum.__doc__)
-    )
+    model_config = ConfigDict(use_attribute_docstrings=True)
+
+    trajectory: TrajectoryProtocolEnum = TrajectoryProtocolEnum.all
+    """Which gradient evaluations to keep in the trajectory"""
 
 
 class OptimizationSpecification(BaseModel):
@@ -58,12 +59,19 @@ class OptimizationSpecification(BaseModel):
     This is the same as the input specification, with a few ids added
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
-    program: LowerStr = Field(..., description="The program to use for an optimization")
+    program: LowerStr
+    """The program to use for an optimization"""
+
     qc_specification: QCSpecification
-    keywords: dict[str, Any] = Field({})
+    """The specification used for the gradient evaluations at each step of the optimization"""
+
+    keywords: dict[str, Any] = {}
+    """Program-specific keywords to use for the optimization"""
+
     protocols: OptimizationProtocols = Field(default_factory=OptimizationProtocols)
+    """Which parts of the optimization output to keep"""
 
     @field_validator("qc_specification", mode="before")
     @classmethod

@@ -166,7 +166,7 @@ class FractalServerSettings(QCFComputeConfigBase):
     """Password to authenticate to the Fractal Server with (alongside the `username`)"""
 
     verify: bool | None = None
-    """Use Server-side generated SSL certification or not."""
+    """Use Server-side generated SSL certification or not"""
 
 
 class FractalComputeConfig(BaseSettings):
@@ -216,9 +216,9 @@ class FractalComputeConfig(BaseSettings):
     See https://parsl.readthedocs.io/en/stable/userguide/advanced/usage_tracking.html
     """
 
-    server: FractalServerSettings = Field(...)
+    server: FractalServerSettings
     environments: PackageEnvironmentSettings = Field(default_factory=PackageEnvironmentSettings)
-    executors: dict[str, AllExecutorTypes] = Field(...)
+    executors: dict[str, AllExecutorTypes]
 
     model_config = SettingsConfigDict(
         extra="forbid",

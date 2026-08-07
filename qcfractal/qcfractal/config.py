@@ -83,7 +83,7 @@ class DatabaseConfig(QCFConfigBase):
     """The port the database is running on. If own = True, a database will be started, binding to this port"""
 
     database_name: str = "qcfractal_default"
-    """The database name to connect to."""
+    """The database name to connect to"""
 
     username: str
     """The database username to connect with"""
@@ -201,7 +201,7 @@ class AutoResetConfig(QCFConfigBase):
     """
 
     unknown_error: int = 2
-    """Maximum automatic restarts for errors that could not be classified."""
+    """Maximum automatic restarts for errors that could not be classified"""
 
     compute_lost: int = 5
     """Maximum automatic restarts for computations whose compute resource disappeared.
@@ -213,7 +213,7 @@ class AutoResetConfig(QCFConfigBase):
     """
 
     random_error: int = 5
-    """Maximum automatic restarts for errors the server recognises as intermittent."""
+    """Maximum automatic restarts for errors the server recognises as intermittent"""
 
 
 class APILimitConfig(QCFConfigBase):
@@ -272,7 +272,7 @@ class WebAPIConfig(QCFConfigBase):
     """The IP address or hostname to bind to"""
 
     port: int = 7777
-    """The port on which to run the REST interface."""
+    """The port on which to run the REST interface"""
 
     secret_key: str
     """Secret key for flask api. See documentation"""
@@ -348,7 +348,7 @@ class S3Config(QCFConfigBase):
     """
 
     verify: bool = True
-    """Verify TLS certificates when connecting to S3."""
+    """Verify TLS certificates when connecting to S3"""
 
     passthrough: bool = False
     """Whether clients may download directly from the S3 endpoint.
@@ -367,7 +367,7 @@ class S3Config(QCFConfigBase):
     """AWS/S3 secret key"""
 
     auto_create_buckets: bool = False
-    """Create the buckets named in ``bucket_map`` at startup if they do not already exist."""
+    """Create the buckets named in ``bucket_map`` at startup if they do not already exist"""
 
     bucket_map: S3BucketMap = Field(default_factory=S3BucketMap)
     """Configuration for where to store various files"""
@@ -389,16 +389,16 @@ class CORSconfig(QCFConfigBase):
     enabled: bool = False
     """Whether to send CORS headers at all. With this off the other options here do nothing."""
 
-    origins: list[str] = Field([])
+    origins: list[str] = []
     """Origins permitted to make cross-origin requests. Use ``["*"]`` to allow any origin."""
 
     supports_credentials: bool = False
-    """Whether cross-origin requests may carry credentials (cookies, authorization headers)."""
+    """Whether cross-origin requests may carry credentials (cookies, authorization headers)"""
 
-    headers: list[str] = Field([])
-    """Request headers a cross-origin request is allowed to set, such as ``Authorization``."""
+    headers: list[str] = []
+    """Request headers a cross-origin request is allowed to set, such as ``Authorization``"""
 
-    methods: list[str] = Field([])
+    methods: list[str] = []
     """HTTP methods permitted for cross-origin requests. Empty means the CORS default."""
 
 
@@ -473,7 +473,6 @@ class FractalConfig(BaseSettings):
     access_log_keep: int = 0
     """How far back to keep access logs (in days or as a duration string). 0 means keep all"""
 
-    # maxmind_account_id: int | None = Field(None, description="Account ID for MaxMind GeoIP2 service")
     maxmind_license_key: str | None = None
     """License key for MaxMind GeoIP2 service. If provided, the GeoIP2 database will be downloaded and updated
     automatically

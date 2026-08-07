@@ -103,11 +103,20 @@ class ComputeManager(BaseModel):
 
 
 class ManagerActivationBody(RestModelBase):
-    name_data: ManagerName = Field(..., description="Name information about this manager")
-    manager_version: str = Field(..., description="Version of the manager itself")
-    username: str | None = Field(..., description="Username this manager is connected with")
-    programs: dict[LowerStr, list[str]] = Field(..., description="Programs available on this manager")
-    compute_tags: list[LowerStr] = Field(..., description="Tags this manager will compute for")
+    name_data: ManagerName
+    """Name information about this manager"""
+
+    manager_version: str
+    """Version of the manager itself"""
+
+    username: str | None
+    """Username this manager is connected with"""
+
+    programs: dict[LowerStr, list[str]]
+    """Programs available on this manager"""
+
+    compute_tags: list[LowerStr]
+    """Tags this manager will compute for"""
 
     @field_validator("compute_tags", mode="after")
     @classmethod
