@@ -1,7 +1,12 @@
-"""Finalize migration of molecule msgpack columns
+"""Migrate molecule msgpack columns to native postgres types
+
+The bulk of the work here (deserializing msgpack into the temporary columns) can be done
+ahead of time, against a live server, with server_admin/migrate_molecule_msgpack.py. That
+script adds the same temporary columns and populates them, leaving this migration with
+only the column moving to do. Anything it did not get to is handled here.
 
 Revision ID: 67f7b25de401
-Revises: 9adf25dba3bc
+Revises: 865e4be6ef5c
 Create Date: 2025-03-06 16:21:00.149754
 
 """
@@ -19,17 +24,35 @@ from tqdm import tqdm
 
 # revision identifiers, used by Alembic.
 revision = "67f7b25de401"
-down_revision = "9adf25dba3bc"
+down_revision = "865e4be6ef5c"
 branch_labels = None
 depends_on = None
 
+# Temporary columns used to hold the deserialized data. These are renamed into place at the
+# end of this migration, so their types must match the MoleculeORM columns.
+# server_admin/migrate_molecule_msgpack.py creates these same columns - keep the two in sync.
+TEMPORARY_COLUMNS = [
+    ("_migrated_status", postgresql.BOOLEAN()),
+    ("symbols_tmp", postgresql.ARRAY(sa.String())),
+    ("geometry_tmp", postgresql.ARRAY(sa.Float())),
+    ("masses_tmp", postgresql.ARRAY(sa.Float())),
+    ("real_tmp", postgresql.ARRAY(sa.Boolean())),
+    ("atom_labels_tmp", postgresql.ARRAY(sa.String())),
+    ("atomic_numbers_tmp", postgresql.ARRAY(sa.Integer())),
+    ("mass_numbers_tmp", postgresql.ARRAY(sa.Float())),
+    ("fragments_tmp", postgresql.JSON()),
+    ("fragment_charges_tmp", postgresql.ARRAY(sa.Float())),
+    ("fragment_multiplicities_tmp", postgresql.ARRAY(sa.Float())),
+]
+
+
 def _msgpackext_decode(obj: Any) -> Any:
     if b"_nd_" in obj:
-        arr = np.frombuffer(obj[b"data"], dtype=obj[b"dtype"])
-        if b"shape" in obj:
-            arr.shape = obj[b"shape"]
-
-        return arr
+        # Deliberately not restoring the shape. The data was written in C order and the
+        # only multi-dimensional value is geometry, which is stored flattened - so the
+        # caller would just ravel() it straight back to what frombuffer already returns.
+        # (Assigning to .shape is also deprecated as of numpy 2.5)
+        return np.frombuffer(obj[b"data"], dtype=obj[b"dtype"])
 
     return obj
 
@@ -44,11 +67,51 @@ def deserialize_msgpackext(value):
         return v.ravel().tolist()
 
     # awkward, but things like "fragments" might be a list of np arrays
-    if isinstance(v, list) and isinstance(v[0], np.ndarray):
+    if isinstance(v, list) and len(v) > 0 and isinstance(v[0], np.ndarray):
         return [v.tolist() for v in v]
+
+    # Anything stored by a newer server is already plain lists/scalars
+    return v
+
+
+def _add_temporary_columns():
+    """
+    Adds the temporary columns, skipping any that server_admin/migrate_molecule_msgpack.py
+    created already
+    """
+
+    bind = op.get_bind()
+    existing = {c["name"] for c in sa.inspect(bind).get_columns("molecule")}
+
+    for col_name, col_type in TEMPORARY_COLUMNS:
+        if col_name not in existing:
+            op.add_column("molecule", sa.Column(col_name, col_type, nullable=True))
+
+    # Needed to find the rows left to do without scanning the whole table. Always rebuild:
+    # an interrupted build leaves an invalid
+    # index that CREATE INDEX IF NOT EXISTS would keep (it matches on the name) even though
+    # the planner ignores it.
+    op.execute("DROP INDEX IF EXISTS ix_molecule__migrated_status")
+    op.execute("CREATE INDEX ix_molecule__migrated_status ON molecule (_migrated_status)")
 
 
 def upgrade():
+    # This migration is one long transaction - hours of it, on a large database. Both of
+    # these default to 0 (no limit) in postgres, but plenty of deployments set them (per
+    # database, per role, or by a managed provider), and either would kill the migration
+    # part way through and roll all of the work back.
+    op.execute("SET LOCAL statement_timeout = 0")
+
+    # transaction_timeout only exists from postgres 17; setting it on anything older is an
+    # error, which would abort the very migration this is meant to protect
+    has_transaction_timeout = (
+        op.get_bind().execute(sa.text("SELECT 1 FROM pg_settings WHERE name = 'transaction_timeout'")).scalar()
+    )
+    if has_transaction_timeout:
+        op.execute("SET LOCAL transaction_timeout = 0")
+
+    _add_temporary_columns()
+
     mol_table = table(
         "molecule",
         column("id", sa.Integer),
@@ -88,6 +151,8 @@ def upgrade():
     print("Total molecules to migrate:", total_to_migrate)
     if total_to_migrate > 50000:
         print("WARNING: This migration may take a long time for large numbers of molecules (100,000+). Please be patient.")
+        print("         The server is unavailable until it finishes, and it cannot be undone (restoring")
+        print("         a backup is the only way back).")
 
     progress = tqdm(total=total_to_migrate, desc="Migrating molecules", unit=" mol")
 
