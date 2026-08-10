@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -486,11 +486,16 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">Provenance</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Provenance information.&quot;&quot;&quot;</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;allow&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;allow&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">creator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The name of the program, library, or person who created the object.&quot;</span><span class="p">)</span>
-    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The version of the creator, blank otherwise&quot;</span><span class="p">)</span>
-    <span class="n">routine</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The name of the routine or function within the creator, blank otherwise.&quot;</span><span class="p">)</span></div>
+    <span class="n">creator</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The name of the program, library, or person who created the object&quot;&quot;&quot;</span>
+
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The version of the creator, blank otherwise&quot;&quot;&quot;</span>
+
+    <span class="n">routine</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The name of the routine or function within the creator, blank otherwise&quot;&quot;&quot;</span></div>
 
 
 
@@ -590,10 +595,14 @@
 <span class="sd">    Storage of outputs and error messages, with optional compression</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">output_type</span><span class="p">:</span> <span class="n">OutputTypeEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The type of output this is (stdout, error, etc)&quot;</span><span class="p">)</span>
-    <span class="n">compression_type</span><span class="p">:</span> <span class="n">CompressionEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">CompressionEnum</span><span class="o">.</span><span class="n">none</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Compression method (such as lzma)&quot;</span><span class="p">)</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">OutputTypeEnum</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The type of output this is (stdout, error, etc)&quot;&quot;&quot;</span>
+
+    <span class="n">compression_type</span><span class="p">:</span> <span class="n">CompressionEnum</span> <span class="o">=</span> <span class="n">CompressionEnum</span><span class="o">.</span><span class="n">none</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compression method (such as lzma)&quot;&quot;&quot;</span>
+
     <span class="n">data_</span><span class="p">:</span> <span class="n">QCPortalBytes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
 
     <span class="n">_data_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
@@ -717,10 +726,14 @@
 <span class="sd">    Storage of native files, with compression</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Name of the file&quot;</span><span class="p">)</span>
-    <span class="n">compression_type</span><span class="p">:</span> <span class="n">CompressionEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Compression method (such as lzma)&quot;</span><span class="p">)</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of the file&quot;&quot;&quot;</span>
+
+    <span class="n">compression_type</span><span class="p">:</span> <span class="n">CompressionEnum</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compression method (such as lzma)&quot;&quot;&quot;</span>
+
     <span class="n">data_</span><span class="p">:</span> <span class="n">QCPortalBytes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
 
     <span class="n">_data_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
@@ -923,7 +936,7 @@
     <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
-    <span class="n">extras</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">({})</span>
+    <span class="n">extras</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="n">status</span><span class="p">:</span> <span class="n">RecordStatusEnum</span>
     <span class="n">manager_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
@@ -955,6 +968,8 @@
     <span class="n">_record_cache</span><span class="p">:</span> <span class="n">RecordCache</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">_cache_dirty</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 
+<div class="viewcode-block" id="BaseRecord.__init__">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base_url_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># TODO - DEPRECATED - REMOVE EVENTUALLY</span>
         <span class="k">if</span> <span class="s2">&quot;owner_user&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
@@ -968,7 +983,8 @@
         <span class="c1"># which should filter down to the ones in this (BaseRecord) class</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">base_url_prefix</span><span class="p">)</span>
 
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">is</span> <span class="n">client</span><span class="p">,</span> <span class="s2">&quot;Client not set in base record class?&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">is</span> <span class="n">client</span><span class="p">,</span> <span class="s2">&quot;Client not set in base record class?&quot;</span></div>
+
 
     <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;extras&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
@@ -1424,6 +1440,8 @@
 <span class="sd">    of a record query and works with all kinds of records.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="RecordQueryIterator.__init__">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordQueryIterator.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">client</span><span class="p">,</span>
@@ -1448,7 +1466,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span> <span class="o">=</span> <span class="n">record_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">include</span> <span class="o">=</span> <span class="n">include</span>
 
-        <span class="n">QueryIteratorBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">,</span> <span class="n">batch_limit</span><span class="p">)</span>
+        <span class="n">QueryIteratorBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">,</span> <span class="n">batch_limit</span><span class="p">)</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Record_T</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

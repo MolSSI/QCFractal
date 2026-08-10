@@ -192,7 +192,7 @@ Calculations may also produce other outputs. All records support the following:
       >>> print(r.properties.keys())
       dict_keys(['pe energy', 'scf dipole', 'calcinfo_nmo',...
 
-      >>> print(r.properties["scf_dipole"])
+      >>> print(r.properties["scf dipole"])
       [0.5734967483313045, 0.5734967483328919, 0.0]
 
 

@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -486,51 +486,44 @@
 <span class="sd">    NEBRecord options</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">images</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="mi">11</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Number of images that will be used to locate a rough transition state structure.&quot;</span><span class="p">,</span>
-        <span class="n">gt</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">images</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of images that will be used to locate a rough transition state structure&quot;&quot;&quot;</span>
 
-    <span class="n">spring_constant</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="mf">1.0</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Spring constant in kcal/mol/Ang^2.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">spring_constant</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Spring constant in kcal/mol/Ang^2&quot;&quot;&quot;</span>
 
-    <span class="n">spring_type</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="mi">0</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;0: Nudged Elastic Band (parallel spring force + perpendicular gradients)</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;1: Hybrid Elastic Band (full spring force + perpendicular gradients)</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="s2">&quot;2: Plain Elastic Band (full spring force + full gradients)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">spring_type</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Which spring and gradient terms to use.</span>
 
-    <span class="n">maximum_force</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="mf">0.05</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Convergence criteria. Converge when maximum RMS-gradient (ev/Ang) of the chain fall below maximum_force.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+<span class="sd">    * ``0`` - Nudged Elastic Band (parallel spring force + perpendicular gradients)</span>
+<span class="sd">    * ``1`` - Hybrid Elastic Band (full spring force + perpendicular gradients)</span>
+<span class="sd">    * ``2`` - Plain Elastic Band (full spring force + full gradients)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">average_force</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="mf">0.025</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Convergence criteria. Converge when average RMS-gradient (ev/Ang) of the chain fall below average_force.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">maximum_force</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convergence criteria. Converge when maximum RMS-gradient (ev/Ang) of the chain fall below maximum_force.&quot;&quot;&quot;</span>
 
-    <span class="n">maximum_cycle</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Maximum iteration number for NEB calculation.&quot;</span><span class="p">)</span>
+    <span class="n">average_force</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.025</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convergence criteria. Converge when average RMS-gradient (ev/Ang) of the chain fall below average_force.&quot;&quot;&quot;</span>
 
-    <span class="n">optimize_ts</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">False</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Setting it equal to true will perform a transition sate optimization starting with the guessed transition state structure from the NEB calculation result.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">maximum_cycle</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maximum iteration number for NEB calculation&quot;&quot;&quot;</span>
 
-    <span class="n">optimize_endpoints</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">False</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Setting it equal to True will optimize two end points of the initial chain before starting NEB.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">optimize_ts</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Perform a transition state optimization, starting from the transition state structure guessed by the</span>
+<span class="sd">    NEB calculation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">align</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Align the images before starting the NEB calculation.&quot;</span><span class="p">)</span>
+    <span class="n">optimize_endpoints</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optimize the two end points of the initial chain before starting NEB&quot;&quot;&quot;</span>
 
-    <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Small eigenvalue threshold for resetting Hessian.&quot;</span><span class="p">)</span>
+    <span class="n">align</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Align the images before starting the NEB calculation&quot;&quot;&quot;</span>
+
+    <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-5</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Small eigenvalue threshold for resetting Hessian&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="NEBKeywords.normalize">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBKeywords.normalize">[docs]</a>

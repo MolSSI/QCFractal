@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -509,9 +509,10 @@
 <span class="sd">    Protocols regarding the manipulation of a Optimization output data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">trajectory</span><span class="p">:</span> <span class="n">TrajectoryProtocolEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">TrajectoryProtocolEnum</span><span class="o">.</span><span class="n">all</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">TrajectoryProtocolEnum</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">)</span>
-    <span class="p">)</span></div>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">trajectory</span><span class="p">:</span> <span class="n">TrajectoryProtocolEnum</span> <span class="o">=</span> <span class="n">TrajectoryProtocolEnum</span><span class="o">.</span><span class="n">all</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Which gradient evaluations to keep in the trajectory&quot;&quot;&quot;</span></div>
 
 
 
@@ -524,12 +525,19 @@
 <span class="sd">    This is the same as the input specification, with a few ids added</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">program</span><span class="p">:</span> <span class="n">LowerStr</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The program to use for an optimization&quot;</span><span class="p">)</span>
+    <span class="n">program</span><span class="p">:</span> <span class="n">LowerStr</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The program to use for an optimization&quot;&quot;&quot;</span>
+
     <span class="n">qc_specification</span><span class="p">:</span> <span class="n">QCSpecification</span>
-    <span class="n">keywords</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">({})</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The specification used for the gradient evaluations at each step of the optimization&quot;&quot;&quot;</span>
+
+    <span class="n">keywords</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Program-specific keywords to use for the optimization&quot;&quot;&quot;</span>
+
     <span class="n">protocols</span><span class="p">:</span> <span class="n">OptimizationProtocols</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">OptimizationProtocols</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Which parts of the optimization output to keep&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="OptimizationSpecification.force_qcspec">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationSpecification.force_qcspec">[docs]</a>

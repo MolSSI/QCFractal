@@ -1,0 +1,1552 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qcportal.project_models &#8212; QCArchive documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=68b739ae" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../_static/documentation_options.js?v=64b8918b"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qcportal/project_models';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/qcarchive_logo.svg" class="logo__image only-light" alt=""/>
+    <img src="../../_static/qcarchive_logo_inverted.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">QCArchive</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart/index.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../overview/index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart/index.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../overview/index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">qcportal.project_models</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for qcportal.project_models</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">field_validator</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">ConfigDict</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.all_inputs</span><span class="w"> </span><span class="kn">import</span> <span class="n">AllInputTypes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.all_results</span><span class="w"> </span><span class="kn">import</span> <span class="n">AllResultTypes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.base_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProjURLParameters</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.base_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RestModelBase</span><span class="p">,</span> <span class="n">validate_list_to_single</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.dataset_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDataset</span><span class="p">,</span> <span class="n">dataset_from_dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.external_files.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExternalFile</span><span class="p">,</span> <span class="n">ExternalFileUploadBase</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.metadata_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">InsertCountsMetadata</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">PriorityEnum</span><span class="p">,</span> <span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="n">RecordAddBodyBase</span><span class="p">,</span> <span class="n">record_from_dict</span><span class="p">,</span> <span class="n">BaseRecord</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_list</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalClient</span>
+
+
+<div class="viewcode-block" id="ProjectAttachmentType">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectAttachmentType">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectAttachmentType</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The type of attachment a file is for a project</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">other</span> <span class="o">=</span> <span class="s2">&quot;other&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="ProjectAttachment">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectAttachment">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectAttachment</span><span class="p">(</span><span class="n">ExternalFile</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A file that has been uploaded to a project</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">attachment_type</span><span class="p">:</span> <span class="n">ProjectAttachmentType</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="ProjectQueryModel">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectQueryModel">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectQueryModel</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+    <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">include</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">exclude</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="ProjectDeleteParams">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectDeleteParams">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectDeleteParams</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+    <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">delete_datasets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">delete_dataset_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="ProjectDeleteParams.validate_lists">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectDeleteParams.validate_lists">[docs]</a>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;delete_records&quot;</span><span class="p">,</span> <span class="s2">&quot;delete_datasets&quot;</span><span class="p">,</span> <span class="s2">&quot;delete_dataset_records&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_lists</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">validate_list_to_single</span><span class="p">(</span><span class="n">v</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ProjectAddBody">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectAddBody">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectAddBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tagline</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">default_compute_tag</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">default_compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span>
+    <span class="n">extras</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="n">existing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+
+<span class="c1"># This is basically a duplicate of DatasetAddBody, but with</span>
+<span class="c1"># dataset_type added. Ok to duplicate because we will eventually move</span>
+<span class="c1"># to projects-only</span>
+<div class="viewcode-block" id="ProjectDatasetAddBody">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectDatasetAddBody">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectDatasetAddBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+    <span class="n">dataset_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tagline</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">provenance</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="n">default_compute_tag</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">default_compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span>
+    <span class="n">extras</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="n">existing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="ProjectLinkDatasetBody">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectLinkDatasetBody">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectLinkDatasetBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+    <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">tagline</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="ProjectUnlinkDatasetsBody">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectUnlinkDatasetsBody">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectUnlinkDatasetsBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+    <span class="n">dataset_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">delete_datasets</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">delete_dataset_records</span><span class="p">:</span> <span class="nb">bool</span></div>
+
+
+
+<div class="viewcode-block" id="ProjectRecordAddBody">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectRecordAddBody">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectRecordAddBody</span><span class="p">(</span><span class="n">RecordAddBodyBase</span><span class="p">):</span>
+    <span class="n">record_input</span><span class="p">:</span> <span class="n">AllInputTypes</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="ProjectRecordImportBody">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectRecordImportBody">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectRecordImportBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+    <span class="n">record_data</span><span class="p">:</span> <span class="n">AllResultTypes</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="ProjectLinkRecordBody">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectLinkRecordBody">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectLinkRecordBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+    <span class="n">record_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="ProjectUnlinkRecordsBody">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectUnlinkRecordsBody">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectUnlinkRecordsBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+    <span class="n">record_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span></div>
+
+
+
+<div class="viewcode-block" id="ProjectAttachmentUploadBody">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectAttachmentUploadBody">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectAttachmentUploadBody</span><span class="p">(</span><span class="n">ExternalFileUploadBase</span><span class="p">):</span>
+    <span class="n">attachment_type</span><span class="p">:</span> <span class="n">ProjectAttachmentType</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="ProjectRecordMetadata">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectRecordMetadata">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectRecordMetadata</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Information about a record contained in a project</span>
+
+<span class="sd">    This is the lightweight information about a record that a project stores, and does</span>
+<span class="sd">    not include the record itself. Use :meth:`Project.get_record` to obtain the full record.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">record_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+    <span class="n">record_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">status</span><span class="p">:</span> <span class="n">RecordStatusEnum</span></div>
+
+
+
+<div class="viewcode-block" id="ProjectDatasetMetadata">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectDatasetMetadata">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectDatasetMetadata</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Information about a dataset contained in a project</span>
+
+<span class="sd">    This is the lightweight information about a dataset that a project stores, and does</span>
+<span class="sd">    not include the dataset itself. Use :meth:`Project.get_dataset` to obtain the full dataset.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">dataset_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tagline</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="ProjectQueryRecords">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectQueryRecords">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectQueryRecords</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+    <span class="n">record_id</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="ProjectQueryDatasets">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectQueryDatasets">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectQueryDatasets</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
+    <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Project">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Project</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A named collection of records, datasets, and files</span>
+
+<span class="sd">    A project groups together the records and datasets belonging to a single piece of work.</span>
+<span class="sd">    Within a project, records and datasets are given names, and most methods here accept</span>
+<span class="sd">    either that name or the underlying ID.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">validate_assignment</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tagline</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+    <span class="n">default_compute_tag</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">default_compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span>
+
+    <span class="n">owner_user</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+
+    <span class="n">extras</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+
+    <span class="c1">########################################</span>
+    <span class="c1"># Caches of information</span>
+    <span class="c1">########################################</span>
+    <span class="n">_record_metadata</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ProjectRecordMetadata</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">([])</span>
+    <span class="n">_dataset_metadata</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ProjectDatasetMetadata</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">([])</span>
+
+    <span class="c1">######################################################</span>
+    <span class="c1"># Fields not always included when fetching the project</span>
+    <span class="c1">######################################################</span>
+    <span class="n">attachments_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ProjectAttachment</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;attachments&quot;</span><span class="p">)</span>
+
+    <span class="c1">#############################</span>
+    <span class="c1"># Private non-pydantic fields</span>
+    <span class="c1">#############################</span>
+    <span class="n">_client</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">offline</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        True if this project is not connected to a server</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">is</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Project.assert_online">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.assert_online">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">assert_online</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Raises a RuntimeError if this project is not connected to a server</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">offline</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Project is not connected to a QCFractal server&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Project.__init__">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">PortalClient</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">BaseModel</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Calls derived class propagate_client</span>
+        <span class="c1"># which should filter down to the ones in this (BaseDataset) class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="n">client</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Project.propagate_client">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.propagate_client">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Propagates a client to this record to any fields within this record that need it</span>
+
+<span class="sd">        This may also be called from derived class propagate_client functions as well</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">client</span></div>
+
+
+    <span class="c1">#############################</span>
+    <span class="c1"># General info</span>
+    <span class="c1">#############################</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dataset_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ProjectDatasetMetadata</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Information about the datasets in this project</span>
+
+<span class="sd">        This is fetched from the server the first time it is accessed, and then cached. Use</span>
+<span class="sd">        :meth:`fetch_dataset_metadata` to fetch it again.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dataset_metadata</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fetch_dataset_metadata</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_metadata</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">record_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ProjectRecordMetadata</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Information about the records in this project</span>
+
+<span class="sd">        This is fetched from the server the first time it is accessed, and then cached. Use</span>
+<span class="sd">        :meth:`fetch_record_metadata` to fetch it again.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_record_metadata</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fetch_record_metadata</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_metadata</span>
+
+<div class="viewcode-block" id="Project.status">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.status">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Obtain a summary of the status of everything in this project</span>
+
+<span class="sd">        The returned dictionary has two keys - ``records`` and ``datasets``. Each maps to a</span>
+<span class="sd">        dictionary of record status to the number of records with that status. The ``records``</span>
+<span class="sd">        entry counts only the records added directly to the project; the ``datasets`` entry</span>
+<span class="sd">        counts the records of all the datasets in the project, summed together.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            Counts of record statuses, split into records and datasets</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/status&quot;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span>
+        <span class="p">)</span></div>
+
+
+    <span class="c1">#############################</span>
+    <span class="c1"># Records</span>
+    <span class="c1">#############################</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_lookup_record_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_metadata</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">d</span><span class="o">.</span><span class="n">record_id</span>
+
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Record &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; not found&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Project.fetch_record_metadata">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.fetch_record_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_record_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fetches information about the records in this project from the server</span>
+
+<span class="sd">        This overwrites what is stored locally, and is available through the</span>
+<span class="sd">        :attr:`record_metadata` property.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_record_metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/record_metadata&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">ProjectRecordMetadata</span><span class="p">]</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Project.add_record">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.add_record">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_record</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record_input</span><span class="p">:</span> <span class="n">AllInputTypes</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">compute_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">find_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseRecord</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new record in this project and submits it for computation</span>
+
+<span class="sd">        Unlike the ``add_*`` methods of the client, this takes a single record input object</span>
+<span class="sd">        (for example, a :class:`~qcportal.singlepoint.record_models.SinglepointInput`) and</span>
+<span class="sd">        creates a single record.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name</span>
+<span class="sd">            Name to give this record within the project. Must be unique within the project</span>
+<span class="sd">        record_input</span>
+<span class="sd">            The specification and input molecule(s), as a record input object</span>
+<span class="sd">        description</span>
+<span class="sd">            Optional longer description of this record</span>
+<span class="sd">        tags</span>
+<span class="sd">            Optional list of tags to attach to this record within the project</span>
+<span class="sd">        compute_tag</span>
+<span class="sd">            The :ref:`compute tag &lt;glossary_tag&gt;` to use. Defaults to the project&#39;s</span>
+<span class="sd">            ``default_compute_tag``</span>
+<span class="sd">        compute_priority</span>
+<span class="sd">            The priority to run this computation at. Defaults to the project&#39;s</span>
+<span class="sd">            ``default_compute_priority``</span>
+<span class="sd">        find_existing</span>
+<span class="sd">            If True, and a matching record already exists on the server, use that record rather</span>
+<span class="sd">            than creating a new one. See :ref:`record_submit_dedup`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            The new record, attached to the project and server</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">tags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tags</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">compute_tag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">compute_tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_compute_tag</span>
+        <span class="k">if</span> <span class="n">compute_priority</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">compute_priority</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_compute_priority</span>
+
+        <span class="n">body_data</span> <span class="o">=</span> <span class="n">ProjectRecordAddBody</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+            <span class="n">record_input</span><span class="o">=</span><span class="n">record_input</span><span class="p">,</span>
+            <span class="n">compute_tag</span><span class="o">=</span><span class="n">compute_tag</span><span class="p">,</span>
+            <span class="n">compute_priority</span><span class="o">=</span><span class="n">compute_priority</span><span class="p">,</span>
+            <span class="n">find_existing</span><span class="o">=</span><span class="n">find_existing</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">meta</span><span class="p">,</span> <span class="n">record_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">InsertCountsMetadata</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">body</span><span class="o">=</span><span class="n">body_data</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">meta</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding record failed: </span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">full_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_record</span><span class="p">(</span><span class="n">record_id</span><span class="p">)</span>
+
+        <span class="n">record_meta</span> <span class="o">=</span> <span class="n">ProjectRecordMetadata</span><span class="p">(</span>
+            <span class="n">record_id</span><span class="o">=</span><span class="n">record_id</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+            <span class="n">record_type</span><span class="o">=</span><span class="n">full_record</span><span class="o">.</span><span class="n">record_type</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">full_record</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_record_metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record_meta</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">full_record</span></div>
+
+
+<div class="viewcode-block" id="Project.import_record">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.import_record">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">import_record</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">record</span><span class="p">:</span> <span class="n">AllResultTypes</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseRecord</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Imports an already-computed record into this project</span>
+
+<span class="sd">        The record is not run on this server - the existing results are stored as-is. This is</span>
+<span class="sd">        used for ingesting records computed elsewhere (on another server, or by hand).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name</span>
+<span class="sd">            Name to give this record within the project. Must be unique within the project</span>
+<span class="sd">        record</span>
+<span class="sd">            The completed record or result to import</span>
+<span class="sd">        description</span>
+<span class="sd">            Optional longer description of this record</span>
+<span class="sd">        tags</span>
+<span class="sd">            Optional list of tags to attach to this record within the project</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            The record, attached to the project and server</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">tags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tags</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="n">body_data</span> <span class="o">=</span> <span class="n">ProjectRecordImportBody</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+            <span class="n">record_data</span><span class="o">=</span><span class="n">record</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">record_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records/import&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body_data</span><span class="p">)</span>
+
+        <span class="n">full_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_record</span><span class="p">(</span><span class="n">record_id</span><span class="p">)</span>
+
+        <span class="n">record_meta</span> <span class="o">=</span> <span class="n">ProjectRecordMetadata</span><span class="p">(</span>
+            <span class="n">record_id</span><span class="o">=</span><span class="n">record_id</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+            <span class="n">record_type</span><span class="o">=</span><span class="n">full_record</span><span class="o">.</span><span class="n">record_type</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">full_record</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_record_metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record_meta</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">full_record</span></div>
+
+
+<div class="viewcode-block" id="Project.link_record">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.link_record">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">link_record</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">record_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseRecord</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds an existing record on the server to this project</span>
+
+<span class="sd">        The record itself is not copied or modified - the project gains a reference to it,</span>
+<span class="sd">        along with a project-local name, description, and tags.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        record_id</span>
+<span class="sd">            ID of an existing record on the server</span>
+<span class="sd">        name</span>
+<span class="sd">            Name to give this record within the project. Must be unique within the project</span>
+<span class="sd">        description</span>
+<span class="sd">            Longer description of this record</span>
+<span class="sd">        tags</span>
+<span class="sd">            List of tags to attach to this record within the project</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            The linked record</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="n">ProjectLinkRecordBody</span><span class="p">(</span><span class="n">record_id</span><span class="o">=</span><span class="n">record_id</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records/link&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
+
+        <span class="n">rec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_record</span><span class="p">(</span><span class="n">record_id</span><span class="p">)</span>
+
+        <span class="n">record_meta</span> <span class="o">=</span> <span class="n">ProjectRecordMetadata</span><span class="p">(</span>
+            <span class="n">record_id</span><span class="o">=</span><span class="n">record_id</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+            <span class="n">record_type</span><span class="o">=</span><span class="n">rec</span><span class="o">.</span><span class="n">record_type</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">rec</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_record_metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record_meta</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rec</span></div>
+
+
+<div class="viewcode-block" id="Project.unlink_records">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.unlink_records">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">unlink_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_ids</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">],</span> <span class="n">delete_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes records from this project</span>
+
+<span class="sd">        By default the records remain on the server and only the association with this project</span>
+<span class="sd">        is removed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        record_ids</span>
+<span class="sd">            Record IDs or project-local record names to remove from the project</span>
+<span class="sd">        delete_records</span>
+<span class="sd">            If True, also delete the records themselves from the server</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">record_ids</span> <span class="o">=</span> <span class="n">make_list</span><span class="p">(</span><span class="n">record_ids</span><span class="p">)</span>
+        <span class="n">record_ids</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_lookup_record_id</span><span class="p">(</span><span class="n">rid</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rid</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">rid</span> <span class="k">for</span> <span class="n">rid</span> <span class="ow">in</span> <span class="n">record_ids</span><span class="p">]</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">ProjectUnlinkRecordsBody</span><span class="p">(</span><span class="n">record_ids</span><span class="o">=</span><span class="n">record_ids</span><span class="p">,</span> <span class="n">delete_records</span><span class="o">=</span><span class="n">delete_records</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records/unlink&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_record_metadata</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_metadata</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">record_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">record_ids</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Project.get_record">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.get_record">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_record</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">record_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">include</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseRecord</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Obtain a record contained in this project</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        record_id</span>
+<span class="sd">            The record ID, or the name the record was given within this project</span>
+<span class="sd">        include</span>
+<span class="sd">            Additional fields to include in the returned record</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            The record, of the appropriate type for the computation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">record_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">record_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup_record_id</span><span class="p">(</span><span class="n">record_id</span><span class="p">)</span>
+
+        <span class="n">url_params</span> <span class="o">=</span> <span class="n">ProjURLParameters</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">)</span>
+
+        <span class="n">r_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/records/</span><span class="si">{</span><span class="n">record_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">url_params</span><span class="o">=</span><span class="n">url_params</span>
+        <span class="p">)</span>
+
+        <span class="c1"># set prefix to be the main prefix of the server. We will fetch all the records/datasets</span>
+        <span class="c1"># directly via the regular (non-project) endpoints</span>
+        <span class="k">return</span> <span class="n">record_from_dict</span><span class="p">(</span><span class="n">r_dict</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">,</span> <span class="n">base_url_prefix</span><span class="o">=</span><span class="s2">&quot;api/v1&quot;</span><span class="p">)</span></div>
+
+
+    <span class="c1">#############################</span>
+    <span class="c1"># Datasets</span>
+    <span class="c1">#############################</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_lookup_dataset_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_metadata</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">d</span><span class="o">.</span><span class="n">dataset_id</span>
+
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dataset &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; not found&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Project.fetch_dataset_metadata">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.fetch_dataset_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_dataset_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fetches information about the datasets in this project from the server</span>
+
+<span class="sd">        This overwrites what is stored locally, and is available through the</span>
+<span class="sd">        :attr:`dataset_metadata` property.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">&quot;get&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/dataset_metadata&quot;</span><span class="p">,</span>
+            <span class="nb">list</span><span class="p">[</span><span class="n">ProjectDatasetMetadata</span><span class="p">],</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Project.add_dataset">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.add_dataset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_dataset</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tagline</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">provenance</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">default_compute_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">default_compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">extras</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">existing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new dataset within this project</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset_type</span>
+<span class="sd">            The type of dataset to create (``singlepoint``, ``optimization``, and so on)</span>
+<span class="sd">        name</span>
+<span class="sd">            Name to give this dataset. Must be unique within the project</span>
+<span class="sd">        description</span>
+<span class="sd">            Optional longer description of this dataset</span>
+<span class="sd">        tagline</span>
+<span class="sd">            Optional short description of this dataset</span>
+<span class="sd">        tags</span>
+<span class="sd">            Optional list of tags to attach to this dataset</span>
+<span class="sd">        provenance</span>
+<span class="sd">            Optional dictionary describing the source of this dataset</span>
+<span class="sd">        default_compute_tag</span>
+<span class="sd">            The default :ref:`compute tag &lt;glossary_tag&gt;` for computations submitted from this</span>
+<span class="sd">            dataset. Defaults to the project&#39;s ``default_compute_tag``</span>
+<span class="sd">        default_compute_priority</span>
+<span class="sd">            The default priority for computations submitted from this dataset. Defaults to the</span>
+<span class="sd">            project&#39;s ``default_compute_priority``</span>
+<span class="sd">        extras</span>
+<span class="sd">            Optional dictionary of arbitrary additional information</span>
+<span class="sd">        existing_ok</span>
+<span class="sd">            If True, return the existing dataset if one with this name is already in the project,</span>
+<span class="sd">            rather than raising an exception</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            The new dataset, of the appropriate type for ``dataset_type``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">tagline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tagline</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">tags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tags</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">provenance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">provenance</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">extras</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">extras</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">default_compute_tag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">default_compute_tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_compute_tag</span>
+        <span class="k">if</span> <span class="n">default_compute_priority</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">default_compute_priority</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_compute_priority</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="n">ProjectDatasetAddBody</span><span class="p">(</span>
+            <span class="n">dataset_type</span><span class="o">=</span><span class="n">dataset_type</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">tagline</span><span class="o">=</span><span class="n">tagline</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+            <span class="n">provenance</span><span class="o">=</span><span class="n">provenance</span><span class="p">,</span>
+            <span class="n">default_compute_tag</span><span class="o">=</span><span class="n">default_compute_tag</span><span class="p">,</span>
+            <span class="n">default_compute_priority</span><span class="o">=</span><span class="n">default_compute_priority</span><span class="p">,</span>
+            <span class="n">extras</span><span class="o">=</span><span class="n">extras</span><span class="p">,</span>
+            <span class="n">existing_ok</span><span class="o">=</span><span class="n">existing_ok</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">ds_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/datasets&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
+        <span class="n">full_dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="n">ds_id</span><span class="p">)</span>
+
+        <span class="n">dataset_meta</span> <span class="o">=</span> <span class="n">ProjectDatasetMetadata</span><span class="p">(</span>
+            <span class="n">dataset_id</span><span class="o">=</span><span class="n">ds_id</span><span class="p">,</span>
+            <span class="n">dataset_type</span><span class="o">=</span><span class="n">dataset_type</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">tagline</span><span class="o">=</span><span class="n">tagline</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset_meta</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">full_dataset</span></div>
+
+
+<div class="viewcode-block" id="Project.link_dataset">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.link_dataset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">link_dataset</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tagline</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds an existing dataset on the server to this project</span>
+
+<span class="sd">        The dataset itself is not copied. The project gains a reference to it, optionally</span>
+<span class="sd">        under a different name and description.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset_id</span>
+<span class="sd">            ID of an existing dataset on the server</span>
+<span class="sd">        name</span>
+<span class="sd">            Name to give this dataset within the project. If None, the dataset&#39;s existing</span>
+<span class="sd">            name is kept</span>
+<span class="sd">        description</span>
+<span class="sd">            Longer description of this dataset. If None, the existing description is kept</span>
+<span class="sd">        tagline</span>
+<span class="sd">            Short description of this dataset. If None, the existing tagline is kept</span>
+<span class="sd">        tags</span>
+<span class="sd">            List of tags for this dataset. If None, the existing tags are kept</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            The linked dataset</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="n">ProjectLinkDatasetBody</span><span class="p">(</span>
+            <span class="n">dataset_id</span><span class="o">=</span><span class="n">dataset_id</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span> <span class="n">tagline</span><span class="o">=</span><span class="n">tagline</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="n">tags</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/datasets/link&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">)</span>
+
+        <span class="n">dataset_meta</span> <span class="o">=</span> <span class="n">ProjectDatasetMetadata</span><span class="p">(</span>
+            <span class="n">dataset_id</span><span class="o">=</span><span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">dataset_type</span><span class="o">=</span><span class="n">ds</span><span class="o">.</span><span class="n">dataset_type</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">ds</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">ds</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">tagline</span><span class="o">=</span><span class="n">ds</span><span class="o">.</span><span class="n">tagline</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="n">ds</span><span class="o">.</span><span class="n">tags</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset_meta</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ds</span></div>
+
+
+<div class="viewcode-block" id="Project.unlink_datasets">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.unlink_datasets">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">unlink_datasets</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset_ids</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">delete_datasets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">delete_dataset_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes datasets from this project</span>
+
+<span class="sd">        By default the datasets remain on the server and only the association with this project</span>
+<span class="sd">        is removed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset_ids</span>
+<span class="sd">            Dataset IDs or project-local dataset names to remove from the project</span>
+<span class="sd">        delete_datasets</span>
+<span class="sd">            If True, also delete the datasets themselves from the server</span>
+<span class="sd">        delete_dataset_records</span>
+<span class="sd">            If True, also delete the records contained in those datasets</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dataset_ids</span> <span class="o">=</span> <span class="n">make_list</span><span class="p">(</span><span class="n">dataset_ids</span><span class="p">)</span>
+        <span class="n">dataset_ids</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_lookup_dataset_id</span><span class="p">(</span><span class="n">ds_id</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ds_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">ds_id</span> <span class="k">for</span> <span class="n">ds_id</span> <span class="ow">in</span> <span class="n">dataset_ids</span><span class="p">]</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">ProjectUnlinkDatasetsBody</span><span class="p">(</span>
+            <span class="n">dataset_ids</span><span class="o">=</span><span class="n">dataset_ids</span><span class="p">,</span> <span class="n">delete_datasets</span><span class="o">=</span><span class="n">delete_datasets</span><span class="p">,</span> <span class="n">delete_dataset_records</span><span class="o">=</span><span class="n">delete_dataset_records</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/datasets/unlink&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_metadata</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_metadata</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">dataset_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataset_ids</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Project.get_dataset">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.get_dataset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Obtain a dataset contained in this project</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset_id</span>
+<span class="sd">            The dataset ID, or the name the dataset was given within this project</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            The dataset, of the appropriate type for the dataset</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">dataset_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup_dataset_id</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">)</span>
+
+        <span class="n">ds_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/datasets/</span><span class="si">{</span><span class="n">dataset_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span>
+
+        <span class="c1"># set prefix to be the main prefix of the server. We will fetch all the records/datasets</span>
+        <span class="c1"># directly via the regular (non-project) endpoints</span>
+        <span class="k">return</span> <span class="n">dataset_from_dict</span><span class="p">(</span><span class="n">ds_dict</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">,</span> <span class="n">base_url_prefix</span><span class="o">=</span><span class="s2">&quot;api/v1&quot;</span><span class="p">)</span></div>
+
+
+    <span class="c1">#############################</span>
+    <span class="c1"># Attachments</span>
+    <span class="c1">#############################</span>
+<div class="viewcode-block" id="Project.fetch_attachments">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.fetch_attachments">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_attachments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fetches the metadata for this project&#39;s attachments from the server</span>
+
+<span class="sd">        This overwrites what is stored locally, and is available through the</span>
+<span class="sd">        :attr:`attachments` property.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">attachments_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/attachments&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">ProjectAttachment</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">att</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attachments_</span><span class="p">:</span>
+            <span class="n">att</span><span class="o">.</span><span class="n">propagate_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">attachments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ProjectAttachment</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The files that have been uploaded to this project</span>
+
+<span class="sd">        This is fetched from the server the first time it is accessed, and then cached.</span>
+<span class="sd">        The returned objects contain only the file metadata - use</span>
+<span class="sd">        :meth:`~qcportal.external_files.models.ExternalFile.download` to obtain the contents.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">attachments_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fetch_attachments</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">attachments_</span>
+
+<div class="viewcode-block" id="Project.upload_attachment">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.upload_attachment">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">upload_attachment</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">attachment_type</span><span class="p">:</span> <span class="n">ProjectAttachmentType</span><span class="p">,</span>
+        <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">provenance</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">new_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Uploads a file to this project</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_path</span>
+<span class="sd">            Path to the local file to upload</span>
+<span class="sd">        attachment_type</span>
+<span class="sd">            The kind of attachment this is. Currently only ``other`` is available</span>
+<span class="sd">        tags</span>
+<span class="sd">            List of tags to attach to this file</span>
+<span class="sd">        description</span>
+<span class="sd">            Optional longer description of this file</span>
+<span class="sd">        provenance</span>
+<span class="sd">            Optional dictionary describing the source of this file</span>
+<span class="sd">        new_file_name</span>
+<span class="sd">            Store the file under this name instead of the base name of ``file_path``</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            ID of the newly-created attachment</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">provenance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">provenance</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">new_file_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">new_file_name</span>
+        <span class="n">file_info</span> <span class="o">=</span> <span class="p">[(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">file_path</span><span class="p">)]</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">ProjectAttachmentUploadBody</span><span class="p">(</span>
+            <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">provenance</span><span class="o">=</span><span class="n">provenance</span><span class="p">,</span>
+            <span class="n">attachment_type</span><span class="o">=</span><span class="n">attachment_type</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">file_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/attachments&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">upload_files</span><span class="o">=</span><span class="n">file_info</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Force refetch next time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attachments_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">file_id</span></div>
+
+
+<div class="viewcode-block" id="Project.delete_attachment">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.delete_attachment">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_attachment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deletes an attachment from this project</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_id</span>
+<span class="sd">            ID of the attachment to delete</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;delete&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/attachments/</span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># Force refetch next time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attachments_</span> <span class="o">=</span> <span class="kc">None</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  
+
+
+
+  
+  
+  
+  
+  
+  
+  
+
+
+<div class="row h-10">
+    <div class="col-2">
+        <a href="https://molssi.org/" target="_blank" title="Go to MolSSI in a new tab">
+            <img src="../../_static/molssi_main_logo.png" class="logo__image only-light footer_logo" alt="Logo image">
+            <img src="../../_static/molssi_main_logo_inverted_white.png" class="logo__image only-dark footer_logo" alt="Logo image">
+        </a>
+    </div>
+    <div class="col-8">
+        <p> &copy; Copyright 2019-2023 <a href="https://molssi.org/">The Molecular Sciences Software Institute</a></p>
+        <p>Funded by the National Science Foundation 
+          <a href="https://nsf.gov/awardsearch/showAward?AWD_ID=1547580">OAC-1547580</a> and 
+          <a href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2136142">CHE-2136142.</a></p>
+ 
+        
+        <p class="sphinx-version">
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 9.0.4.<br>
+        </p>
+        
+
+        <p class="theme-version">
+        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+        </p>
+
+    </div>
+    <div class="col-2">
+        <a href="https://nsf.gov/" target="_blank" title="Go to the NSF in a new tab">
+            <img src="../../_static/nsf.png" class="footer_logo" alt="The NSF">
+          </a>
+    </div>
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

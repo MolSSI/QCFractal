@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -593,6 +593,8 @@
 <span class="sd">    Main class for interacting with a QCArchive server</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="PortalClient.__init__">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">address</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -628,7 +630,8 @@
 
         <span class="n">PortalClientBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">verify</span><span class="p">,</span> <span class="n">show_motd</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;PortalClient&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">PortalCache</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">,</span> <span class="n">cache_max_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">PortalCache</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">,</span> <span class="n">cache_max_size</span><span class="p">)</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A short representation of the current PortalClient.</span>
@@ -748,6 +751,38 @@
         <span class="n">extras</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">existing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Project</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new project on the server</span>
+
+<span class="sd">        Project names are unique across the server, and are compared case-insensitively.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name</span>
+<span class="sd">            Name of the new project</span>
+<span class="sd">        description</span>
+<span class="sd">            Optional longer description of the project</span>
+<span class="sd">        tagline</span>
+<span class="sd">            Optional short description of the project</span>
+<span class="sd">        tags</span>
+<span class="sd">            Optional list of tags to attach to the project</span>
+<span class="sd">        default_compute_tag</span>
+<span class="sd">            The default :ref:`compute tag &lt;glossary_tag&gt;` for computations created within this</span>
+<span class="sd">            project. Records and datasets added to the project inherit this unless they override it</span>
+<span class="sd">        default_compute_priority</span>
+<span class="sd">            The default priority for computations created within this project</span>
+<span class="sd">        extras</span>
+<span class="sd">            Optional dictionary of arbitrary additional information</span>
+<span class="sd">        existing_ok</span>
+<span class="sd">            If True, return the existing project if one already exists with this name, rather</span>
+<span class="sd">            than raising an exception</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            The new project (or existing project if `existing_ok=True` and a project with the given</span>
+<span class="sd">            name already exists)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">if</span> <span class="n">tagline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -774,7 +809,12 @@
 
 <div class="viewcode-block" id="PortalClient.get_project">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.get_project">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Project</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Obtain a project by name</span>
+
+<span class="sd">        The name is matched case-insensitively.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">body</span> <span class="o">=</span> <span class="n">ProjectQueryModel</span><span class="p">(</span><span class="n">project_name</span><span class="o">=</span><span class="n">project_name</span><span class="p">)</span>
         <span class="n">proj_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/query&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Project</span><span class="p">(</span><span class="o">**</span><span class="n">proj_dict</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span></div>
@@ -783,6 +823,9 @@
 <div class="viewcode-block" id="PortalClient.get_project_by_id">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.get_project_by_id">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_project_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Project</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Obtain a project by ID</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">project_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/</span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">Project</span><span class="p">(</span><span class="o">**</span><span class="n">project_dict</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span></div>
 
@@ -796,6 +839,23 @@
         <span class="n">delete_datasets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">delete_dataset_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deletes a project from the server</span>
+
+<span class="sd">        By default, only the project itself is deleted. The records and datasets it contained</span>
+<span class="sd">        remain on the server.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        project_id</span>
+<span class="sd">            ID of the project to delete</span>
+<span class="sd">        delete_records</span>
+<span class="sd">            If True, also delete the records that were added directly to the project</span>
+<span class="sd">        delete_datasets</span>
+<span class="sd">            If True, also delete the datasets that were in the project</span>
+<span class="sd">        delete_dataset_records</span>
+<span class="sd">            If True, also delete the records contained in those datasets</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">params</span> <span class="o">=</span> <span class="n">ProjectDeleteParams</span><span class="p">(</span>
             <span class="n">delete_records</span><span class="o">=</span><span class="n">delete_records</span><span class="p">,</span>
@@ -807,20 +867,63 @@
 
 <div class="viewcode-block" id="PortalClient.list_projects">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_projects">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">list_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Obtain a summary of all projects on the server</span>
+
+<span class="sd">        Each entry is a dictionary with the keys ``id``, ``project_name``, ``tagline``, ``tags``,</span>
+<span class="sd">        ``description``, ``record_count``, ``dataset_count``, ``owner_user``, and ``creator_user``.</span>
+
+<span class="sd">        The full project is not returned - use :meth:`get_project` or :meth:`get_project_by_id`</span>
+<span class="sd">        for that.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            A list of dictionaries, one per project, ordered by project ID</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span></div>
 
 
 <div class="viewcode-block" id="PortalClient.query_project_records">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.query_project_records">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">query_project_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_project_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determine which projects the given records belong to</span>
+
+<span class="sd">        Records that are not in any project simply do not appear in the result, so the returned</span>
+<span class="sd">        list may be shorter than the list of IDs given.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            A list of dictionaries, each with the keys ``record_id``, ``project_id``,</span>
+<span class="sd">            ``project_name``, and ``record_name``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">body</span> <span class="o">=</span> <span class="n">ProjectQueryRecords</span><span class="p">(</span><span class="n">record_id</span><span class="o">=</span><span class="n">make_list</span><span class="p">(</span><span class="n">record_id</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/queryrecords&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="PortalClient.query_project_datasets">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.query_project_datasets">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">query_project_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query_project_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determine which projects the given datasets belong to</span>
+
+<span class="sd">        Datasets that are not in any project simply do not appear in the result, so the returned</span>
+<span class="sd">        list may be shorter than the list of IDs given.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset_id</span>
+<span class="sd">            A dataset ID or list of dataset IDs to look up</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            A list of dictionaries, each with the keys ``record_id`` (which holds the *dataset*</span>
+<span class="sd">            ID), ``project_id``, ``project_name``, and ``dataset_name``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">body</span> <span class="o">=</span> <span class="n">ProjectQueryDatasets</span><span class="p">(</span><span class="n">dataset_id</span><span class="o">=</span><span class="n">make_list</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;api/v1/projects/querydatasets&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span></div>
 
@@ -933,8 +1036,8 @@
         <span class="n">group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">provenance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">visibility</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">default_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
-        <span class="n">default_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="n">PriorityEnum</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span>
+        <span class="n">default_compute_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+        <span class="n">default_compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">=</span> <span class="n">PriorityEnum</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span>
         <span class="n">extras</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">owner_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">existing_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -942,6 +1045,12 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseDataset</span><span class="p">:</span>
 
         <span class="c1"># TODO - DEPRECATED - Remove eventually</span>
+        <span class="k">if</span> <span class="s2">&quot;default_tag&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;default_tag&#39; is deprecated; use &#39;default_compute_tag&#39; instead&quot;</span><span class="p">)</span>
+            <span class="n">default_compute_tag</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;default_tag&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;default_priority&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;default_priority&#39; is deprecated; use &#39;default_compute_priority&#39; instead&quot;</span><span class="p">)</span>
+            <span class="n">default_compute_priority</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;default_priority&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">group</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;group&#39; parameter has been deprecated and will be removed in a future version&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">visibility</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -972,8 +1081,8 @@
             <span class="n">tagline</span><span class="o">=</span><span class="n">tagline</span><span class="p">,</span>
             <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
             <span class="n">provenance</span><span class="o">=</span><span class="n">provenance</span><span class="p">,</span>
-            <span class="n">default_tag</span><span class="o">=</span><span class="n">default_tag</span><span class="p">,</span>
-            <span class="n">default_priority</span><span class="o">=</span><span class="n">default_priority</span><span class="p">,</span>
+            <span class="n">default_compute_tag</span><span class="o">=</span><span class="n">default_compute_tag</span><span class="p">,</span>
+            <span class="n">default_compute_priority</span><span class="o">=</span><span class="n">default_compute_priority</span><span class="p">,</span>
             <span class="n">extras</span><span class="o">=</span><span class="n">extras</span><span class="p">,</span>
             <span class="n">existing_ok</span><span class="o">=</span><span class="n">existing_ok</span><span class="p">,</span>
         <span class="p">)</span>
@@ -2733,7 +2842,7 @@
 <span class="sd">        This checks if the calculations already exist in the database. If so, it returns</span>
 <span class="sd">        the existing id, otherwise it will insert it and return the new id.</span>
 
-<span class="sd">        This will add one record per set of molecules</span>
+<span class="sd">        This will add one record per reaction</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2759,7 +2868,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        :</span>
 <span class="sd">            Metadata about the insertion, and a list of record ids. The ids will be in the</span>
-<span class="sd">            order of the input molecules</span>
+<span class="sd">            order of the input stoichiometries</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="s2">&quot;tag&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
@@ -2881,7 +2990,7 @@
 <span class="sd">        parent_id</span>
 <span class="sd">            Query records that have a parent is in the given list</span>
 <span class="sd">        child_id</span>
-<span class="sd">            Query records that have a child (optimization calculation) is in the given list</span>
+<span class="sd">            Query records that have a child (singlepoint or optimization calculation) is in the given list</span>
 <span class="sd">        created_before</span>
 <span class="sd">            Query records that were created before the given date/time</span>
 <span class="sd">        created_after</span>
@@ -3111,7 +3220,7 @@
 <span class="sd">        parent_id</span>
 <span class="sd">            Query records that have a parent is in the given list</span>
 <span class="sd">        child_id</span>
-<span class="sd">            Query records that have a child (optimization calculation) is in the given list</span>
+<span class="sd">            Query records that have a child (singlepoint calculation) is in the given list</span>
 <span class="sd">        created_before</span>
 <span class="sd">            Query records that were created before the given date/time</span>
 <span class="sd">        created_after</span>
@@ -3121,7 +3230,7 @@
 <span class="sd">        modified_after</span>
 <span class="sd">            Query records that were modified after the given date/time</span>
 <span class="sd">        program</span>
-<span class="sd">            Query records whose reaction program is in the given list</span>
+<span class="sd">            Query records whose manybody program is in the given list</span>
 <span class="sd">        qc_program</span>
 <span class="sd">            Query records whose qc program is in the given list</span>
 <span class="sd">        qc_method</span>
@@ -3193,21 +3302,24 @@
 <span class="sd">        This checks if the calculations already exist in the database. If so, it returns</span>
 <span class="sd">        the existing id, otherwise it will insert it and return the new id.</span>
 
-<span class="sd">        This will add one record per set of molecules</span>
+<span class="sd">        This will add one record per initial chain</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        initial_chains</span>
-<span class="sd">            The initial chains to run the NEB calculations on . Each NEB calculation starts with a single</span>
+<span class="sd">            The initial chains to run the NEB calculations on. Each NEB calculation starts with a single</span>
 <span class="sd">            chain (list of molecules), so this is a nested list</span>
 <span class="sd">        program</span>
 <span class="sd">            The program to run the neb computation with (&quot;geometric&quot;)</span>
 <span class="sd">        singlepoint_specification</span>
 <span class="sd">            Specification of how each singlepoint (gradient/hessian) should be run</span>
 <span class="sd">        optimization_specification</span>
-<span class="sd">            Specification of how any optimizations of the torsiondrive should be run</span>
+<span class="sd">            Specification of how the transition state optimization should be run, if one was requested</span>
+<span class="sd">            with the optimize_ts keyword. May be None. Note that this does not apply to the endpoint</span>
+<span class="sd">            optimizations requested with the optimize_endpoints keyword, which always use geometric</span>
+<span class="sd">            with the level of theory given in the singlepoint specification</span>
 <span class="sd">        keywords</span>
-<span class="sd">            The torsiondrive keywords for the computation</span>
+<span class="sd">            The NEB keywords for the computation</span>
 <span class="sd">        compute_tag</span>
 <span class="sd">            The tag for the task. This will assist in routing to appropriate compute managers.</span>
 <span class="sd">        compute_priority</span>
@@ -3219,7 +3331,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        :</span>
 <span class="sd">            Metadata about the insertion, and a list of record ids. The ids will be in the</span>
-<span class="sd">            order of the input molecules</span>
+<span class="sd">            order of the input chains</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="s2">&quot;tag&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
@@ -3343,7 +3455,7 @@
 <span class="sd">        parent_id</span>
 <span class="sd">            Query records that have a parent is in the given list</span>
 <span class="sd">        child_id</span>
-<span class="sd">            Query records that have a child (optimization calculation) is in the given list</span>
+<span class="sd">            Query records that have a child (singlepoint or optimization calculation) is in the given list</span>
 <span class="sd">        created_before</span>
 <span class="sd">            Query records that were created before the given date/time</span>
 <span class="sd">        created_after</span>
@@ -3353,7 +3465,7 @@
 <span class="sd">        modified_after</span>
 <span class="sd">            Query records that were modified after the given date/time</span>
 <span class="sd">        program</span>
-<span class="sd">            Query records whose torsiondrive program is in the given list</span>
+<span class="sd">            Query records whose neb program is in the given list</span>
 <span class="sd">        qc_program</span>
 <span class="sd">            Query records whose qc program is in the given list</span>
 <span class="sd">        qc_method</span>

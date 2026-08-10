@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Gridoptimization calculations" href="gridoptimization.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -436,6 +436,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/attachments.html">Attachments</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../projects/index.html">Projects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../projects/records.html">Records in a Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../projects/datasets.html">Datasets in a Project</a></li>
+</ul>
+</details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Record &amp; Computation Types</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="base.html">Base Record</a></li>
 <li class="toctree-l2"><a class="reference internal" href="singlepoint.html">Singlepoint calculations</a></li>
@@ -452,6 +457,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/auth.html">Authentication and User Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/base_models.html">Base Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/projects.html">Projects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/metadata_models.html">Metadata Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/tasks_services.html">Tasks and Services</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
@@ -534,418 +540,567 @@
                   
   <section id="torsiondrive-calculations">
 <h1>Torsiondrive calculations<a class="headerlink" href="#torsiondrive-calculations" title="Link to this heading">#</a></h1>
-<p>Stuff</p>
-<section id="torsiondrive-record">
-<span id="id1"></span><h2>Torsiondrive Record<a class="headerlink" href="#torsiondrive-record" title="Link to this heading">#</a></h2>
-<p>Stuff</p>
+<p>Torsiondrives perform constrained scans over one or more dihedral angles.
+At each grid point (a specific set of dihedral values), a constrained geometry
+optimization is performed to minimize the energy while keeping the target
+dihedral(s) fixed. This produces a map of optimized structures and energies
+across the dihedral grid.</p>
+<section id="torsiondrive-records">
+<span id="torsiondrive-record"></span><h2>Torsiondrive Records<a class="headerlink" href="#torsiondrive-records" title="Link to this heading">#</a></h2>
+<p>Torsiondrive records contain all the fields of a <a class="reference internal" href="base.html"><span class="doc">base record</span></a>, and additionally include:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">initial_molecules</span></code> - The starting molecules for the scan (one torsiondrive can start from multiple initial geometries)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimizations</span></code> - A mapping from grid keys to lists of constrained
+<a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord" title="qcportal.optimization.record_models.OptimizationRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationRecord</span></code></a> objects</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minimum_optimizations</span></code> - A mapping from grid keys to the selected lowest-energy
+<a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord" title="qcportal.optimization.record_models.OptimizationRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationRecord</span></code></a> for each grid point</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">specification</span></code> - The scan/optimization setup (see below)</p></li>
+</ul>
+<p>Grid keys identify points in the dihedral scan. They are tuples whose length equals the
+number of scanned dihedrals.</p>
+<p>Convenience properties include:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.optimizations" title="qcportal.torsiondrive.record_models.TorsiondriveRecord.optimizations"><code class="xref py py-attr docutils literal notranslate"><span class="pre">optimizations</span></code></a> -
+Returns a dictionary mapping grid keys (tuples) to lists of optimization records run at that key.</p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.minimum_optimizations" title="qcportal.torsiondrive.record_models.TorsiondriveRecord.minimum_optimizations"><code class="xref py py-attr docutils literal notranslate"><span class="pre">minimum_optimizations</span></code></a> -
+Returns a dictionary mapping grid keys (tuples) to the lowest-energy optimization record at each key.</p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.final_energies" title="qcportal.torsiondrive.record_models.TorsiondriveRecord.final_energies"><code class="xref py py-attr docutils literal notranslate"><span class="pre">final_energies</span></code></a> -
+Returns a dictionary mapping grid keys (tuples) to the final energy (a.u.) from the minimum optimization at that key.</p></li>
+</ul>
 </section>
-<section id="torsiondrive-dataset">
-<span id="id2"></span><h2>Torsiondrive Dataset<a class="headerlink" href="#torsiondrive-dataset" title="Link to this heading">#</a></h2>
-<p>Stuff</p>
+<section id="torsiondrive-specification">
+<span id="id1"></span><h2>Torsiondrive Specification<a class="headerlink" href="#torsiondrive-specification" title="Link to this heading">#</a></h2>
+<p>The <a class="reference internal" href="../../overview/glossary.html#glossary-specification"><span class="std std-ref">specification</span></a> for a torsiondrive is a
+<a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveSpecification" title="qcportal.torsiondrive.record_models.TorsiondriveSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">TorsiondriveSpecification</span></code></a>. The key fields are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">program</span></code> - The torsiondrive driver program (<code class="docutils literal notranslate"><span class="pre">&quot;torsiondrive&quot;</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> - How each constrained optimization should be run; see
+<a class="reference internal" href="optimization.html#optimization-specification"><span class="std std-ref">Optimization Specification</span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keywords</span></code> - Torsiondrive scan definition and related options</p></li>
+</ul>
+<p>Keywords are provided via <a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords" title="qcportal.torsiondrive.record_models.TorsiondriveKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">TorsiondriveKeywords</span></code></a> and include:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dihedrals</span></code> (list of 4-tuples of ints) - The dihedral indices to scan.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">grid_spacing</span></code> (list of ints, degrees) - The grid spacing for each dihedral. If multiple
+values are given, they are paired element-wise with the dihedrals.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dihedral_ranges</span></code> (optional list of (lower, upper) degree pairs) - Limits the scan range for each dihedral.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">energy_decrease_thresh</span></code> (float, optional) - Smallest energy decrease to trigger launching
+new optimizations from a grid point.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">energy_upper_limit</span></code> (float, optional, a.u.) - Skip launching new optimizations whose starting energy is above
+the current global minimum by more than this amount.</p></li>
+</ul>
+<p>Note: The constrained optimizations at each grid point use the details supplied by the
+<a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationSpecification</span></code></a>, which in turn references the
+singlepoint QC settings inside its <code class="docutils literal notranslate"><span class="pre">qc_specification</span></code>. See <a class="reference internal" href="singlepoint.html#singlepoint-specification"><span class="std std-ref">Singlepoint Specification (QCSpecification)</span></a> and
+<a class="reference internal" href="optimization.html#optimization-specification"><span class="std std-ref">Optimization Specification</span></a> for more.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Every field of <a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords" title="qcportal.torsiondrive.record_models.TorsiondriveKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">TorsiondriveKeywords</span></code></a> has a default,
+so <code class="docutils literal notranslate"><span class="pre">TorsiondriveKeywords()</span></code> is valid and describes no scan at all. That is deliberate: in a
+<a class="reference internal" href="#torsiondrive-dataset"><span class="std std-ref">torsiondrive dataset</span></a> the keywords are normally left empty in the
+specification and supplied per entry instead, because <code class="docutils literal notranslate"><span class="pre">dihedrals</span></code> refers to atom indices that
+differ from molecule to molecule. See <a class="reference internal" href="#torsiondrive-dataset-keywords"><span class="std std-ref">How entry and specification keywords are combined</span></a>.</p>
+<p>When submitting a single record with <a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_torsiondrives" title="qcportal.client.PortalClient.add_torsiondrives"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_torsiondrives()</span></code></a>
+there are no entries, so the keywords must be given here.</p>
+</div>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Basic TorsiondriveSpecification with a single dihedral</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.torsiondrive</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorsiondriveSpecification</span><span class="p">,</span> <span class="n">TorsiondriveKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">td_spec</span> <span class="o">=</span> <span class="n">TorsiondriveSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;torsiondrive&quot;</span><span class="p">,</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">TorsiondriveKeywords</span><span class="p">(</span>
+        <span class="n">dihedrals</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)],</span>
+        <span class="n">grid_spacing</span><span class="o">=</span><span class="p">[</span><span class="mi">15</span><span class="p">],</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Multiple dihedrals with different spacings and ranges</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.torsiondrive</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorsiondriveSpecification</span><span class="p">,</span> <span class="n">TorsiondriveKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">td_spec</span> <span class="o">=</span> <span class="n">TorsiondriveSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;torsiondrive&quot;</span><span class="p">,</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;wb97x-d&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-tzvp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">TorsiondriveKeywords</span><span class="p">(</span>
+        <span class="n">dihedrals</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)],</span>
+        <span class="n">grid_spacing</span><span class="o">=</span><span class="p">[</span><span class="mi">15</span><span class="p">,</span> <span class="mi">30</span><span class="p">],</span>
+        <span class="n">dihedral_ranges</span><span class="o">=</span><span class="p">[(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="mi">180</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">120</span><span class="p">,</span> <span class="mi">120</span><span class="p">)],</span>
+        <span class="n">energy_upper_limit</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details></section>
+<section id="submitting-records">
+<span id="torsiondrive-submission"></span><h2>Submitting Records<a class="headerlink" href="#submitting-records" title="Link to this heading">#</a></h2>
+<p>Torsiondrive records can be submitted using a client via the <a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_torsiondrives" title="qcportal.client.PortalClient.add_torsiondrives"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_torsiondrives()</span></code></a> method.
+This method takes the following key information:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">initial_molecules</span></code> - A list of lists of molecules. Each torsiondrive may start from multiple initial molecules,
+so pass a nested list (one inner list per record).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">program</span></code> - The torsiondrive program (use <code class="docutils literal notranslate"><span class="pre">&quot;torsiondrive&quot;</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> - The optimization setup for each grid point (see <a class="reference internal" href="#torsiondrive-specification"><span class="std std-ref">Torsiondrive Specification</span></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keywords</span></code> - The torsiondrive dihedral scan definition and options</p></li>
+</ul>
+<p>See <a class="reference internal" href="../record_submission.html"><span class="doc">Submitting computations</span></a> for more information about other common fields such as compute tag and priority.</p>
+</section>
+<section id="client-examples">
+<h2>Client Examples<a class="headerlink" href="#client-examples" title="Link to this heading">#</a></h2>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Obtain a single torsiondrive record by ID</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_torsiondrives</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Obtain multiple torsiondrive records by ID</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-3">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_lst</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_torsiondrives</span><span class="p">([</span><span class="mi">123</span><span class="p">,</span> <span class="mi">456</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Include child optimizations and their data during fetch</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_torsiondrives</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;optimizations&quot;</span><span class="p">,</span> <span class="s2">&quot;**&quot;</span><span class="p">])</span>  <span class="c1"># include full child data</span>
+<span class="c1"># Access optimizations via a mapping from grid keys (tuples) to lists of OptimizationRecord</span>
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">opt_list</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">optimizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[</span><span class="n">opt</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="n">opt_list</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Query torsiondrives by QC method/basis and include optimizations</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_torsiondrives</span><span class="p">(</span><span class="n">qc_method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">qc_basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;optimizations&#39;</span><span class="p">])</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">optimizations</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Submit torsiondrives with two different starting geometries</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-6">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.torsiondrive</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorsiondriveSpecification</span><span class="p">,</span> <span class="n">TorsiondriveKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">td_spec</span> <span class="o">=</span> <span class="n">TorsiondriveSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;torsiondrive&#39;</span><span class="p">,</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;deferred&#39;</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">TorsiondriveKeywords</span><span class="p">(</span>
+        <span class="n">dihedrals</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)],</span>
+        <span class="n">grid_spacing</span><span class="o">=</span><span class="p">[</span><span class="mi">15</span><span class="p">],</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Two initial conformers for a single torsiondrive</span>
+<span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_torsiondrives</span><span class="p">(</span>
+    <span class="n">initial_molecules</span><span class="o">=</span><span class="p">[[</span><span class="n">mol_conf1</span><span class="p">,</span> <span class="n">mol_conf2</span><span class="p">]],</span>
+    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;torsiondrive&#39;</span><span class="p">,</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">td_spec</span><span class="o">.</span><span class="n">optimization_specification</span><span class="p">,</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">td_spec</span><span class="o">.</span><span class="n">keywords</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details></section>
+<section id="working-with-results">
+<h2>Working with Results<a class="headerlink" href="#working-with-results" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Access the starting molecules via <a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.initial_molecules" title="qcportal.torsiondrive.record_models.TorsiondriveRecord.initial_molecules"><code class="xref py py-attr docutils literal notranslate"><span class="pre">initial_molecules</span></code></a>.</p></li>
+<li><p>Access all optimizations per grid point via <a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.optimizations" title="qcportal.torsiondrive.record_models.TorsiondriveRecord.optimizations"><code class="xref py py-attr docutils literal notranslate"><span class="pre">optimizations</span></code></a>.</p></li>
+<li><p>Access the lowest-energy optimization per grid point via
+<a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.minimum_optimizations" title="qcportal.torsiondrive.record_models.TorsiondriveRecord.minimum_optimizations"><code class="xref py py-attr docutils literal notranslate"><span class="pre">minimum_optimizations</span></code></a>.</p></li>
+<li><p>Get a simple map of final energies via <a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.final_energies" title="qcportal.torsiondrive.record_models.TorsiondriveRecord.final_energies"><code class="xref py py-attr docutils literal notranslate"><span class="pre">final_energies</span></code></a>.</p></li>
+</ul>
+<p>When writing/reading keys (for example, when working with serialized data), use
+<a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.serialize_key" title="qcportal.torsiondrive.record_models.serialize_key"><code class="xref py py-func docutils literal notranslate"><span class="pre">serialize_key()</span></code></a> and
+<a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.deserialize_key" title="qcportal.torsiondrive.record_models.deserialize_key"><code class="xref py py-func docutils literal notranslate"><span class="pre">deserialize_key()</span></code></a>.</p>
+</section>
+<section id="torsiondrive-datasets">
+<span id="torsiondrive-dataset"></span><h2>Torsiondrive Datasets<a class="headerlink" href="#torsiondrive-datasets" title="Link to this heading">#</a></h2>
+<p>Torsiondrive <a class="reference internal" href="../../overview/glossary.html#glossary-dataset"><span class="std std-ref">datasets</span></a> are collections of torsiondrive records.
+<a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetEntry" title="qcportal.torsiondrive.dataset_models.TorsiondriveDatasetEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">Entries</span></code></a> contain one or more
+initial molecules, and the
+<a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.dataset_models.TorsiondriveDatasetSpecification" title="qcportal.torsiondrive.dataset_models.TorsiondriveDatasetSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataset</span> <span class="pre">specifications</span></code></a>
+wrap a <a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveSpecification" title="qcportal.torsiondrive.record_models.TorsiondriveSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">TorsiondriveSpecification</span></code></a>.</p>
+<p>Torsiondrive datasets differ from the other dataset types in one important way. For most dataset
+types the specification is self-contained and the entry supplies only the molecule. Here, the
+scan definition itself - which dihedral to drive - depends on the atom indices of the particular
+molecule, and those differ from entry to entry. So a torsiondrive entry carries keywords of its
+own, and the two are combined when records are created.</p>
+<p>An entry has two keyword fields in addition to its molecules:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">additional_keywords</span></code> - merged into the specification’s torsiondrive
+<a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords" title="qcportal.torsiondrive.record_models.TorsiondriveKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">TorsiondriveKeywords</span></code></a>. This is where <code class="docutils literal notranslate"><span class="pre">dihedrals</span></code>
+and <code class="docutils literal notranslate"><span class="pre">grid_spacing</span></code> normally live</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">additional_optimization_keywords</span></code> - merged into the specification’s
+<code class="docutils literal notranslate"><span class="pre">optimization_specification.keywords</span></code></p></li>
+</ul>
+<p>See <a class="reference internal" href="../datasets/index.html"><span class="doc">Datasets</span></a> for general dataset operations and advanced usage.</p>
+<section id="how-entry-and-specification-keywords-are-combined">
+<span id="torsiondrive-dataset-keywords"></span><h3>How entry and specification keywords are combined<a class="headerlink" href="#how-entry-and-specification-keywords-are-combined" title="Link to this heading">#</a></h3>
+<p>When a dataset is <a class="reference internal" href="../datasets/creating.html#dataset-submission"><span class="std std-ref">submitted</span></a>, the server builds one torsiondrive
+specification for each (entry, specification) pair by taking the dataset specification and
+updating it from the entry:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Specification field</p></th>
+<th class="head"><p>Updated from the entry’s</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">keywords</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">additional_keywords</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">optimization_specification.keywords</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">additional_optimization_keywords</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The merge is a plain dictionary update, one level deep. A key present in the entry replaces that
+key in the specification outright; keys the entry does not mention are left as they were. Values
+are not combined element-wise - an entry that sets <code class="docutils literal notranslate"><span class="pre">grid_spacing</span></code> replaces the whole list, it
+does not append to it.</p>
+<p>Nothing else in the specification is affected. The <code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code>’s <code class="docutils literal notranslate"><span class="pre">program</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qc_specification</span></code>, and <code class="docutils literal notranslate"><span class="pre">protocols</span></code> come from the dataset specification alone and cannot be
+varied per entry.</p>
+<p>Because <code class="docutils literal notranslate"><span class="pre">dihedrals</span></code> is molecule-specific, the usual arrangement is:</p>
+<ul class="simple">
+<li><p><strong>The dataset specification</strong> holds the level of theory - the optimization program, the QC
+program, method, and basis - and leaves <code class="docutils literal notranslate"><span class="pre">keywords</span></code> empty</p></li>
+<li><p><strong>Each entry</strong> holds that molecule’s <code class="docutils literal notranslate"><span class="pre">dihedrals</span></code> and <code class="docutils literal notranslate"><span class="pre">grid_spacing</span></code></p></li>
+</ul>
+<p>Both halves are still ordinary keyword dictionaries, though, so anything that genuinely is common
+to the whole dataset can go in the specification instead and be inherited by every entry. Settings
+that are common to most entries but not all can be put in the specification and overridden by the
+handful of entries that differ. The examples below show each arrangement.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code class="docutils literal notranslate"><span class="pre">additional_keywords</span></code> is stored as an unvalidated dictionary on the entry. It is only checked
+against <a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords" title="qcportal.torsiondrive.record_models.TorsiondriveKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">TorsiondriveKeywords</span></code></a>, which forbids unknown
+fields, at the point where the merged specification is built - that is, on
+<a class="reference internal" href="../datasets/creating.html#dataset-submission"><span class="std std-ref">submission</span></a>, not when the entry is added.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-7">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Note the typo - &#39;grid_spacings&#39;. This is accepted without complaint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;butane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">butane_conf1</span><span class="p">],</span> <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;grid_spacings&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">15</span><span class="p">]})</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Because that validation failure happens inside the server, it does not come back as a friendly
+message - on a server with the default <code class="docutils literal notranslate"><span class="pre">hide_internal_errors</span></code> setting you will get an internal
+server error and an error ID rather than the name of the offending key. If a submission fails for
+no apparent reason, check the spelling of the keys in your entries against the field names of
+<a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords" title="qcportal.torsiondrive.record_models.TorsiondriveKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">TorsiondriveKeywords</span></code></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">additional_optimization_keywords</span></code> is not checked this way, since
+<code class="docutils literal notranslate"><span class="pre">OptimizationSpecification.keywords</span></code> is an open dictionary passed through to the optimization
+program. A misspelled key there is silently ignored, or rejected later by the optimizer itself.</p>
+</div>
+</section>
+</section>
+<section id="dataset-examples">
+<h2>Dataset Examples<a class="headerlink" href="#dataset-examples" title="Link to this heading">#</a></h2>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Create a torsiondrive dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-8">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;torsiondrive&quot;</span><span class="p">,</span> <span class="s2">&quot;Torsion Scan Dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;A demonstration torsiondrive dataset&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add a specification with empty keywords (the usual case)</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">The specification carries the level of theory only. <code class="docutils literal notranslate"><span class="pre">keywords</span></code> is left at its default, so
+every field of the scan definition comes from the entries.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-9">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.torsiondrive</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorsiondriveSpecification</span><span class="p">,</span> <span class="n">TorsiondriveKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">td_spec</span> <span class="o">=</span> <span class="n">TorsiondriveSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;torsiondrive&quot;</span><span class="p">,</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">TorsiondriveKeywords</span><span class="p">(),</span>
+<span class="p">)</span>
+
+<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;td-geometric/psi4-b3lyp-def2-svp&quot;</span><span class="p">,</span> <span class="n">td_spec</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add entries with per-entry dihedrals and grid spacing</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">Each entry drives a different dihedral, given as atom indices into that entry’s own molecules.
+This is the reason the scan definition lives on the entry rather than the specification.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-10" name="sd-tab-set-10" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-10">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># The central C-C torsion of butane, and the C-C torsion of ethane -</span>
+<span class="c1"># different atom indices in each molecule</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span>
+    <span class="s2">&quot;butane&quot;</span><span class="p">,</span>
+    <span class="p">[</span><span class="n">butane_conf1</span><span class="p">,</span> <span class="n">butane_conf2</span><span class="p">],</span>
+    <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)],</span> <span class="s2">&quot;grid_spacing&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">15</span><span class="p">]},</span>
+<span class="p">)</span>
+
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span>
+    <span class="s2">&quot;ethane&quot;</span><span class="p">,</span>
+    <span class="p">[</span><span class="n">ethane_conf</span><span class="p">],</span>
+    <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)],</span> <span class="s2">&quot;grid_spacing&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">15</span><span class="p">]},</span>
+<span class="p">)</span>
+
+<span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add many entries at once, building the entry objects directly</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-11" name="sd-tab-set-11" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-11">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.torsiondrive</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorsiondriveDatasetNewEntry</span>
+
+<span class="c1"># Molecules and the dihedral to drive in each, worked out beforehand</span>
+<span class="n">to_scan</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">&quot;butane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">butane_conf1</span><span class="p">,</span> <span class="n">butane_conf2</span><span class="p">],</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s2">&quot;ethane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">ethane_conf</span><span class="p">],</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s2">&quot;propane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">propane_conf</span><span class="p">],</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)),</span>
+<span class="p">]</span>
+
+<span class="n">entries</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">TorsiondriveDatasetNewEntry</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">initial_molecules</span><span class="o">=</span><span class="n">mols</span><span class="p">,</span>
+        <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">dihedral</span><span class="p">],</span> <span class="s2">&quot;grid_spacing&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">15</span><span class="p">]},</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">dihedral</span> <span class="ow">in</span> <span class="n">to_scan</span>
+<span class="p">]</span>
+
+<span class="c1"># Efficiently add all entries in a single call</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entries</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Put shared keywords in the specification instead</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">Options that are the same for every entry can go in the specification, where they only have to
+be written once. Here the spacing and range are shared, and the entries supply only
+<code class="docutils literal notranslate"><span class="pre">dihedrals</span></code>.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-12" name="sd-tab-set-12" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-12">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.torsiondrive</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorsiondriveSpecification</span><span class="p">,</span> <span class="n">TorsiondriveKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">td_spec</span> <span class="o">=</span> <span class="n">TorsiondriveSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;torsiondrive&quot;</span><span class="p">,</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">TorsiondriveKeywords</span><span class="p">(</span>
+        <span class="n">grid_spacing</span><span class="o">=</span><span class="p">[</span><span class="mi">15</span><span class="p">],</span>
+        <span class="n">dihedral_ranges</span><span class="o">=</span><span class="p">[(</span><span class="o">-</span><span class="mi">165</span><span class="p">,</span> <span class="mi">180</span><span class="p">)],</span>
+        <span class="n">energy_upper_limit</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;coarse&quot;</span><span class="p">,</span> <span class="n">td_spec</span><span class="p">)</span>
+
+<span class="c1"># Entries only need to say which dihedral to drive</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;butane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">butane_conf1</span><span class="p">],</span> <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]})</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;ethane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">ethane_conf</span><span class="p">],</span> <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)]})</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Override a specification keyword for one entry</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">An entry’s <code class="docutils literal notranslate"><span class="pre">additional_keywords</span></code> replaces matching keys and leaves the rest alone, so a single
+entry can deviate from the dataset-wide settings. With the <code class="docutils literal notranslate"><span class="pre">&quot;coarse&quot;</span></code> specification above:</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-13" name="sd-tab-set-13" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-13">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Uses the specification&#39;s grid_spacing of 15</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;butane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">butane_conf1</span><span class="p">],</span> <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]})</span>
+
+<span class="c1"># Scanned more finely, but still inherits dihedral_ranges and energy_upper_limit</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span>
+    <span class="s2">&quot;butane_fine&quot;</span><span class="p">,</span>
+    <span class="p">[</span><span class="n">butane_conf1</span><span class="p">],</span>
+    <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)],</span> <span class="s2">&quot;grid_spacing&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">5</span><span class="p">]},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p class="sd-card-text">The record created for <code class="docutils literal notranslate"><span class="pre">butane_fine</span></code> gets <code class="docutils literal notranslate"><span class="pre">grid_spacing=[5]</span></code>,
+<code class="docutils literal notranslate"><span class="pre">dihedral_ranges=[(-165,</span> <span class="pre">180)]</span></code>, and <code class="docutils literal notranslate"><span class="pre">energy_upper_limit=0.05</span></code>.</p>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Pass keywords through to the optimizer per entry</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">additional_optimization_keywords</span></code> is merged into <code class="docutils literal notranslate"><span class="pre">optimization_specification.keywords</span></code> the
+same way, which is useful when one awkward molecule needs different optimizer settings.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-14" name="sd-tab-set-14" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-14">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">td_spec</span> <span class="o">=</span> <span class="n">TorsiondriveSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;torsiondrive&quot;</span><span class="p">,</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">),</span>
+        <span class="n">keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">},</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">TorsiondriveKeywords</span><span class="p">(</span><span class="n">grid_spacing</span><span class="o">=</span><span class="p">[</span><span class="mi">15</span><span class="p">]),</span>
+<span class="p">)</span>
+
+<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">td_spec</span><span class="p">)</span>
+
+<span class="c1"># Inherits maxiter=200</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;butane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">butane_conf1</span><span class="p">],</span> <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]})</span>
+
+<span class="c1"># Overrides maxiter and adds another optimizer keyword</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span>
+    <span class="s2">&quot;stubborn_molecule&quot;</span><span class="p">,</span>
+    <span class="p">[</span><span class="n">stubborn_conf</span><span class="p">],</span>
+    <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">)]},</span>
+    <span class="n">additional_optimization_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span> <span class="s2">&quot;coordsys&quot;</span><span class="p">:</span> <span class="s2">&quot;dlc&quot;</span><span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p class="sd-card-text">The record for <code class="docutils literal notranslate"><span class="pre">stubborn_molecule</span></code> is optimized with
+<code class="docutils literal notranslate"><span class="pre">keywords={&quot;maxiter&quot;:</span> <span class="pre">500,</span> <span class="pre">&quot;coordsys&quot;:</span> <span class="pre">&quot;dlc&quot;}</span></code> - <code class="docutils literal notranslate"><span class="pre">maxiter</span></code> replaced, <code class="docutils literal notranslate"><span class="pre">coordsys</span></code> added.</p>
+</div>
+</details></section>
+<section id="notes-and-tips">
+<h2>Notes and Tips<a class="headerlink" href="#notes-and-tips" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Each grid point corresponds to a full <a class="reference internal" href="optimization.html#optimization-record"><span class="std std-ref">optimization record</span></a>.
+You can access trajectory information and final structures/energies via those records.</p></li>
+<li><p>Torsiondrive keys represent dihedral angle positions; when serialized to strings (eg in JSON),
+use helper functions to convert to/from tuples if needed.</p></li>
+<li><p>See <a class="reference internal" href="singlepoint.html#singlepoint-specification"><span class="std std-ref">Singlepoint Specification (QCSpecification)</span></a> and <a class="reference internal" href="optimization.html#optimization-specification"><span class="std std-ref">Optimization Specification</span></a> for details on setting up the
+underlying QC and optimization parameters used at each grid point.</p></li>
+<li><p>In a dataset, <code class="docutils literal notranslate"><span class="pre">dihedrals</span></code> belongs on the entry, not the specification - see
+<a class="reference internal" href="#torsiondrive-dataset-keywords"><span class="std std-ref">How entry and specification keywords are combined</span></a>. The finished record’s <code class="docutils literal notranslate"><span class="pre">specification</span></code> shows the merged
+result, so a record’s keywords will not look identical to the dataset specification it came from.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">driver=&quot;deferred&quot;</span></code> is the conventional setting for the <code class="docutils literal notranslate"><span class="pre">qc_specification</span></code> inside an
+optimization specification, since the driver used at each step is decided by the optimizer.</p></li>
+</ul>
 </section>
 <section id="torsiondrive-qcportal-api">
-<span id="id3"></span><h2>Torsiondrive QCPortal API<a class="headerlink" href="#torsiondrive-qcportal-api" title="Link to this heading">#</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">TorsiondriveRecord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'torsiondrive'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_service</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manager_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_on</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modified_on</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">creator_user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_history</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">service</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">native_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_molecules_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_molecules</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum_optimizations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_records</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/torsiondrive/record_models.html#TorsiondriveRecord"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRecord</span></code></a></p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_url_prefix</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>id</strong> (<em>int</em>)</p></li>
-<li><p><strong>record_type</strong> (<em>Literal</em><em>[</em><em>'torsiondrive'</em><em>]</em>)</p></li>
-<li><p><strong>is_service</strong> (<em>bool</em>)</p></li>
-<li><p><strong>name</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>description</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>tags</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>properties</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>extras</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
-<li><p><strong>status</strong> (<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a>)</p></li>
-<li><p><strong>manager_name</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>created_on</strong> (<em>datetime</em>)</p></li>
-<li><p><strong>modified_on</strong> (<em>datetime</em>)</p></li>
-<li><p><strong>creator_user</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>compute_history</strong> (<em>list</em><em>[</em><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.ComputeHistory" title="qcportal.record_models.ComputeHistory"><em>ComputeHistory</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>task</strong> (<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><em>RecordTask</em></a><em> | </em><em>None</em>)</p></li>
-<li><p><strong>service</strong> (<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><em>RecordService</em></a><em> | </em><em>None</em>)</p></li>
-<li><p><strong>comments</strong> (<em>list</em><em>[</em><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordComment" title="qcportal.record_models.RecordComment"><em>RecordComment</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>native_files</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.NativeFile" title="qcportal.record_models.NativeFile"><em>NativeFile</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>specification</strong> (<a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveSpecification" title="qcportal.torsiondrive.record_models.TorsiondriveSpecification"><em>TorsiondriveSpecification</em></a>)</p></li>
-<li><p><strong>initial_molecules_ids</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>initial_molecules</strong> (<em>list</em><em>[</em><em>Molecule</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>optimizations</strong> (<em>list</em><em>[</em><a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveOptimization" title="qcportal.torsiondrive.record_models.TorsiondriveOptimization"><em>TorsiondriveOptimization</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>minimum_optimizations</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>optimization_records</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>list</em><em>[</em><a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord" title="qcportal.optimization.record_models.OptimizationRecord"><em>OptimizationRecord</em></a><em>]</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<span id="id2"></span><h2>Torsiondrive QCPortal API<a class="headerlink" href="#torsiondrive-qcportal-api" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#module-qcportal.torsiondrive.record_models" title="qcportal.torsiondrive.record_models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Record</span> <span class="pre">models</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#module-qcportal.torsiondrive.dataset_models" title="qcportal.torsiondrive.dataset_models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Dataset</span> <span class="pre">models</span></code></a></p></li>
+<li><p>PortalClient methods</p>
+<ul>
+<li><p><a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_torsiondrives" title="qcportal.client.PortalClient.add_torsiondrives"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_torsiondrives()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.get_torsiondrives" title="qcportal.client.PortalClient.get_torsiondrives"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_torsiondrives()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.query_torsiondrives" title="qcportal.client.PortalClient.query_torsiondrives"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_torsiondrives()</span></code></a></p></li>
 </ul>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.record_type">
-<span class="sig-name descname"><span class="pre">record_type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'torsiondrive'</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.record_type" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.specification">
-<span class="sig-name descname"><span class="pre">specification</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.torsiondrive.TorsiondriveSpecification" title="qcportal.torsiondrive.TorsiondriveSpecification"><span class="pre">TorsiondriveSpecification</span></a></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.specification" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.initial_molecules_ids_">
-<span class="sig-name descname"><span class="pre">initial_molecules_ids_</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.initial_molecules_ids_" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.initial_molecules_">
-<span class="sig-name descname"><span class="pre">initial_molecules_</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.initial_molecules_" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.optimizations_">
-<span class="sig-name descname"><span class="pre">optimizations_</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveOptimization" title="qcportal.torsiondrive.record_models.TorsiondriveOptimization"><span class="pre">TorsiondriveOptimization</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.optimizations_" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.minimum_optimizations_">
-<span class="sig-name descname"><span class="pre">minimum_optimizations_</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.minimum_optimizations_" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.optimization_records_">
-<span class="sig-name descname"><span class="pre">optimization_records_</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord" title="qcportal.optimization.record_models.OptimizationRecord"><span class="pre">OptimizationRecord</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.optimization_records_" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.propagate_client">
-<span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/torsiondrive/record_models.html#TorsiondriveRecord.propagate_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.propagate_client" title="Link to this definition">#</a></dt>
-<dd><p>Propagates a client and related information to this record to any fields within this record that need it</p>
-<p>This is expected to be called from derived class propagate_client functions as well</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>base_url_prefix</strong> (<em>str</em><em> | </em><em>None</em>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.get_cache_dict">
-<span class="sig-name descname"><span class="pre">get_cache_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/torsiondrive/record_models.html#TorsiondriveRecord.get_cache_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.get_cache_dict" title="Link to this definition">#</a></dt>
-<dd><p>Returns a dictionary of the record meant for caching</p>
-<p>When a record is stored in the cache, it is stored without child records (which
-are in the cache under their own keys). This function returns a dictionary that
-excludes those children.</p>
-<p>kwargs are passed directly to the pydantic <cite>dict()</cite> function.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict[str, <em>Any</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.initial_molecules">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">initial_molecules</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Molecule</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.initial_molecules" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.optimizations">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">optimizations</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord" title="qcportal.optimization.record_models.OptimizationRecord"><span class="pre">OptimizationRecord</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.optimizations" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.minimum_optimizations">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">minimum_optimizations</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationRecord" title="qcportal.optimization.record_models.OptimizationRecord"><span class="pre">OptimizationRecord</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.minimum_optimizations" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.final_energies">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">final_energies</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.final_energies" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.children_errors">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">children_errors</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><span class="pre">BaseRecord</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.children_errors" title="Link to this definition">#</a></dt>
-<dd><p>Returns errored child records</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.children_status">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">children_status</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><span class="pre">RecordStatusEnum</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.children_status" title="Link to this definition">#</a></dt>
-<dd><p>Returns a dictionary of the status of all children of this record</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.comments">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">comments</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordComment" title="qcportal.record_models.RecordComment"><span class="pre">RecordComment</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.comments" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.compute_history">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">compute_history</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.ComputeHistory" title="qcportal.record_models.ComputeHistory"><span class="pre">ComputeHistory</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.compute_history" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.error">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">error</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.error" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.fetch_children">
-<span class="sig-name descname"><span class="pre">fetch_children</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_fetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.fetch_children" title="Link to this definition">#</a></dt>
-<dd><p>Fetches all children of this record recursively</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>force_fetch</strong> (<em>bool</em>)</p></li>
+</li>
 </ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.fetch_children_multi">
-<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">fetch_children_multi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">records</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_fetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.fetch_children_multi" title="Link to this definition">#</a></dt>
-<dd><p>Fetches all children of the given records</p>
-<p>This tries to work efficiently, fetching larger batches of children
-that can span multiple records</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>records</strong> (<em>Iterable</em><em>[</em><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a><em> | </em><em>None</em><em>]</em>)</p></li>
-<li><p><strong>include</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>force_fetch</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.get_subclass">
-<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_subclass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.get_subclass" title="Link to this definition">#</a></dt>
-<dd><p>Obtain a subclass of this class given its record_type</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>record_type</strong> (<em>str</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Type</em>[<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.get_waiting_reason">
-<span class="sig-name descname"><span class="pre">get_waiting_reason</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.get_waiting_reason" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict[str, <em>Any</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'frozen':</span> <span class="pre">False,</span> <span class="pre">'serialize_by_alias':</span> <span class="pre">True,</span> <span class="pre">'validate_assignment':</span> <span class="pre">True,</span> <span class="pre">'validate_by_alias':</span> <span class="pre">True,</span> <span class="pre">'validate_by_name':</span> <span class="pre">True}</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.model_post_init">
-<span class="sig-name descname"><span class="pre">model_post_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.model_post_init" title="Link to this definition">#</a></dt>
-<dd><p>This function is meant to behave like a BaseModel method to initialize private attributes.</p>
-<p>It takes context as an argument since that’s what pydantic-core passes when calling it.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>BaseModel</em>) – The BaseModel instance.</p></li>
-<li><p><strong>context</strong> (<em>Any</em>) – The context.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.native_files">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">native_files</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.NativeFile" title="qcportal.record_models.NativeFile"><span class="pre">NativeFile</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.native_files" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.offline">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">offline</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.offline" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.provenance">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">provenance</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.Provenance" title="qcportal.record_models.Provenance"><span class="pre">Provenance</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.provenance" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.service">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">service</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><span class="pre">RecordService</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.service" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.stderr">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">stderr</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.stderr" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.stdout">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">stdout</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.stdout" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.sync_to_cache">
-<span class="sig-name descname"><span class="pre">sync_to_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">detach</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.sync_to_cache" title="Link to this definition">#</a></dt>
-<dd><p>Syncs this record to the cache</p>
-<p>If <cite>detach</cite> is True, then the record will be removed from the cache</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>detach</strong> (<em>bool</em>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.task">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">task</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><span class="pre">RecordTask</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.task" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.id">
-<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.id" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.is_service">
-<span class="sig-name descname"><span class="pre">is_service</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.is_service" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.name" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.description">
-<span class="sig-name descname"><span class="pre">description</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.description" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.tags">
-<span class="sig-name descname"><span class="pre">tags</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.tags" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.properties">
-<span class="sig-name descname"><span class="pre">properties</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.properties" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.extras">
-<span class="sig-name descname"><span class="pre">extras</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.extras" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.status">
-<span class="sig-name descname"><span class="pre">status</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.status" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.manager_name">
-<span class="sig-name descname"><span class="pre">manager_name</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.manager_name" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.created_on">
-<span class="sig-name descname"><span class="pre">created_on</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.created_on" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.modified_on">
-<span class="sig-name descname"><span class="pre">modified_on</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.modified_on" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.creator_user">
-<span class="sig-name descname"><span class="pre">creator_user</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.creator_user" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.compute_history_">
-<span class="sig-name descname"><span class="pre">compute_history_</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.compute_history_" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.task_">
-<span class="sig-name descname"><span class="pre">task_</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.task_" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.service_">
-<span class="sig-name descname"><span class="pre">service_</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.service_" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.comments_">
-<span class="sig-name descname"><span class="pre">comments_</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.comments_" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveRecord.native_files_">
-<span class="sig-name descname"><span class="pre">native_files_</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveRecord.native_files_" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveSpecification">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">TorsiondriveSpecification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">program</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'torsiondrive'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keywords</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/torsiondrive/record_models.html#TorsiondriveSpecification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveSpecification" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>program</strong> (<em>Annotated</em><em>[</em><em>str</em><em>, </em><em>StringConstraints</em><em>(</em><em>strip_whitespace=None</em><em>, </em><em>to_upper=None</em><em>, </em><em>to_lower=True</em><em>, </em><em>strict=None</em><em>, </em><em>min_length=None</em><em>, </em><em>max_length=None</em><em>, </em><em>pattern=None</em><em>, </em><em>ascii_only=None</em><em>)</em><em>]</em>)</p></li>
-<li><p><strong>optimization_specification</strong> (<a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><em>OptimizationSpecification</em></a>)</p></li>
-<li><p><strong>keywords</strong> (<a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords" title="qcportal.torsiondrive.record_models.TorsiondriveKeywords"><em>TorsiondriveKeywords</em></a>)</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveSpecification.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid'}</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveSpecification.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveSpecification.program">
-<span class="sig-name descname"><span class="pre">program</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">LowerStr</span></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveSpecification.program" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveSpecification.optimization_specification">
-<span class="sig-name descname"><span class="pre">optimization_specification</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/optimization.html#qcportal.optimization.record_models.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><span class="pre">OptimizationSpecification</span></a></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveSpecification.optimization_specification" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.torsiondrive.TorsiondriveSpecification.keywords">
-<span class="sig-name descname"><span class="pre">keywords</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords" title="qcportal.torsiondrive.record_models.TorsiondriveKeywords"><span class="pre">TorsiondriveKeywords</span></a></span><a class="headerlink" href="#qcportal.torsiondrive.TorsiondriveSpecification.keywords" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
 </section>
 </section>
 
@@ -996,70 +1151,18 @@ validated to form a valid model.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torsiondrive-record">Torsiondrive Record</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torsiondrive-dataset">Torsiondrive Dataset</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torsiondrive-qcportal-api">Torsiondrive QCPortal API</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.record_type"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.record_type</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.specification"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.specification</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.initial_molecules_ids_"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.initial_molecules_ids_</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.initial_molecules_"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.initial_molecules_</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.optimizations_"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.optimizations_</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.minimum_optimizations_"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.minimum_optimizations_</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.optimization_records_"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.optimization_records_</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.propagate_client"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.propagate_client()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.get_cache_dict"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.get_cache_dict()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.initial_molecules"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.initial_molecules</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.optimizations"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.optimizations</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.minimum_optimizations"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.minimum_optimizations</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.final_energies"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.final_energies</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.children_errors"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.children_errors</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.children_status"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.children_status</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.comments"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.comments</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.compute_history"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.compute_history</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.error"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.error</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.fetch_children"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.fetch_children()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.fetch_children_multi"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.fetch_children_multi()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.get_subclass"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.get_subclass()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.get_waiting_reason"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.get_waiting_reason()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.model_config"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.model_config</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.model_post_init"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.model_post_init()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.native_files"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.native_files</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.offline"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.offline</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.provenance"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.provenance</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.service"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.service</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.stderr"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.stderr</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.stdout"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.stdout</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.sync_to_cache"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.sync_to_cache()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.task"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.task</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.id"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.id</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.is_service"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.is_service</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.name"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.name</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.description"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.description</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.tags"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.tags</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.properties"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.properties</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.extras"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.extras</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.status"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.status</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.manager_name"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.manager_name</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.created_on"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.created_on</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.modified_on"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.modified_on</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.creator_user"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.creator_user</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.compute_history_"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.compute_history_</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.task_"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.task_</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.service_"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.service_</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.comments_"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.comments_</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveRecord.native_files_"><code class="docutils literal notranslate"><span class="pre">TorsiondriveRecord.native_files_</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torsiondrive-records">Torsiondrive Records</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torsiondrive-specification">Torsiondrive Specification</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submitting-records">Submitting Records</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#client-examples">Client Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#working-with-results">Working with Results</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torsiondrive-datasets">Torsiondrive Datasets</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-entry-and-specification-keywords-are-combined">How entry and specification keywords are combined</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveSpecification"><code class="docutils literal notranslate"><span class="pre">TorsiondriveSpecification</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveSpecification.model_config"><code class="docutils literal notranslate"><span class="pre">TorsiondriveSpecification.model_config</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveSpecification.program"><code class="docutils literal notranslate"><span class="pre">TorsiondriveSpecification.program</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveSpecification.optimization_specification"><code class="docutils literal notranslate"><span class="pre">TorsiondriveSpecification.optimization_specification</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.torsiondrive.TorsiondriveSpecification.keywords"><code class="docutils literal notranslate"><span class="pre">TorsiondriveSpecification.keywords</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dataset-examples">Dataset Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notes-and-tips">Notes and Tips</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torsiondrive-qcportal-api">Torsiondrive QCPortal API</a></li>
 </ul>
   </nav></div>
 

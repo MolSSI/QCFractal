@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -505,9 +505,11 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">QCFComputeConfigBase</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
+<div class="viewcode-block" id="PackageEnvironmentSettings">
+<a class="viewcode-back" href="../../admin_guide/managers/index.html#qcfractalcompute.config.PackageEnvironmentSettings">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">PackageEnvironmentSettings</span><span class="p">(</span><span class="n">QCFComputeConfigBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Environments with installed packages that can be used to run calculations</span>
@@ -516,16 +518,19 @@
 <span class="sd">    direct appropriate calculations to them.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">use_manager_environment</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">True</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Use the environment that the manager is running in for computation. May be in addition to other environments&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">conda</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">([],</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of conda environments to query for installed packages&quot;</span><span class="p">)</span>
-    <span class="n">apptainer</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="p">[],</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of paths to apptainer/singularity files to query for installed packages&quot;</span>
-    <span class="p">)</span>
+    <span class="n">use_manager_environment</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use the environment that the manager is running in for computation. May be in addition to other environments&quot;&quot;&quot;</span>
+
+    <span class="n">conda</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;List of conda environments to query for installed packages&quot;&quot;&quot;</span>
+
+    <span class="n">apptainer</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;List of paths to apptainer/singularity files to query for installed packages&quot;&quot;&quot;</span></div>
 
 
+
+<div class="viewcode-block" id="ExecutorConfig">
+<a class="viewcode-back" href="../../admin_guide/managers/index.html#qcfractalcompute.config.ExecutorConfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ExecutorConfig</span><span class="p">(</span><span class="n">QCFComputeConfigBase</span><span class="p">):</span>
     <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">compute_tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
@@ -539,7 +544,8 @@
 
     <span class="n">extra_executor_options</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="n">environments</span><span class="p">:</span> <span class="n">PackageEnvironmentSettings</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">PackageEnvironmentSettings</span><span class="p">)</span>
+    <span class="n">environments</span><span class="p">:</span> <span class="n">PackageEnvironmentSettings</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">PackageEnvironmentSettings</span><span class="p">)</span></div>
+
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">CustomExecutorConfig</span><span class="p">(</span><span class="n">ExecutorConfig</span><span class="p">):</span>
@@ -624,67 +630,78 @@
 <span class="sd">    to ensure its security.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">fractal_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Full URI to the Fractal Server you want to connect to&quot;</span><span class="p">)</span>
-    <span class="n">username</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Username to connect to the Fractal Server with. When not provided, a connection is attempted &quot;</span>
-        <span class="s2">&quot;as a guest user, which in most default Servers will be unable to return results.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">password</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Password to authenticate to the Fractal Server with (alongside the `username`)&quot;</span>
-    <span class="p">)</span>
-    <span class="n">verify</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Use Server-side generated SSL certification or not.&quot;</span><span class="p">)</span>
+    <span class="n">fractal_uri</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Full URI to the Fractal Server you want to connect to&quot;&quot;&quot;</span>
+
+    <span class="n">username</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Username to connect to the Fractal Server with. When not provided, a connection is attempted as a guest user,</span>
+<span class="sd">    which in most default Servers will be unable to return results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">password</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Password to authenticate to the Fractal Server with (alongside the `username`)&quot;&quot;&quot;</span>
+
+    <span class="n">verify</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use Server-side generated SSL certification or not&quot;&quot;&quot;</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">FractalComputeConfig</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
-    <span class="n">base_folder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The base folder to use as the default for some options (logs, etc). Default is the location of the config file.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">base_folder</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The base folder to use as the default for some options (logs, etc). Default is the location of the config</span>
+<span class="sd">    file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">cluster</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Name of this scheduler to present to the Fractal Server. Descriptive names help the server &quot;</span>
-        <span class="s2">&quot;identify the manager resource and assists with debugging.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">cluster</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of this scheduler to present to the Fractal Server. Descriptive names help the server identify the</span>
+<span class="sd">    manager resource and assists with debugging.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">loglevel</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;INFO&quot;</span>
-    <span class="n">logfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Full path to save a log file to, including the filename. If not provided, information will still &quot;</span>
-        <span class="s2">&quot;be reported to terminal, but not saved. When set, logger information is sent to this file.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">update_frequency</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="mi">30</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Time between heartbeats/update checks between this Manager and the Fractal Server. The lower this &quot;</span>
-        <span class="s2">&quot;value, the shorter the intervals. If you have an unreliable network connection, consider &quot;</span>
-        <span class="s2">&quot;increasing this time as repeated, consecutive network failures will cause the Manager to shut &quot;</span>
-        <span class="s2">&quot;itself down to maintain integrity between it and the Fractal Server. Units of seconds&quot;</span><span class="p">,</span>
-        <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">update_frequency_jitter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="mf">0.1</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The update frequency will be modified by up to a certain amount for each request. The &quot;</span>
-        <span class="s2">&quot;update_frequency_jitter represents a fraction of the update_frequency to allow as a max. &quot;</span>
-        <span class="s2">&quot;Ie, update_frequency=60, and jitter=0.1, updates will happen between 54 and 66 seconds. &quot;</span>
-        <span class="s2">&quot;This helps with spreading out server load.&quot;</span><span class="p">,</span>
-        <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">logfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Full path to save a log file to, including the filename. If not provided, information will still be reported</span>
+<span class="sd">    to terminal, but not saved. When set, logger information is sent to this file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">max_idle_time</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Maximum consecutive time in seconds that the manager &quot;</span>
-        <span class="s2">&quot;should be allowed to run. If this is reached, the manager will shutdown.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">update_frequency</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Time between heartbeats/update checks between this Manager and the Fractal Server. The lower this value, the</span>
+<span class="sd">    shorter the intervals. If you have an unreliable network connection, consider increasing this time as</span>
+<span class="sd">    repeated, consecutive network failures will cause the Manager to shut itself down to maintain integrity</span>
+<span class="sd">    between it and the Fractal Server. Units of seconds</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">update_frequency_jitter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The update frequency will be modified by up to a certain amount for each request. The update_frequency_jitter</span>
+<span class="sd">    represents a fraction of the update_frequency to allow as a max. Ie, update_frequency=60, and jitter=0.1,</span>
+<span class="sd">    updates will happen between 54 and 66 seconds. This helps with spreading out server load.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">max_idle_time</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maximum consecutive time in seconds that the manager should be allowed to run. If this is reached, the manager</span>
+<span class="sd">    will shutdown.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">parsl_run_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;parsl_run_dir&quot;</span>
-    <span class="n">parsl_usage_tracking</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Directory for parsl to use for temporary files, submission scripts, etc</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">server</span><span class="p">:</span> <span class="n">FractalServerSettings</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">parsl_usage_tracking</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set to 1-3 to send usage information to Parsl developers. This helps Parsl to collect</span>
+<span class="sd">    aggregate statistics on usage to better report to funding agencies. Recommended to help enable them</span>
+<span class="sd">    to keep working, but disabled by default for privacy reasons.</span>
+<span class="sd">    </span>
+<span class="sd">    See https://parsl.readthedocs.io/en/stable/userguide/advanced/usage_tracking.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">server</span><span class="p">:</span> <span class="n">FractalServerSettings</span>
     <span class="n">environments</span><span class="p">:</span> <span class="n">PackageEnvironmentSettings</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">PackageEnvironmentSettings</span><span class="p">)</span>
-    <span class="n">executors</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AllExecutorTypes</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">executors</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AllExecutorTypes</span><span class="p">]</span>
 
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">SettingsConfigDict</span><span class="p">(</span>
-        <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">case_sensitive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">env_prefix</span><span class="o">=</span><span class="s2">&quot;QCF_COMPUTE_&quot;</span><span class="p">,</span> <span class="n">env_nested_delimiter</span><span class="o">=</span><span class="s2">&quot;__&quot;</span>
+        <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span>
+        <span class="n">case_sensitive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">env_prefix</span><span class="o">=</span><span class="s2">&quot;QCF_COMPUTE_&quot;</span><span class="p">,</span>
+        <span class="n">env_nested_delimiter</span><span class="o">=</span><span class="s2">&quot;__&quot;</span><span class="p">,</span>
+        <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="c1"># Since we manually read the yaml files, the values passed into the init</span>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,10 +53,10 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Tasks and Services" href="tasks_services.html" />
-    <link rel="prev" title="Molecule" href="molecules.html" />
+    <link rel="prev" title="Projects" href="projects.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -436,6 +436,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/attachments.html">Attachments</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../projects/index.html">Projects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../projects/records.html">Records in a Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../projects/datasets.html">Datasets in a Project</a></li>
+</ul>
+</details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../records/base.html">Base Record</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../records/singlepoint.html">Singlepoint calculations</a></li>
@@ -452,6 +457,7 @@
 <li class="toctree-l2"><a class="reference internal" href="auth.html">Authentication and User Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="base_models.html">Base Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="projects.html">Projects</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Metadata Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tasks_services.html">Tasks and Services</a></li>
 <li class="toctree-l2"><a class="reference internal" href="internal_jobs.html">Internal Jobs</a></li>
@@ -536,41 +542,80 @@
 <span id="metadata-models"></span><h1>Metadata Models<a class="headerlink" href="#module-qcportal.metadata_models" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">InsertMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inserted_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">existing_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">InsertMetadata</span></span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/base_model/#pydantic.BaseModel" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
 <p>Metadata returned by insertion / adding functions</p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>errors</strong> (<em>list</em><em>[</em><em>tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>)</p></li>
-<li><p><strong>inserted_idx</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>)</p></li>
-<li><p><strong>existing_idx</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>)</p></li>
-</ul>
-</dd>
-</dl>
+<div class="pst-scrollable-table-container"><table class="table" id="id1">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id1" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.metadata_models.InsertMetadata.error_description" title="qcportal.metadata_models.InsertMetadata.error_description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">error_description</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.metadata_models.InsertMetadata.errors" title="qcportal.metadata_models.InsertMetadata.errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">errors</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p></td>
+<td><p>No</p></td>
+<td><p><em>factory</em></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.metadata_models.InsertMetadata.existing_idx" title="qcportal.metadata_models.InsertMetadata.existing_idx"><code class="xref py py-obj docutils literal notranslate"><span class="pre">existing_idx</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</p></td>
+<td><p>No</p></td>
+<td><p><em>factory</em></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.metadata_models.InsertMetadata.inserted_idx" title="qcportal.metadata_models.InsertMetadata.inserted_idx"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inserted_idx</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</p></td>
+<td><p>No</p></td>
+<td><p><em>factory</em></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table" id="id2">
+<caption><span class="caption-text">Validators</span><a class="headerlink" href="#id2" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Validator</p></th>
+<th class="head"><p>Mode</p></th>
+<th class="head"><p>Fields</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.metadata_models.InsertMetadata.check_all_indices" title="qcportal.metadata_models.InsertMetadata.check_all_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_all_indices</span></code></a></p></td>
+<td><p>after</p></td>
+<td><p><em>model</em></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.metadata_models.InsertMetadata.sort_fields" title="qcportal.metadata_models.InsertMetadata.sort_fields"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort_fields</span></code></a></p></td>
+<td><p>before</p></td>
+<td><p><a class="reference internal" href="#qcportal.metadata_models.InsertMetadata.errors" title="qcportal.metadata_models.InsertMetadata.errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">errors</span></code></a>, <a class="reference internal" href="#qcportal.metadata_models.InsertMetadata.inserted_idx" title="qcportal.metadata_models.InsertMetadata.inserted_idx"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inserted_idx</span></code></a>, <a class="reference internal" href="#qcportal.metadata_models.InsertMetadata.existing_idx" title="qcportal.metadata_models.InsertMetadata.existing_idx"><code class="xref py py-obj docutils literal notranslate"><span class="pre">existing_idx</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.error_description">
-<span class="sig-name descname"><span class="pre">error_description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.error_description" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">error_description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.error_description" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.errors">
-<span class="sig-name descname"><span class="pre">errors</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.errors" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">errors</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.errors" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.inserted_idx">
-<span class="sig-name descname"><span class="pre">inserted_idx</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.inserted_idx" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">inserted_idx</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.inserted_idx" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.existing_idx">
-<span class="sig-name descname"><span class="pre">existing_idx</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.existing_idx" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">existing_idx</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.existing_idx" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -618,7 +663,7 @@ validated to form a valid model.</p>
 <span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertMetadata.merge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.merge" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>metadata</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><em>InsertMetadata</em></a><em>]</em>)</p>
+<dd class="field-odd"><p><strong>metadata</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.14)"><em>Sequence</em></a><em>[</em><a class="reference internal" href="#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><em>InsertMetadata</em></a><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#qcportal.metadata_models.InsertMetadata" title="qcportal.metadata_models.InsertMetadata"><em>InsertMetadata</em></a></p>
@@ -626,51 +671,64 @@ validated to form a valid model.</p>
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.metadata_models.InsertMetadata.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertMetadata.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertCountsMetadata">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">InsertCountsMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_inserted</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_existing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertCountsMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">InsertCountsMetadata</span></span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#InsertCountsMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/base_model/#pydantic.BaseModel" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
 <p>Metadata returned by insertion / adding functions, only including counts</p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n_inserted</strong> (<em>int</em>)</p></li>
-<li><p><strong>n_existing</strong> (<em>int</em>)</p></li>
-<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>errors</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
-</ul>
-</dd>
-</dl>
+<div class="pst-scrollable-table-container"><table class="table" id="id3">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id3" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.metadata_models.InsertCountsMetadata.error_description" title="qcportal.metadata_models.InsertCountsMetadata.error_description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">error_description</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.metadata_models.InsertCountsMetadata.errors" title="qcportal.metadata_models.InsertCountsMetadata.errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">errors</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
+<td><p>No</p></td>
+<td><p><em>factory</em></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.metadata_models.InsertCountsMetadata.n_existing" title="qcportal.metadata_models.InsertCountsMetadata.n_existing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_existing</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.metadata_models.InsertCountsMetadata.n_inserted" title="qcportal.metadata_models.InsertCountsMetadata.n_inserted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_inserted</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertCountsMetadata.n_inserted">
-<span class="sig-name descname"><span class="pre">n_inserted</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.n_inserted" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">n_inserted</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.n_inserted" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertCountsMetadata.n_existing">
-<span class="sig-name descname"><span class="pre">n_existing</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.n_existing" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">n_existing</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.n_existing" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertCountsMetadata.error_description">
-<span class="sig-name descname"><span class="pre">error_description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.error_description" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">error_description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.error_description" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.InsertCountsMetadata.errors">
-<span class="sig-name descname"><span class="pre">errors</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.errors" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">errors</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.errors" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -701,51 +759,84 @@ validated to form a valid model.</p>
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.metadata_models.InsertCountsMetadata.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#qcportal.metadata_models.InsertCountsMetadata.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">DeleteMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deleted_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_children_deleted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#DeleteMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">DeleteMetadata</span></span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#DeleteMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/base_model/#pydantic.BaseModel" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
 <p>Metadata returned by delete functions</p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>errors</strong> (<em>list</em><em>[</em><em>tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>)</p></li>
-<li><p><strong>deleted_idx</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>)</p></li>
-<li><p><strong>n_children_deleted</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-</dl>
+<div class="pst-scrollable-table-container"><table class="table" id="id4">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id4" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.metadata_models.DeleteMetadata.deleted_idx" title="qcportal.metadata_models.DeleteMetadata.deleted_idx"><code class="xref py py-obj docutils literal notranslate"><span class="pre">deleted_idx</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</p></td>
+<td><p>No</p></td>
+<td><p><em>factory</em></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.metadata_models.DeleteMetadata.error_description" title="qcportal.metadata_models.DeleteMetadata.error_description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">error_description</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.metadata_models.DeleteMetadata.errors" title="qcportal.metadata_models.DeleteMetadata.errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">errors</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p></td>
+<td><p>No</p></td>
+<td><p><em>factory</em></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.metadata_models.DeleteMetadata.n_children_deleted" title="qcportal.metadata_models.DeleteMetadata.n_children_deleted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_children_deleted</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table" id="id5">
+<caption><span class="caption-text">Validators</span><a class="headerlink" href="#id5" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Validator</p></th>
+<th class="head"><p>Mode</p></th>
+<th class="head"><p>Fields</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.metadata_models.DeleteMetadata.check_all_indices" title="qcportal.metadata_models.DeleteMetadata.check_all_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_all_indices</span></code></a></p></td>
+<td><p>after</p></td>
+<td><p><em>model</em></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.metadata_models.DeleteMetadata.sort_fields" title="qcportal.metadata_models.DeleteMetadata.sort_fields"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort_fields</span></code></a></p></td>
+<td><p>before</p></td>
+<td><p><a class="reference internal" href="#qcportal.metadata_models.DeleteMetadata.errors" title="qcportal.metadata_models.DeleteMetadata.errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">errors</span></code></a>, <a class="reference internal" href="#qcportal.metadata_models.DeleteMetadata.deleted_idx" title="qcportal.metadata_models.DeleteMetadata.deleted_idx"><code class="xref py py-obj docutils literal notranslate"><span class="pre">deleted_idx</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.error_description">
-<span class="sig-name descname"><span class="pre">error_description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.error_description" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">error_description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.error_description" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.errors">
-<span class="sig-name descname"><span class="pre">errors</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.errors" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">errors</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.errors" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.deleted_idx">
-<span class="sig-name descname"><span class="pre">deleted_idx</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.deleted_idx" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">deleted_idx</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.deleted_idx" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.n_children_deleted">
-<span class="sig-name descname"><span class="pre">n_children_deleted</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.n_children_deleted" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">n_children_deleted</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.n_children_deleted" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -783,51 +874,84 @@ validated to form a valid model.</p>
 <span class="sig-name descname"><span class="pre">check_all_indices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#DeleteMetadata.check_all_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.check_all_indices" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.metadata_models.DeleteMetadata.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#qcportal.metadata_models.DeleteMetadata.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">UpdateMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">updated_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_children_updated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#UpdateMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">UpdateMetadata</span></span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#UpdateMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/base_model/#pydantic.BaseModel" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
 <p>Metadata returned by update functions</p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>errors</strong> (<em>list</em><em>[</em><em>tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>)</p></li>
-<li><p><strong>updated_idx</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>)</p></li>
-<li><p><strong>n_children_updated</strong> (<em>int</em>)</p></li>
-</ul>
-</dd>
-</dl>
+<div class="pst-scrollable-table-container"><table class="table" id="id6">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id6" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.metadata_models.UpdateMetadata.error_description" title="qcportal.metadata_models.UpdateMetadata.error_description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">error_description</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.metadata_models.UpdateMetadata.errors" title="qcportal.metadata_models.UpdateMetadata.errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">errors</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p></td>
+<td><p>No</p></td>
+<td><p><em>factory</em></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.metadata_models.UpdateMetadata.n_children_updated" title="qcportal.metadata_models.UpdateMetadata.n_children_updated"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_children_updated</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.metadata_models.UpdateMetadata.updated_idx" title="qcportal.metadata_models.UpdateMetadata.updated_idx"><code class="xref py py-obj docutils literal notranslate"><span class="pre">updated_idx</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</p></td>
+<td><p>No</p></td>
+<td><p><em>factory</em></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table" id="id7">
+<caption><span class="caption-text">Validators</span><a class="headerlink" href="#id7" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Validator</p></th>
+<th class="head"><p>Mode</p></th>
+<th class="head"><p>Fields</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.metadata_models.UpdateMetadata.check_all_indices" title="qcportal.metadata_models.UpdateMetadata.check_all_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_all_indices</span></code></a></p></td>
+<td><p>after</p></td>
+<td><p><em>model</em></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.metadata_models.UpdateMetadata.sort_fields" title="qcportal.metadata_models.UpdateMetadata.sort_fields"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort_fields</span></code></a></p></td>
+<td><p>before</p></td>
+<td><p><a class="reference internal" href="#qcportal.metadata_models.UpdateMetadata.errors" title="qcportal.metadata_models.UpdateMetadata.errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">errors</span></code></a>, <a class="reference internal" href="#qcportal.metadata_models.UpdateMetadata.updated_idx" title="qcportal.metadata_models.UpdateMetadata.updated_idx"><code class="xref py py-obj docutils literal notranslate"><span class="pre">updated_idx</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.error_description">
-<span class="sig-name descname"><span class="pre">error_description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.error_description" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">error_description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.error_description" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.errors">
-<span class="sig-name descname"><span class="pre">errors</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.errors" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">errors</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.errors" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.updated_idx">
-<span class="sig-name descname"><span class="pre">updated_idx</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.updated_idx" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">updated_idx</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.updated_idx" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.n_children_updated">
-<span class="sig-name descname"><span class="pre">n_children_updated</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.n_children_updated" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">n_children_updated</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.n_children_updated" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -865,45 +989,70 @@ validated to form a valid model.</p>
 <span class="sig-name descname"><span class="pre">check_all_indices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#UpdateMetadata.check_all_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.check_all_indices" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.metadata_models.UpdateMetadata.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#qcportal.metadata_models.UpdateMetadata.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">TaskReturnMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rejected_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accepted_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#TaskReturnMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">TaskReturnMetadata</span></span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#TaskReturnMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/base_model/#pydantic.BaseModel" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
 <p>Metadata returned to managers that have sent completed tasks back to the server</p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>error_description</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>rejected_info</strong> (<em>list</em><em>[</em><em>tuple</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>)</p></li>
-<li><p><strong>accepted_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>)</p></li>
-</ul>
-</dd>
-</dl>
+<div class="pst-scrollable-table-container"><table class="table" id="id8">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id8" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.metadata_models.TaskReturnMetadata.accepted_ids" title="qcportal.metadata_models.TaskReturnMetadata.accepted_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">accepted_ids</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</p></td>
+<td><p>No</p></td>
+<td><p><em>factory</em></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.metadata_models.TaskReturnMetadata.error_description" title="qcportal.metadata_models.TaskReturnMetadata.error_description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">error_description</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.metadata_models.TaskReturnMetadata.rejected_info" title="qcportal.metadata_models.TaskReturnMetadata.rejected_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rejected_info</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p></td>
+<td><p>No</p></td>
+<td><p><em>factory</em></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table" id="id9">
+<caption><span class="caption-text">Validators</span><a class="headerlink" href="#id9" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Validator</p></th>
+<th class="head"><p>Mode</p></th>
+<th class="head"><p>Fields</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.metadata_models.TaskReturnMetadata.sort_fields" title="qcportal.metadata_models.TaskReturnMetadata.sort_fields"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort_fields</span></code></a></p></td>
+<td><p>before</p></td>
+<td><p><a class="reference internal" href="#qcportal.metadata_models.TaskReturnMetadata.rejected_info" title="qcportal.metadata_models.TaskReturnMetadata.rejected_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rejected_info</span></code></a>, <a class="reference internal" href="#qcportal.metadata_models.TaskReturnMetadata.accepted_ids" title="qcportal.metadata_models.TaskReturnMetadata.accepted_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">accepted_ids</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.error_description">
-<span class="sig-name descname"><span class="pre">error_description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.error_description" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">error_description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.error_description" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.rejected_info">
-<span class="sig-name descname"><span class="pre">rejected_info</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.rejected_info" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">rejected_info</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.rejected_info" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.accepted_ids">
-<span class="sig-name descname"><span class="pre">accepted_ids</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.accepted_ids" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">accepted_ids</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.accepted_ids" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -936,12 +1085,6 @@ validated to form a valid model.</p>
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">sort_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/metadata_models.html#TaskReturnMetadata.sort_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.sort_fields" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.metadata_models.TaskReturnMetadata.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#qcportal.metadata_models.TaskReturnMetadata.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
 </dd></dl>
 
 </section>
@@ -957,12 +1100,12 @@ validated to form a valid model.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="molecules.html"
+       href="projects.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Molecule</p>
+        <p class="prev-next-title">Projects</p>
       </div>
     </a>
     <a class="right-next"
@@ -1007,7 +1150,6 @@ validated to form a valid model.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.sort_fields"><code class="docutils literal notranslate"><span class="pre">InsertMetadata.sort_fields()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.check_all_indices"><code class="docutils literal notranslate"><span class="pre">InsertMetadata.check_all_indices()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.merge"><code class="docutils literal notranslate"><span class="pre">InsertMetadata.merge()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.InsertMetadata.model_config"><code class="docutils literal notranslate"><span class="pre">InsertMetadata.model_config</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.InsertCountsMetadata"><code class="docutils literal notranslate"><span class="pre">InsertCountsMetadata</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
@@ -1019,7 +1161,6 @@ validated to form a valid model.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.InsertCountsMetadata.success"><code class="docutils literal notranslate"><span class="pre">InsertCountsMetadata.success</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.InsertCountsMetadata.error_string"><code class="docutils literal notranslate"><span class="pre">InsertCountsMetadata.error_string</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.InsertCountsMetadata.from_insert_metadata"><code class="docutils literal notranslate"><span class="pre">InsertCountsMetadata.from_insert_metadata()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.InsertCountsMetadata.model_config"><code class="docutils literal notranslate"><span class="pre">InsertCountsMetadata.model_config</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata"><code class="docutils literal notranslate"><span class="pre">DeleteMetadata</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
@@ -1034,7 +1175,6 @@ validated to form a valid model.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.error_string"><code class="docutils literal notranslate"><span class="pre">DeleteMetadata.error_string</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.sort_fields"><code class="docutils literal notranslate"><span class="pre">DeleteMetadata.sort_fields()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.check_all_indices"><code class="docutils literal notranslate"><span class="pre">DeleteMetadata.check_all_indices()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.DeleteMetadata.model_config"><code class="docutils literal notranslate"><span class="pre">DeleteMetadata.model_config</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata"><code class="docutils literal notranslate"><span class="pre">UpdateMetadata</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
@@ -1049,7 +1189,6 @@ validated to form a valid model.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.error_string"><code class="docutils literal notranslate"><span class="pre">UpdateMetadata.error_string</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.sort_fields"><code class="docutils literal notranslate"><span class="pre">UpdateMetadata.sort_fields()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.check_all_indices"><code class="docutils literal notranslate"><span class="pre">UpdateMetadata.check_all_indices()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.UpdateMetadata.model_config"><code class="docutils literal notranslate"><span class="pre">UpdateMetadata.model_config</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata"><code class="docutils literal notranslate"><span class="pre">TaskReturnMetadata</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
@@ -1062,7 +1201,6 @@ validated to form a valid model.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.success"><code class="docutils literal notranslate"><span class="pre">TaskReturnMetadata.success</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.error_string"><code class="docutils literal notranslate"><span class="pre">TaskReturnMetadata.error_string</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.sort_fields"><code class="docutils literal notranslate"><span class="pre">TaskReturnMetadata.sort_fields()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.metadata_models.TaskReturnMetadata.model_config"><code class="docutils literal notranslate"><span class="pre">TaskReturnMetadata.model_config</span></code></a></li>
 </ul>
 </li>
 </ul>

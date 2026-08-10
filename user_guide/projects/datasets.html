@@ -1,0 +1,964 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Datasets in a Project &#8212; QCArchive documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=68b739ae" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../_static/documentation_options.js?v=64b8918b"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/projects/datasets';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Record &amp; Computation Types" href="../records/index.html" />
+    <link rel="prev" title="Records in a Project" href="records.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/qcarchive_logo.svg" class="logo__image only-light" alt=""/>
+    <img src="../../_static/qcarchive_logo_inverted.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">QCArchive</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart/index.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../overview/index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart/index.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../overview/index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../admin_guide/index.html">
+    Admin Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../web_api/index.html">
+    Web API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer_guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://molssi.org">
+    MolSSI
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../client_setup.html">QCPortal Installation &amp; Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../connecting_qcportal.html">Connecting to a server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata.html">Interpreting metadata</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../query_iterators.html">Query Iterators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../molecule.html">Molecules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../record_retrieval.html">Retrieving records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../record_submission.html">Submitting computations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../record_management.html">Managing Records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../datasets/index.html">Datasets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/basics.html">Using datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/creating.html">Creating datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/maintenance.html">Maintenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/caching.html">Caching &amp; Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/attachments.html">Attachments</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Projects</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="records.html">Records in a Project</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Datasets in a Project</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../records/base.html">Base Record</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/singlepoint.html">Singlepoint calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/optimization.html">Optimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/gridoptimization.html">Gridoptimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/torsiondrive.html">Torsiondrive calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/manybody.html">Manybody calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/reaction.html">Reaction calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../records/neb.html">NEB calculations</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../qcportal_reference/index.html">QCPortal API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/clients.html">QCPortal Clients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/auth.html">Authentication and User Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/base_models.html">Base Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/projects.html">Projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/metadata_models.html">Metadata Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/tasks_services.html">Tasks and Services</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/serverinfo.html">Server Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/managers.html">Managers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/external_files.html">External Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/utils_misc.html">Utilities and Miscellaneous</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/base_record_models.html">Base Record Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/singlepoint.html">Singlepoint Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/optimization.html">Optimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/torsiondrive.html">Torsiondrive Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/gridoptimization.html">Gridoptimization Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/manybody.html">Manybody Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/reaction.html">Reaction Records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/records/neb.html">NEB Records</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">QCArchive User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Projects</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Datasets in a Project</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="datasets-in-a-project">
+<h1>Datasets in a Project<a class="headerlink" href="#datasets-in-a-project" title="Link to this heading">#</a></h1>
+<p>A project holds <a class="reference internal" href="../../overview/glossary.html#glossary-dataset"><span class="std std-ref">datasets</span></a> under project-local names, in the same way it
+holds records. Every method here that takes a dataset accepts either the name or the ID.</p>
+<p>A dataset in a project is an ordinary dataset. Everything in <a class="reference internal" href="../datasets/index.html"><span class="doc">Datasets</span></a> applies to it
+unchanged - entries, specifications, submission, caching, and views all work the same way. What
+the project adds is the grouping and the name.</p>
+<section id="creating-datasets">
+<span id="project-add-datasets"></span><h2>Creating datasets<a class="headerlink" href="#creating-datasets" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.add_dataset" title="qcportal.project_models.Project.add_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_dataset()</span></code></a> creates a new dataset in the project. It takes
+the same arguments as <a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_dataset" title="qcportal.client.PortalClient.add_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_dataset()</span></code></a> - see
+<a class="reference internal" href="../datasets/creating.html#id1"><span class="std std-ref">Adding Datasets</span></a> - with the dataset type and name required and the rest optional.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span> <span class="s2">&quot;b3lyp barriers&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="go">377 b3lyp barriers</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;psi4/b3lyp/def2-svp&quot;</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;hooh&quot;</span><span class="p">,</span> <span class="n">hooh_mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The dataset that comes back is a normal dataset of the appropriate type - a
+<a class="reference internal" href="../qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDataset" title="qcportal.singlepoint.dataset_models.SinglepointDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">SinglepointDataset</span></code></a> here.</p>
+<p>Two defaults are inherited from the project unless given explicitly:
+<code class="docutils literal notranslate"><span class="pre">default_compute_tag</span></code> and <code class="docutils literal notranslate"><span class="pre">default_compute_priority</span></code>. This is the main practical benefit of
+creating a dataset inside a project rather than alongside it - the routing settings are set once,
+on the project.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_project</span><span class="p">(</span><span class="s2">&quot;Peroxide barrier heights&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">default_compute_tag</span><span class="o">=</span><span class="s2">&quot;big_mem&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">default_compute_priority</span><span class="o">=</span><span class="s2">&quot;low&quot;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="s2">&quot;geometries&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">default_compute_tag</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">default_compute_priority</span><span class="p">)</span>
+<span class="go">big_mem PriorityEnum.low</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Or override for this one dataset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds2</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="s2">&quot;quick geometries&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">default_compute_tag</span><span class="o">=</span><span class="s2">&quot;small_mem&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">default_compute_priority</span><span class="o">=</span><span class="s2">&quot;high&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The name must be unique within the project - reusing a name raises a
+<a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client_base.PortalRequestError" title="qcportal.client_base.PortalRequestError"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalRequestError</span></code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Dataset names must be unique both within the project and, for a given dataset type, across the
+server. The two checks are separate and <code class="docutils literal notranslate"><span class="pre">existing_ok</span></code> only affects the second one.</p>
+<p><code class="docutils literal notranslate"><span class="pre">existing_ok=True</span></code> means “if a dataset of this type and name already exists on the server, add
+<em>that</em> dataset to the project instead of creating a new one”. It does <strong>not</strong> suppress the error
+from a name that is already used within this project - that check happens first and is
+unconditional. To make a script re-runnable, check
+<a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.dataset_metadata" title="qcportal.project_models.Project.dataset_metadata"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dataset_metadata</span></code></a> before adding.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">existing</span> <span class="o">=</span> <span class="p">{</span><span class="n">dm</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">dm</span> <span class="ow">in</span> <span class="n">proj</span><span class="o">.</span><span class="n">dataset_metadata</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="s2">&quot;b3lyp barriers&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span> <span class="s2">&quot;b3lyp barriers&quot;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">else</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="s2">&quot;b3lyp barriers&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="linking-existing-datasets">
+<span id="project-link-datasets"></span><h2>Linking existing datasets<a class="headerlink" href="#linking-existing-datasets" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.link_dataset" title="qcportal.project_models.Project.link_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">link_dataset()</span></code></a> associates a dataset that already exists on
+the server with the project. Nothing is copied - the project gains a reference to it.</p>
+<p>Only the ID is required. By default the dataset keeps its existing name, description, tagline, and
+tags.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-3">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">link_dataset</span><span class="p">(</span><span class="mi">381</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="go">Diatomic geometries</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Any of those four can be given to store a project-local value instead.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">link_dataset</span><span class="p">(</span><span class="mi">381</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">name</span><span class="o">=</span><span class="s2">&quot;reference geometries&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Diatomic geometries, used as a reference set&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">tagline</span><span class="o">=</span><span class="s2">&quot;Reference geometries&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;reference&quot;</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="go">reference geometries</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>These overrides belong to the project, not to the dataset. The dataset’s own name, description,
+tagline, and tags are unchanged, and the project’s values are substituted in only when the
+dataset is fetched <em>through</em> the project.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Through the project - the project&#39;s name</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">proj</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="mi">381</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="go">reference geometries</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Directly from the server - the dataset&#39;s own name</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">381</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="go">Diatomic geometries</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>A consequence is that the two can drift: renaming the dataset itself with
+<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.set_name" title="qcportal.dataset_models.BaseDataset.set_name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_name()</span></code></a> does not update the project’s name for it,
+and vice versa. The same applies to records, whose project-local <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">description</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">tags</span></code> exist only within the project.</p>
+</div>
+<p>Linking a dataset that is already in this project is an error.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-6">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">link_dataset</span><span class="p">(</span><span class="mi">381</span><span class="p">)</span>
+<span class="go">---------------------------------------------------------------------------</span>
+<span class="go">PortalRequestError                        Traceback (most recent call last)</span>
+
+<span class="go">...</span>
+
+<span class="go">PortalRequestError: Request failed: Dataset 381 already linked to project 7 (HTTP status 400)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="getting-datasets">
+<span id="project-get-datasets"></span><h2>Getting datasets<a class="headerlink" href="#getting-datasets" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.get_dataset" title="qcportal.project_models.Project.get_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_dataset()</span></code></a> fetches a dataset from the project, by
+project-local name or by ID.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-7">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="s2">&quot;b3lyp barriers&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+<span class="go">377</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># By ID works too</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="mi">377</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">status</span><span class="p">())</span>
+<span class="go">{&#39;psi4/b3lyp/def2-svp&#39;: {&lt;RecordStatusEnum.complete: &#39;complete&#39;&gt;: 20}}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>From here on it is an ordinary dataset - see <a class="reference internal" href="../datasets/basics.html"><span class="doc">Using datasets</span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Datasets obtained through a project are cached in the same way as those obtained through the
+client. If the client was created with a <code class="docutils literal notranslate"><span class="pre">cache_dir</span></code>, the dataset’s cache file lives there.
+See <a class="reference internal" href="../datasets/caching.html"><span class="doc">Caching &amp; Views</span></a>.</p>
+</div>
+</section>
+<section id="listing-datasets">
+<span id="project-dataset-metadata"></span><h2>Listing datasets<a class="headerlink" href="#listing-datasets" title="Link to this heading">#</a></h2>
+<p>The <a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.dataset_metadata" title="qcportal.project_models.Project.dataset_metadata"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dataset_metadata</span></code></a> property lists the datasets in the
+project without fetching them. Each entry is a
+<a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.ProjectDatasetMetadata" title="qcportal.project_models.ProjectDatasetMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProjectDatasetMetadata</span></code></a> object.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-8">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">dm</span> <span class="ow">in</span> <span class="n">proj</span><span class="o">.</span><span class="n">dataset_metadata</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">dm</span><span class="o">.</span><span class="n">dataset_id</span><span class="p">,</span> <span class="n">dm</span><span class="o">.</span><span class="n">dataset_type</span><span class="p">,</span> <span class="n">dm</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">dm</span><span class="o">.</span><span class="n">tags</span><span class="p">)</span>
+<span class="go">377 singlepoint b3lyp barriers []</span>
+<span class="go">381 optimization reference geometries [&#39;reference&#39;]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>This is fetched from the server the first time it is accessed and then cached. Call
+<a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.fetch_dataset_metadata" title="qcportal.project_models.Project.fetch_dataset_metadata"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fetch_dataset_metadata()</span></code></a> to refresh it.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-9">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">fetch_dataset_metadata</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Note that, unlike <a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.ProjectRecordMetadata" title="qcportal.project_models.ProjectRecordMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProjectRecordMetadata</span></code></a>, there is no status
+field here - a dataset does not have a single status. Use
+<a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.status" title="qcportal.project_models.Project.status"><code class="xref py py-meth docutils literal notranslate"><span class="pre">status()</span></code></a> for a project-wide summary
+(<a class="reference internal" href="index.html#project-status"><span class="std std-ref">Project status</span></a>), or the dataset’s own
+<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.status" title="qcportal.dataset_models.BaseDataset.status"><code class="xref py py-meth docutils literal notranslate"><span class="pre">status()</span></code></a> for a per-specification breakdown.</p>
+</section>
+<section id="removing-datasets">
+<span id="project-unlink-datasets"></span><h2>Removing datasets<a class="headerlink" href="#removing-datasets" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.unlink_datasets" title="qcportal.project_models.Project.unlink_datasets"><code class="xref py py-meth docutils literal notranslate"><span class="pre">unlink_datasets()</span></code></a> removes datasets from the project. By
+default the datasets stay on the server and only the association with the project is dropped.</p>
+<p>It accepts a single name or ID, or a list, and the two may be mixed.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-10" name="sd-tab-set-10" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-10">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_datasets</span><span class="p">(</span><span class="s2">&quot;b3lyp barriers&quot;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_datasets</span><span class="p">([</span><span class="s2">&quot;reference geometries&quot;</span><span class="p">,</span> <span class="mi">377</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Two flags control how much else goes with it:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">delete_datasets</span></code> - also delete the datasets themselves from the server</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">delete_dataset_records</span></code> - also delete the records held by those datasets</p></li>
+</ul>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-11" name="sd-tab-set-11" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-11">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Remove from the project and delete the dataset, but keep its records</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_datasets</span><span class="p">(</span><span class="s2">&quot;b3lyp barriers&quot;</span><span class="p">,</span> <span class="n">delete_datasets</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Remove from the project and delete the dataset and its records</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_datasets</span><span class="p">(</span><span class="s2">&quot;b3lyp barriers&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                     <span class="n">delete_datasets</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>                     <span class="n">delete_dataset_records</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>These deletions are permanent and affect the server, not just the project.</p>
+<p>If the dataset is linked into another project as well, <code class="docutils literal notranslate"><span class="pre">delete_datasets=True</span></code> does not quietly
+skip it - it fails with an internal server error, because the dataset is still referenced.
+Check with <a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.query_project_datasets" title="qcportal.client.PortalClient.query_project_datasets"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_project_datasets()</span></code></a> first when a dataset may
+be shared.</p>
+<p><code class="docutils literal notranslate"><span class="pre">delete_dataset_records=True</span></code> is best effort in the same way as for records: entries whose
+records are also used by another dataset or project are protected by the database and survive,
+silently. See <a class="reference internal" href="index.html#project-deletion-shared"><span class="std std-ref">Shared records and datasets when deleting</span></a>.</p>
+</div>
+</section>
+<section id="datasets-qcportal-api">
+<h2>Datasets QCPortal API<a class="headerlink" href="#datasets-qcportal-api" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project" title="qcportal.project_models.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">Project</span></code></a></p>
+<ul>
+<li><p><a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.add_dataset" title="qcportal.project_models.Project.add_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_dataset()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.link_dataset" title="qcportal.project_models.Project.link_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">link_dataset()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.get_dataset" title="qcportal.project_models.Project.get_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_dataset()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.unlink_datasets" title="qcportal.project_models.Project.unlink_datasets"><code class="xref py py-meth docutils literal notranslate"><span class="pre">unlink_datasets()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.dataset_metadata" title="qcportal.project_models.Project.dataset_metadata"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dataset_metadata</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.fetch_dataset_metadata" title="qcportal.project_models.Project.fetch_dataset_metadata"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fetch_dataset_metadata()</span></code></a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.ProjectDatasetMetadata" title="qcportal.project_models.ProjectDatasetMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProjectDatasetMetadata</span></code></a></p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="records.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Records in a Project</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../records/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Record &amp; Computation Types</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-datasets">Creating datasets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linking-existing-datasets">Linking existing datasets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-datasets">Getting datasets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#listing-datasets">Listing datasets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#removing-datasets">Removing datasets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#datasets-qcportal-api">Datasets QCPortal API</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/user_guide/projects/datasets.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  
+
+
+
+  
+  
+  
+  
+  
+  
+  
+
+
+<div class="row h-10">
+    <div class="col-2">
+        <a href="https://molssi.org/" target="_blank" title="Go to MolSSI in a new tab">
+            <img src="../../_static/molssi_main_logo.png" class="logo__image only-light footer_logo" alt="Logo image">
+            <img src="../../_static/molssi_main_logo_inverted_white.png" class="logo__image only-dark footer_logo" alt="Logo image">
+        </a>
+    </div>
+    <div class="col-8">
+        <p> &copy; Copyright 2019-2023 <a href="https://molssi.org/">The Molecular Sciences Software Institute</a></p>
+        <p>Funded by the National Science Foundation 
+          <a href="https://nsf.gov/awardsearch/showAward?AWD_ID=1547580">OAC-1547580</a> and 
+          <a href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2136142">CHE-2136142.</a></p>
+ 
+        
+        <p class="sphinx-version">
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 9.0.4.<br>
+        </p>
+        
+
+        <p class="theme-version">
+        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+        </p>
+
+    </div>
+    <div class="col-2">
+        <a href="https://nsf.gov/" target="_blank" title="Go to the NSF in a new tab">
+            <img src="../../_static/nsf.png" class="footer_logo" alt="The NSF">
+          </a>
+    </div>
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

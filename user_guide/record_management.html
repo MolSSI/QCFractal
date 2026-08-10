@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Submitting computations" href="record_submission.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -436,6 +436,11 @@
 <li class="toctree-l2"><a class="reference internal" href="datasets/attachments.html">Attachments</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="projects/index.html">Projects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="projects/records.html">Records in a Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="projects/datasets.html">Datasets in a Project</a></li>
+</ul>
+</details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="records/base.html">Base Record</a></li>
 <li class="toctree-l2"><a class="reference internal" href="records/singlepoint.html">Singlepoint calculations</a></li>
@@ -452,6 +457,7 @@
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/auth.html">Authentication and User Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/base_models.html">Base Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/projects.html">Projects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/metadata_models.html">Metadata Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/tasks_services.html">Tasks and Services</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
@@ -577,7 +583,7 @@ of its dependency records.</p>
 does not lead to an error state. In that case, the record will (eventually) be recycled to
 <code class="docutils literal notranslate"><span class="pre">waiting</span></code> again.</p>
 <p>To attempt to run the same record again, use <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.reset_records" title="qcportal.client.PortalClient.reset_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset_records()</span></code></a>.
-The server may also automatically reset errored records - see <a class="reference internal" href="../admin_guide/configuration.html#server-configuration-autoreset-error"><span class="std std-ref">autoreset error</span></a>.</p>
+The server may also automatically reset errored records - see <a class="reference internal" href="../admin_guide/configuration.html#server-configuration-autoreset-error"><span class="std std-ref">Automatic resets (auto_reset)</span></a>.</p>
 </section>
 <section id="cancelled">
 <h3>cancelled<a class="headerlink" href="#cancelled" title="Link to this heading">#</a></h3>
@@ -656,7 +662,10 @@ This operation can be done with <a class="reference internal" href="qcportal_ref
 If <code class="docutils literal notranslate"><span class="pre">soft_delete=False</span></code> (“hard delete”), then the record is deleted permanently from the server.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>A record cannot be hard-deleted if it is being referenced somewhere (another record or a dataset).</p>
+<p>A record cannot be hard-deleted if it is being referenced somewhere - another record, a dataset,
+or a <a class="reference internal" href="projects/index.html"><span class="doc">project</span></a>. Such records are reported in the <code class="docutils literal notranslate"><span class="pre">errors</span></code> field of the
+returned <a class="reference internal" href="qcportal_reference/metadata_models.html#qcportal.metadata_models.DeleteMetadata" title="qcportal.metadata_models.DeleteMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">DeleteMetadata</span></code></a> rather than raising, so check it if it
+matters.</p>
 </div>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
@@ -719,8 +728,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.cancel_records" title="qcportal.client.PortalClient.cancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cancel_records()</span></code></a>. If they were <code class="docutils literal notranslate"><span class="pre">waiting</span></code>, then they will no longer
 be picked up by a compute manager.</p>
 <p>Cancelling can be undone with <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.uncancel_records" title="qcportal.client.PortalClient.uncancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncancel_records()</span></code></a>. If the record was <code class="docutils literal notranslate"><span class="pre">running</span></code>
-before it was cancelled, with will go back to a <code class="docutils literal notranslate"><span class="pre">waiting</span> <span class="pre">state</span></code>.</p>
-<p>Invalidation can be undone with <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.uncancel_records" title="qcportal.client.PortalClient.uncancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncancel_records()</span></code></a>.</p>
+before it was cancelled, it will go back to a <code class="docutils literal notranslate"><span class="pre">waiting</span></code> state.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-5">

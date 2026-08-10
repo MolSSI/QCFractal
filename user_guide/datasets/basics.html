@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Datasets" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -436,6 +436,11 @@
 <li class="toctree-l2"><a class="reference internal" href="attachments.html">Attachments</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../projects/index.html">Projects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../projects/records.html">Records in a Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../projects/datasets.html">Datasets in a Project</a></li>
+</ul>
+</details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../records/base.html">Base Record</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../records/singlepoint.html">Singlepoint calculations</a></li>
@@ -452,6 +457,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/auth.html">Authentication and User Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/base_models.html">Base Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/projects.html">Projects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/metadata_models.html">Metadata Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/tasks_services.html">Tasks and Services</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
@@ -660,7 +666,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <h2>Dataset Metadata<a class="headerlink" href="#dataset-metadata" title="Link to this heading">#</a></h2>
 <p>Datasets have some useful metadata and properties</p>
 <ul class="simple">
-<li><p><strong>name</strong>, <strong>description</strong>, <strong>tagline</strong>, <strong>group</strong>, and <strong>tags</strong> are user-defined metadata that categorize this dataset
+<li><p><strong>name</strong>, <strong>description</strong>, <strong>tagline</strong>, and <strong>tags</strong> are user-defined metadata that categorize this dataset
 among the other datasets</p></li>
 <li><p><strong>default_compute_tag</strong> and <strong>default_compute_priority</strong> are the defaults used when submitting new computations (can be overridden
 in <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.submit" title="qcportal.dataset_models.BaseDataset.submit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">submit()</span></code></a>, see <a class="reference internal" href="creating.html#dataset-submission"><span class="std std-ref">Submitting Computations</span></a>).</p></li>
@@ -769,6 +775,72 @@ status may reflect changes to records that have been retrieved, and so may be ou
 local caching.</p>
 </div>
 </section>
+<section id="status-by-compute-tag">
+<span id="dataset-status-by-compute-tag"></span><h2>Status by Compute Tag<a class="headerlink" href="#status-by-compute-tag" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.status_by_compute_tag" title="qcportal.dataset_models.BaseDataset.status_by_compute_tag"><code class="xref py py-meth docutils literal notranslate"><span class="pre">status_by_compute_tag()</span></code></a> breaks the status of the dataset’s
+computations down by <a class="reference internal" href="../../overview/tasks_services.html#compute-tags"><span class="std std-ref">compute tag</span></a> rather than by specification. This answers a
+different question than <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.status" title="qcportal.dataset_models.BaseDataset.status"><code class="xref py py-meth docutils literal notranslate"><span class="pre">status()</span></code></a> does: not “how far along
+is each column of my dataset”, but “which of my queues is this dataset waiting on”.</p>
+<p>It returns a list of <code class="docutils literal notranslate"><span class="pre">(compute</span> <span class="pre">tag,</span> <span class="pre">status,</span> <span class="pre">count)</span></code> tuples.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-7">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">status_by_compute_tag</span><span class="p">()</span>
+<span class="go">[(&#39;large_mem&#39;, &lt;RecordStatusEnum.waiting: &#39;waiting&#39;&gt;, 12),</span>
+<span class="go"> (&#39;large_mem&#39;, &lt;RecordStatusEnum.error: &#39;error&#39;&gt;, 2),</span>
+<span class="go"> (&#39;*&#39;, &lt;RecordStatusEnum.running: &#39;running&#39;&gt;, 4)]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>This is useful when a dataset has been submitted under more than one tag - for example, if part of it
+was submitted with a tag that no compute manager is currently claiming, this is how that shows up.
+It is also the quickest way to see which tag a dataset’s outstanding work is actually sitting under,
+which is not always the dataset’s <code class="docutils literal notranslate"><span class="pre">default_compute_tag</span></code>:
+<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.submit" title="qcportal.dataset_models.BaseDataset.submit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">submit()</span></code></a> can override the tag for individual submissions,
+and records can be retagged afterwards.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><strong>Only records that still have a task or service queue entry are counted.</strong> A record’s task is
+removed from the queue once it completes, so completed records never appear here, and the counts
+will not add up to the counts from <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.status" title="qcportal.dataset_models.BaseDataset.status"><code class="xref py py-meth docutils literal notranslate"><span class="pre">status()</span></code></a>. In practice
+this method reports waiting, running, and errored records.</p>
+<p>This is a feature rather than a limitation - the point of the method is to show outstanding work -
+but it does mean an empty list means “nothing is queued”, not “nothing exists”.</p>
+<p>Records whose computation type is a <a class="reference internal" href="../../overview/glossary.html#glossary-service"><span class="std std-ref">service</span></a> (torsiondrive, gridoptimization,
+NEB, manybody, and reaction) keep their queue entry when they are cancelled, deleted, or
+invalidated, since it holds the service’s state. Those statuses can therefore appear for datasets of
+those types, but not for singlepoint or optimization datasets.</p>
+</div>
+<p>The returned list is neither sorted nor aggregated any further, so sort it yourself if you want stable
+output:</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-8">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">by_tag</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">tag</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">status_by_compute_tag</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="n">by_tag</span><span class="p">[</span><span class="n">tag</span><span class="p">][</span><span class="n">status</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">count</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">by_tag</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">by_tag</span><span class="p">[</span><span class="n">tag</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span>
+<span class="go">* {&#39;running&#39;: 4}</span>
+<span class="go">large_mem {&#39;error&#39;: 2, &#39;waiting&#39;: 12}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A related method, <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.detailed_status" title="qcportal.dataset_models.BaseDataset.detailed_status"><code class="xref py py-meth docutils literal notranslate"><span class="pre">detailed_status()</span></code></a>, returns a list of
+<code class="docutils literal notranslate"><span class="pre">(entry</span> <span class="pre">name,</span> <span class="pre">specification</span> <span class="pre">name,</span> <span class="pre">status)</span></code> tuples - one per record in the dataset, with no
+grouping. It is the right tool when you need to know <em>which</em> entries are in a given state rather
+than how many.</p>
+</div>
+</section>
 <section id="specifications-and-entries">
 <h2>Specifications and Entries<a class="headerlink" href="#specifications-and-entries" title="Link to this heading">#</a></h2>
 <p>The specifications of the dataset are available with the <code class="docutils literal notranslate"><span class="pre">.specification_names</span></code> and <code class="docutils literal notranslate"><span class="pre">.specifications</span></code> properties.
@@ -779,8 +851,8 @@ local caching.</p>
 <a class="reference internal" href="../records/index.html"><span class="doc">individual record documentation</span></a> for the different types.</p>
 </div>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-7">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-9">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">specification_names</span><span class="p">)</span>
 <span class="go">[&#39;hf/sto-3g&#39;, &#39;hf/def2-tzvp&#39;]</span>
@@ -799,8 +871,8 @@ PYTHON</label><div class="sd-tab-content docutils">
 <p>Entries are slightly different. Since it is expected that a dataset may have many entries, only the names
 are accessible all at once</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-8">
+<input checked="checked" id="sd-tab-item-10" name="sd-tab-set-10" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-10">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">entry_names</span><span class="p">)</span>
 <span class="go">[&#39;H2&#39;, &#39;N2&#39;, &#39;O2&#39;, &#39;F2&#39;, &#39;Hg2&#39;]</span>
@@ -810,10 +882,10 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 <p>You can obtain a full entry from its name with <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.get_entry" title="qcportal.dataset_models.BaseDataset.get_entry"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_entry()</span></code></a>:</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-9">
+<input checked="checked" id="sd-tab-item-11" name="sd-tab-set-11" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-11">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">get_entry</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">get_entry</span><span class="p">(</span><span class="s1">&#39;H2&#39;</span><span class="p">))</span>
 <span class="go">OptimizationDatasetEntry(name=&#39;H2&#39;, initial_molecule=Molecule(name=&#39;H2&#39;, formula=&#39;H2&#39;, hash=&#39;7746e69&#39;),</span>
 <span class="go">additional_keywords={}, attributes={}, comment=None)</span>
 </pre></div>
@@ -823,8 +895,8 @@ PYTHON</label><div class="sd-tab-content docutils">
 <p>If you need to get all entries, you may iterate over the entries with
 <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.iterate_entries" title="qcportal.dataset_models.BaseDataset.iterate_entries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">iterate_entries()</span></code></a>:</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-10" name="sd-tab-set-10" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-10">
+<input checked="checked" id="sd-tab-item-12" name="sd-tab-set-12" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-12">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_entries</span><span class="p">():</span>
 <span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">initial_molecule</span><span class="p">)</span>
@@ -840,8 +912,8 @@ PYTHON</label><div class="sd-tab-content docutils">
 <p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.iterate_entries" title="qcportal.dataset_models.BaseDataset.iterate_entries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">iterate_entries()</span></code></a> can also be restricted to only iterate over certain
 entry names.</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-11" name="sd-tab-set-11" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-11">
+<input checked="checked" id="sd-tab-item-13" name="sd-tab-set-13" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-13">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_entries</span><span class="p">(</span><span class="n">entry_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H2&#39;</span><span class="p">,</span> <span class="s1">&#39;O2&#39;</span><span class="p">]):</span>
 <span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">initial_molecule</span><span class="p">)</span>
@@ -857,8 +929,8 @@ PYTHON</label><div class="sd-tab-content docutils">
 <p>A single records can be retrieved by entry name and specification name
 with <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.get_record" title="qcportal.dataset_models.BaseDataset.get_record"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_record()</span></code></a></p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-12" name="sd-tab-set-12" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-12">
+<input checked="checked" id="sd-tab-item-14" name="sd-tab-set-14" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-14">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rec</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_record</span><span class="p">(</span><span class="s1">&#39;H2&#39;</span><span class="p">,</span> <span class="s1">&#39;hf/sto-3g&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
@@ -874,8 +946,8 @@ PYTHON</label><div class="sd-tab-content docutils">
 <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.iterate_records" title="qcportal.dataset_models.BaseDataset.iterate_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">iterate_records()</span></code></a>. The iterator return a tuple of three
 values - the entry name, specification name, and then the full record.</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-13" name="sd-tab-set-13" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-13">
+<input checked="checked" id="sd-tab-item-15" name="sd-tab-set-15" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-15">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_records</span><span class="p">():</span>
 <span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
@@ -894,8 +966,8 @@ PYTHON</label><div class="sd-tab-content docutils">
 <p><a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.iterate_records" title="qcportal.dataset_models.BaseDataset.iterate_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">iterate_records()</span></code></a> also has filtering options, including
 by entry name, specification name, and status</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-14" name="sd-tab-set-14" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-14">
+<input checked="checked" id="sd-tab-item-16" name="sd-tab-set-16" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-16">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_records</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">):</span>
 <span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
@@ -965,6 +1037,7 @@ be overridden with <code class="docutils literal notranslate"><span class="pre">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dataset-metadata">Dataset Metadata</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#listing-properties">Listing properties</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#record-status">Record Status</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#status-by-compute-tag">Status by Compute Tag</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#specifications-and-entries">Specifications and Entries</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#retrieving-records">Retrieving Records</a></li>
 </ul>

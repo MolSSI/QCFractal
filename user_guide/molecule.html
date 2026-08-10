@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Query Iterators" href="query_iterators.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -436,6 +436,11 @@
 <li class="toctree-l2"><a class="reference internal" href="datasets/attachments.html">Attachments</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="projects/index.html">Projects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="projects/records.html">Records in a Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="projects/datasets.html">Datasets in a Project</a></li>
+</ul>
+</details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="records/base.html">Base Record</a></li>
 <li class="toctree-l2"><a class="reference internal" href="records/singlepoint.html">Singlepoint calculations</a></li>
@@ -452,6 +457,7 @@
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/auth.html">Authentication and User Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/base_models.html">Base Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/projects.html">Projects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/metadata_models.html">Metadata Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/tasks_services.html">Tasks and Services</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
@@ -579,7 +585,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="gp">... </span><span class="s2">  O   0.000000 0.000000 0.000000</span>
 <span class="gp">... </span><span class="s2">&quot;&quot;&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">water</span> <span class="o">=</span> <span class="n">Molecule</span><span class="o">.</span><span class="n">from_data</span><span class="p">(</span><span class="n">mol_xyz</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">water2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">water</span><span class="p">)</span>
 <span class="go">Molecule(name=&#39;H2O&#39;, formula=&#39;H2O&#39;, hash=&#39;246998b&#39;)</span>
 </pre></div>
 </div>
@@ -588,7 +594,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <p>Note that in the case of XYZ files, the units are angstroms.</p>
 <p>Similarly, you can construct the molecule from a file. If the above XYZ data was in a file,</p>
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">water</span> <span class="o">=</span> <span class="n">Molecule</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s1">&#39;water.xyz&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">water2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">water</span><span class="p">)</span>
 <span class="go">Molecule(name=&#39;H2O&#39;, formula=&#39;H2O&#39;, hash=&#39;246998b&#39;)</span>
 </pre></div>
 </div>
@@ -601,7 +607,8 @@ PYTHON</label><div class="sd-tab-content docutils">
 <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.add_singlepoints" title="qcportal.client.PortalClient.add_singlepoints"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_singlepoints()</span></code></a> and they will be automatically added
 to the database as needed. However, in some cases, this may be useful.</p>
 </div>
-<p>Molecules can be added to the server database with <cite>~qcportal.client.PortalClient.add_molecules</cite>. This returns
+<p>Molecules can be added to the server database with
+<a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.add_molecules" title="qcportal.client.PortalClient.add_molecules"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_molecules()</span></code></a>. This returns
 some metadata about the insertion, and the molecule IDs.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Manybody calculations" href="manybody.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -436,6 +436,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/attachments.html">Attachments</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../projects/index.html">Projects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../projects/records.html">Records in a Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../projects/datasets.html">Datasets in a Project</a></li>
+</ul>
+</details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Record &amp; Computation Types</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="base.html">Base Record</a></li>
 <li class="toctree-l2"><a class="reference internal" href="singlepoint.html">Singlepoint calculations</a></li>
@@ -452,6 +457,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/auth.html">Authentication and User Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/base_models.html">Base Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/projects.html">Projects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/metadata_models.html">Metadata Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/tasks_services.html">Tasks and Services</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
@@ -534,18 +540,562 @@
                   
   <section id="reaction-calculations">
 <h1>Reaction calculations<a class="headerlink" href="#reaction-calculations" title="Link to this heading">#</a></h1>
-<p>Stuff</p>
-<section id="reaction-record">
-<span id="id1"></span><h2>Reaction Record<a class="headerlink" href="#reaction-record" title="Link to this heading">#</a></h2>
-<p>Stuff</p>
+<p>A reaction record computes a linear combination of energies - a reaction energy, a binding energy,
+an atomization energy, or anything else that can be written as a sum of coefficients times
+molecular energies.</p>
+<p>A reaction is defined by its <em>stoichiometry</em>: a list of (coefficient, molecule) pairs. Each molecule
+is computed once, and the total energy is the sum of each molecule’s energy multiplied by its
+coefficient.</p>
+<p>Coefficients are given by the user and are usually negative for reactants and positive for products.
+For example, the dissociation energy of a water dimer is written as <code class="docutils literal notranslate"><span class="pre">[(-1.0,</span> <span class="pre">dimer),</span> <span class="pre">(2.0,</span> <span class="pre">monomer)]</span></code>.</p>
+<p>Each component may be optimized before its energy is evaluated, evaluated at the geometry as given,
+or both. Reactions are <a class="reference internal" href="../../overview/glossary.html#glossary-service"><span class="std std-ref">services</span></a>, so the individual optimizations and
+singlepoints are ordinary records that can be inspected on their own.</p>
+<section id="reaction-records">
+<span id="reaction-record"></span><h2>Reaction Records<a class="headerlink" href="#reaction-records" title="Link to this heading">#</a></h2>
+<p>Reaction records contain all the fields of a <a class="reference internal" href="base.html"><span class="doc">base record</span></a>, and additionally include:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">specification</span></code> - The programs, levels of theory, and other options (see below)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">total_energy</span></code> - The computed reaction energy, in hartrees. <code class="docutils literal notranslate"><span class="pre">None</span></code> until the record is complete</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">components</span></code> - The individual pieces of the reaction; one per molecule</p></li>
+</ul>
+<p>Each element of <code class="docutils literal notranslate"><span class="pre">components</span></code> is a
+<a class="reference internal" href="../qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionComponent" title="qcportal.reaction.record_models.ReactionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReactionComponent</span></code></a> with the following fields:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">molecule</span></code> - The molecule as it was given in the stoichiometry. Note that this is the <em>input</em>
+geometry; if the component was optimized, the optimized geometry is on the optimization record</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">molecule_id</span></code> - The ID of that molecule</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coefficient</span></code> - The coefficient of this molecule in the reaction</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">singlepoint_id</span></code> / <code class="docutils literal notranslate"><span class="pre">singlepoint_record</span></code> - The singlepoint computation for this component,
+if the specification has a singlepoint specification</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimization_id</span></code> / <code class="docutils literal notranslate"><span class="pre">optimization_record</span></code> - The optimization computation for this component,
+if the specification has an optimization specification</p></li>
+</ul>
+<p>The energy that a component contributes to <code class="docutils literal notranslate"><span class="pre">total_energy</span></code> depends on which specifications
+were given:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Specification</p></th>
+<th class="head"><p>Energy used for each component</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>singlepoint only</p></td>
+<td><p>The energy of the singlepoint record</p></td>
+</tr>
+<tr class="row-odd"><td><p>optimization only</p></td>
+<td><p>The final energy of the optimization record</p></td>
+</tr>
+<tr class="row-even"><td><p>both</p></td>
+<td><p>The energy of the singlepoint record, which was run
+on the optimized geometry</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </section>
-<section id="reaction-dataset">
-<span id="id2"></span><h2>Reaction Dataset<a class="headerlink" href="#reaction-dataset" title="Link to this heading">#</a></h2>
-<p>Stuff</p>
+<section id="reaction-specification">
+<span id="id1"></span><h2>Reaction Specification<a class="headerlink" href="#reaction-specification" title="Link to this heading">#</a></h2>
+<p>The <a class="reference internal" href="../../overview/glossary.html#glossary-specification"><span class="std std-ref">specification</span></a> for a reaction is a
+<a class="reference internal" href="../qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionSpecification" title="qcportal.reaction.record_models.ReactionSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReactionSpecification</span></code></a>. The fields are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">program</span></code> - The program that drives the reaction service (<code class="docutils literal notranslate"><span class="pre">&quot;reaction&quot;</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">singlepoint_specification</span></code> - How the energy of each component should be evaluated. See
+<a class="reference internal" href="singlepoint.html#singlepoint-specification"><span class="std std-ref">Singlepoint Specification (QCSpecification)</span></a>. May be <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> - How each component should be optimized before its energy is
+evaluated. See <a class="reference internal" href="optimization.html#optimization-specification"><span class="std std-ref">Optimization Specification</span></a>. May be <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keywords</span></code> - A <a class="reference internal" href="../qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionKeywords" title="qcportal.reaction.record_models.ReactionKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReactionKeywords</span></code></a> object</p></li>
+</ul>
+<p>At least one of <code class="docutils literal notranslate"><span class="pre">singlepoint_specification</span></code> and <code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> must be given.
+Which ones you give determines what the service does:</p>
+<ul class="simple">
+<li><p><strong>Singlepoint only</strong> - each molecule is computed at the geometry given in the stoichiometry.
+This is the usual choice when the geometries are already optimized.</p></li>
+<li><p><strong>Optimization only</strong> - each molecule is optimized, and the final energy of the optimization is
+used. The level of theory comes from the optimization’s <code class="docutils literal notranslate"><span class="pre">qc_specification</span></code></p></li>
+<li><p><strong>Both</strong> - each molecule is optimized first, and then a separate singlepoint is run on the
+optimized geometry. This is how you optimize at a cheap level of theory and evaluate energies at
+a a more expensive one</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="../qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionKeywords" title="qcportal.reaction.record_models.ReactionKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReactionKeywords</span></code></a> currently has no fields at all, so
+<code class="docutils literal notranslate"><span class="pre">ReactionKeywords()</span></code> is the only meaningful value. It is still a required field of the
+specification. It exists so that options can be added later without changing the shape of the
+specification.</p>
+</div>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Singlepoint energies at fixed geometries</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.reaction</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReactionSpecification</span><span class="p">,</span> <span class="n">ReactionKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">rxn_spec</span> <span class="o">=</span> <span class="n">ReactionSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;reaction&quot;</span><span class="p">,</span>
+    <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
+        <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">ReactionKeywords</span><span class="p">(),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Optimize each component, use the optimized energy</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.reaction</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReactionSpecification</span><span class="p">,</span> <span class="n">ReactionKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">rxn_spec</span> <span class="o">=</span> <span class="n">ReactionSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;reaction&quot;</span><span class="p">,</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">ReactionKeywords</span><span class="p">(),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Optimize cheaply, then evaluate energies at a higher level of theory</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.reaction</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReactionSpecification</span><span class="p">,</span> <span class="n">ReactionKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">rxn_spec</span> <span class="o">=</span> <span class="n">ReactionSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;reaction&quot;</span><span class="p">,</span>
+    <span class="c1"># Optimize with b3lyp/def2-svp ...</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="c1"># ... but take the energies from ccsd(t)/def2-tzvp</span>
+    <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ccsd(t)&quot;</span><span class="p">,</span>
+        <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-tzvp&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">ReactionKeywords</span><span class="p">(),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details></section>
+<section id="submitting-records">
+<span id="reaction-submission"></span><h2>Submitting Records<a class="headerlink" href="#submitting-records" title="Link to this heading">#</a></h2>
+<p>Reaction records are submitted with <a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_reactions" title="qcportal.client.PortalClient.add_reactions"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_reactions()</span></code></a>.
+This method takes the following information:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">stoichiometries</span></code> - The reactions to compute. Each reaction is a list of
+<code class="docutils literal notranslate"><span class="pre">(coefficient,</span> <span class="pre">molecule)</span></code> pairs, so this is a <strong>nested</strong> list - one inner list per record</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">program</span></code> - The reaction program (use <code class="docutils literal notranslate"><span class="pre">&quot;reaction&quot;</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">singlepoint_specification</span></code> - The singlepoint details, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> - The optimization details, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keywords</span></code> - A <a class="reference internal" href="../qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionKeywords" title="qcportal.reaction.record_models.ReactionKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReactionKeywords</span></code></a> object</p></li>
+</ul>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">singlepoint_specification</span></code>, <code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code>, and <code class="docutils literal notranslate"><span class="pre">keywords</span></code> have no
+defaults; the unused specification must be passed explicitly as <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>The molecules in a stoichiometry may be <a class="reference internal" href="../molecule.html"><span class="doc">Molecule</span></a> objects or molecule IDs, and
+the two may be mixed.</p>
+<p>See <a class="reference internal" href="../record_submission.html"><span class="doc">Submitting computations</span></a> for more information about other arguments.</p>
 </section>
+<section id="reaction-datasets">
+<span id="reaction-dataset"></span><h2>Reaction Datasets<a class="headerlink" href="#reaction-datasets" title="Link to this heading">#</a></h2>
+<p>Reaction <a class="reference internal" href="../../overview/glossary.html#glossary-dataset"><span class="std std-ref">datasets</span></a> are collections of reaction records.
+An <a class="reference internal" href="../qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetEntry" title="qcportal.reaction.dataset_models.ReactionDatasetEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">entry</span></code></a> holds one reaction:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> - The name of the entry</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stoichiometries</span></code> - The coefficients and molecules of this reaction</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">additional_keywords</span></code> - Per-entry reaction keywords (see the note below)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">attributes</span></code> - A user-defined dictionary of metadata for this entry</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comment</span></code> - A user-supplied comment</p></li>
+</ul>
+<p>The stoichiometry is a property of the <em>entry</em>, not of the specification - a reaction dataset is a
+collection of different reactions, all computed the same way. The
+<a class="reference internal" href="../qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetSpecification" title="qcportal.reaction.dataset_models.ReactionDatasetSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataset</span> <span class="pre">specification</span></code></a>
+holds the <a class="reference internal" href="../qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionSpecification" title="qcportal.reaction.record_models.ReactionSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReactionSpecification</span></code></a>
+that every entry is computed with.</p>
+<p>When adding entries, each stoichiometry may be given either as a list of <code class="docutils literal notranslate"><span class="pre">(coefficient,</span> <span class="pre">molecule)</span></code>
+tuples or as a list of
+<a class="reference internal" href="../qcportal_reference/records/reaction.html#qcportal.reaction.dataset_models.ReactionDatasetEntryStoichiometry" title="qcportal.reaction.dataset_models.ReactionDatasetEntryStoichiometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReactionDatasetEntryStoichiometry</span></code></a> objects.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Entries have an <code class="docutils literal notranslate"><span class="pre">additional_keywords</span></code> field, which mirrors the per-entry keyword overrides
+available in <a class="reference internal" href="torsiondrive.html#torsiondrive-dataset-keywords"><span class="std std-ref">torsiondrive</span></a> and
+<a class="reference internal" href="neb.html#neb-dataset-keywords"><span class="std std-ref">neb</span></a> datasets. Since <a class="reference internal" href="../qcportal_reference/records/reaction.html#qcportal.reaction.record_models.ReactionKeywords" title="qcportal.reaction.record_models.ReactionKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReactionKeywords</span></code></a> has no fields, and
+ignores keys it does not recognize, <strong>anything placed in a reaction entry’s</strong>
+<code class="docutils literal notranslate"><span class="pre">additional_keywords</span></code> <strong>is silently discarded</strong> when the record is created. Leave it empty until
+reaction keywords actually exist.</p>
+</div>
+<p>See <a class="reference internal" href="../datasets/index.html"><span class="doc">Datasets</span></a> for general dataset operations and advanced usage.</p>
+</section>
+<section id="client-examples">
+<span id="reaction-client-examples"></span><h2>Client Examples<a class="headerlink" href="#client-examples" title="Link to this heading">#</a></h2>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Obtain a single reaction record by ID</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-3">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_reactions</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Obtain multiple reaction records by ID</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_lst</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_reactions</span><span class="p">([</span><span class="mi">123</span><span class="p">,</span> <span class="mi">456</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Obtain multiple reactions by ID, ignoring missing records</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_lst</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_reactions</span><span class="p">([</span><span class="mi">123</span><span class="p">,</span> <span class="mi">456</span><span class="p">,</span> <span class="mi">789</span><span class="p">],</span> <span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Include the components and all their data during the initial fetch</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-6">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_reactions</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;**&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Query reactions by QC method and basis</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-7">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_reactions</span><span class="p">(</span><span class="n">qc_method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">qc_basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">total_energy</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Query reactions that contain a particular molecule</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-8">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_reactions</span><span class="p">(</span><span class="n">molecule_id</span><span class="o">=</span><span class="mi">8231</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add a reaction record - singlepoint energies only</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-9">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.reaction</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReactionKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="c1"># Dissociation of a water dimer</span>
+<span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_reactions</span><span class="p">(</span>
+    <span class="p">[[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">water_dimer</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">water</span><span class="p">)]],</span>
+    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;reaction&#39;</span><span class="p">,</span>
+    <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span>
+    <span class="p">),</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">ReactionKeywords</span><span class="p">(),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add a reaction record - optimize each component first</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-10" name="sd-tab-set-10" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-10">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.reaction</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReactionKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_reactions</span><span class="p">(</span>
+    <span class="p">[[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">water_dimer</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">water</span><span class="p">)]],</span>
+    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;reaction&#39;</span><span class="p">,</span>
+    <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;ccsd(t)&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-tzvp&#39;</span>
+    <span class="p">),</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+            <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;deferred&#39;</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">ReactionKeywords</span><span class="p">(),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add several reactions at once</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">Each inner list is one reaction, and therefore one record.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-11" name="sd-tab-set-11" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-11">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.reaction</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReactionKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_reactions</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">water_dimer</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">water</span><span class="p">)],</span>
+        <span class="p">[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">methanol_dimer</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">methanol</span><span class="p">)],</span>
+    <span class="p">],</span>
+    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;reaction&#39;</span><span class="p">,</span>
+    <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span>
+    <span class="p">),</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">ReactionKeywords</span><span class="p">(),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Inspect the components of a completed reaction</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-12" name="sd-tab-set-12" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-12">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_reactions</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">total_energy</span><span class="p">)</span>
+<span class="go">-0.008132215079</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">coefficient</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">molecule</span><span class="o">.</span><span class="n">get_molecular_formula</span><span class="p">(),</span> <span class="n">c</span><span class="o">.</span><span class="n">singlepoint_record</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s1">&#39;return_energy&#39;</span><span class="p">])</span>
+<span class="go">-1.0 H4O2 -152.1032871</span>
+<span class="go">2.0 H2O -76.0475774</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details></section>
+<section id="dataset-examples">
+<span id="reaction-dataset-examples"></span><h2>Dataset Examples<a class="headerlink" href="#dataset-examples" title="Link to this heading">#</a></h2>
+<p>See <a class="reference internal" href="../datasets/index.html"><span class="doc">Datasets</span></a> for more information and advanced usage.
+See the <a class="reference internal" href="#reaction-specification"><span class="std std-ref">specification</span></a> section for all the options in creating
+specifications.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Create a reaction dataset with default options</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-13" name="sd-tab-set-13" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-13">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span>
+         <span class="s2">&quot;reaction&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;Dataset Name&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;An example of a reaction dataset&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add a single entry to a reaction dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-14" name="sd-tab-set-14" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-14">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;water dimer dissociation&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">water_dimer</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">water</span><span class="p">)])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add many entries to a reaction dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-15" name="sd-tab-set-15" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-15">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.reaction</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReactionDatasetNewEntry</span>
+
+<span class="c1"># Dimer/monomer pairs worked out beforehand</span>
+<span class="n">dissociations</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">&quot;water&quot;</span><span class="p">,</span> <span class="n">water_dimer</span><span class="p">,</span> <span class="n">water</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;methanol&quot;</span><span class="p">,</span> <span class="n">methanol_dimer</span><span class="p">,</span> <span class="n">methanol</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;ammonia&quot;</span><span class="p">,</span> <span class="n">ammonia_dimer</span><span class="p">,</span> <span class="n">ammonia</span><span class="p">),</span>
+<span class="p">]</span>
+
+<span class="n">new_entries</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">ReactionDatasetNewEntry</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> dimer dissociation&quot;</span><span class="p">,</span>
+        <span class="n">stoichiometries</span><span class="o">=</span><span class="p">[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">dimer</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">monomer</span><span class="p">)],</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dimer</span><span class="p">,</span> <span class="n">monomer</span> <span class="ow">in</span> <span class="n">dissociations</span>
+<span class="p">]</span>
+
+<span class="c1"># Efficiently add all entries in a single call</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entries</span><span class="p">(</span><span class="n">new_entries</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add entries using explicit stoichiometry objects</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">Equivalent to passing tuples, but easier to read when the reaction has several components.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-16" name="sd-tab-set-16" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-16">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.reaction</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReactionDatasetNewEntry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.reaction.dataset_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReactionDatasetEntryStoichiometry</span>
+
+<span class="n">ent</span> <span class="o">=</span> <span class="n">ReactionDatasetNewEntry</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;methane combustion&quot;</span><span class="p">,</span>
+    <span class="n">stoichiometries</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">ReactionDatasetEntryStoichiometry</span><span class="p">(</span><span class="n">coefficient</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="n">methane</span><span class="p">),</span>
+        <span class="n">ReactionDatasetEntryStoichiometry</span><span class="p">(</span><span class="n">coefficient</span><span class="o">=-</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="n">o2</span><span class="p">),</span>
+        <span class="n">ReactionDatasetEntryStoichiometry</span><span class="p">(</span><span class="n">coefficient</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="n">co2</span><span class="p">),</span>
+        <span class="n">ReactionDatasetEntryStoichiometry</span><span class="p">(</span><span class="n">coefficient</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="n">water</span><span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entries</span><span class="p">(</span><span class="n">ent</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add a specification to a reaction dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-17" name="sd-tab-set-17" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-17">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.reaction</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReactionSpecification</span><span class="p">,</span> <span class="n">ReactionKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">rxn_spec</span> <span class="o">=</span> <span class="n">ReactionSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;reaction&quot;</span><span class="p">,</span>
+    <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
+        <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">ReactionKeywords</span><span class="p">(),</span>
+<span class="p">)</span>
+
+<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;psi4/b3lyp/def2-svp&quot;</span><span class="p">,</span> <span class="n">rxn_spec</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Compare reaction energies across specifications</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-18" name="sd-tab-set-18" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-18">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_records</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s1">&#39;complete&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">total_energy</span><span class="p">)</span>
+<span class="go">water dimer dissociation psi4/b3lyp/def2-svp -0.008132215079</span>
+<span class="go">water dimer dissociation psi4/mp2/def2-tzvp -0.007984120012</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details></section>
 <section id="reaction-qcportal-api">
-<span id="id3"></span><h2>Reaction QCPortal API<a class="headerlink" href="#reaction-qcportal-api" title="Link to this heading">#</a></h2>
-<p>TODO</p>
+<span id="id2"></span><h2>Reaction QCPortal API<a class="headerlink" href="#reaction-qcportal-api" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../qcportal_reference/records/reaction.html#module-qcportal.reaction.record_models" title="qcportal.reaction.record_models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Record</span> <span class="pre">models</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/reaction.html#module-qcportal.reaction.dataset_models" title="qcportal.reaction.dataset_models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Dataset</span> <span class="pre">models</span></code></a></p></li>
+<li><p>PortalClient methods</p>
+<ul>
+<li><p><a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_reactions" title="qcportal.client.PortalClient.add_reactions"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_reactions()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.get_reactions" title="qcportal.client.PortalClient.get_reactions"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_reactions()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.query_reactions" title="qcportal.client.PortalClient.query_reactions"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_reactions()</span></code></a></p></li>
+</ul>
+</li>
+</ul>
 </section>
 </section>
 
@@ -596,8 +1146,12 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reaction-record">Reaction Record</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reaction-dataset">Reaction Dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reaction-records">Reaction Records</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reaction-specification">Reaction Specification</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submitting-records">Submitting Records</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reaction-datasets">Reaction Datasets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#client-examples">Client Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dataset-examples">Dataset Examples</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reaction-qcportal-api">Reaction QCPortal API</a></li>
 </ul>
   </nav></div>

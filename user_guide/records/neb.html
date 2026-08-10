@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Reaction calculations" href="reaction.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -436,6 +436,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/attachments.html">Attachments</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../projects/index.html">Projects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../projects/records.html">Records in a Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../projects/datasets.html">Datasets in a Project</a></li>
+</ul>
+</details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Record &amp; Computation Types</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="base.html">Base Record</a></li>
 <li class="toctree-l2"><a class="reference internal" href="singlepoint.html">Singlepoint calculations</a></li>
@@ -452,6 +457,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/auth.html">Authentication and User Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/base_models.html">Base Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/projects.html">Projects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/metadata_models.html">Metadata Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/tasks_services.html">Tasks and Services</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
@@ -534,18 +540,776 @@
                   
   <section id="neb-calculations">
 <h1>NEB calculations<a class="headerlink" href="#neb-calculations" title="Link to this heading">#</a></h1>
-<p>Stuff</p>
-<section id="neb-record">
-<span id="id1"></span><h2>NEB Record<a class="headerlink" href="#neb-record" title="Link to this heading">#</a></h2>
-<p>Stuff</p>
+<p>A nudged elastic band (NEB) calculation locates the minimum energy path between two endpoints -
+typically a reactant and a product - and from that path produces a guess at the transition state
+structure connecting them.</p>
+<p>The path is represented by a <em>chain</em>: an ordered list of molecular geometries (called <em>images</em>)
+running from one endpoint to the other. Each iteration computes the gradient at every image, and
+those gradients, together with spring forces that keep neighbouring images from sliding into each
+other, are used to move the whole chain downhill toward the minimum energy path. When the chain
+stops moving, the highest-energy image is a rough transition state.</p>
+<p>NEB records are <a class="reference internal" href="../../overview/glossary.html#glossary-service"><span class="std std-ref">services</span></a>. Every gradient evaluation is an ordinary
+<a class="reference internal" href="singlepoint.html#singlepoint-record"><span class="std std-ref">singlepoint record</span></a>, and the optional endpoint and transition-state
+optimizations are ordinary <a class="reference internal" href="optimization.html#optimization-record"><span class="std std-ref">optimization records</span></a>, all of which can be
+inspected individually. A single NEB record therefore accumulates a large number of child records:
+the number of images multiplied by the number of iterations.</p>
+<p>Optionally, the NEB service can also:</p>
+<ul class="simple">
+<li><p>optimize the two endpoints of the chain before starting (<code class="docutils literal notranslate"><span class="pre">optimize_endpoints</span></code>), and</p></li>
+<li><p>refine the guessed transition state into a true first-order saddle point, by computing its
+Hessian and running a transition-state optimization (<code class="docutils literal notranslate"><span class="pre">optimize_ts</span></code>).</p></li>
+</ul>
+<section id="neb-records">
+<span id="neb-record"></span><h2>NEB Records<a class="headerlink" href="#neb-records" title="Link to this heading">#</a></h2>
+<p>NEB records contain all the fields of a <a class="reference internal" href="base.html"><span class="doc">base record</span></a>, and additionally include:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">specification</span></code> - The programs, level of theory, and NEB options (see below)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">initial_chain</span></code> - The chain of molecules the calculation started from, as it was submitted</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">singlepoints</span></code> - The gradient calculations, as a dictionary keyed by chain iteration. Each value
+is the list of <a class="reference internal" href="../qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">SinglepointRecord</span></code></a> for that iteration,
+ordered by position along the chain</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">final_chain</span></code> - Shorthand for the singlepoints of the last iteration; that is, the converged path</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">result</span></code> - The guessed transition state: the <a class="reference internal" href="../molecule.html"><span class="doc">molecule</span></a> of the
+highest-energy image of the final chain</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimizations</span></code> - Any endpoint or transition-state optimizations, as a dictionary (see below)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ts_optimization</span></code> - Shorthand for the transition-state optimization, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if there was not
+one</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ts_hessian</span></code> - The Hessian <a class="reference internal" href="../qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">SinglepointRecord</span></code></a>
+computed on the guessed transition state before optimizing it, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+<p>The keys of the <code class="docutils literal notranslate"><span class="pre">optimizations</span></code> dictionary describe which optimization each one is:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Optimization</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">initial</span></code></p></td>
+<td><p>The first image of the chain, optimized before the NEB started</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">final</span></code></p></td>
+<td><p>The last image of the chain, optimized before the NEB started</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">transition</span></code></p></td>
+<td><p>The guessed transition state, optimized to a first-order saddle point</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">initial</span></code> and <code class="docutils literal notranslate"><span class="pre">final</span></code> are present only when <code class="docutils literal notranslate"><span class="pre">optimize_endpoints</span></code> was set, and <code class="docutils literal notranslate"><span class="pre">transition</span></code>
+only when <code class="docutils literal notranslate"><span class="pre">optimize_ts</span></code> was set, so the dictionary is frequently empty.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">result</span></code> raises <code class="docutils literal notranslate"><span class="pre">ValueError:</span> <span class="pre">NEB</span> <span class="pre">result</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">available</span> <span class="pre">after</span> <span class="pre">the</span> <span class="pre">calculation</span> <span class="pre">is</span> <span class="pre">complete.</span></code>
+unless the record’s status is <code class="docutils literal notranslate"><span class="pre">complete</span></code>. It is the <em>guessed</em> transition state taken straight
+off the chain, not the result of the transition-state optimization; for that, use
+<code class="docutils literal notranslate"><span class="pre">ts_optimization.final_molecule</span></code>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The record’s underlying pydantic fields (<code class="docutils literal notranslate"><span class="pre">neb_result_</span></code>, <code class="docutils literal notranslate"><span class="pre">singlepoints_</span></code>, <code class="docutils literal notranslate"><span class="pre">optimizations_</span></code>,
+and so on) are private storage for what has been fetched from the server. Use the properties listed
+above - they fetch what they need on demand.</p>
+</div>
 </section>
-<section id="neb-dataset">
-<span id="id2"></span><h2>NEB Dataset<a class="headerlink" href="#neb-dataset" title="Link to this heading">#</a></h2>
-<p>Stuff</p>
+<section id="neb-specification">
+<span id="id1"></span><h2>NEB Specification<a class="headerlink" href="#neb-specification" title="Link to this heading">#</a></h2>
+<p>The <a class="reference internal" href="../../overview/glossary.html#glossary-specification"><span class="std std-ref">specification</span></a> for a NEB is a
+<a class="reference internal" href="../qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBSpecification" title="qcportal.neb.record_models.NEBSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">NEBSpecification</span></code></a>. The fields are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">program</span></code> - The program that drives the NEB (<code class="docutils literal notranslate"><span class="pre">&quot;geometric&quot;</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">singlepoint_specification</span></code> - The level of theory for the gradient calculation at each image.
+See <a class="reference internal" href="singlepoint.html#singlepoint-specification"><span class="std std-ref">Singlepoint Specification (QCSpecification)</span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> - Optional; how the transition state should be optimized when
+<code class="docutils literal notranslate"><span class="pre">optimize_ts</span></code> is set. See <a class="reference internal" href="optimization.html#optimization-specification"><span class="std std-ref">Optimization Specification</span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keywords</span></code> - A <a class="reference internal" href="../qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBKeywords" title="qcportal.neb.record_models.NEBKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">NEBKeywords</span></code></a> object holding the NEB options</p></li>
+</ul>
+<p>Unlike most other specifications, <code class="docutils literal notranslate"><span class="pre">keywords</span></code> is required and has no default - pass
+<code class="docutils literal notranslate"><span class="pre">NEBKeywords()</span></code> to accept every default.</p>
+<section id="neb-keywords">
+<span id="id2"></span><h3>NEB Keywords<a class="headerlink" href="#neb-keywords" title="Link to this heading">#</a></h3>
+<p><a class="reference internal" href="../qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBKeywords" title="qcportal.neb.record_models.NEBKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">NEBKeywords</span></code></a> has the following fields:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Keyword</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">images</span></code></p></td>
+<td><p>11</p></td>
+<td><p>Number of images used to locate a rough transition
+state structure. Must be greater than 5</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">spring_constant</span></code></p></td>
+<td><p>1.0</p></td>
+<td><p>Spring constant, in kcal/mol/Ang^2</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">spring_type</span></code></p></td>
+<td><p>0</p></td>
+<td><p>How spring forces and gradients are combined; see below</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">maximum_force</span></code></p></td>
+<td><p>0.05</p></td>
+<td><p>Convergence criterion: converge when the maximum
+RMS-gradient of the chain (eV/Ang) falls below this</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">average_force</span></code></p></td>
+<td><p>0.025</p></td>
+<td><p>Convergence criterion: converge when the average
+RMS-gradient of the chain (eV/Ang) falls below this</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">maximum_cycle</span></code></p></td>
+<td><p>100</p></td>
+<td><p>Maximum number of NEB iterations</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">optimize_endpoints</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Optimize the two ends of the initial chain before
+starting the NEB</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">optimize_ts</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>After convergence, optimize the guessed transition
+state to a first-order saddle point</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">align</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Align the images before starting</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">epsilon</span></code></p></td>
+<td><p>1e-5</p></td>
+<td><p>Small eigenvalue threshold for resetting the Hessian</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">spring_type</span></code> selects how the spring force and the gradient are projected:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>Nudged elastic band - parallel spring force + perpendicular gradients</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>Hybrid elastic band - full spring force + perpendicular gradients</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>Plain elastic band - full spring force + full gradients</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Both convergence criteria must be satisfied for the chain to be considered converged.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Before the first iteration the chain is respaced by geomeTRIC (and aligned, if <code class="docutils literal notranslate"><span class="pre">align</span></code> is set),
+which may insert or remove images. The number of gradient calculations in an iteration therefore
+need not equal the number of molecules you submitted.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">driver</span></code> of <code class="docutils literal notranslate"><span class="pre">singlepoint_specification</span></code> is ignored. The service overrides it with
+<code class="docutils literal notranslate"><span class="pre">gradient</span></code> for the chain calculations, and with <code class="docutils literal notranslate"><span class="pre">hessian</span></code> for the transition-state Hessian.
+As with <a class="reference internal" href="optimization.html#optimization-specification"><span class="std std-ref">optimizations</span></a>, the convention is to set
+<code class="docutils literal notranslate"><span class="pre">driver=&quot;deferred&quot;</span></code>.</p>
+</div>
 </section>
+<section id="what-optimization-specification-is-and-is-not-used-for">
+<h3>What <code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> is (and is not) used for<a class="headerlink" href="#what-optimization-specification-is-and-is-not-used-for" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> applies <strong>only to the transition-state optimization</strong>, and even then
+the service adjusts it:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">program</span></code> is forced to <code class="docutils literal notranslate"><span class="pre">geometric</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transition:</span> <span class="pre">True</span></code> and the computed Hessian (<code class="docutils literal notranslate"><span class="pre">hess_data</span></code>) are added to its <code class="docutils literal notranslate"><span class="pre">keywords</span></code></p></li>
+</ul>
+<p>The endpoint optimizations requested by <code class="docutils literal notranslate"><span class="pre">optimize_endpoints</span></code> do <strong>not</strong> use it. They always run
+with <code class="docutils literal notranslate"><span class="pre">geometric</span></code> and <code class="docutils literal notranslate"><span class="pre">coordsys:</span> <span class="pre">tric</span></code>, taking their level of theory from
+<code class="docutils literal notranslate"><span class="pre">singlepoint_specification</span></code>. Similarly, when <code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> is omitted and
+<code class="docutils literal notranslate"><span class="pre">optimize_ts</span></code> is set, the transition-state optimization uses <code class="docutils literal notranslate"><span class="pre">geometric</span></code> with
+<code class="docutils literal notranslate"><span class="pre">coordsys:</span> <span class="pre">tric</span></code> and <code class="docutils literal notranslate"><span class="pre">transition:</span> <span class="pre">True</span></code>, again at the level of theory of
+<code class="docutils literal notranslate"><span class="pre">singlepoint_specification</span></code>.</p>
+<p>One consequence is worth noting: when <code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> <em>is</em> given, the
+transition-state Hessian is computed with that specification’s <code class="docutils literal notranslate"><span class="pre">qc_specification</span></code>, not with
+<code class="docutils literal notranslate"><span class="pre">singlepoint_specification</span></code>. Keep the two at the same level of theory unless you specifically want
+them to differ.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Basic NEBSpecification</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.neb</span><span class="w"> </span><span class="kn">import</span> <span class="n">NEBSpecification</span><span class="p">,</span> <span class="n">NEBKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">neb_spec</span> <span class="o">=</span> <span class="n">NEBSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+    <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
+        <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">A coarser, cheaper chain</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.neb</span><span class="w"> </span><span class="kn">import</span> <span class="n">NEBSpecification</span><span class="p">,</span> <span class="n">NEBKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">neb_spec</span> <span class="o">=</span> <span class="n">NEBSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+    <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;hf&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span>
+        <span class="n">images</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+        <span class="n">maximum_cycle</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">maximum_force</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">average_force</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Optimize the endpoints before starting</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">Useful when the endpoints came from a scan, a docking program, or hand-built geometries, and are
+not themselves minima.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.neb</span><span class="w"> </span><span class="kn">import</span> <span class="n">NEBSpecification</span><span class="p">,</span> <span class="n">NEBKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">neb_spec</span> <span class="o">=</span> <span class="n">NEBSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+    <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span><span class="n">optimize_endpoints</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Refine the guessed transition state</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-3">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.neb</span><span class="w"> </span><span class="kn">import</span> <span class="n">NEBSpecification</span><span class="p">,</span> <span class="n">NEBKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">neb_spec</span> <span class="o">=</span> <span class="n">NEBSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+    <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span><span class="n">optimize_ts</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Control the transition-state optimization explicitly</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.neb</span><span class="w"> </span><span class="kn">import</span> <span class="n">NEBSpecification</span><span class="p">,</span> <span class="n">NEBKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationSpecification</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">qc_spec</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span>
+<span class="p">)</span>
+
+<span class="n">neb_spec</span> <span class="o">=</span> <span class="n">NEBSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+    <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">qc_spec</span><span class="p">,</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">qc_spec</span><span class="p">,</span>
+        <span class="n">keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">},</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span><span class="n">optimize_ts</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">A plain elastic band with a stiffer spring</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.neb</span><span class="w"> </span><span class="kn">import</span> <span class="n">NEBSpecification</span><span class="p">,</span> <span class="n">NEBKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">neb_spec</span> <span class="o">=</span> <span class="n">NEBSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+    <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span>
+        <span class="n">spring_type</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">spring_constant</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details></section>
+</section>
+<section id="submitting-records">
+<span id="neb-submission"></span><h2>Submitting Records<a class="headerlink" href="#submitting-records" title="Link to this heading">#</a></h2>
+<p>NEB records are submitted with <a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_nebs" title="qcportal.client.PortalClient.add_nebs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_nebs()</span></code></a>.
+This method takes the following information:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">initial_chains</span></code> - The chains to run. Each NEB starts from a single chain (a list of molecules),
+so this is a <strong>nested</strong> list - one inner list per record</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">program</span></code> - The NEB program (use <code class="docutils literal notranslate"><span class="pre">&quot;geometric&quot;</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">singlepoint_specification</span></code> - The level of theory for the gradient calculations</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> - The transition-state optimization details, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keywords</span></code> - A <a class="reference internal" href="../qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBKeywords" title="qcportal.neb.record_models.NEBKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">NEBKeywords</span></code></a> object</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> and <code class="docutils literal notranslate"><span class="pre">keywords</span></code> have no defaults, so both must be given;
+pass <code class="docutils literal notranslate"><span class="pre">None</span></code> for the former if you do not need it.</p>
+<p>The molecules in a chain may be <a class="reference internal" href="../molecule.html"><span class="doc">Molecule</span></a> objects or molecule IDs,
+and the two may be mixed. The chain must be ordered from one endpoint to the other - the service
+treats the first and last elements as the endpoints.</p>
+<p>See <a class="reference internal" href="../record_submission.html"><span class="doc">Submitting computations</span></a> for more information about other arguments.</p>
+</section>
+<section id="neb-datasets">
+<span id="neb-dataset"></span><h2>NEB Datasets<a class="headerlink" href="#neb-datasets" title="Link to this heading">#</a></h2>
+<p>NEB <a class="reference internal" href="../../overview/glossary.html#glossary-dataset"><span class="std std-ref">datasets</span></a> are collections of NEB records.
+An <a class="reference internal" href="../qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetEntry" title="qcportal.neb.dataset_models.NEBDatasetEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">entry</span></code></a> holds one chain:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> - The name of the entry</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">initial_chain</span></code> - The ordered list of molecules making up this chain</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">additional_keywords</span></code> - Per-entry NEB keywords, merged into the specification’s
+<a class="reference internal" href="../qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBKeywords" title="qcportal.neb.record_models.NEBKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">NEBKeywords</span></code></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">additional_singlepoint_keywords</span></code> - Per-entry keywords, merged into the specification’s
+<code class="docutils literal notranslate"><span class="pre">singlepoint_specification.keywords</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">attributes</span></code> - A user-defined dictionary of metadata for this entry</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comment</span></code> - A user-supplied comment</p></li>
+</ul>
+<p>The <a class="reference internal" href="../qcportal_reference/records/neb.html#qcportal.neb.dataset_models.NEBDatasetSpecification" title="qcportal.neb.dataset_models.NEBDatasetSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataset</span> <span class="pre">specification</span></code></a> holds the
+<a class="reference internal" href="../qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBSpecification" title="qcportal.neb.record_models.NEBSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">NEBSpecification</span></code></a> that every entry is computed
+with.</p>
+<section id="per-entry-keyword-overrides">
+<span id="neb-dataset-keywords"></span><h3>Per-entry keyword overrides<a class="headerlink" href="#per-entry-keyword-overrides" title="Link to this heading">#</a></h3>
+<p>When a dataset is <a class="reference internal" href="../datasets/creating.html#dataset-submission"><span class="std std-ref">submitted</span></a>, the server builds one NEB specification for
+each (entry, specification) pair by taking the dataset specification and updating it from the entry:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Specification field</p></th>
+<th class="head"><p>Updated from the entry’s</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">keywords</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">additional_keywords</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">singlepoint_specification.keywords</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">additional_singlepoint_keywords</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The merge is a plain dictionary update, one level deep: a key present in the entry replaces that key
+in the specification outright, and keys the entry does not mention are left alone. Nothing else in
+the specification is affected - the programs, method, basis, and <code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> come
+from the dataset specification alone and cannot be varied per entry.</p>
+<p>The normal arrangement is to put everything in the dataset specification and leave the entry
+keywords empty, reaching for <code class="docutils literal notranslate"><span class="pre">additional_keywords</span></code> only for the occasional chain that needs a
+looser convergence criterion or a different number of images.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code class="docutils literal notranslate"><span class="pre">additional_keywords</span></code> is stored as an unvalidated dictionary on the entry. It is only checked
+against <a class="reference internal" href="../qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBKeywords" title="qcportal.neb.record_models.NEBKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">NEBKeywords</span></code></a>, which forbids unknown fields, at the
+point where the merged specification is built - that is, on <a class="reference internal" href="../datasets/creating.html#dataset-submission"><span class="std std-ref">submission</span></a>,
+not when the entry is added. A misspelled keyword is accepted without complaint and then fails the
+submission, and because the failure happens inside the server it comes back as an internal server
+error and an error ID rather than the name of the offending key. If a submission fails for no
+apparent reason, check your entries’ keys against the field names of
+<a class="reference internal" href="../qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBKeywords" title="qcportal.neb.record_models.NEBKeywords"><code class="xref py py-class docutils literal notranslate"><span class="pre">NEBKeywords</span></code></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">additional_singlepoint_keywords</span></code> is not checked this way, since <code class="docutils literal notranslate"><span class="pre">QCSpecification.keywords</span></code>
+is an open dictionary passed through to the QC program.</p>
+</div>
+<p>See <a class="reference internal" href="../datasets/index.html"><span class="doc">Datasets</span></a> for general dataset operations and advanced usage.</p>
+</section>
+</section>
+<section id="client-examples">
+<span id="neb-client-examples"></span><h2>Client Examples<a class="headerlink" href="#client-examples" title="Link to this heading">#</a></h2>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Obtain a single NEB record by ID</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-6">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_nebs</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Obtain multiple NEB records by ID</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-7">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_lst</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_nebs</span><span class="p">([</span><span class="mi">123</span><span class="p">,</span> <span class="mi">456</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Obtain multiple NEB records by ID, ignoring missing records</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-8">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_lst</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_nebs</span><span class="p">([</span><span class="mi">123</span><span class="p">,</span> <span class="mi">456</span><span class="p">,</span> <span class="mi">789</span><span class="p">],</span> <span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Fetch the chain singlepoints and optimizations up front</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">A NEB record has a lot of children, so <code class="docutils literal notranslate"><span class="pre">include=['**']</span></code> can be very expensive. Ask only for
+what you need.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-9">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_nebs</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;initial_chain&#39;</span><span class="p">,</span> <span class="s1">&#39;singlepoints&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Query NEB records by QC method and basis</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-10" name="sd-tab-set-10" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-10">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_nebs</span><span class="p">(</span><span class="n">qc_method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">qc_basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Query NEB records containing a particular molecule in their initial chain</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-11" name="sd-tab-set-11" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-11">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_nebs</span><span class="p">(</span><span class="n">molecule_id</span><span class="o">=</span><span class="mi">8231</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add a NEB record</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-12" name="sd-tab-set-12" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-12">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.neb</span><span class="w"> </span><span class="kn">import</span> <span class="n">NEBKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="c1"># chain is an ordered list of molecules from reactant to product</span>
+<span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_nebs</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">chain</span><span class="p">],</span>
+    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span>
+    <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;deferred&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span>
+    <span class="p">),</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span><span class="n">images</span><span class="o">=</span><span class="mi">11</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add a NEB record that also locates the transition state</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-13" name="sd-tab-set-13" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-13">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.neb</span><span class="w"> </span><span class="kn">import</span> <span class="n">NEBKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_nebs</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">chain</span><span class="p">],</span>
+    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span>
+    <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;deferred&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span>
+    <span class="p">),</span>
+    <span class="n">optimization_specification</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span><span class="n">optimize_endpoints</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optimize_ts</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Follow the energy profile of the converged path</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-14" name="sd-tab-set-14" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-14">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_nebs</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">final_chain</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s1">&#39;return_energy&#39;</span><span class="p">])</span>
+<span class="go">-78.5873142</span>
+<span class="go">-78.5841027</span>
+<span class="go">-78.5766319</span>
+<span class="go">...</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Watch the chain converge over the iterations</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">singlepoints</span></code> is keyed by iteration number, so the barrier height can be tracked as the
+calculation proceeds.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-15" name="sd-tab-set-15" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-15">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_nebs</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">singlepoints</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">energies</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s1">&#39;return_energy&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">singlepoints</span><span class="p">[</span><span class="n">iteration</span><span class="p">]]</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">iteration</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">energies</span><span class="p">)</span> <span class="o">-</span> <span class="n">energies</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">1 0.0421783</span>
+<span class="go">2 0.0398215</span>
+<span class="go">3 0.0391044</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Retrieve the guessed and optimized transition states</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-16" name="sd-tab-set-16" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-16">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_nebs</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The highest-energy image of the converged chain</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">guess</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">result</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The refined saddle point, if optimize_ts was set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">ts_optimization</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">ts</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">ts_optimization</span><span class="o">.</span><span class="n">final_molecule</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details></section>
+<section id="dataset-examples">
+<span id="neb-dataset-examples"></span><h2>Dataset Examples<a class="headerlink" href="#dataset-examples" title="Link to this heading">#</a></h2>
+<p>See <a class="reference internal" href="../datasets/index.html"><span class="doc">Datasets</span></a> for more information and advanced usage.
+See the <a class="reference internal" href="#neb-specification"><span class="std std-ref">specification</span></a> section for all the options in creating
+specifications.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Create a NEB dataset with default options</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-17" name="sd-tab-set-17" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-17">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span>
+         <span class="s2">&quot;neb&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;Dataset Name&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;An example of a NEB dataset&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add a single entry to a NEB dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-18" name="sd-tab-set-18" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-18">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># hcn_chain is an ordered list of molecules</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;HCN isomerization&quot;</span><span class="p">,</span> <span class="n">hcn_chain</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add many entries to a NEB dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-19" name="sd-tab-set-19" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-19">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.neb</span><span class="w"> </span><span class="kn">import</span> <span class="n">NEBDatasetNewEntry</span>
+
+<span class="c1"># Chains built beforehand, for example by interpolating between endpoints</span>
+<span class="n">new_entries</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">NEBDatasetNewEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">initial_chain</span><span class="o">=</span><span class="n">chain</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">chain</span> <span class="ow">in</span> <span class="n">all_chains</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+<span class="p">]</span>
+
+<span class="c1"># Efficiently add all entries in a single call</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entries</span><span class="p">(</span><span class="n">new_entries</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Add a specification to a NEB dataset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-20" name="sd-tab-set-20" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-20">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.neb</span><span class="w"> </span><span class="kn">import</span> <span class="n">NEBSpecification</span><span class="p">,</span> <span class="n">NEBKeywords</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
+
+<span class="n">neb_spec</span> <span class="o">=</span> <span class="n">NEBSpecification</span><span class="p">(</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+    <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
+        <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span><span class="n">images</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">optimize_ts</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;psi4/b3lyp/def2-svp&quot;</span><span class="p">,</span> <span class="n">neb_spec</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Loosen the convergence criteria for one difficult chain</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">Everything else about the entry is inherited from the dataset specification.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-21" name="sd-tab-set-21" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-21">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Uses the specification&#39;s keywords as-is</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;HCN isomerization&quot;</span><span class="p">,</span> <span class="n">hcn_chain</span><span class="p">)</span>
+
+<span class="c1"># Same level of theory, but fewer images and a looser force criterion</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span>
+    <span class="s2">&quot;C4H3N2 isomerization&quot;</span><span class="p">,</span>
+    <span class="n">c4h3n2_chain</span><span class="p">,</span>
+    <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span> <span class="s2">&quot;maximum_force&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Pass keywords through to the QC program for one entry</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">additional_singlepoint_keywords</span></code> is merged into the specification’s
+<code class="docutils literal notranslate"><span class="pre">singlepoint_specification.keywords</span></code> the same way, which is useful when one chain has a molecule
+that converges badly.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-22" name="sd-tab-set-22" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-22">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span>
+    <span class="s2">&quot;stubborn chain&quot;</span><span class="p">,</span>
+    <span class="n">stubborn_chain</span><span class="p">,</span>
+    <span class="n">additional_singlepoint_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span> <span class="s2">&quot;guess&quot;</span><span class="p">:</span> <span class="s2">&quot;sad&quot;</span><span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details></section>
 <section id="neb-qcportal-api">
 <span id="id3"></span><h2>NEB QCPortal API<a class="headerlink" href="#neb-qcportal-api" title="Link to this heading">#</a></h2>
-<p>TODO</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../qcportal_reference/records/neb.html#module-qcportal.neb.record_models" title="qcportal.neb.record_models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Record</span> <span class="pre">models</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/records/neb.html#module-qcportal.neb.dataset_models" title="qcportal.neb.dataset_models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Dataset</span> <span class="pre">models</span></code></a></p></li>
+<li><p>PortalClient methods</p>
+<ul>
+<li><p><a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.add_nebs" title="qcportal.client.PortalClient.add_nebs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_nebs()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.get_nebs" title="qcportal.client.PortalClient.get_nebs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_nebs()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../qcportal_reference/clients.html#qcportal.client.PortalClient.query_nebs" title="qcportal.client.PortalClient.query_nebs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_nebs()</span></code></a></p></li>
+</ul>
+</li>
+</ul>
 </section>
 </section>
 
@@ -596,8 +1360,19 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#neb-record">NEB Record</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#neb-dataset">NEB Dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#neb-records">NEB Records</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#neb-specification">NEB Specification</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#neb-keywords">NEB Keywords</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-optimization-specification-is-and-is-not-used-for">What <code class="docutils literal notranslate"><span class="pre">optimization_specification</span></code> is (and is not) used for</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submitting-records">Submitting Records</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#neb-datasets">NEB Datasets</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#per-entry-keyword-overrides">Per-entry keyword overrides</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#client-examples">Client Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dataset-examples">Dataset Examples</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#neb-qcportal-api">NEB QCPortal API</a></li>
 </ul>
   </nav></div>

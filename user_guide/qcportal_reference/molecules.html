@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,11 +52,11 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Metadata Models" href="metadata_models.html" />
+    <link rel="next" title="Projects" href="projects.html" />
     <link rel="prev" title="Base Models" href="base_models.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -436,6 +436,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/attachments.html">Attachments</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../projects/index.html">Projects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../projects/records.html">Records in a Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../projects/datasets.html">Datasets in a Project</a></li>
+</ul>
+</details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../records/base.html">Base Record</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../records/singlepoint.html">Singlepoint calculations</a></li>
@@ -452,6 +457,7 @@
 <li class="toctree-l2"><a class="reference internal" href="auth.html">Authentication and User Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="base_models.html">Base Models</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="projects.html">Projects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="metadata_models.html">Metadata Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tasks_services.html">Tasks and Services</a></li>
 <li class="toctree-l2"><a class="reference internal" href="internal_jobs.html">Internal Jobs</a></li>
@@ -536,49 +542,86 @@
 <span id="molecule"></span><h1>Molecule<a class="headerlink" href="#module-qcportal.molecules.models" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MoleculeQueryFilters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cursor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">molecule_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">molecule_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">molecular_formula</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">identifiers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/molecules/models.html#MoleculeQueryFilters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MoleculeQueryFilters</span></span><a class="reference internal" href="../../_modules/qcportal/molecules/models.html#MoleculeQueryFilters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.QueryModelBase" title="qcportal.base_models.QueryModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">QueryModelBase</span></code></a></p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>cursor</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>molecule_id</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>molecule_hash</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>molecular_formula</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>identifiers</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>list</em><em>[</em><em>str</em><em>]</em><em>] </em><em>| </em><em>None</em>)</p></li>
-</ul>
-</dd>
-</dl>
+<div class="pst-scrollable-table-container"><table class="table" id="id1">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id1" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.cursor" title="qcportal.molecules.models.MoleculeQueryFilters.cursor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cursor</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.identifiers" title="qcportal.molecules.models.MoleculeQueryFilters.identifiers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">identifiers</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.limit" title="qcportal.molecules.models.MoleculeQueryFilters.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.molecular_formula" title="qcportal.molecules.models.MoleculeQueryFilters.molecular_formula"><code class="xref py py-obj docutils literal notranslate"><span class="pre">molecular_formula</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.molecule_hash" title="qcportal.molecules.models.MoleculeQueryFilters.molecule_hash"><code class="xref py py-obj docutils literal notranslate"><span class="pre">molecule_hash</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeQueryFilters.molecule_id" title="qcportal.molecules.models.MoleculeQueryFilters.molecule_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">molecule_id</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table" id="id2">
+<caption><span class="caption-text">Validators</span><a class="headerlink" href="#id2" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Validator</p></th>
+<th class="head"><p>Mode</p></th>
+<th class="head"><p>Fields</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="base_models.html#qcportal.base_models.QueryModelBase.validate_lists" title="qcportal.base_models.QueryModelBase.validate_lists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></a></p></td>
+<td><p>before</p></td>
+<td><p><a class="reference internal" href="base_models.html#qcportal.base_models.QueryModelBase.limit" title="qcportal.base_models.QueryModelBase.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span></code></a>, <a class="reference internal" href="base_models.html#qcportal.base_models.QueryModelBase.cursor" title="qcportal.base_models.QueryModelBase.cursor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cursor</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.molecule_id">
-<span class="sig-name descname"><span class="pre">molecule_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.molecule_id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">molecule_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.molecule_id" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.molecule_hash">
-<span class="sig-name descname"><span class="pre">molecule_hash</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.molecule_hash" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">molecule_hash</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.molecule_hash" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.molecular_formula">
-<span class="sig-name descname"><span class="pre">molecular_formula</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.molecular_formula" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">molecular_formula</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.molecular_formula" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.identifiers">
-<span class="sig-name descname"><span class="pre">identifiers</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.identifiers" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">identifiers</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.identifiers" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryFilters.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryFilters.validate_lists">
@@ -599,84 +642,103 @@ validated to form a valid model.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeModifyBody">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MoleculeModifyBody</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">identifiers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_identifiers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/molecules/models.html#MoleculeModifyBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.molecules.models.MoleculeModifyBody" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MoleculeModifyBody</span></span><a class="reference internal" href="../../_modules/qcportal/molecules/models.html#MoleculeModifyBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.molecules.models.MoleculeModifyBody" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>comment</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>identifiers</strong> (<em>Identifiers</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>overwrite_identifiers</strong> (<em>bool</em>)</p></li>
-</ul>
-</dd>
-</dl>
+<div class="pst-scrollable-table-container"><table class="table" id="id3">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id3" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeModifyBody.comment" title="qcportal.molecules.models.MoleculeModifyBody.comment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">comment</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeModifyBody.identifiers" title="qcportal.molecules.models.MoleculeModifyBody.identifiers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">identifiers</span></code></a></p></td>
+<td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Identifiers</span></code> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeModifyBody.name" title="qcportal.molecules.models.MoleculeModifyBody.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeModifyBody.overwrite_identifiers" title="qcportal.molecules.models.MoleculeModifyBody.overwrite_identifiers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">overwrite_identifiers</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeModifyBody.name">
-<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeModifyBody.name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeModifyBody.name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeModifyBody.comment">
-<span class="sig-name descname"><span class="pre">comment</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeModifyBody.comment" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">comment</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeModifyBody.comment" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeModifyBody.identifiers">
-<span class="sig-name descname"><span class="pre">identifiers</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Identifiers</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeModifyBody.identifiers" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">identifiers</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Identifiers</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeModifyBody.identifiers" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeModifyBody.overwrite_identifiers">
-<span class="sig-name descname"><span class="pre">overwrite_identifiers</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeModifyBody.overwrite_identifiers" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">overwrite_identifiers</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeModifyBody.overwrite_identifiers" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeModifyBody.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeModifyBody.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeUploadOptions">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MoleculeUploadOptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">dummy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/molecules/models.html#MoleculeUploadOptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.molecules.models.MoleculeUploadOptions" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MoleculeUploadOptions</span></span><a class="reference internal" href="../../_modules/qcportal/molecules/models.html#MoleculeUploadOptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.molecules.models.MoleculeUploadOptions" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dummy</strong> (<em>bool</em>)</p>
-</dd>
-</dl>
+<div class="pst-scrollable-table-container"><table class="table" id="id4">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id4" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.molecules.models.MoleculeUploadOptions.dummy" title="qcportal.molecules.models.MoleculeUploadOptions.dummy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dummy</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeUploadOptions.dummy">
-<span class="sig-name descname"><span class="pre">dummy</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeUploadOptions.dummy" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">dummy</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeUploadOptions.dummy" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeUploadOptions.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></span><a class="headerlink" href="#qcportal.molecules.models.MoleculeUploadOptions.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryIterator">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MoleculeQueryIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_filters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/molecules/models.html#MoleculeQueryIterator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryIterator" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MoleculeQueryIterator</span></span><a class="reference internal" href="../../_modules/qcportal/molecules/models.html#MoleculeQueryIterator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryIterator" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.QueryIteratorBase" title="qcportal.base_models.QueryIteratorBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">QueryIteratorBase</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Molecule</span></code>]</p>
 <p>Iterator for molecule queries</p>
 <p>This iterator transparently handles batching and pagination over the results
 of a molecule query.</p>
-<p>Construct an iterator</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryIterator.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_filters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/molecules/models.html#MoleculeQueryIterator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryIterator.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Construct an iterator</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -685,6 +747,8 @@ of a molecule query.</p>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.molecules.models.MoleculeQueryIterator.reset">
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.molecules.models.MoleculeQueryIterator.reset" title="Link to this definition">#</a></dt>
@@ -715,11 +779,11 @@ of a molecule query.</p>
       </div>
     </a>
     <a class="right-next"
-       href="metadata_models.html"
+       href="projects.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Metadata Models</p>
+        <p class="prev-next-title">Projects</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -747,7 +811,6 @@ of a molecule query.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.molecule_hash"><code class="docutils literal notranslate"><span class="pre">MoleculeQueryFilters.molecule_hash</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.molecular_formula"><code class="docutils literal notranslate"><span class="pre">MoleculeQueryFilters.molecular_formula</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.identifiers"><code class="docutils literal notranslate"><span class="pre">MoleculeQueryFilters.identifiers</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.model_config"><code class="docutils literal notranslate"><span class="pre">MoleculeQueryFilters.model_config</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.validate_lists"><code class="docutils literal notranslate"><span class="pre">MoleculeQueryFilters.validate_lists()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.limit"><code class="docutils literal notranslate"><span class="pre">MoleculeQueryFilters.limit</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryFilters.cursor"><code class="docutils literal notranslate"><span class="pre">MoleculeQueryFilters.cursor</span></code></a></li>
@@ -758,15 +821,14 @@ of a molecule query.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeModifyBody.comment"><code class="docutils literal notranslate"><span class="pre">MoleculeModifyBody.comment</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeModifyBody.identifiers"><code class="docutils literal notranslate"><span class="pre">MoleculeModifyBody.identifiers</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeModifyBody.overwrite_identifiers"><code class="docutils literal notranslate"><span class="pre">MoleculeModifyBody.overwrite_identifiers</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeModifyBody.model_config"><code class="docutils literal notranslate"><span class="pre">MoleculeModifyBody.model_config</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeUploadOptions"><code class="docutils literal notranslate"><span class="pre">MoleculeUploadOptions</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeUploadOptions.dummy"><code class="docutils literal notranslate"><span class="pre">MoleculeUploadOptions.dummy</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeUploadOptions.model_config"><code class="docutils literal notranslate"><span class="pre">MoleculeUploadOptions.model_config</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryIterator"><code class="docutils literal notranslate"><span class="pre">MoleculeQueryIterator</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryIterator.__init__"><code class="docutils literal notranslate"><span class="pre">MoleculeQueryIterator.__init__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.molecules.models.MoleculeQueryIterator.reset"><code class="docutils literal notranslate"><span class="pre">MoleculeQueryIterator.reset()</span></code></a></li>
 </ul>
 </li>

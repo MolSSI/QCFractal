@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Molecules" href="molecule.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -436,6 +436,11 @@
 <li class="toctree-l2"><a class="reference internal" href="datasets/attachments.html">Attachments</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="projects/index.html">Projects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="projects/records.html">Records in a Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="projects/datasets.html">Datasets in a Project</a></li>
+</ul>
+</details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="records/base.html">Base Record</a></li>
 <li class="toctree-l2"><a class="reference internal" href="records/singlepoint.html">Singlepoint calculations</a></li>
@@ -452,6 +457,7 @@
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/auth.html">Authentication and User Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/base_models.html">Base Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/projects.html">Projects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/metadata_models.html">Metadata Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/tasks_services.html">Tasks and Services</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
@@ -613,8 +619,7 @@ Raw API</label><div class="sd-tab-content docutils">
 <span class="w">   </span><span class="nt">&quot;manager_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">   </span><span class="nt">&quot;modified_on&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2019-03-07T19:45:27.745000&quot;</span><span class="p">,</span>
 <span class="w">   </span><span class="nt">&quot;molecule_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">37</span><span class="p">,</span>
-<span class="w">   </span><span class="nt">&quot;owner_group&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<span class="w">   </span><span class="nt">&quot;owner_user&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">   </span><span class="nt">&quot;creator_user&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">   </span><span class="err">...</span>
 <span class="p">}</span>
 </pre></div>
@@ -654,8 +659,7 @@ Raw API (bulk)</label><div class="sd-tab-content docutils">
 <span class="w">     </span><span class="nt">&quot;manager_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">     </span><span class="nt">&quot;modified_on&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2019-03-07T19:45:27.745000&quot;</span><span class="p">,</span>
 <span class="w">     </span><span class="nt">&quot;molecule_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">37</span><span class="p">,</span>
-<span class="w">     </span><span class="nt">&quot;owner_group&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<span class="w">     </span><span class="nt">&quot;owner_user&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">     </span><span class="nt">&quot;creator_user&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">     </span><span class="err">...</span>
 <span class="w">  </span><span class="p">},</span>
 <span class="w">  </span><span class="kc">null</span><span class="p">,</span>
@@ -667,8 +671,7 @@ Raw API (bulk)</label><div class="sd-tab-content docutils">
 <span class="w">     </span><span class="nt">&quot;manager_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">     </span><span class="nt">&quot;modified_on&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2019-03-07T19:45:42.748000&quot;</span><span class="p">,</span>
 <span class="w">     </span><span class="nt">&quot;molecule_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">38</span><span class="p">,</span>
-<span class="w">     </span><span class="nt">&quot;owner_group&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<span class="w">     </span><span class="nt">&quot;owner_user&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">     </span><span class="nt">&quot;creator_user&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">     </span><span class="err">...</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">]</span>

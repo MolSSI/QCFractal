@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -484,18 +484,15 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The computational molecular sciences model to run.&quot;&quot;&quot;</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;allow&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;allow&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...). &quot;</span>
-        <span class="s2">&quot;For MM, name of the force field.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">basis</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
-        <span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for &quot;</span>
-        <span class="s2">&quot;methods without basis sets. For molecular mechanics, name of the atom-typer.&quot;</span><span class="p">,</span>
-    <span class="p">)</span></div>
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...). For MM, name of the force field.&quot;&quot;&quot;</span>
+
+    <span class="n">basis</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for methods without</span>
+<span class="sd">    basis sets. For molecular mechanics, name of the atom-typer.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
 
 
 <div class="viewcode-block" id="SinglepointDriver">
@@ -528,14 +525,15 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">ErrorCorrectionProtocol</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Configuration for how computational chemistry programs handle error correction&quot;&quot;&quot;</span>
 
-    <span class="n">default_policy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">True</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Whether to allow error corrections to be used &quot;</span> <span class="s2">&quot;if not directly specified in `policies`&quot;</span>
-    <span class="p">)</span>
-    <span class="n">policies</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Settings that define whether specific error corrections are allowed. &quot;</span>
-        <span class="s2">&quot;Keys are the name of a known error and values are whether it is allowed to be used.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">default_policy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether to allow error corrections to be used if not directly specified in `policies`&quot;&quot;&quot;</span>
+
+    <span class="n">policies</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Settings that define whether specific error corrections are allowed. Keys are the name of a known error and</span>
+<span class="sd">    values are whether it is allowed to be used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="ErrorCorrectionProtocol.allows">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.ErrorCorrectionProtocol.allows">[docs]</a>
@@ -563,39 +561,48 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">SinglepointProtocols</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Protocols regarding the manipulation of computational result data.&quot;&quot;&quot;</span>
 
-    <span class="n">wavefunction</span><span class="p">:</span> <span class="n">WavefunctionProtocolEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">WavefunctionProtocolEnum</span><span class="o">.</span><span class="n">none</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">WavefunctionProtocolEnum</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">stdout</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Primary output file to keep from the computation&quot;</span><span class="p">)</span>
-    <span class="n">error_correction</span><span class="p">:</span> <span class="n">ErrorCorrectionProtocol</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default_factory</span><span class="o">=</span><span class="n">ErrorCorrectionProtocol</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Policies for error correction&quot;</span>
-    <span class="p">)</span>
-    <span class="n">native_files</span><span class="p">:</span> <span class="n">NativeFilesProtocolEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">NativeFilesProtocolEnum</span><span class="o">.</span><span class="n">none</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Policies for keeping processed files from the computation&quot;</span><span class="p">,</span>
-    <span class="p">)</span></div>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">wavefunction</span><span class="p">:</span> <span class="n">WavefunctionProtocolEnum</span> <span class="o">=</span> <span class="n">WavefunctionProtocolEnum</span><span class="o">.</span><span class="n">none</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Which parts of the wavefunction to keep&quot;&quot;&quot;</span>
+
+    <span class="n">stdout</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Primary output file to keep from the computation&quot;&quot;&quot;</span>
+
+    <span class="n">error_correction</span><span class="p">:</span> <span class="n">ErrorCorrectionProtocol</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">ErrorCorrectionProtocol</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Policies for error correction&quot;&quot;&quot;</span>
+
+    <span class="n">native_files</span><span class="p">:</span> <span class="n">NativeFilesProtocolEnum</span> <span class="o">=</span> <span class="n">NativeFilesProtocolEnum</span><span class="o">.</span><span class="n">none</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Policies for keeping processed files from the computation&quot;&quot;&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="QCSpecification">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.QCSpecification">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">QCSpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">program</span><span class="p">:</span> <span class="n">LowerStr</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs&quot;</span>
-        <span class="s2">&quot; support all combinations of driver/method/basis.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">driver</span><span class="p">:</span> <span class="n">SinglepointDriver</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-    <span class="n">method</span><span class="p">:</span> <span class="n">LowerStr</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...).&quot;</span><span class="p">)</span>
-    <span class="n">basis</span><span class="p">:</span> <span class="n">LowerStr</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for &quot;</span>
-        <span class="s2">&quot;methods without basis sets.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">keywords</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">({},</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Program-specific keywords to use for the computation&quot;</span><span class="p">)</span>
+    <span class="n">program</span><span class="p">:</span> <span class="n">LowerStr</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs support all</span>
+<span class="sd">    combinations of driver/method/basis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">driver</span><span class="p">:</span> <span class="n">SinglepointDriver</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;What the computation should return - energy, gradient, hessian, or properties&quot;&quot;&quot;</span>
+
+    <span class="n">method</span><span class="p">:</span> <span class="n">LowerStr</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...)&quot;&quot;&quot;</span>
+
+    <span class="n">basis</span><span class="p">:</span> <span class="n">LowerStr</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for methods without</span>
+<span class="sd">    basis sets.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">keywords</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Program-specific keywords to use for the computation&quot;&quot;&quot;</span>
+
     <span class="n">protocols</span><span class="p">:</span> <span class="n">SinglepointProtocols</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">SinglepointProtocols</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Which parts of the computation output to keep&quot;&quot;&quot;</span>
 
     <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;basis&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
     <span class="nd">@classmethod</span>

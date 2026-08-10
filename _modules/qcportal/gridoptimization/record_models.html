@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -558,21 +558,21 @@
 <span class="sd">    A full description of a dimension to scan over.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="nb">type</span><span class="p">:</span> <span class="n">ScanTypeEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">ScanTypeEnum</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">))</span>
-    <span class="n">indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The indices of atoms to select for the scan. The size of this is a function of the type. e.g., &quot;</span>
-        <span class="s2">&quot;distances, angles and dihedrals require 2, 3, and 4 atoms, respectively.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">steps</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Step sizes to scan in relative to your current location in the scan. This must be a strictly &quot;</span>
-        <span class="s2">&quot;monotonic series.&quot;</span><span class="p">,</span>
-        <span class="n">json_schema_extra</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Bohr&quot;</span><span class="p">,</span> <span class="s2">&quot;degrees&quot;</span><span class="p">]},</span>
-    <span class="p">)</span>
-    <span class="n">step_type</span><span class="p">:</span> <span class="n">StepTypeEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">StepTypeEnum</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">))</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="n">ScanTypeEnum</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The type of scan to perform&quot;&quot;&quot;</span>
+
+    <span class="n">indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The indices of atoms to select for the scan. The size of this is a function of the type. e.g., distances,</span>
+<span class="sd">    angles and dihedrals require 2, 3, and 4 atoms, respectively.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">steps</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">json_schema_extra</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Bohr&quot;</span><span class="p">,</span> <span class="s2">&quot;degrees&quot;</span><span class="p">]})</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Step sizes to scan in relative to your current location in the scan. This must be a strictly monotonic series.&quot;&quot;&quot;</span>
+
+    <span class="n">step_type</span><span class="p">:</span> <span class="n">StepTypeEnum</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether the step values are absolute, or relative to the starting value&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="ScanDimension.check_lower_type_step_type">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.ScanDimension.check_lower_type_step_type">[docs]</a>
@@ -614,16 +614,15 @@
 <span class="sd">    Keywords for grid optimizations</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">scans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ScanDimension</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="p">[],</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The dimensions to scan along (along with their options) for the Gridoptimization.&quot;</span>
-    <span class="p">)</span>
-    <span class="n">preoptimization</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">True</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;If ``True``, first runs an unrestricted optimization before starting the grid computations. &quot;</span>
-        <span class="s2">&quot;This is especially useful when combined with ``relative`` ``step_types``.&quot;</span><span class="p">,</span>
-    <span class="p">)</span></div>
+    <span class="n">scans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ScanDimension</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The dimensions to scan along (along with their options) for the Gridoptimization&quot;&quot;&quot;</span>
+
+    <span class="n">preoptimization</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;If ``True``, first runs an unrestricted optimization before starting the grid computations. This is especially</span>
+<span class="sd">    useful when combined with ``relative`` ``step_types``.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
 
 
 

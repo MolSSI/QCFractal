@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Release Notes" href="../release_notes.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -422,7 +422,8 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="setup.html">QCFractal Installation and Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Server Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cli_admin.html">Administration &amp; maintenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_admin.html">Server administration via the CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="portal_admin.html">Administering a QCFractal server with PortalClient</a></li>
 <li class="toctree-l1"><a class="reference internal" href="monitoring.html">Server administration via client and API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="managers/index.html">QCFractalCompute - Compute Managers and Workers</a></li>
 </ul>
@@ -494,16 +495,40 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Server Configuration</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="configuration.html#autoreset-error">autoreset error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#quick-start">Quick start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#how-configuration-is-loaded">How configuration is loaded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#environment-variables">Environment variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#top-level-settings-fractalconfig">Top-level settings (FractalConfig)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#database-database">Database (database)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#web-api-api">Web API (api)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#api-limits-api-limits">API limits (api_limits)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#automatic-resets-auto-reset">Automatic resets (auto_reset)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#cors-cors">CORS (cors)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#s3-external-files-s3">S3 external files (s3)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#minimal-and-full-configuration-examples">Minimal and full configuration examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#environment-variable-examples">Environment variable examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#notes-on-path-handling">Notes on path handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#generated-reference">Generated reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="cli_admin.html">Administration &amp; maintenance</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="cli_admin.html#starting-and-stopping">Starting and Stopping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cli_admin.html#backup-and-restore">Backup and Restore</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cli_admin.html#upgrading">Upgrading</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cli_admin.html#security">Security</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cli_admin.html#users-and-passwords">Users and Passwords</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cli_admin.html#access-logs-and-geoip">Access Logs and Geoip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_admin.html">Server administration via the CLI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cli_admin.html#quick-start">Quick start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli_admin.html#getting-help">Getting help</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli_admin.html#global-options">Global options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli_admin.html#subcommands">Subcommands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli_admin.html#common-tasks-and-examples">Common tasks and examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli_admin.html#troubleshooting">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli_admin.html#see-also">See also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="portal_admin.html">Administering a QCFractal server with PortalClient</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="portal_admin.html#getting-started-connecting-and-authentication">Getting started: connecting and authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="portal_admin.html#users-add-list-enable-disable-change-passwords-delete">Users: add, list, enable/disable, change passwords, delete</a></li>
+<li class="toctree-l2"><a class="reference internal" href="portal_admin.html#groups-create-list-get-delete">Groups: create, list, get, delete</a></li>
+<li class="toctree-l2"><a class="reference internal" href="portal_admin.html#compute-managers-viewing-manager-information">Compute managers: viewing manager information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="portal_admin.html#access-log-view-and-clear">Access log: view and clear</a></li>
+<li class="toctree-l2"><a class="reference internal" href="portal_admin.html#internal-jobs-view-cancel-delete">Internal jobs: view, cancel, delete</a></li>
+<li class="toctree-l2"><a class="reference internal" href="portal_admin.html#tips-and-notes">Tips and notes</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="monitoring.html">Server administration via client and API</a></li>

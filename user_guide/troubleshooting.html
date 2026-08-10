@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Managing Records" href="record_management.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -436,6 +436,11 @@
 <li class="toctree-l2"><a class="reference internal" href="datasets/attachments.html">Attachments</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="projects/index.html">Projects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="projects/records.html">Records in a Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="projects/datasets.html">Datasets in a Project</a></li>
+</ul>
+</details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="records/base.html">Base Record</a></li>
 <li class="toctree-l2"><a class="reference internal" href="records/singlepoint.html">Singlepoint calculations</a></li>
@@ -452,6 +457,7 @@
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/auth.html">Authentication and User Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/base_models.html">Base Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qcportal_reference/projects.html">Projects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/metadata_models.html">Metadata Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/tasks_services.html">Tasks and Services</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
@@ -531,6 +537,386 @@
                   
   <section id="troubleshooting">
 <h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h1>
+<p>This page collects the questions that come up most often when computations do not behave as
+expected, and the client methods that answer them.</p>
+<p>Most problems fall into one of three categories: the computation is not being picked up, the
+computation ran and failed, or the client cannot talk to the server.</p>
+<section id="a-record-is-stuck-in-waiting">
+<span id="troubleshooting-waiting"></span><h2>A record is stuck in “waiting”<a class="headerlink" href="#a-record-is-stuck-in-waiting" title="Link to this heading">#</a></h2>
+<p>A record with a status of <code class="docutils literal notranslate"><span class="pre">waiting</span></code> has been created but it is not being claimed. See
+<a class="reference internal" href="record_management.html#record-status"><span class="std std-ref">Record Statuses</span></a>. This is normal for a short while, but a record that stays <code class="docutils literal notranslate"><span class="pre">waiting</span></code>
+indefinitely means no <a class="reference internal" href="../overview/glossary.html#glossary-manager"><span class="std std-ref">compute manager</span></a> is able to take its
+<a class="reference internal" href="../overview/glossary.html#glossary-task"><span class="std std-ref">task</span></a>.</p>
+<p>The server can answer this directly. <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.get_waiting_reason" title="qcportal.client.PortalClient.get_waiting_reason"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_waiting_reason()</span></code></a>
+takes a record ID and reports why the record has not been claimed, checking each active manager in
+turn. <a class="reference internal" href="qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.get_waiting_reason" title="qcportal.record_models.BaseRecord.get_waiting_reason"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_waiting_reason()</span></code></a> does the same from a record
+object.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">get_waiting_reason</span><span class="p">(</span><span class="mi">118326390</span><span class="p">)</span>
+<span class="go">{&#39;reason&#39;: &#39;No manager matches programs &amp; tags&#39;,</span>
+<span class="go"> &#39;details&#39;: {&#39;test_cluster-a_host1-1234-5678&#39;: &quot;Manager missing programs: {&#39;psi4&#39;}&quot;,</span>
+<span class="go">             &#39;test_cluster-a_host2-8765-4321&#39;: &#39;Manager does not handle tag &quot;big_mem&quot;&#39;}}</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Or from the record</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">118326390</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">get_waiting_reason</span><span class="p">()</span>
+<span class="go">{&#39;reason&#39;: &#39;Waiting for a free manager&#39;,</span>
+<span class="go"> &#39;details&#39;: {&#39;test_cluster-a_host1-1234-5678&#39;: &#39;Manager is busy&#39;}}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">reason</span></code> key is always present and holds the overall answer. When the record really is
+waiting and there is at least one active manager, a <code class="docutils literal notranslate"><span class="pre">details</span></code> key is also present, mapping each
+active manager’s name to why that particular manager cannot take the task.</p>
+<p>The possible values of <code class="docutils literal notranslate"><span class="pre">reason</span></code> are:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Reason</p></th>
+<th class="head"><p>What it means</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Record</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">exist</span></code></p></td>
+<td><p>No record with that ID on the server</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Record</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">waiting</span></code></p></td>
+<td><p>The record’s status is something other than <code class="docutils literal notranslate"><span class="pre">waiting</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Record</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">service</span></code></p></td>
+<td><p>Services are iterated by the server, not claimed by a
+manager. See <a class="reference internal" href="#troubleshooting-service"><span class="std std-ref">A service is not progressing</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">No</span> <span class="pre">active</span> <span class="pre">managers</span></code></p></td>
+<td><p>No manager is currently connected to the server</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">No</span> <span class="pre">manager</span> <span class="pre">matches</span> <span class="pre">programs</span> <span class="pre">&amp;</span> <span class="pre">tags</span></code></p></td>
+<td><p>Managers are active, but none has both the required programs
+and a matching compute tag. Check <code class="docutils literal notranslate"><span class="pre">details</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Waiting</span> <span class="pre">for</span> <span class="pre">a</span> <span class="pre">free</span> <span class="pre">manager</span></code></p></td>
+<td><p>A manager could take this task but is at capacity. This is
+normal - the task should run once the manager has room</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The two entries to act on are the <code class="docutils literal notranslate"><span class="pre">details</span></code> messages:</p>
+<p><strong>Manager missing programs</strong> - the task requires a program the manager does not have installed.
+The required program comes from the record’s specification, so a singlepoint with
+<code class="docutils literal notranslate"><span class="pre">program=&quot;psi4&quot;</span></code> needs a manager with psi4 available. Managers report what they have, which you
+can check with <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.query_managers" title="qcportal.client.PortalClient.query_managers"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_managers()</span></code></a>.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">query_managers</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s1">&#39;active&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">compute_tags</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">programs</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+<span class="go">test_cluster-a_host1-1234-5678 [&#39;big_mem&#39;] [&#39;geometric&#39;, &#39;qcengine&#39;]</span>
+<span class="go">test_cluster-a_host2-8765-4321 [&#39;*&#39;] [&#39;psi4&#39;, &#39;qcengine&#39;, &#39;rdkit&#39;]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p><strong>Manager does not handle tag</strong> - the record’s <a class="reference internal" href="../overview/glossary.html#glossary-tag"><span class="std std-ref">compute tag</span></a> is not one the
+manager is configured to claim. Note that a task tagged <code class="docutils literal notranslate"><span class="pre">*</span></code> is claimed <em>only</em> by a manager that
+also has <code class="docutils literal notranslate"><span class="pre">*</span></code>; the wildcard is not a “match anything” on the task side. See <a class="reference internal" href="../overview/tasks_services.html#compute-tags"><span class="std std-ref">Compute tags</span></a>.</p>
+<p>A record’s tag can be changed after the fact with
+<a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.modify_records" title="qcportal.client.PortalClient.modify_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">modify_records()</span></code></a>.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">118326390</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">compute_tag</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">required_programs</span><span class="p">)</span>
+<span class="go">big_mem [&#39;psi4&#39;, &#39;qcengine&#39;]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">modify_records</span><span class="p">(</span><span class="mi">118326390</span><span class="p">,</span> <span class="n">new_compute_tag</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p><a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.query_active_managers" title="qcportal.client.PortalClient.query_active_managers"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_active_managers()</span></code></a> answers the same question ahead of
+time - given a tag and a set of programs, which managers could take such a task.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-3">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">query_active_managers</span><span class="p">(</span><span class="n">compute_tag</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;big_mem&#39;</span><span class="p">],</span> <span class="n">programs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;psi4&#39;</span><span class="p">:</span> <span class="p">[]})</span>
+<span class="go">[]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">query_active_managers</span><span class="p">(</span><span class="n">compute_tag</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;*&#39;</span><span class="p">],</span> <span class="n">programs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;psi4&#39;</span><span class="p">:</span> <span class="p">[]})</span>
+<span class="go">[&#39;test_cluster-a_host2-8765-4321&#39;]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">get_waiting_reason</span></code> only considers managers the server currently regards as <em>active</em>. A
+manager that has stopped reporting in is eventually marked inactive, and any tasks it had
+claimed are returned to <code class="docutils literal notranslate"><span class="pre">waiting</span></code> to be claimed by someone else.</p>
+</div>
+</section>
+<section id="a-record-has-an-error">
+<span id="troubleshooting-errors"></span><h2>A record has an error<a class="headerlink" href="#a-record-has-an-error" title="Link to this heading">#</a></h2>
+<p>A record with a status of <code class="docutils literal notranslate"><span class="pre">error</span></code> ran and failed. The details are on the record itself.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.error" title="qcportal.record_models.BaseRecord.error"><code class="xref py py-attr docutils literal notranslate"><span class="pre">error</span></code></a> - a dictionary with <code class="docutils literal notranslate"><span class="pre">error_type</span></code> and
+<code class="docutils literal notranslate"><span class="pre">error_message</span></code>. Usually the most useful thing to read</p></li>
+<li><p><a class="reference internal" href="qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.stdout" title="qcportal.record_models.BaseRecord.stdout"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stdout</span></code></a> - the program’s output, if it was stored</p></li>
+<li><p><a class="reference internal" href="qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.stderr" title="qcportal.record_models.BaseRecord.stderr"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stderr</span></code></a> - anything written to stderr</p></li>
+</ul>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">118326390</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+<span class="go">RecordStatusEnum.error</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">error</span><span class="p">[</span><span class="s2">&quot;error_type&quot;</span><span class="p">])</span>
+<span class="go">unknown_error</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">error</span><span class="p">[</span><span class="s2">&quot;error_message&quot;</span><span class="p">])</span>
+<span class="go">QCEngine Unknown Error:</span>
+<span class="go">...</span>
+<span class="go">psi4.driver.p4util.exceptions.SCFConvergenceError: Could not converge SCF iterations in 200 iterations.</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>A record may have been attempted more than once. Each attempt is an entry in
+<a class="reference internal" href="qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.compute_history" title="qcportal.record_models.BaseRecord.compute_history"><code class="xref py py-attr docutils literal notranslate"><span class="pre">compute_history</span></code></a>, and the top-level <code class="docutils literal notranslate"><span class="pre">error</span></code>,
+<code class="docutils literal notranslate"><span class="pre">stdout</span></code>, and <code class="docutils literal notranslate"><span class="pre">stderr</span></code> reflect the most recent one. Earlier entries are useful when a record has
+been reset and failed differently each time, and the <code class="docutils literal notranslate"><span class="pre">manager_name</span></code> on each entry tells you
+<em>where</em> it failed - a program failing on one cluster but not another is a strong signal.
+See <a class="reference internal" href="records/base.html"><span class="doc">Base Record</span></a>.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">compute_history</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">modified_on</span><span class="p">,</span> <span class="n">h</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">h</span><span class="o">.</span><span class="n">manager_name</span><span class="p">)</span>
+<span class="go">2026-04-19 15:14:31.128937+00:00 RecordStatusEnum.error test_cluster-a_host1-1234-5678</span>
+<span class="go">2026-04-21 09:02:11.551204+00:00 RecordStatusEnum.error test_cluster-a_host2-8765-4321</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>To find the errored records among many, query by status, or use a dataset’s status methods.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-6">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">query_records</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">record_type</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">error</span><span class="p">[</span><span class="s2">&quot;error_type&quot;</span><span class="p">])</span>
+<span class="go">118326390 singlepoint unknown_error</span>
+<span class="go">118326404 optimization compute_error</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Within a dataset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">377</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">print_status</span><span class="p">()</span>
+<span class="go">  specification    complete    error</span>
+<span class="go">---------------  ----------  -------</span>
+<span class="go"> b3lyp/def2-svp          18        2</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>If an error looks transient - a node failure, a network problem, a queue timeout - reset the record
+to run it again with <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.reset_records" title="qcportal.client.PortalClient.reset_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset_records()</span></code></a>. A server may also be
+configured to reset errored records automatically; see
+<a class="reference internal" href="../admin_guide/configuration.html#server-configuration-autoreset-error"><span class="std std-ref">Automatic resets (auto_reset)</span></a>.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-7">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">reset_records</span><span class="p">(</span><span class="mi">118326390</span><span class="p">)</span>
+<span class="go">UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>If an error is <em>not</em> transient - an unknown method, a basis set the program does not have, a
+molecule that will never converge - resetting will just fail again. Fix the specification and
+submit a new record instead.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A compute manager disappearing does not normally produce an <code class="docutils literal notranslate"><span class="pre">error</span></code>. Those records go back to
+<code class="docutils literal notranslate"><span class="pre">waiting</span></code> instead, and there is nothing to reset.</p>
+</div>
+</section>
+<section id="a-service-is-not-progressing">
+<span id="troubleshooting-service"></span><h2>A service is not progressing<a class="headerlink" href="#a-service-is-not-progressing" title="Link to this heading">#</a></h2>
+<p>A <a class="reference internal" href="../overview/glossary.html#glossary-service"><span class="std std-ref">service</span></a> - a torsiondrive, gridoptimization, NEB, manybody, or reaction
+record - is iterated by the server rather than claimed by a manager, so
+<a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.get_waiting_reason" title="qcportal.client.PortalClient.get_waiting_reason"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_waiting_reason()</span></code></a> will only tell you
+<code class="docutils literal notranslate"><span class="pre">Record</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">service</span></code>. See <a class="reference internal" href="../overview/tasks_services.html"><span class="doc">Tasks and Services</span></a>.</p>
+<p>A service alternates between waiting on the records it created and iterating. The usual reason it
+appears stalled is that one of those dependencies is itself stuck or errored.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-8">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">118326390</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">is_service</span><span class="p">)</span>
+<span class="go">True</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># What is it waiting on?</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dep_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">record_id</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">service</span><span class="o">.</span><span class="n">dependencies</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="n">dep_ids</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">dep</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+<span class="go">118326391 RecordStatusEnum.complete</span>
+<span class="go">118326392 RecordStatusEnum.error</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Once a stuck dependency is dealt with, the service will pick up again on its next iteration.
+Services also write progress to <a class="reference internal" href="qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.stdout" title="qcportal.record_models.BaseRecord.stdout"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stdout</span></code></a> as they run,
+which is worth reading - unlike task-based records, this is updated while the record is still
+running.</p>
+<p>Two server settings limit how quickly services iterate: <code class="docutils literal notranslate"><span class="pre">max_active_services</span></code> caps how many run
+at once, and <code class="docutils literal notranslate"><span class="pre">service_frequency</span></code> sets how often the server looks for services to iterate. On a
+busy server a service may simply be queued behind others. See <a class="reference internal" href="../admin_guide/configuration.html#server-configuration"><span class="std std-ref">Server Configuration</span></a>.</p>
+</section>
+<section id="the-client-cannot-reach-the-server">
+<span id="troubleshooting-connection"></span><h2>The client cannot reach the server<a class="headerlink" href="#the-client-cannot-reach-the-server" title="Link to this heading">#</a></h2>
+<p>Failed requests raise <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client_base.PortalRequestError" title="qcportal.client_base.PortalRequestError"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalRequestError</span></code></a>, which carries the HTTP
+status code and the server’s message.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-9">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalRequestError</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">PortalRequestError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span>
+<span class="go">404</span>
+<span class="go">Request failed: Could not find record with id 1</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Common cases:</p>
+<ul class="simple">
+<li><p><strong>401 / 403</strong> - not logged in, or the role does not permit the operation. Check the username and
+password in use, and see <a class="reference internal" href="../overview/users_groups.html#overview-roles"><span class="std std-ref">Roles</span></a> for what each role allows</p></li>
+<li><p><strong>404</strong> - the record, dataset, or project does not exist. Many client methods accept
+<code class="docutils literal notranslate"><span class="pre">missing_ok=True</span></code> to return <code class="docutils literal notranslate"><span class="pre">None</span></code> instead of raising</p></li>
+<li><p><strong>400</strong> - the server rejected the request. The message is usually specific</p></li>
+<li><p><strong>500</strong> - an internal server error. See <a class="reference internal" href="#troubleshooting-server-errors"><span class="std std-ref">Internal server errors</span></a></p></li>
+</ul>
+<p>If the connection fails outright rather than returning a status code, the address or the
+credentials are the place to start. <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.get_server_information" title="qcportal.client.PortalClient.get_server_information"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_server_information()</span></code></a>
+is a cheap way to confirm you are talking to the server you think you are.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-10" name="sd-tab-set-10" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-10">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+<span class="go">https://ml.qcarchive.molssi.org/</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">info</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_server_information</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">])</span>
+<span class="go">0.65</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>See <a class="reference internal" href="client_setup.html"><span class="doc">QCPortal Installation &amp; Setup</span></a> and <a class="reference internal" href="connecting_qcportal.html"><span class="doc">Connecting to a server</span></a> for how the address and credentials are
+resolved, including from configuration files and environment variables.</p>
+</section>
+<section id="retrieval-is-slow">
+<span id="troubleshooting-slow"></span><h2>Retrieval is slow<a class="headerlink" href="#retrieval-is-slow" title="Link to this heading">#</a></h2>
+<p>Repeatedly fetching the same records is the most common cause of a slow script.</p>
+<ul class="simple">
+<li><p>Enable an on-disk cache by passing <code class="docutils literal notranslate"><span class="pre">cache_dir</span></code> to the
+<a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a> constructor. Records and datasets are then reused
+across runs instead of being downloaded again. See <a class="reference internal" href="datasets/caching.html"><span class="doc">Caching &amp; Views</span></a></p></li>
+<li><p>Fetch in bulk. <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.get_records" title="qcportal.client.PortalClient.get_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_records()</span></code></a> takes a list of IDs and
+retrieves them in one request; a loop of single-ID calls does one request each</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">include=['**']</span></code> when you know you will need all of a record’s data, so it arrives in the
+initial fetch rather than as a separate request per field later</p></li>
+<li><p>For a finished dataset, a <a class="reference internal" href="datasets/caching.html#dataset-views"><span class="std std-ref">view</span></a> is a single local file with no server
+round-trips at all</p></li>
+</ul>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Queries return an <a class="reference internal" href="query_iterators.html"><span class="doc">iterator</span></a>, not a list, and fetch in batches as you
+iterate. Calling <code class="docutils literal notranslate"><span class="pre">list()</span></code> on a query with no <code class="docutils literal notranslate"><span class="pre">limit</span></code> will try to pull everything.</p>
+</div>
+</section>
+<section id="internal-server-errors">
+<span id="troubleshooting-server-errors"></span><h2>Internal server errors<a class="headerlink" href="#internal-server-errors" title="Link to this heading">#</a></h2>
+<p>Errors inside the server itself are recorded in a separate log from record errors. By default the
+server does not show the details to users - the <code class="docutils literal notranslate"><span class="pre">hide_internal_errors</span></code> setting - and instead
+returns an error ID to quote to an administrator. See <a class="reference internal" href="../admin_guide/configuration.html#server-configuration"><span class="std std-ref">Server Configuration</span></a>.</p>
+<p>Users with sufficient permissions can read that log with
+<a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.query_error_log" title="qcportal.client.PortalClient.query_error_log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_error_log()</span></code></a>.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-11" name="sd-tab-set-11" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-11">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">query_error_log</span><span class="p">(</span><span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">error_date</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">request_path</span><span class="p">)</span>
+<span class="go">12 2026-08-01 14:22:03.118293+00:00 ben /api/v1/records/bulkGet?</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Or look up the ID a user was given</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">entry</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">query_error_log</span><span class="p">(</span><span class="n">error_id</span><span class="o">=</span><span class="mi">12</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">error_text</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Entries are <a class="reference internal" href="qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogEntry" title="qcportal.serverinfo.models.ErrorLogEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">ErrorLogEntry</span></code></a> objects, and the query can be
+filtered by <code class="docutils literal notranslate"><span class="pre">error_id</span></code>, <code class="docutils literal notranslate"><span class="pre">user</span></code>, <code class="docutils literal notranslate"><span class="pre">before</span></code>, and <code class="docutils literal notranslate"><span class="pre">after</span></code>. Old entries are removed with
+<a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.delete_error_log" title="qcportal.client.PortalClient.delete_error_log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_error_log()</span></code></a>, which takes a cutoff date and returns the
+number deleted.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-12" name="sd-tab-set-12" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-12">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">delete_error_log</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2026</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">41</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="troubleshooting-api">
+<h2>Troubleshooting API<a class="headerlink" href="#troubleshooting-api" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>PortalClient methods</p>
+<ul>
+<li><p><a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.get_waiting_reason" title="qcportal.client.PortalClient.get_waiting_reason"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_waiting_reason()</span></code></a></p></li>
+<li><p><a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.query_managers" title="qcportal.client.PortalClient.query_managers"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_managers()</span></code></a></p></li>
+<li><p><a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.query_active_managers" title="qcportal.client.PortalClient.query_active_managers"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_active_managers()</span></code></a></p></li>
+<li><p><a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.reset_records" title="qcportal.client.PortalClient.reset_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset_records()</span></code></a></p></li>
+<li><p><a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.modify_records" title="qcportal.client.PortalClient.modify_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">modify_records()</span></code></a></p></li>
+<li><p><a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.get_server_information" title="qcportal.client.PortalClient.get_server_information"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_server_information()</span></code></a></p></li>
+<li><p><a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.query_error_log" title="qcportal.client.PortalClient.query_error_log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query_error_log()</span></code></a></p></li>
+<li><p><a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.delete_error_log" title="qcportal.client.PortalClient.delete_error_log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_error_log()</span></code></a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.get_waiting_reason" title="qcportal.record_models.BaseRecord.get_waiting_reason"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_waiting_reason()</span></code></a></p></li>
+<li><p><a class="reference internal" href="qcportal_reference/clients.html#qcportal.client_base.PortalRequestError" title="qcportal.client_base.PortalRequestError"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalRequestError</span></code></a></p></li>
+<li><p><a class="reference internal" href="qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogEntry" title="qcportal.serverinfo.models.ErrorLogEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">ErrorLogEntry</span></code></a></p></li>
+</ul>
+</section>
 </section>
 
 
@@ -571,6 +957,24 @@
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-record-is-stuck-in-waiting">A record is stuck in “waiting”</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-record-has-an-error">A record has an error</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-service-is-not-progressing">A service is not progressing</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-client-cannot-reach-the-server">The client cannot reach the server</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#retrieval-is-slow">Retrieval is slow</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#internal-server-errors">Internal server errors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting-api">Troubleshooting API</a></li>
+</ul>
+  </nav></div>
 
   <div class="sidebar-secondary-item">
 

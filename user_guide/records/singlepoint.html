@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Base Record" href="base.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -436,6 +436,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/attachments.html">Attachments</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../projects/index.html">Projects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../projects/records.html">Records in a Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../projects/datasets.html">Datasets in a Project</a></li>
+</ul>
+</details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Record &amp; Computation Types</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="base.html">Base Record</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Singlepoint calculations</a></li>
@@ -452,6 +457,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/auth.html">Authentication and User Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/base_models.html">Base Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/projects.html">Projects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/metadata_models.html">Metadata Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/tasks_services.html">Tasks and Services</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qcportal_reference/internal_jobs.html">Internal Jobs</a></li>
@@ -560,7 +566,7 @@ a <a class="reference internal" href="../qcportal_reference/records/singlepoint.
 </ul>
 <p>Protocols control additional flags for the computation. For singlepoint calculations, this includes whether
 to save the raw outputs, wavefunction, or native files.</p>
-<p>See the the <code class="xref py py-class docutils literal notranslate"><span class="pre">SinglepointProtocols</span></code> API
+<p>See the <a class="reference internal" href="../qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointProtocols" title="qcportal.singlepoint.record_models.SinglepointProtocols"><code class="xref py py-class docutils literal notranslate"><span class="pre">SinglepointProtocols</span></code></a> API
 documentation for more information.</p>
 <p><a class="reference internal" href="../qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.QCSpecification" title="qcportal.singlepoint.record_models.QCSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">QCSpecification</span></code></a> objects can be created manually (for example,
 when adding to datasets).</p>
@@ -750,16 +756,27 @@ will have the same name and metadata as in the source dataset, however will cont
 molecules from the records for the given specification. If a particular record is not complete,
 the given entry will not be added.</p>
 <p>If an entry with the same name already exists, it will be ignored.</p>
+<p>All arguments to this method are keyword-only. The source dataset is identified either by
+<code class="docutils literal notranslate"><span class="pre">dataset_id</span></code>, or by both <code class="docutils literal notranslate"><span class="pre">dataset_type</span></code> and <code class="docutils literal notranslate"><span class="pre">dataset_name</span></code> together.</p>
+<p>Copying from another singlepoint dataset preserves the entries’ <code class="docutils literal notranslate"><span class="pre">additional_keywords</span></code>. Copying from
+an optimization dataset resets them to an empty dictionary, since an optimization entry has none.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-7">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span> <span class="s2">&quot;Dataset from optimization&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_entries_from</span><span class="p">(</span><span class="mi">377</span><span class="p">,</span> <span class="s1">&#39;default&#39;</span><span class="p">)</span> <span class="c1"># from an optimization dataset</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># From an optimization dataset, identified by ID</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_entries_from</span><span class="p">(</span><span class="n">dataset_id</span><span class="o">=</span><span class="mi">377</span><span class="p">,</span> <span class="n">specification_name</span><span class="o">=</span><span class="s1">&#39;default&#39;</span><span class="p">)</span>
 <span class="go">InsertCountsMetadata(n_inserted=20, n_existing=0, error_description=None, errors=[])</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">entry_names</span><span class="p">)</span>
 <span class="go">[&#39;000280960&#39;, &#39;000524682&#39;, &#39;010464300&#39;, ...</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The source may also be given by type and name</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_entries_from</span><span class="p">(</span><span class="n">dataset_type</span><span class="o">=</span><span class="s1">&#39;optimization&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                    <span class="n">dataset_name</span><span class="o">=</span><span class="s1">&#39;Diatomic geometries&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                    <span class="n">specification_name</span><span class="o">=</span><span class="s1">&#39;default&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -844,7 +861,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_singlepoints</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span>
                                    <span class="n">created_after</span><span class="o">=</span><span class="s1">&#39;2024-03-21 12:34:56&#39;</span><span class="p">,</span>
-                                   <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;**&#39;</span><span class="p">])</span>
+                                   <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;**&#39;</span><span class="p">],</span>
                                    <span class="n">limit</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
@@ -882,7 +899,7 @@ PYTHON</label><div class="sd-tab-content docutils">
                                     <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span>
                                     <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span>
                                     <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">,</span>
-                                    <span class="n">keywords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;scf_type&#39;</span><span class="p">:</span> <span class="s1">&#39;df&#39;</span><span class="p">}</span>
+                                    <span class="n">keywords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;scf_type&#39;</span><span class="p">:</span> <span class="s1">&#39;df&#39;</span><span class="p">})</span>
 </pre></div>
 </div>
 </div>

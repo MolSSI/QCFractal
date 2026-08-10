@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Server Information" href="serverinfo.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -436,6 +436,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/attachments.html">Attachments</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../projects/index.html">Projects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../projects/records.html">Records in a Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../projects/datasets.html">Datasets in a Project</a></li>
+</ul>
+</details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../records/base.html">Base Record</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../records/singlepoint.html">Singlepoint calculations</a></li>
@@ -452,6 +457,7 @@
 <li class="toctree-l2"><a class="reference internal" href="auth.html">Authentication and User Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="base_models.html">Base Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="projects.html">Projects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="metadata_models.html">Metadata Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tasks_services.html">Tasks and Services</a></li>
 <li class="toctree-l2"><a class="reference internal" href="internal_jobs.html">Internal Jobs</a></li>
@@ -536,8 +542,8 @@
 <span id="managers"></span><h1>Managers<a class="headerlink" href="#module-qcportal.managers.models" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerStatusEnum">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ManagerStatusEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerStatusEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerStatusEnum" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ManagerStatusEnum</span></span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerStatusEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerStatusEnum" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
 <p>The state of a Queue Manager. The states which are available are a finite set.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerStatusEnum.active">
@@ -549,44 +555,58 @@
 <span class="sig-name descname"><span class="pre">inactive</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'inactive'</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerStatusEnum.inactive" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerStatusEnum.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.managers.models.ManagerStatusEnum.__init__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerName">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ManagerName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hostname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uuid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerName" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>cluster</strong> (<em>str</em>)</p></li>
-<li><p><strong>hostname</strong> (<em>str</em>)</p></li>
-<li><p><strong>uuid</strong> (<em>str</em>)</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.managers.models.ManagerName.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid'}</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerName.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ManagerName</span></span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerName" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/base_model/#pydantic.BaseModel" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
+<div class="pst-scrollable-table-container"><table class="table" id="id1">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id1" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerName.cluster" title="qcportal.managers.models.ManagerName.cluster"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cluster</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerName.hostname" title="qcportal.managers.models.ManagerName.hostname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hostname</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerName.uuid" title="qcportal.managers.models.ManagerName.uuid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uuid</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerName.cluster">
-<span class="sig-name descname"><span class="pre">cluster</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerName.cluster" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">cluster</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerName.cluster" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerName.hostname">
-<span class="sig-name descname"><span class="pre">hostname</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerName.hostname" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">hostname</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerName.hostname" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerName.uuid">
-<span class="sig-name descname"><span class="pre">uuid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerName.uuid" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">uuid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerName.uuid" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -598,111 +618,184 @@ validated to form a valid model.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ComputeManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hostname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">claimed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">successes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">failures</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rejected</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_cpu_hours</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_cores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_memory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_on</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modified_on</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manager_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">programs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ComputeManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ComputeManager" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>int</em>)</p></li>
-<li><p><strong>name</strong> (<em>str</em>)</p></li>
-<li><p><strong>cluster</strong> (<em>str</em>)</p></li>
-<li><p><strong>hostname</strong> (<em>str</em>)</p></li>
-<li><p><strong>username</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>compute_tags</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
-<li><p><strong>claimed</strong> (<em>int</em>)</p></li>
-<li><p><strong>successes</strong> (<em>int</em>)</p></li>
-<li><p><strong>failures</strong> (<em>int</em>)</p></li>
-<li><p><strong>rejected</strong> (<em>int</em>)</p></li>
-<li><p><strong>total_cpu_hours</strong> (<em>float</em>)</p></li>
-<li><p><strong>active_tasks</strong> (<em>int</em>)</p></li>
-<li><p><strong>active_cores</strong> (<em>int</em>)</p></li>
-<li><p><strong>active_memory</strong> (<em>float</em>)</p></li>
-<li><p><strong>status</strong> (<a class="reference internal" href="#qcportal.managers.models.ManagerStatusEnum" title="qcportal.managers.models.ManagerStatusEnum"><em>ManagerStatusEnum</em></a>)</p></li>
-<li><p><strong>created_on</strong> (<em>datetime</em>)</p></li>
-<li><p><strong>modified_on</strong> (<em>datetime</em>)</p></li>
-<li><p><strong>manager_version</strong> (<em>str</em>)</p></li>
-<li><p><strong>programs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>)</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid'}</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ComputeManager</span></span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ComputeManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ComputeManager" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/base_model/#pydantic.BaseModel" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
+<div class="pst-scrollable-table-container"><table class="table" id="id2">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id2" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.active_cores" title="qcportal.managers.models.ComputeManager.active_cores"><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_cores</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.active_memory" title="qcportal.managers.models.ComputeManager.active_memory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_memory</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.active_tasks" title="qcportal.managers.models.ComputeManager.active_tasks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_tasks</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.claimed" title="qcportal.managers.models.ComputeManager.claimed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">claimed</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.cluster" title="qcportal.managers.models.ComputeManager.cluster"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cluster</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.compute_tags" title="qcportal.managers.models.ComputeManager.compute_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tags</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.created_on" title="qcportal.managers.models.ComputeManager.created_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">created_on</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.failures" title="qcportal.managers.models.ComputeManager.failures"><code class="xref py py-obj docutils literal notranslate"><span class="pre">failures</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.hostname" title="qcportal.managers.models.ComputeManager.hostname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hostname</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.id" title="qcportal.managers.models.ComputeManager.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.manager_version" title="qcportal.managers.models.ComputeManager.manager_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">manager_version</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.modified_on" title="qcportal.managers.models.ComputeManager.modified_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_on</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.name" title="qcportal.managers.models.ComputeManager.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.programs" title="qcportal.managers.models.ComputeManager.programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">programs</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.rejected" title="qcportal.managers.models.ComputeManager.rejected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rejected</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.status" title="qcportal.managers.models.ComputeManager.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span></code></a></p></td>
+<td><p><a class="reference internal" href="#qcportal.managers.models.ManagerStatusEnum" title="qcportal.managers.models.ManagerStatusEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManagerStatusEnum</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.successes" title="qcportal.managers.models.ComputeManager.successes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">successes</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.total_cpu_hours" title="qcportal.managers.models.ComputeManager.total_cpu_hours"><code class="xref py py-obj docutils literal notranslate"><span class="pre">total_cpu_hours</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ComputeManager.username" title="qcportal.managers.models.ComputeManager.username"><code class="xref py py-obj docutils literal notranslate"><span class="pre">username</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.id">
-<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.id" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.name">
-<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.cluster">
-<span class="sig-name descname"><span class="pre">cluster</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.cluster" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">cluster</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.cluster" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.hostname">
-<span class="sig-name descname"><span class="pre">hostname</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.hostname" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">hostname</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.hostname" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.username">
-<span class="sig-name descname"><span class="pre">username</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.username" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">username</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.username" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.compute_tags">
-<span class="sig-name descname"><span class="pre">compute_tags</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.compute_tags" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">compute_tags</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.compute_tags" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.claimed">
-<span class="sig-name descname"><span class="pre">claimed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.claimed" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">claimed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.claimed" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.successes">
-<span class="sig-name descname"><span class="pre">successes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.successes" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">successes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.successes" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.failures">
-<span class="sig-name descname"><span class="pre">failures</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.failures" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">failures</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.failures" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.rejected">
-<span class="sig-name descname"><span class="pre">rejected</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.rejected" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">rejected</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.rejected" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.total_cpu_hours">
-<span class="sig-name descname"><span class="pre">total_cpu_hours</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.total_cpu_hours" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">total_cpu_hours</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.total_cpu_hours" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.active_tasks">
-<span class="sig-name descname"><span class="pre">active_tasks</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.active_tasks" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">active_tasks</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.active_tasks" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.active_cores">
-<span class="sig-name descname"><span class="pre">active_cores</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.active_cores" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">active_cores</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.active_cores" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.active_memory">
-<span class="sig-name descname"><span class="pre">active_memory</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.active_memory" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">active_memory</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.active_memory" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -712,22 +805,22 @@ validated to form a valid model.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.created_on">
-<span class="sig-name descname"><span class="pre">created_on</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.created_on" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">created_on</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><span class="pre">datetime</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.created_on" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.modified_on">
-<span class="sig-name descname"><span class="pre">modified_on</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.modified_on" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">modified_on</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><span class="pre">datetime</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.modified_on" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.manager_version">
-<span class="sig-name descname"><span class="pre">manager_version</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.manager_version" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">manager_version</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.manager_version" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.programs">
-<span class="sig-name descname"><span class="pre">programs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.programs" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">programs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.programs" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -735,14 +828,14 @@ validated to form a valid model.</p>
 <span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ComputeManager.propagate_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ComputeManager.propagate_client" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>base_url_prefix</strong> (<em>str</em><em> | </em><em>None</em>)</p>
+<dd class="field-odd"><p><strong>base_url_prefix</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.managers.models.ComputeManager.tags">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">tags</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.tags" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">tags</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.managers.models.ComputeManager.tags" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -767,47 +860,105 @@ validated to form a valid model.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ManagerActivationBody</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manager_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">programs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerActivationBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ManagerActivationBody</span></span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerActivationBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name_data</strong> (<a class="reference internal" href="#qcportal.managers.models.ManagerName" title="qcportal.managers.models.ManagerName"><em>ManagerName</em></a>)</p></li>
-<li><p><strong>manager_version</strong> (<em>str</em>)</p></li>
-<li><p><strong>username</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>programs</strong> (<em>dict</em><em>[</em><em>Annotated</em><em>[</em><em>str</em><em>, </em><em>StringConstraints</em><em>(</em><em>strip_whitespace=None</em><em>, </em><em>to_upper=None</em><em>, </em><em>to_lower=True</em><em>, </em><em>strict=None</em><em>, </em><em>min_length=None</em><em>, </em><em>max_length=None</em><em>, </em><em>pattern=None</em><em>, </em><em>ascii_only=None</em><em>)</em><em>]</em><em>, </em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>)</p></li>
-<li><p><strong>compute_tags</strong> (<em>list</em><em>[</em><em>Annotated</em><em>[</em><em>str</em><em>, </em><em>StringConstraints</em><em>(</em><em>strip_whitespace=None</em><em>, </em><em>to_upper=None</em><em>, </em><em>to_lower=True</em><em>, </em><em>strict=None</em><em>, </em><em>min_length=None</em><em>, </em><em>max_length=None</em><em>, </em><em>pattern=None</em><em>, </em><em>ascii_only=None</em><em>)</em><em>]</em><em>]</em>)</p></li>
-</ul>
-</dd>
-</dl>
+<div class="pst-scrollable-table-container"><table class="table" id="id3">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id3" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.compute_tags" title="qcportal.managers.models.ManagerActivationBody.compute_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tags</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Annotated</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringConstraints</span></code></a>(strip_whitespace=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, to_upper=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, to_lower=True, strict=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, min_length=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, max_length=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, pattern=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, ascii_only=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>)]]</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.manager_version" title="qcportal.managers.models.ManagerActivationBody.manager_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">manager_version</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.name_data" title="qcportal.managers.models.ManagerActivationBody.name_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name_data</span></code></a></p></td>
+<td><p><a class="reference internal" href="#qcportal.managers.models.ManagerName" title="qcportal.managers.models.ManagerName"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManagerName</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.programs" title="qcportal.managers.models.ManagerActivationBody.programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">programs</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Annotated</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringConstraints</span></code></a>(strip_whitespace=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, to_upper=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, to_lower=True, strict=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, min_length=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, max_length=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, pattern=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, ascii_only=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>)], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.username" title="qcportal.managers.models.ManagerActivationBody.username"><code class="xref py py-obj docutils literal notranslate"><span class="pre">username</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table" id="id4">
+<caption><span class="caption-text">Validators</span><a class="headerlink" href="#id4" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Validator</p></th>
+<th class="head"><p>Mode</p></th>
+<th class="head"><p>Fields</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.validate_programs" title="qcportal.managers.models.ManagerActivationBody.validate_programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_programs</span></code></a></p></td>
+<td><p>after</p></td>
+<td><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.programs" title="qcportal.managers.models.ManagerActivationBody.programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">programs</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.validate_tags" title="qcportal.managers.models.ManagerActivationBody.validate_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_tags</span></code></a></p></td>
+<td><p>after</p></td>
+<td><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.compute_tags" title="qcportal.managers.models.ManagerActivationBody.compute_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tags</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.name_data">
 <span class="sig-name descname"><span class="pre">name_data</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.managers.models.ManagerName" title="qcportal.managers.models.ManagerName"><span class="pre">ManagerName</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.name_data" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Name information about this manager</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.manager_version">
-<span class="sig-name descname"><span class="pre">manager_version</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.manager_version" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">manager_version</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.manager_version" title="Link to this definition">#</a></dt>
+<dd><p>Version of the manager itself</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.username">
-<span class="sig-name descname"><span class="pre">username</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.username" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">username</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.username" title="Link to this definition">#</a></dt>
+<dd><p>Username this manager is connected with</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.programs">
-<span class="sig-name descname"><span class="pre">programs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">StringConstraints</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strip_whitespace</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_upper</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ascii_only</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.programs" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">programs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="(in Python v3.14)"><span class="pre">Annotated</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><span class="pre">StringConstraints</span></a><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strip_whitespace</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_upper</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ascii_only</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.programs" title="Link to this definition">#</a></dt>
+<dd><p>Programs available on this manager</p>
+<dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.validate_programs" title="qcportal.managers.models.ManagerActivationBody.validate_programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_programs</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.compute_tags">
-<span class="sig-name descname"><span class="pre">compute_tags</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">StringConstraints</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strip_whitespace</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_upper</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ascii_only</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.compute_tags" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">compute_tags</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="(in Python v3.14)"><span class="pre">Annotated</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><span class="pre">StringConstraints</span></a><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strip_whitespace</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_upper</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ascii_only</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.compute_tags" title="Link to this definition">#</a></dt>
+<dd><p>Tags this manager will compute for</p>
+<dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#qcportal.managers.models.ManagerActivationBody.validate_tags" title="qcportal.managers.models.ManagerActivationBody.validate_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_tags</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.validate_tags">
@@ -819,33 +970,50 @@ validated to form a valid model.</p>
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">validate_programs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerActivationBody.validate_programs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.validate_programs" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.managers.models.ManagerActivationBody.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerActivationBody.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerUpdateBody">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ManagerUpdateBody</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_cores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_memory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_cpu_hours</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerUpdateBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ManagerUpdateBody</span></span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerUpdateBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>status</strong> (<a class="reference internal" href="#qcportal.managers.models.ManagerStatusEnum" title="qcportal.managers.models.ManagerStatusEnum"><em>ManagerStatusEnum</em></a>)</p></li>
-<li><p><strong>active_tasks</strong> (<em>int</em>)</p></li>
-<li><p><strong>active_cores</strong> (<em>int</em>)</p></li>
-<li><p><strong>active_memory</strong> (<em>float</em>)</p></li>
-<li><p><strong>total_cpu_hours</strong> (<em>float</em>)</p></li>
-</ul>
-</dd>
-</dl>
+<div class="pst-scrollable-table-container"><table class="table" id="id5">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id5" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerUpdateBody.active_cores" title="qcportal.managers.models.ManagerUpdateBody.active_cores"><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_cores</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerUpdateBody.active_memory" title="qcportal.managers.models.ManagerUpdateBody.active_memory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_memory</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerUpdateBody.active_tasks" title="qcportal.managers.models.ManagerUpdateBody.active_tasks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_tasks</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerUpdateBody.status" title="qcportal.managers.models.ManagerUpdateBody.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span></code></a></p></td>
+<td><p><a class="reference internal" href="#qcportal.managers.models.ManagerStatusEnum" title="qcportal.managers.models.ManagerStatusEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManagerStatusEnum</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerUpdateBody.total_cpu_hours" title="qcportal.managers.models.ManagerUpdateBody.total_cpu_hours"><code class="xref py py-obj docutils literal notranslate"><span class="pre">total_cpu_hours</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerUpdateBody.status">
 <span class="sig-name descname"><span class="pre">status</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#qcportal.managers.models.ManagerStatusEnum" title="qcportal.managers.models.ManagerStatusEnum"><span class="pre">ManagerStatusEnum</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody.status" title="Link to this definition">#</a></dt>
@@ -853,102 +1021,157 @@ validated to form a valid model.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerUpdateBody.active_tasks">
-<span class="sig-name descname"><span class="pre">active_tasks</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody.active_tasks" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">active_tasks</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody.active_tasks" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerUpdateBody.active_cores">
-<span class="sig-name descname"><span class="pre">active_cores</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody.active_cores" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">active_cores</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody.active_cores" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerUpdateBody.active_memory">
-<span class="sig-name descname"><span class="pre">active_memory</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody.active_memory" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">active_memory</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody.active_memory" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerUpdateBody.total_cpu_hours">
-<span class="sig-name descname"><span class="pre">total_cpu_hours</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody.total_cpu_hours" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">total_cpu_hours</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody.total_cpu_hours" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.managers.models.ManagerUpdateBody.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerUpdateBody.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ManagerQueryFilters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cursor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manager_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hostname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modified_before</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modified_after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerQueryFilters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ManagerQueryFilters</span></span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerQueryFilters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.QueryProjModelBase" title="qcportal.base_models.QueryProjModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">QueryProjModelBase</span></code></a></p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>include</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>exclude</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>cursor</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>manager_id</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>name</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>cluster</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>hostname</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>status</strong> (<em>list</em><em>[</em><a class="reference internal" href="#qcportal.managers.models.ManagerStatusEnum" title="qcportal.managers.models.ManagerStatusEnum"><em>ManagerStatusEnum</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>modified_before</strong> (<em>datetime</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>modified_after</strong> (<em>datetime</em><em> | </em><em>None</em>)</p></li>
-</ul>
-</dd>
-</dl>
+<div class="pst-scrollable-table-container"><table class="table" id="id6">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id6" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.cluster" title="qcportal.managers.models.ManagerQueryFilters.cluster"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cluster</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.cursor" title="qcportal.managers.models.ManagerQueryFilters.cursor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cursor</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.exclude" title="qcportal.managers.models.ManagerQueryFilters.exclude"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exclude</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.hostname" title="qcportal.managers.models.ManagerQueryFilters.hostname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hostname</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.include" title="qcportal.managers.models.ManagerQueryFilters.include"><code class="xref py py-obj docutils literal notranslate"><span class="pre">include</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.limit" title="qcportal.managers.models.ManagerQueryFilters.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.manager_id" title="qcportal.managers.models.ManagerQueryFilters.manager_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">manager_id</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.modified_after" title="qcportal.managers.models.ManagerQueryFilters.modified_after"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_after</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.modified_before" title="qcportal.managers.models.ManagerQueryFilters.modified_before"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_before</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.name" title="qcportal.managers.models.ManagerQueryFilters.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.status" title="qcportal.managers.models.ManagerQueryFilters.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="#qcportal.managers.models.ManagerStatusEnum" title="qcportal.managers.models.ManagerStatusEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManagerStatusEnum</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table" id="id7">
+<caption><span class="caption-text">Validators</span><a class="headerlink" href="#id7" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Validator</p></th>
+<th class="head"><p>Mode</p></th>
+<th class="head"><p>Fields</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.parse_dates" title="qcportal.managers.models.ManagerQueryFilters.parse_dates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_dates</span></code></a></p></td>
+<td><p>before</p></td>
+<td><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.modified_before" title="qcportal.managers.models.ManagerQueryFilters.modified_before"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_before</span></code></a>, <a class="reference internal" href="#qcportal.managers.models.ManagerQueryFilters.modified_after" title="qcportal.managers.models.ManagerQueryFilters.modified_after"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_after</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="base_models.html#qcportal.base_models.QueryModelBase.validate_lists" title="qcportal.base_models.QueryModelBase.validate_lists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_lists</span></code></a></p></td>
+<td><p>before</p></td>
+<td><p><a class="reference internal" href="base_models.html#qcportal.base_models.QueryModelBase.limit" title="qcportal.base_models.QueryModelBase.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span></code></a>, <a class="reference internal" href="base_models.html#qcportal.base_models.QueryModelBase.cursor" title="qcportal.base_models.QueryModelBase.cursor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cursor</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.manager_id">
-<span class="sig-name descname"><span class="pre">manager_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.manager_id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">manager_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.manager_id" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.name">
-<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.cluster">
-<span class="sig-name descname"><span class="pre">cluster</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.cluster" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">cluster</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.cluster" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.hostname">
-<span class="sig-name descname"><span class="pre">hostname</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.hostname" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">hostname</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.hostname" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.status">
-<span class="sig-name descname"><span class="pre">status</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#qcportal.managers.models.ManagerStatusEnum" title="qcportal.managers.models.ManagerStatusEnum"><span class="pre">ManagerStatusEnum</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.status" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">status</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#qcportal.managers.models.ManagerStatusEnum" title="qcportal.managers.models.ManagerStatusEnum"><span class="pre">ManagerStatusEnum</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.status" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.modified_before">
-<span class="sig-name descname"><span class="pre">modified_before</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.modified_before" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">modified_before</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><span class="pre">datetime</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.modified_before" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.modified_after">
-<span class="sig-name descname"><span class="pre">modified_after</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.modified_after" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">modified_after</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><span class="pre">datetime</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.modified_after" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.parse_dates">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">parse_dates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerQueryFilters.parse_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.parse_dates" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryFilters.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryFilters.validate_lists">
@@ -979,46 +1202,60 @@ validated to form a valid model.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryAvailableFilters">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ManagerQueryAvailableFilters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">programs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerQueryAvailableFilters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryAvailableFilters" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ManagerQueryAvailableFilters</span></span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerQueryAvailableFilters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryAvailableFilters" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
-validated to form a valid model.</p>
-<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>compute_tag</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
-<li><p><strong>programs</strong> (<em>dict</em><em>[</em><em>Annotated</em><em>[</em><em>str</em><em>, </em><em>StringConstraints</em><em>(</em><em>strip_whitespace=None</em><em>, </em><em>to_upper=None</em><em>, </em><em>to_lower=True</em><em>, </em><em>strict=None</em><em>, </em><em>min_length=None</em><em>, </em><em>max_length=None</em><em>, </em><em>pattern=None</em><em>, </em><em>ascii_only=None</em><em>)</em><em>]</em><em>, </em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>)</p></li>
-</ul>
-</dd>
-</dl>
+<div class="pst-scrollable-table-container"><table class="table" id="id8">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id8" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryAvailableFilters.compute_tag" title="qcportal.managers.models.ManagerQueryAvailableFilters.compute_tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tag</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.managers.models.ManagerQueryAvailableFilters.programs" title="qcportal.managers.models.ManagerQueryAvailableFilters.programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">programs</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Annotated</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringConstraints</span></code></a>(strip_whitespace=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, to_upper=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, to_lower=True, strict=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, min_length=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, max_length=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, pattern=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, ascii_only=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>)], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryAvailableFilters.compute_tag">
-<span class="sig-name descname"><span class="pre">compute_tag</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryAvailableFilters.compute_tag" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">compute_tag</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryAvailableFilters.compute_tag" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryAvailableFilters.programs">
-<span class="sig-name descname"><span class="pre">programs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">StringConstraints</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strip_whitespace</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_upper</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ascii_only</span></span><span class="o"><span class="pre">=</span></span><span class="pre">None</span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryAvailableFilters.programs" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">programs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="(in Python v3.14)"><span class="pre">Annotated</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><span class="pre">StringConstraints</span></a><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strip_whitespace</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_upper</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ascii_only</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryAvailableFilters.programs" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryAvailableFilters.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryAvailableFilters.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryIterator">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ManagerQueryIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_filters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerQueryIterator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryIterator" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ManagerQueryIterator</span></span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerQueryIterator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryIterator" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.QueryIteratorBase" title="qcportal.base_models.QueryIteratorBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">QueryIteratorBase</span></code></a>[<a class="reference internal" href="#qcportal.managers.models.ComputeManager" title="qcportal.managers.models.ComputeManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">ComputeManager</span></code></a>]</p>
 <p>Iterator for manager queries</p>
 <p>This iterator transparently handles batching and pagination over the results
 of a manager query</p>
-<p>Construct an iterator</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryIterator.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryIterator.reset" title="Link to this definition">#</a></dt>
+<dd><p>Starts retrieval of results from the beginning again</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryIterator.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_filters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/managers/models.html#ManagerQueryIterator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.managers.models.ManagerQueryIterator.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Construct an iterator</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1027,10 +1264,6 @@ of a manager query</p>
 </ul>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="qcportal.managers.models.ManagerQueryIterator.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.managers.models.ManagerQueryIterator.reset" title="Link to this definition">#</a></dt>
-<dd><p>Starts retrieval of results from the beginning again</p>
 </dd></dl>
 
 </dd></dl>
@@ -1087,10 +1320,10 @@ of a manager query</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerStatusEnum"><code class="docutils literal notranslate"><span class="pre">ManagerStatusEnum</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerStatusEnum.active"><code class="docutils literal notranslate"><span class="pre">ManagerStatusEnum.active</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerStatusEnum.inactive"><code class="docutils literal notranslate"><span class="pre">ManagerStatusEnum.inactive</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerStatusEnum.__init__"><code class="docutils literal notranslate"><span class="pre">ManagerStatusEnum.__init__()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerName"><code class="docutils literal notranslate"><span class="pre">ManagerName</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerName.model_config"><code class="docutils literal notranslate"><span class="pre">ManagerName.model_config</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerName.cluster"><code class="docutils literal notranslate"><span class="pre">ManagerName.cluster</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerName.hostname"><code class="docutils literal notranslate"><span class="pre">ManagerName.hostname</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerName.uuid"><code class="docutils literal notranslate"><span class="pre">ManagerName.uuid</span></code></a></li>
@@ -1098,7 +1331,6 @@ of a manager query</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager"><code class="docutils literal notranslate"><span class="pre">ComputeManager</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.model_config"><code class="docutils literal notranslate"><span class="pre">ComputeManager.model_config</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.id"><code class="docutils literal notranslate"><span class="pre">ComputeManager.id</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.name"><code class="docutils literal notranslate"><span class="pre">ComputeManager.name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ComputeManager.cluster"><code class="docutils literal notranslate"><span class="pre">ComputeManager.cluster</span></code></a></li>
@@ -1131,7 +1363,6 @@ of a manager query</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.compute_tags"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.compute_tags</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.validate_tags"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.validate_tags()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.validate_programs"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.validate_programs()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerActivationBody.model_config"><code class="docutils literal notranslate"><span class="pre">ManagerActivationBody.model_config</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerUpdateBody"><code class="docutils literal notranslate"><span class="pre">ManagerUpdateBody</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
@@ -1140,7 +1371,6 @@ of a manager query</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerUpdateBody.active_cores"><code class="docutils literal notranslate"><span class="pre">ManagerUpdateBody.active_cores</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerUpdateBody.active_memory"><code class="docutils literal notranslate"><span class="pre">ManagerUpdateBody.active_memory</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerUpdateBody.total_cpu_hours"><code class="docutils literal notranslate"><span class="pre">ManagerUpdateBody.total_cpu_hours</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerUpdateBody.model_config"><code class="docutils literal notranslate"><span class="pre">ManagerUpdateBody.model_config</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
@@ -1152,7 +1382,6 @@ of a manager query</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.modified_before"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.modified_before</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.modified_after"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.modified_after</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.parse_dates"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.parse_dates()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.model_config"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.model_config</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.validate_lists"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.validate_lists()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.limit"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.limit</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryFilters.cursor"><code class="docutils literal notranslate"><span class="pre">ManagerQueryFilters.cursor</span></code></a></li>
@@ -1163,11 +1392,11 @@ of a manager query</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryAvailableFilters"><code class="docutils literal notranslate"><span class="pre">ManagerQueryAvailableFilters</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryAvailableFilters.compute_tag"><code class="docutils literal notranslate"><span class="pre">ManagerQueryAvailableFilters.compute_tag</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryAvailableFilters.programs"><code class="docutils literal notranslate"><span class="pre">ManagerQueryAvailableFilters.programs</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryAvailableFilters.model_config"><code class="docutils literal notranslate"><span class="pre">ManagerQueryAvailableFilters.model_config</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryIterator"><code class="docutils literal notranslate"><span class="pre">ManagerQueryIterator</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryIterator.reset"><code class="docutils literal notranslate"><span class="pre">ManagerQueryIterator.reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.managers.models.ManagerQueryIterator.__init__"><code class="docutils literal notranslate"><span class="pre">ManagerQueryIterator.__init__()</span></code></a></li>
 </ul>
 </li>
 </ul>

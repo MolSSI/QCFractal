@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=87bfacbb"></script>
+    <script src="../../_static/documentation_options.js?v=64b8918b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Metadata Models" href="metadata_models.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post93+ge3d7136d1" />
+  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -436,6 +436,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/attachments.html">Attachments</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../projects/index.html">Projects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../projects/records.html">Records in a Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../projects/datasets.html">Datasets in a Project</a></li>
+</ul>
+</details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../records/index.html">Record &amp; Computation Types</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../records/base.html">Base Record</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../records/singlepoint.html">Singlepoint calculations</a></li>
@@ -452,6 +457,7 @@
 <li class="toctree-l2"><a class="reference internal" href="auth.html">Authentication and User Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="base_models.html">Base Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="molecules.html">Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="projects.html">Projects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="metadata_models.html">Metadata Models</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Tasks and Services</a></li>
 <li class="toctree-l2"><a class="reference internal" href="internal_jobs.html">Internal Jobs</a></li>
@@ -532,59 +538,696 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-qcportal.generic_result">
-<span id="tasks-and-services"></span><h1>Tasks and Services<a class="headerlink" href="#module-qcportal.generic_result" title="Link to this heading">#</a></h1>
+  <section id="tasks-and-services">
+<h1>Tasks and Services<a class="headerlink" href="#tasks-and-services" title="Link to this heading">#</a></h1>
+<p>The <a class="reference internal" href="records/base_record_models.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordTask</span></code></a> and <a class="reference internal" href="records/base_record_models.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordService</span></code></a>
+objects attached to a record are documented under <a class="reference internal" href="records/base_record_models.html"><span class="doc">Base Record Models</span></a>.</p>
+<p>The models below are the supporting types, most of which are used by compute managers
+rather than directly by users.</p>
+<dl class="py class" id="module-qcportal.tasks.models">
+<dt class="sig sig-object py" id="qcportal.tasks.models.TaskClaimBody">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">TaskClaimBody</span></span><a class="reference internal" href="../../_modules/qcportal/tasks/models.html#TaskClaimBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.tasks.models.TaskClaimBody" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
+<div class="pst-scrollable-table-container"><table class="table" id="id1">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id1" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.tasks.models.TaskClaimBody.compute_tags" title="qcportal.tasks.models.TaskClaimBody.compute_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tags</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.tasks.models.TaskClaimBody.limit" title="qcportal.tasks.models.TaskClaimBody.limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.tasks.models.TaskClaimBody.name_data" title="qcportal.tasks.models.TaskClaimBody.name_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name_data</span></code></a></p></td>
+<td><p><a class="reference internal" href="managers.html#qcportal.managers.models.ManagerName" title="qcportal.managers.models.ManagerName"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManagerName</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.tasks.models.TaskClaimBody.programs" title="qcportal.tasks.models.TaskClaimBody.programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">programs</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Annotated</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringConstraints</span></code></a>(strip_whitespace=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, to_upper=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, to_lower=True, strict=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, min_length=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, max_length=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, pattern=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, ascii_only=<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>)], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table" id="id2">
+<caption><span class="caption-text">Validators</span><a class="headerlink" href="#id2" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Validator</p></th>
+<th class="head"><p>Mode</p></th>
+<th class="head"><p>Fields</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.tasks.models.TaskClaimBody.validate_programs" title="qcportal.tasks.models.TaskClaimBody.validate_programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_programs</span></code></a></p></td>
+<td><p>after</p></td>
+<td><p><a class="reference internal" href="#qcportal.tasks.models.TaskClaimBody.programs" title="qcportal.tasks.models.TaskClaimBody.programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">programs</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.tasks.models.TaskClaimBody.validate_tags" title="qcportal.tasks.models.TaskClaimBody.validate_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_tags</span></code></a></p></td>
+<td><p>after</p></td>
+<td><p><a class="reference internal" href="#qcportal.tasks.models.TaskClaimBody.compute_tags" title="qcportal.tasks.models.TaskClaimBody.compute_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_tags</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.tasks.models.TaskClaimBody.name_data">
+<span class="sig-name descname"><span class="pre">name_data</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="managers.html#qcportal.managers.models.ManagerName" title="qcportal.managers.models.ManagerName"><span class="pre">ManagerName</span></a></span><a class="headerlink" href="#qcportal.tasks.models.TaskClaimBody.name_data" title="Link to this definition">#</a></dt>
+<dd><p>Name information about this manager</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.tasks.models.TaskClaimBody.programs">
+<span class="sig-name descname"><span class="pre">programs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="(in Python v3.14)"><span class="pre">Annotated</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><span class="pre">StringConstraints</span></a><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strip_whitespace</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_upper</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">True</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ascii_only</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.tasks.models.TaskClaimBody.programs" title="Link to this definition">#</a></dt>
+<dd><p>Subset of programs to claim tasks for</p>
+<dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#qcportal.tasks.models.TaskClaimBody.validate_programs" title="qcportal.tasks.models.TaskClaimBody.validate_programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_programs</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.tasks.models.TaskClaimBody.compute_tags">
+<span class="sig-name descname"><span class="pre">compute_tags</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.tasks.models.TaskClaimBody.compute_tags" title="Link to this definition">#</a></dt>
+<dd><p>Subset of tags to claim tasks from</p>
+<dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#qcportal.tasks.models.TaskClaimBody.validate_tags" title="qcportal.tasks.models.TaskClaimBody.validate_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_tags</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.tasks.models.TaskClaimBody.limit">
+<span class="sig-name descname"><span class="pre">limit</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.tasks.models.TaskClaimBody.limit" title="Link to this definition">#</a></dt>
+<dd><p>Limit on the number of tasks to claim</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.tasks.models.TaskClaimBody.validate_tags">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">validate_tags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/tasks/models.html#TaskClaimBody.validate_tags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.tasks.models.TaskClaimBody.validate_tags" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.tasks.models.TaskClaimBody.validate_programs">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">validate_programs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/tasks/models.html#TaskClaimBody.validate_programs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.tasks.models.TaskClaimBody.validate_programs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="py class">
-<dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">GenericTaskResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'qca_generic_task_result'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stderr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">success</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/generic_result.html#GenericTaskResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<dt class="sig sig-object py" id="qcportal.tasks.models.TaskReturnBody">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">TaskReturnBody</span></span><a class="reference internal" href="../../_modules/qcportal/tasks/models.html#TaskReturnBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.tasks.models.TaskReturnBody" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
+<div class="pst-scrollable-table-container"><table class="table" id="id3">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id3" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.tasks.models.TaskReturnBody.name_data" title="qcportal.tasks.models.TaskReturnBody.name_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name_data</span></code></a></p></td>
+<td><p><a class="reference internal" href="managers.html#qcportal.managers.models.ManagerName" title="qcportal.managers.models.ManagerName"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManagerName</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.tasks.models.TaskReturnBody.results_compressed" title="qcportal.tasks.models.TaskReturnBody.results_compressed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">results_compressed</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Annotated</span></code>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">BytesAnnotation</span></code>]]</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.tasks.models.TaskReturnBody.name_data">
+<span class="sig-name descname"><span class="pre">name_data</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="managers.html#qcportal.managers.models.ManagerName" title="qcportal.managers.models.ManagerName"><span class="pre">ManagerName</span></a></span><a class="headerlink" href="#qcportal.tasks.models.TaskReturnBody.name_data" title="Link to this definition">#</a></dt>
+<dd><p>Name information about this manager</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.tasks.models.TaskReturnBody.results_compressed">
+<span class="sig-name descname"><span class="pre">results_compressed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="(in Python v3.14)"><span class="pre">Annotated</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">BytesAnnotation</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.tasks.models.TaskReturnBody.results_compressed" title="Link to this definition">#</a></dt>
+<dd><p>Compressed results of the completed computations, keyed by task id</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class" id="module-qcportal.services.models">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ServiceSubtaskRecord</span></span><a class="reference internal" href="../../_modules/qcportal/services/models.html#ServiceSubtaskRecord"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="records/base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRecord</span></code></a></p>
+<div class="pst-scrollable-table-container"><table class="table" id="id4">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id4" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Alias</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.comments_" title="qcportal.services.models.ServiceSubtaskRecord.comments_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">comments_</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="records/base_record_models.html#qcportal.record_models.RecordComment" title="qcportal.record_models.RecordComment"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordComment</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">comments</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.compute_history_" title="qcportal.services.models.ServiceSubtaskRecord.compute_history_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_history_</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="records/base_record_models.html#qcportal.record_models.ComputeHistory" title="qcportal.record_models.ComputeHistory"><code class="xref py py-class docutils literal notranslate"><span class="pre">ComputeHistory</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">compute_history</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.created_on" title="qcportal.services.models.ServiceSubtaskRecord.created_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">created_on</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.creator_user" title="qcportal.services.models.ServiceSubtaskRecord.creator_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">creator_user</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.description" title="qcportal.services.models.ServiceSubtaskRecord.description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">description</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.extras" title="qcportal.services.models.ServiceSubtaskRecord.extras"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extras</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code></a>]</p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.function" title="qcportal.services.models.ServiceSubtaskRecord.function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">function</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.function_kwargs" title="qcportal.services.models.ServiceSubtaskRecord.function_kwargs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">function_kwargs</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code></a>]</p></td>
+<td><p>Yes</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.id" title="qcportal.services.models.ServiceSubtaskRecord.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.is_service" title="qcportal.services.models.ServiceSubtaskRecord.is_service"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_service</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.manager_name" title="qcportal.services.models.ServiceSubtaskRecord.manager_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">manager_name</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.modified_on" title="qcportal.services.models.ServiceSubtaskRecord.modified_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modified_on</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.name" title="qcportal.services.models.ServiceSubtaskRecord.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.native_files_" title="qcportal.services.models.ServiceSubtaskRecord.native_files_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">native_files_</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="records/base_record_models.html#qcportal.record_models.NativeFile" title="qcportal.record_models.NativeFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">NativeFile</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">native_files</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.properties" title="qcportal.services.models.ServiceSubtaskRecord.properties"><code class="xref py py-obj docutils literal notranslate"><span class="pre">properties</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.record_type" title="qcportal.services.models.ServiceSubtaskRecord.record_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_type</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Literal</span></code></a>[‘servicesubtask’]</p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'servicesubtask'</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.required_programs" title="qcportal.services.models.ServiceSubtaskRecord.required_programs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">required_programs</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code></a>]</p></td>
+<td><p>Yes</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.results" title="qcportal.services.models.ServiceSubtaskRecord.results"><code class="xref py py-obj docutils literal notranslate"><span class="pre">results</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.service_" title="qcportal.services.models.ServiceSubtaskRecord.service_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">service_</span></code></a></p></td>
+<td><p><a class="reference internal" href="records/base_record_models.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordService</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">service</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.status" title="qcportal.services.models.ServiceSubtaskRecord.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span></code></a></p></td>
+<td><p><a class="reference internal" href="records/base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordStatusEnum</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.tags" title="qcportal.services.models.ServiceSubtaskRecord.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.services.models.ServiceSubtaskRecord.task_" title="qcportal.services.models.ServiceSubtaskRecord.task_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">task_</span></code></a></p></td>
+<td><p><a class="reference internal" href="records/base_record_models.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordTask</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">task</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.record_type">
+<span class="sig-name descname"><span class="pre">record_type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'servicesubtask'</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.record_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.required_programs">
+<span class="sig-name descname"><span class="pre">required_programs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.required_programs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.function">
+<span class="sig-name descname"><span class="pre">function</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.function" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.function_kwargs">
+<span class="sig-name descname"><span class="pre">function_kwargs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.function_kwargs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.results">
+<span class="sig-name descname"><span class="pre">results</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.results" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
 validated to form a valid model.</p>
 <p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>base_url_prefix</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.children_errors">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">children_errors</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="records/base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><span class="pre">BaseRecord</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.children_errors" title="Link to this definition">#</a></dt>
+<dd><p>Returns errored child records</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.children_status">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">children_status</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="records/base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><span class="pre">RecordStatusEnum</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.children_status" title="Link to this definition">#</a></dt>
+<dd><p>Returns a dictionary of the status of all children of this record</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.comments">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">comments</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="records/base_record_models.html#qcportal.record_models.RecordComment" title="qcportal.record_models.RecordComment"><span class="pre">RecordComment</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.comments" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.compute_history">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">compute_history</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="records/base_record_models.html#qcportal.record_models.ComputeHistory" title="qcportal.record_models.ComputeHistory"><span class="pre">ComputeHistory</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.compute_history" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.error">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">error</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.error" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.fetch_children">
+<span class="sig-name descname"><span class="pre">fetch_children</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_fetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.fetch_children" title="Link to this definition">#</a></dt>
+<dd><p>Fetches all children of this record recursively</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>schema_name</strong> (<em>Literal</em><em>[</em><em>'qca_generic_task_result'</em><em>]</em>)</p></li>
-<li><p><strong>id</strong> (<em>int</em>)</p></li>
-<li><p><strong>results</strong> (<em>Any</em>)</p></li>
-<li><p><strong>stdout</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>stderr</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>success</strong> (<em>bool</em>)</p></li>
-<li><p><strong>provenance</strong> (<em>Provenance</em>)</p></li>
-<li><p><strong>extras</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
-<li><p><strong>error</strong> (<em>ComputeError</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>include</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><em>Iterable</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>force_fetch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.fetch_children_multi">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">fetch_children_multi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">records</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_fetch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.fetch_children_multi" title="Link to this definition">#</a></dt>
+<dd><p>Fetches all children of the given records</p>
+<p>This tries to work efficiently, fetching larger batches of children
+that can span multiple records</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>records</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><em>Iterable</em></a><em>[</em><a class="reference internal" href="records/base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a><em> | </em><em>None</em><em>]</em>)</p></li>
+<li><p><strong>include</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><em>Iterable</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>force_fetch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.get_cache_dict">
+<span class="sig-name descname"><span class="pre">get_cache_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.get_cache_dict" title="Link to this definition">#</a></dt>
+<dd><p>Returns a dictionary of the record meant for caching</p>
+<p>When a record is stored in the cache, it is stored without child records (which
+are in the cache under their own keys). This function returns a dictionary that
+excludes those children.</p>
+<p>kwargs are passed directly to the pydantic <cite>dict()</cite> function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.get_subclass">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_subclass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.get_subclass" title="Link to this definition">#</a></dt>
+<dd><p>Obtain a subclass of this class given its record_type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>record_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><em>Type</em></a>[<a class="reference internal" href="records/base_record_models.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.get_waiting_reason">
+<span class="sig-name descname"><span class="pre">get_waiting_reason</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.get_waiting_reason" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.model_post_init">
+<span class="sig-name descname"><span class="pre">model_post_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.model_post_init" title="Link to this definition">#</a></dt>
+<dd><p>This function is meant to behave like a BaseModel method to initialize private attributes.</p>
+<p>It takes context as an argument since that’s what pydantic-core passes when calling it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<em>BaseModel</em>) – The BaseModel instance.</p></li>
+<li><p><strong>context</strong> (<em>Any</em>) – The context.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.native_files">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">native_files</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="records/base_record_models.html#qcportal.record_models.NativeFile" title="qcportal.record_models.NativeFile"><span class="pre">NativeFile</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.native_files" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.offline">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">offline</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.offline" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.propagate_client">
+<span class="sig-name descname"><span class="pre">propagate_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url_prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.propagate_client" title="Link to this definition">#</a></dt>
+<dd><p>Propagates a client and related information to this record to any fields within this record that need it</p>
+<p>This is expected to be called from derived class propagate_client functions as well</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>base_url_prefix</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.provenance">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">provenance</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="records/base_record_models.html#qcportal.record_models.Provenance" title="qcportal.record_models.Provenance"><span class="pre">Provenance</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.provenance" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.service">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">service</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="records/base_record_models.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><span class="pre">RecordService</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.service" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.stderr">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">stderr</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.stderr" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.stdout">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">stdout</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.stdout" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.sync_to_cache">
+<span class="sig-name descname"><span class="pre">sync_to_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">detach</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.sync_to_cache" title="Link to this definition">#</a></dt>
+<dd><p>Syncs this record to the cache</p>
+<p>If <cite>detach</cite> is True, then the record will be removed from the cache</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>detach</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.task">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">task</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="records/base_record_models.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><span class="pre">RecordTask</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.task" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.id" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.is_service">
+<span class="sig-name descname"><span class="pre">is_service</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.is_service" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.description">
+<span class="sig-name descname"><span class="pre">description</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.description" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.tags">
+<span class="sig-name descname"><span class="pre">tags</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.tags" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.properties">
+<span class="sig-name descname"><span class="pre">properties</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.properties" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.extras">
+<span class="sig-name descname"><span class="pre">extras</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.extras" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.status">
+<span class="sig-name descname"><span class="pre">status</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.status" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.manager_name">
+<span class="sig-name descname"><span class="pre">manager_name</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.manager_name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.created_on">
+<span class="sig-name descname"><span class="pre">created_on</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.created_on" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.modified_on">
+<span class="sig-name descname"><span class="pre">modified_on</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.modified_on" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.creator_user">
+<span class="sig-name descname"><span class="pre">creator_user</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.creator_user" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.compute_history_">
+<span class="sig-name descname"><span class="pre">compute_history_</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.compute_history_" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.task_">
+<span class="sig-name descname"><span class="pre">task_</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.task_" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.service_">
+<span class="sig-name descname"><span class="pre">service_</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.service_" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.comments_">
+<span class="sig-name descname"><span class="pre">comments_</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.comments_" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.services.models.ServiceSubtaskRecord.native_files_">
+<span class="sig-name descname"><span class="pre">native_files_</span></span><a class="headerlink" href="#qcportal.services.models.ServiceSubtaskRecord.native_files_" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class" id="module-qcportal.generic_result">
+<dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">GenericTaskResult</span></span><a class="reference internal" href="../../_modules/qcportal/generic_result.html#GenericTaskResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/base_model/#pydantic.BaseModel" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
+<div class="pst-scrollable-table-container"><table class="table" id="id5">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id5" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.error" title="qcportal.generic_result.GenericTaskResult.error"><code class="xref py py-obj docutils literal notranslate"><span class="pre">error</span></code></a></p></td>
+<td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ComputeError</span></code> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.extras" title="qcportal.generic_result.GenericTaskResult.extras"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extras</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code></a>]</p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.id" title="qcportal.generic_result.GenericTaskResult.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.provenance" title="qcportal.generic_result.GenericTaskResult.provenance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">provenance</span></code></a></p></td>
+<td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Provenance</span></code></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.results" title="qcportal.generic_result.GenericTaskResult.results"><code class="xref py py-obj docutils literal notranslate"><span class="pre">results</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.schema_name" title="qcportal.generic_result.GenericTaskResult.schema_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">schema_name</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Literal</span></code></a>[‘qca_generic_task_result’]</p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'qca_generic_task_result'</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.stderr" title="qcportal.generic_result.GenericTaskResult.stderr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stderr</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.stdout" title="qcportal.generic_result.GenericTaskResult.stdout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stdout</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.generic_result.GenericTaskResult.success" title="qcportal.generic_result.GenericTaskResult.success"><code class="xref py py-obj docutils literal notranslate"><span class="pre">success</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.schema_name">
-<span class="sig-name descname"><span class="pre">schema_name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'qca_generic_task_result'</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.schema_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">schema_name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'qca_generic_task_result'</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.schema_name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.id">
-<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.id" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.results">
-<span class="sig-name descname"><span class="pre">results</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.results" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">results</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.results" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.stdout">
-<span class="sig-name descname"><span class="pre">stdout</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.stdout" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">stdout</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.stdout" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.stderr">
-<span class="sig-name descname"><span class="pre">stderr</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.stderr" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">stderr</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.stderr" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.success">
-<span class="sig-name descname"><span class="pre">success</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.success" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">success</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.success" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -594,19 +1237,13 @@ validated to form a valid model.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.extras">
-<span class="sig-name descname"><span class="pre">extras</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.extras" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">extras</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.extras" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.error">
-<span class="sig-name descname"><span class="pre">error</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ComputeError</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.error" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">error</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ComputeError</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.error" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcportal.generic_result.GenericTaskResult.model_config">
-<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#qcportal.generic_result.GenericTaskResult.model_config" title="Link to this definition">#</a></dt>
-<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
-</dd></dl>
 
 </dd></dl>
 
@@ -659,6 +1296,66 @@ validated to form a valid model.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.tasks.models.TaskClaimBody"><code class="docutils literal notranslate"><span class="pre">TaskClaimBody</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.tasks.models.TaskClaimBody.name_data"><code class="docutils literal notranslate"><span class="pre">TaskClaimBody.name_data</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.tasks.models.TaskClaimBody.programs"><code class="docutils literal notranslate"><span class="pre">TaskClaimBody.programs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.tasks.models.TaskClaimBody.compute_tags"><code class="docutils literal notranslate"><span class="pre">TaskClaimBody.compute_tags</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.tasks.models.TaskClaimBody.limit"><code class="docutils literal notranslate"><span class="pre">TaskClaimBody.limit</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.tasks.models.TaskClaimBody.validate_tags"><code class="docutils literal notranslate"><span class="pre">TaskClaimBody.validate_tags()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.tasks.models.TaskClaimBody.validate_programs"><code class="docutils literal notranslate"><span class="pre">TaskClaimBody.validate_programs()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.tasks.models.TaskReturnBody"><code class="docutils literal notranslate"><span class="pre">TaskReturnBody</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.tasks.models.TaskReturnBody.name_data"><code class="docutils literal notranslate"><span class="pre">TaskReturnBody.name_data</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.tasks.models.TaskReturnBody.results_compressed"><code class="docutils literal notranslate"><span class="pre">TaskReturnBody.results_compressed</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.record_type"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.record_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.required_programs"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.required_programs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.function"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.function</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.function_kwargs"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.function_kwargs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.results"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.results</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.__init__"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.children_errors"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.children_errors</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.children_status"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.children_status</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.comments"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.comments</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.compute_history"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.compute_history</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.error"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.error</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.fetch_children"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.fetch_children()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.fetch_children_multi"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.fetch_children_multi()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.get_cache_dict"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.get_cache_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.get_subclass"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.get_subclass()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.get_waiting_reason"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.get_waiting_reason()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.model_post_init"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.model_post_init()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.native_files"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.native_files</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.offline"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.offline</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.propagate_client"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.propagate_client()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.provenance"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.provenance</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.service"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.service</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.stderr"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.stderr</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.stdout"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.stdout</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.sync_to_cache"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.sync_to_cache()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.task"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.task</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.id"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.id</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.is_service"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.is_service</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.name"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.description"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.description</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.tags"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.tags</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.properties"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.properties</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.extras"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.extras</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.status"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.status</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.manager_name"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.manager_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.created_on"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.created_on</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.modified_on"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.modified_on</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.creator_user"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.creator_user</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.compute_history_"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.compute_history_</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.task_"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.task_</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.service_"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.service_</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.comments_"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.comments_</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.services.models.ServiceSubtaskRecord.native_files_"><code class="docutils literal notranslate"><span class="pre">ServiceSubtaskRecord.native_files_</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.schema_name"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.schema_name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.id"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.id</span></code></a></li>
@@ -669,7 +1366,6 @@ validated to form a valid model.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.provenance"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.provenance</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.extras"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.extras</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.error"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.error</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.generic_result.GenericTaskResult.model_config"><code class="docutils literal notranslate"><span class="pre">GenericTaskResult.model_config</span></code></a></li>
 </ul>
 </li>
 </ul>
