@@ -6,10 +6,17 @@ from qcportal.managers import ManagerName
 
 
 class TaskClaimBody(RestModelBase):
-    name_data: ManagerName = Field(..., description="Name information about this manager")
-    programs: dict[LowerStr, list[str]] = Field(..., description="Subset of programs to claim tasks for")
-    compute_tags: list[str] = Field(..., description="Subset of tags to claim tasks from")
-    limit: int = Field(..., description="Limit on the number of tasks to claim")
+    name_data: ManagerName
+    """Name information about this manager"""
+
+    programs: dict[LowerStr, list[str]]
+    """Subset of programs to claim tasks for"""
+
+    compute_tags: list[str]
+    """Subset of tags to claim tasks from"""
+
+    limit: int
+    """Limit on the number of tasks to claim"""
 
     @field_validator("compute_tags", mode="after")
     @classmethod
@@ -40,5 +47,8 @@ class TaskClaimBody(RestModelBase):
 
 
 class TaskReturnBody(RestModelBase):
-    name_data: ManagerName = Field(..., description="Name information about this manager")
+    name_data: ManagerName
+    """Name information about this manager"""
+
     results_compressed: dict[int, QCPortalBytes]
+    """Compressed results of the completed computations, keyed by task id"""

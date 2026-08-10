@@ -62,11 +62,16 @@ class GroupInfo(BaseModel):
     Information about a group
     """
 
-    id: int | None = Field(None, description="ID of the group")
-    groupname: str = Field(..., description="The name of the group")
-    description: str = Field("", description="Text description of the group")
+    id: int | None = None
+    """ID of the group"""
 
-    model_config = ConfigDict(extra="forbid")
+    groupname: str
+    """The name of the group"""
+
+    description: str = ""
+    """Text description of the group"""
+
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
     @field_validator("groupname", mode="before")
     @classmethod
@@ -86,19 +91,34 @@ class UserInfo(BaseModel):
     """
 
     # id may be None when used for initial creation
-    id: int | None = Field(None, frozen=True, description="The id of the user")
-    auth_type: AuthTypeEnum = Field(
-        AuthTypeEnum.password, frozen=True, description="Type of authentication the user uses"
-    )
-    username: str = Field(..., frozen=True, description="The username of this user")
-    role: str = Field(..., description="The role this user belongs to")
-    groups: list[str] = Field([], description="Groups this user belongs to")
-    enabled: bool = Field(..., description="Whether this user is enabled or not")
-    fullname: Max128Str = Field("", description="The full name or description of the user")
-    organization: Max128Str = Field("", description="The organization the user belongs to")
-    email: Max128Str = Field("", description="The email address for the user")
+    id: int | None = Field(None, frozen=True)
+    """The id of the user"""
 
-    model_config = ConfigDict(extra="forbid")
+    auth_type: AuthTypeEnum = Field(AuthTypeEnum.password, frozen=True)
+    """Type of authentication the user uses"""
+
+    username: str = Field(..., frozen=True)
+    """The username of this user"""
+
+    role: str
+    """The role this user belongs to"""
+
+    groups: list[str] = []
+    """Groups this user belongs to"""
+
+    enabled: bool
+    """Whether this user is enabled or not"""
+
+    fullname: Max128Str = ""
+    """The full name or description of the user"""
+
+    organization: Max128Str = ""
+    """The organization the user belongs to"""
+
+    email: Max128Str = ""
+    """The email address for the user"""
+
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
     @field_validator("username", mode="before")
     @classmethod

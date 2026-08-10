@@ -22,7 +22,7 @@ def validate_list_to_single(v):
 
 
 class RestModelBase(BaseModel):
-    model_config = ConfigDict(extra="forbid", validate_assignment=True)
+    model_config = ConfigDict(extra="forbid", validate_assignment=True, use_attribute_docstrings=True)
 
 
 class CommonBulkGetBody(RestModelBase):

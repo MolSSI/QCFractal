@@ -50,6 +50,31 @@ def test_dataset_client_add_get(submitter_client: PortalClient, dataset_type: st
     assert ds2.id == ds.id
 
 
+def test_dataset_client_add_default_compute_tag_priority(submitter_client: PortalClient):
+    ds = submitter_client.add_dataset(
+        "singlepoint",
+        "Test dataset",
+        default_compute_tag="new_tag",
+        default_compute_priority=PriorityEnum.high,
+    )
+
+    assert ds.default_compute_tag == "new_tag"
+    assert ds.default_compute_priority == PriorityEnum.high
+
+
+def test_dataset_client_add_default_tag_priority_deprecated(submitter_client: PortalClient):
+    # 'default_tag'/'default_priority' are deprecated, but should still work
+    ds = submitter_client.add_dataset(
+        "singlepoint",
+        "Test dataset",
+        default_tag="old_tag",
+        default_priority=PriorityEnum.low,
+    )
+
+    assert ds.default_compute_tag == "old_tag"
+    assert ds.default_compute_priority == PriorityEnum.low
+
+
 def test_dataset_client_status(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
     storage_socket = snowflake.get_storage_socket()

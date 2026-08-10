@@ -36,7 +36,7 @@ a :class:`~qcportal.singlepoint.record_models.QCSpecification`. The main fields 
 Protocols control additional flags for the computation. For singlepoint calculations, this includes whether
 to save the raw outputs, wavefunction, or native files.
 
-See the the :class:`~qcportal.singlepoint.SinglepointProtocols` API
+See the :class:`~qcportal.singlepoint.record_models.SinglepointProtocols` API
 documentation for more information.
 
 :class:`~qcportal.singlepoint.record_models.QCSpecification` objects can be created manually (for example,
@@ -223,6 +223,12 @@ the given entry will not be added.
 
 If an entry with the same name already exists, it will be ignored.
 
+All arguments to this method are keyword-only. The source dataset is identified either by
+``dataset_id``, or by both ``dataset_type`` and ``dataset_name`` together.
+
+Copying from another singlepoint dataset preserves the entries' ``additional_keywords``. Copying from
+an optimization dataset resets them to an empty dictionary, since an optimization entry has none.
+
 .. tab-set::
 
   .. tab-item:: PYTHON
@@ -230,11 +236,18 @@ If an entry with the same name already exists, it will be ignored.
     .. code-block:: py3
 
       >>> ds = client.add_dataset("singlepoint", "Dataset from optimization")
-      >>> ds.add_entries_from(377, 'default') # from an optimization dataset
+
+      >>> # From an optimization dataset, identified by ID
+      >>> ds.add_entries_from(dataset_id=377, specification_name='default')
       InsertCountsMetadata(n_inserted=20, n_existing=0, error_description=None, errors=[])
 
       >>> print(ds.entry_names)
       ['000280960', '000524682', '010464300', ...
+
+      >>> # The source may also be given by type and name
+      >>> ds.add_entries_from(dataset_type='optimization',
+      ...                     dataset_name='Diatomic geometries',
+      ...                     specification_name='default')
 
 
 .. _singlepoint_client_examples:
@@ -304,7 +317,7 @@ Client Examples
 
         r_iter = client.query_singlepoints(program='psi4',
                                            created_after='2024-03-21 12:34:56',
-                                           include=['**'])
+                                           include=['**'],
                                            limit=50)
         for r in r_iter:
             print(r.id)
@@ -336,7 +349,7 @@ Client Examples
                                             driver='energy',
                                             method='b3lyp',
                                             basis='def2-svp',
-                                            keywords={'scf_type': 'df'}
+                                            keywords={'scf_type': 'df'})
 
 .. dropdown:: Add a singlepoint record, don't store raw output
 

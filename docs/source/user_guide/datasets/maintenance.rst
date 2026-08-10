@@ -7,7 +7,7 @@ Modifying metadata and defaults
 -------------------------------
 
 Various parameters that are set when :ref:`creating a dataset <creating_datasets>` can be later
-modified. These include the name, description, tags, tagline, and the default routing tag & priority.
+modified. These include the name, description, tags, tagline, and the default compute tag & priority.
 See the following functions:
 
 * :meth:`~qcportal.dataset_models.BaseDataset.set_name`
@@ -15,7 +15,7 @@ See the following functions:
 * :meth:`~qcportal.dataset_models.BaseDataset.set_tags`
 * :meth:`~qcportal.dataset_models.BaseDataset.set_tagline`
 * :meth:`~qcportal.dataset_models.BaseDataset.set_provenance`
-* :meth:`~qcportal.dataset_models.BaseDataset.set_metadata`
+* :meth:`~qcportal.dataset_models.BaseDataset.set_extras`
 * :meth:`~qcportal.dataset_models.BaseDataset.set_default_compute_tag`
 * :meth:`~qcportal.dataset_models.BaseDataset.set_default_compute_priority`
 
@@ -26,31 +26,14 @@ See the following functions:
 
     .. code-block:: py3
 
-          >>> ds = get_dataset_by_id(123)
-          >>> ds.set_default_compute_priority("low")
-          >>> ds.set_name("New Dataset Name")
-          >>> print(ds.name)
-          New Dataset Name
-
-          >>> print(ds.default_priority)
-          PriorityEnum.low
-
-          >>> ds = get_dataset_by_id(123)
-          >>> ds.set_default_compute_priority("low")
-          >>> ds.set_name("New Dataset Name")
-          >>> print(ds.name)
-          New Dataset Name
-
-          >>> print(ds.default_priority)
-          PriorityEnum.low
-
-      >>> ds = get_dataset_by_id(123)
-      >>> ds.set_default_priority("low")
+      >>> ds = client.get_dataset_by_id(123)
+      >>> ds.set_default_compute_priority("low")
       >>> ds.set_name("New Dataset Name")
+
       >>> print(ds.name)
       New Dataset Name
 
-      >>> print(ds.default_priority)
+      >>> print(ds.default_compute_priority)
       PriorityEnum.low
 
 

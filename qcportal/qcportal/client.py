@@ -271,6 +271,38 @@ class PortalClient(PortalClientBase):
         extras: Optional[Dict[str, Any]] = None,
         existing_ok: bool = False,
     ) -> Project:
+        """
+        Creates a new project on the server
+
+        Project names are unique across the server, and are compared case-insensitively.
+
+        Parameters
+        ----------
+        name
+            Name of the new project
+        description
+            Optional longer description of the project
+        tagline
+            Optional short description of the project
+        tags
+            Optional list of tags to attach to the project
+        default_compute_tag
+            The default :ref:`compute tag <glossary_tag>` for computations created within this
+            project. Records and datasets added to the project inherit this unless they override it
+        default_compute_priority
+            The default priority for computations created within this project
+        extras
+            Optional dictionary of arbitrary additional information
+        existing_ok
+            If True, return the existing project if one already exists with this name, rather
+            than raising an exception
+
+        Returns
+        -------
+        :
+            The new project (or existing project if `existing_ok=True` and a project with the given
+            name already exists)
+        """
         if description is None:
             description = ""
         if tagline is None:
@@ -294,12 +326,20 @@ class PortalClient(PortalClientBase):
         proj_id = self.make_request("post", f"api/v1/projects", int, body=body)
         return self.get_project_by_id(proj_id)
 
-    def get_project(self, project_name: str):
+    def get_project(self, project_name: str) -> Project:
+        """
+        Obtain a project by name
+
+        The name is matched case-insensitively.
+        """
         body = ProjectQueryModel(project_name=project_name)
         proj_dict = self.make_request("post", f"api/v1/projects/query", Dict[str, Any], body=body)
         return Project(**proj_dict, client=self)
 
     def get_project_by_id(self, project_id: int) -> Project:
+        """
+        Obtain a project by ID
+        """
         project_dict = self.make_request("get", f"api/v1/projects/{project_id}", Dict[str, Any])
         return Project(**project_dict, client=self)
 
@@ -310,6 +350,23 @@ class PortalClient(PortalClientBase):
         delete_datasets: bool = False,
         delete_dataset_records: bool = False,
     ):
+        """
+        Deletes a project from the server
+
+        By default, only the project itself is deleted. The records and datasets it contained
+        remain on the server.
+
+        Parameters
+        ----------
+        project_id
+            ID of the project to delete
+        delete_records
+            If True, also delete the records that were added directly to the project
+        delete_datasets
+            If True, also delete the datasets that were in the project
+        delete_dataset_records
+            If True, also delete the records contained in those datasets
+        """
 
         params = ProjectDeleteParams(
             delete_records=delete_records,
@@ -318,14 +375,57 @@ class PortalClient(PortalClientBase):
         )
         return self.make_request("delete", f"api/v1/projects/{project_id}", None, url_params=params)
 
-    def list_projects(self):
+    def list_projects(self) -> List[Dict[str, Any]]:
+        """
+        Obtain a summary of all projects on the server
+
+        Each entry is a dictionary with the keys ``id``, ``project_name``, ``tagline``, ``tags``,
+        ``description``, ``record_count``, ``dataset_count``, ``owner_user``, and ``creator_user``.
+
+        The full project is not returned - use :meth:`get_project` or :meth:`get_project_by_id`
+        for that.
+
+        Returns
+        -------
+        :
+            A list of dictionaries, one per project, ordered by project ID
+        """
         return self.make_request("get", f"api/v1/projects", List[Dict[str, Any]])
 
-    def query_project_records(self, record_id: Union[int, Iterable[int]]):
+    def query_project_records(self, record_id: Union[int, Iterable[int]]) -> List[Dict]:
+        """
+        Determine which projects the given records belong to
+
+        Records that are not in any project simply do not appear in the result, so the returned
+        list may be shorter than the list of IDs given.
+
+        Returns
+        -------
+        :
+            A list of dictionaries, each with the keys ``record_id``, ``project_id``,
+            ``project_name``, and ``record_name``
+        """
         body = ProjectQueryRecords(record_id=make_list(record_id))
         return self.make_request("post", f"api/v1/projects/queryrecords", List[Dict], body=body)
 
-    def query_project_datasets(self, dataset_id: Union[int, Iterable[int]]):
+    def query_project_datasets(self, dataset_id: Union[int, Iterable[int]]) -> List[Dict]:
+        """
+        Determine which projects the given datasets belong to
+
+        Datasets that are not in any project simply do not appear in the result, so the returned
+        list may be shorter than the list of IDs given.
+
+        Parameters
+        ----------
+        dataset_id
+            A dataset ID or list of dataset IDs to look up
+
+        Returns
+        -------
+        :
+            A list of dictionaries, each with the keys ``record_id`` (which holds the *dataset*
+            ID), ``project_id``, ``project_name``, and ``dataset_name``
+        """
         body = ProjectQueryDatasets(dataset_id=make_list(dataset_id))
         return self.make_request("post", f"api/v1/projects/querydatasets", List[Dict], body=body)
 
@@ -408,8 +508,8 @@ class PortalClient(PortalClientBase):
         group: Optional[str] = None,
         provenance: Optional[Dict[str, Any]] = None,
         visibility: bool = None,
-        default_tag: str = "*",
-        default_priority: PriorityEnum = PriorityEnum.normal,
+        default_compute_tag: str = "*",
+        default_compute_priority: PriorityEnum = PriorityEnum.normal,
         extras: Optional[Dict[str, Any]] = None,
         owner_group: Optional[str] = None,
         existing_ok: bool = False,
@@ -417,6 +517,12 @@ class PortalClient(PortalClientBase):
     ) -> BaseDataset:
 
         # TODO - DEPRECATED - Remove eventually
+        if "default_tag" in kwargs:
+            self._logger.warning("'default_tag' is deprecated; use 'default_compute_tag' instead")
+            default_compute_tag = kwargs["default_tag"]
+        if "default_priority" in kwargs:
+            self._logger.warning("'default_priority' is deprecated; use 'default_compute_priority' instead")
+            default_compute_priority = kwargs["default_priority"]
         if group is not None:
             self._logger.warning(f"'group' parameter has been deprecated and will be removed in a future version")
         if visibility is not None:
@@ -447,8 +553,8 @@ class PortalClient(PortalClientBase):
             tagline=tagline,
             tags=tags,
             provenance=provenance,
-            default_tag=default_tag,
-            default_priority=default_priority,
+            default_compute_tag=default_compute_tag,
+            default_compute_priority=default_compute_priority,
             extras=extras,
             existing_ok=existing_ok,
         )
@@ -2103,7 +2209,7 @@ class PortalClient(PortalClientBase):
         This checks if the calculations already exist in the database. If so, it returns
         the existing id, otherwise it will insert it and return the new id.
 
-        This will add one record per set of molecules
+        This will add one record per reaction
 
         Parameters
         ----------
@@ -2129,7 +2235,7 @@ class PortalClient(PortalClientBase):
         -------
         :
             Metadata about the insertion, and a list of record ids. The ids will be in the
-            order of the input molecules
+            order of the input stoichiometries
         """
 
         if "tag" in kwargs:
@@ -2245,7 +2351,7 @@ class PortalClient(PortalClientBase):
         parent_id
             Query records that have a parent is in the given list
         child_id
-            Query records that have a child (optimization calculation) is in the given list
+            Query records that have a child (singlepoint or optimization calculation) is in the given list
         created_before
             Query records that were created before the given date/time
         created_after
@@ -2466,7 +2572,7 @@ class PortalClient(PortalClientBase):
         parent_id
             Query records that have a parent is in the given list
         child_id
-            Query records that have a child (optimization calculation) is in the given list
+            Query records that have a child (singlepoint calculation) is in the given list
         created_before
             Query records that were created before the given date/time
         created_after
@@ -2476,7 +2582,7 @@ class PortalClient(PortalClientBase):
         modified_after
             Query records that were modified after the given date/time
         program
-            Query records whose reaction program is in the given list
+            Query records whose manybody program is in the given list
         qc_program
             Query records whose qc program is in the given list
         qc_method
@@ -2545,21 +2651,24 @@ class PortalClient(PortalClientBase):
         This checks if the calculations already exist in the database. If so, it returns
         the existing id, otherwise it will insert it and return the new id.
 
-        This will add one record per set of molecules
+        This will add one record per initial chain
 
         Parameters
         ----------
         initial_chains
-            The initial chains to run the NEB calculations on . Each NEB calculation starts with a single
+            The initial chains to run the NEB calculations on. Each NEB calculation starts with a single
             chain (list of molecules), so this is a nested list
         program
             The program to run the neb computation with ("geometric")
         singlepoint_specification
             Specification of how each singlepoint (gradient/hessian) should be run
         optimization_specification
-            Specification of how any optimizations of the torsiondrive should be run
+            Specification of how the transition state optimization should be run, if one was requested
+            with the optimize_ts keyword. May be None. Note that this does not apply to the endpoint
+            optimizations requested with the optimize_endpoints keyword, which always use geometric
+            with the level of theory given in the singlepoint specification
         keywords
-            The torsiondrive keywords for the computation
+            The NEB keywords for the computation
         compute_tag
             The tag for the task. This will assist in routing to appropriate compute managers.
         compute_priority
@@ -2571,7 +2680,7 @@ class PortalClient(PortalClientBase):
         -------
         :
             Metadata about the insertion, and a list of record ids. The ids will be in the
-            order of the input molecules
+            order of the input chains
         """
 
         if "tag" in kwargs:
@@ -2689,7 +2798,7 @@ class PortalClient(PortalClientBase):
         parent_id
             Query records that have a parent is in the given list
         child_id
-            Query records that have a child (optimization calculation) is in the given list
+            Query records that have a child (singlepoint or optimization calculation) is in the given list
         created_before
             Query records that were created before the given date/time
         created_after
@@ -2699,7 +2808,7 @@ class PortalClient(PortalClientBase):
         modified_after
             Query records that were modified after the given date/time
         program
-            Query records whose torsiondrive program is in the given list
+            Query records whose neb program is in the given list
         qc_program
             Query records whose qc program is in the given list
         qc_method

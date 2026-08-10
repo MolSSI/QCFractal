@@ -31,5 +31,6 @@ dependencies:
   # Worker codes below
   - qcengine>=0.50,<0.70a0
   - psi4>=1.10.1
+  - libxc-c=7.0.0 # pinned due to errors. Remove eventually
   - rdkit
   - geometric>=1.1.1

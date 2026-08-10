@@ -24,18 +24,15 @@ from qcportal.record_models import (
 class Model(BaseModel):
     """The computational molecular sciences model to run."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", use_attribute_docstrings=True)
 
-    method: str = Field(  # type: ignore
-        ...,
-        description="The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...). "
-        "For MM, name of the force field.",
-    )
-    basis: str | None = Field(  # type: ignore
-        None,
-        description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for "
-        "methods without basis sets. For molecular mechanics, name of the atom-typer.",
-    )
+    method: str
+    """The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...). For MM, name of the force field."""
+
+    basis: str | None = None
+    """The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for methods without
+    basis sets. For molecular mechanics, name of the atom-typer.
+    """
 
 class SinglepointDriver(str, Enum):
     # Copied from qcelemental to add "deferred"
@@ -59,14 +56,15 @@ class WavefunctionProtocolEnum(str, Enum):
 class ErrorCorrectionProtocol(BaseModel):
     r"""Configuration for how computational chemistry programs handle error correction"""
 
-    default_policy: bool = Field(
-        True, description="Whether to allow error corrections to be used " "if not directly specified in `policies`"
-    )
-    policies: dict[str, bool] | None = Field(
-        None,
-        description="Settings that define whether specific error corrections are allowed. "
-        "Keys are the name of a known error and values are whether it is allowed to be used.",
-    )
+    model_config = ConfigDict(use_attribute_docstrings=True)
+
+    default_policy: bool = True
+    """Whether to allow error corrections to be used if not directly specified in `policies`"""
+
+    policies: dict[str, bool] | None = None
+    """Settings that define whether specific error corrections are allowed. Keys are the name of a known error and
+    values are whether it is allowed to be used.
+    """
 
     def allows(self, policy: str):
         if self.policies is None:
@@ -85,36 +83,45 @@ class NativeFilesProtocolEnum(str, Enum):
 class SinglepointProtocols(BaseModel):
     r"""Protocols regarding the manipulation of computational result data."""
 
-    wavefunction: WavefunctionProtocolEnum = Field(
-        WavefunctionProtocolEnum.none, description=str(WavefunctionProtocolEnum.__doc__)
-    )
-    stdout: bool = Field(True, description="Primary output file to keep from the computation")
-    error_correction: ErrorCorrectionProtocol = Field(
-        default_factory=ErrorCorrectionProtocol, description="Policies for error correction"
-    )
-    native_files: NativeFilesProtocolEnum = Field(
-        NativeFilesProtocolEnum.none,
-        description="Policies for keeping processed files from the computation",
-    )
+    model_config = ConfigDict(use_attribute_docstrings=True)
+
+    wavefunction: WavefunctionProtocolEnum = WavefunctionProtocolEnum.none
+    """Which parts of the wavefunction to keep"""
+
+    stdout: bool = True
+    """Primary output file to keep from the computation"""
+
+    error_correction: ErrorCorrectionProtocol = Field(default_factory=ErrorCorrectionProtocol)
+    """Policies for error correction"""
+
+    native_files: NativeFilesProtocolEnum = NativeFilesProtocolEnum.none
+    """Policies for keeping processed files from the computation"""
 
 
 class QCSpecification(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
-    program: LowerStr = Field(
-        ...,
-        description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs"
-        " support all combinations of driver/method/basis.",
-    )
-    driver: SinglepointDriver = Field(...)
-    method: LowerStr = Field(..., description="The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...).")
-    basis: LowerStr | None = Field(
-        ...,
-        description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for "
-        "methods without basis sets.",
-    )
-    keywords: dict[str, Any] = Field({}, description="Program-specific keywords to use for the computation")
+    program: LowerStr
+    """The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs support all
+    combinations of driver/method/basis.
+    """
+
+    driver: SinglepointDriver
+    """What the computation should return - energy, gradient, hessian, or properties"""
+
+    method: LowerStr
+    """The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...)"""
+
+    basis: LowerStr | None
+    """The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for methods without
+    basis sets.
+    """
+
+    keywords: dict[str, Any] = {}
+    """Program-specific keywords to use for the computation"""
+
     protocols: SinglepointProtocols = Field(default_factory=SinglepointProtocols)
+    """Which parts of the computation output to keep"""
 
     @field_validator("basis", mode="before")
     @classmethod

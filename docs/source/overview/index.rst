@@ -10,6 +10,7 @@ QCArchive Overview
    glossary
    tasks_services
    internal_jobs
+   users_groups
    snowflake
 
 Introduction

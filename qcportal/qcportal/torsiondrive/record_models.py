@@ -49,34 +49,27 @@ class TorsiondriveKeywords(BaseModel):
     Options for torsiondrive calculations
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
-    dihedrals: list[tuple[int, int, int, int]] = Field(
-        [],
-        description="The list of dihedrals to select for the TorsionDrive operation. Each entry is a tuple of integers "
-        "of for particle indices.",
-    )
-    grid_spacing: list[int] = Field(
-        [],
-        description="List of grid spacing for dihedral scan in degrees. Multiple values will be mapped to each "
-        "dihedral angle.",
-    )
-    dihedral_ranges: list[tuple[int, int]] | None = Field(
-        None,
-        description="A list of dihedral range limits as a pair (lower, upper). "
-        "Each range corresponds to the dihedrals in input.",
-    )
-    energy_decrease_thresh: float | None = Field(
-        None,
-        description="The threshold of the smallest energy decrease amount to trigger activating optimizations from "
-        "grid point.",
-    )
-    energy_upper_limit: float | None = Field(
-        None,
-        description="The threshold if the energy of a grid point that is higher than the current global minimum, to "
-        "start new optimizations, in unit of a.u. I.e. if energy_upper_limit = 0.05, current global "
-        "minimum energy is -9.9 , then a new task starting with energy -9.8 will be skipped.",
-    )
+    dihedrals: list[tuple[int, int, int, int]] = []
+    """The list of dihedrals to select for the TorsionDrive operation. Each entry is a tuple of integers of for
+    particle indices.
+    """
+
+    grid_spacing: list[int] = []
+    """List of grid spacing for dihedral scan in degrees. Multiple values will be mapped to each dihedral angle."""
+
+    dihedral_ranges: list[tuple[int, int]] | None = None
+    """A list of dihedral range limits as a pair (lower, upper). Each range corresponds to the dihedrals in input."""
+
+    energy_decrease_thresh: float | None = None
+    """The threshold of the smallest energy decrease amount to trigger activating optimizations from grid point"""
+
+    energy_upper_limit: float | None = None
+    """The threshold if the energy of a grid point that is higher than the current global minimum, to start new
+    optimizations, in unit of a.u. I.e. if energy_upper_limit = 0.05, current global minimum energy is -9.9 , then
+    a new task starting with energy -9.8 will be skipped.
+    """
 
     @model_validator(mode="before")
     @classmethod

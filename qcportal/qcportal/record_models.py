@@ -26,11 +26,16 @@ _T = TypeVar("_T")
 class Provenance(BaseModel):
     """Provenance information."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", use_attribute_docstrings=True)
 
-    creator: str = Field(..., description="The name of the program, library, or person who created the object.")
-    version: str = Field("", description="The version of the creator, blank otherwise")
-    routine: str = Field("", description="The name of the routine or function within the creator, blank otherwise.")
+    creator: str
+    """The name of the program, library, or person who created the object"""
+
+    version: str = ""
+    """The version of the creator, blank otherwise"""
+
+    routine: str = ""
+    """The name of the routine or function within the creator, blank otherwise"""
 
 
 class PriorityEnum(int, Enum):
@@ -115,10 +120,14 @@ class OutputStore(BaseModel):
     Storage of outputs and error messages, with optional compression
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
-    output_type: OutputTypeEnum = Field(..., description="The type of output this is (stdout, error, etc)")
-    compression_type: CompressionEnum = Field(CompressionEnum.none, description="Compression method (such as lzma)")
+    output_type: OutputTypeEnum
+    """The type of output this is (stdout, error, etc)"""
+
+    compression_type: CompressionEnum = CompressionEnum.none
+    """Compression method (such as lzma)"""
+
     data_: QCPortalBytes | None = Field(None, alias="data")
 
     _data_url: str | None = PrivateAttr(None)
@@ -224,10 +233,14 @@ class NativeFile(BaseModel):
     Storage of native files, with compression
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
-    name: str = Field(..., description="Name of the file")
-    compression_type: CompressionEnum = Field(..., description="Compression method (such as lzma)")
+    name: str
+    """Name of the file"""
+
+    compression_type: CompressionEnum
+    """Compression method (such as lzma)"""
+
     data_: QCPortalBytes | None = Field(None, alias="data")
 
     _data_url: str | None = PrivateAttr(None)
@@ -406,7 +419,7 @@ class BaseRecord(BaseModel):
     tags: list[str] | None = None
 
     properties: dict[str, Any] | None
-    extras: dict[str, Any] = Field({})
+    extras: dict[str, Any] = {}
 
     status: RecordStatusEnum
     manager_name: str | None

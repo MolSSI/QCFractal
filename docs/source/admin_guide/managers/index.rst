@@ -49,7 +49,7 @@ For this example, we are assuming a cluster using LSF as the scheduler; for othe
         request_by_nodes: false
         scheduler_options:            # add additional options for submission command
           - "-R fscratch"
-        queue_tags:                   # only claim tasks with these tags; '*' means all tags accepted
+        compute_tags:                 # only claim tasks with these tags; '*' means all tags accepted
           - '*'
         environments:
           use_manager_environment: False   # don't use the manager environment for task execution
@@ -110,7 +110,7 @@ Set the name of this conda env (``qcfractal-worker-psi4-18.1``) in the line ``- 
 
 Finally, start up the compute manager::
 
-    $ qcfractal-compute-manager --config config.yml
+    $ qcfractal-compute-manager --config qcfractal-manager-config.yml
 
 The compute manager will read its config file, communicate with the QCFractal server to claim tasks, and launch jobs to the HPC scheduler as needed to execute those tasks using the worker conda environment.
 To keep it running beyond your current session if connected via SSH, consider running the compute manager under `tmux`_ or `screen`_.
@@ -127,6 +127,15 @@ Configuration for different HPC schedulers
 ------------------------------------------
 HPC cluster schedulers vary in behavior, so you will need to adapt your ``qcfractal-manager-config.yml`` to the scheduler of the HPC cluster you intend to use.
 The configuration keys available for each ``type`` of record in the ``executors`` list are referenced here.
+
+Every executor, whatever its ``type``, accepts the keys on ``ExecutorConfig`` below - including
+``compute_tags``, ``cores_per_worker``, ``memory_per_worker``, ``worker_init``, and the nested
+``environments`` block. The scheduler-specific classes that follow add their own keys on top.
+
+.. autoclass:: qcfractalcompute.config.ExecutorConfig
+
+
+.. autoclass:: qcfractalcompute.config.PackageEnvironmentSettings
 
 
 .. autoclass:: qcfractalcompute.config.SlurmExecutorConfig
@@ -151,7 +160,7 @@ If leaving a long-running process running on the head node is undesirable, then 
         max_workers: 4                # max number of workers to spawn
         cores_per_worker: 16          # cores per worker
         memory_per_worker: 96         # memory per worker, in GiB
-        queue_tags:
+        compute_tags:
           - '*'
         environments:
           use_manager_environment: False

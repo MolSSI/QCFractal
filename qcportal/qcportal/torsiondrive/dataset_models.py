@@ -126,6 +126,42 @@ class TorsiondriveDataset(BaseDataset):
         dataset_id: int | None = None,
         specification_name: str | None = None,
     ) -> InsertCountsMetadata:
+        """
+        Adds entries to this dataset by copying them from another dataset
+
+        The source dataset may be another torsiondrive dataset, or an optimization dataset.
+
+        When copying from another torsiondrive dataset, entries are copied whole - including their
+        ``additional_keywords`` and ``additional_optimization_keywords``, and therefore their scan
+        definitions.
+
+        When copying from an optimization dataset, ``specification_name`` is required, and the single
+        initial molecule of each new entry is the optimized molecule of the corresponding record.
+        Entries whose record is not complete are skipped. Note that an optimization entry has no
+        scan definition to copy, so ``additional_keywords`` and ``additional_optimization_keywords``
+        of the new entries are empty - the dihedrals to scan must come from the dataset
+        specification, or the entries must be added manually instead.
+
+        Entries whose name already exists in this dataset are ignored.
+
+        Parameters
+        ----------
+        dataset_type
+            Type of the dataset to copy entries from. Must be given together with ``dataset_name``
+        dataset_name
+            Name of the dataset to copy entries from. Must be given together with ``dataset_type``
+        dataset_id
+            ID of the dataset to copy entries from. May be given instead of the type and name
+        specification_name
+            Specification of the source dataset to take molecules from. Required when copying
+            from an optimization dataset, and unused otherwise
+
+        Returns
+        -------
+        :
+            Metadata about how many entries were added
+        """
+
         body = TorsiondriveDatasetEntriesFrom(
             dataset_type=dataset_type,
             dataset_name=dataset_name,

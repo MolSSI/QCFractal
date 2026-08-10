@@ -125,7 +125,7 @@ Dataset Metadata
 
 Datasets have some useful metadata and properties
 
-* **name**, **description**, **tagline**, **group**, and **tags** are user-defined metadata that categorize this dataset
+* **name**, **description**, **tagline**, and **tags** are user-defined metadata that categorize this dataset
   among the other datasets
 * **default_compute_tag** and **default_compute_priority** are the defaults used when submitting new computations (can be overridden
   in :meth:`~qcportal.dataset_models.BaseDataset.submit`, see :ref:`dataset_submission`).
@@ -240,6 +240,79 @@ If you are in an interactive session or notebook, or just want a prettier versio
   local caching.
 
 
+.. _dataset_status_by_compute_tag:
+
+Status by Compute Tag
+---------------------
+
+:meth:`~qcportal.dataset_models.BaseDataset.status_by_compute_tag` breaks the status of the dataset's
+computations down by :ref:`compute tag <compute_tags>` rather than by specification. This answers a
+different question than :meth:`~qcportal.dataset_models.BaseDataset.status` does: not "how far along
+is each column of my dataset", but "which of my queues is this dataset waiting on".
+
+It returns a list of ``(compute tag, status, count)`` tuples.
+
+.. tab-set::
+
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> ds.status_by_compute_tag()
+      [('large_mem', <RecordStatusEnum.waiting: 'waiting'>, 12),
+       ('large_mem', <RecordStatusEnum.error: 'error'>, 2),
+       ('*', <RecordStatusEnum.running: 'running'>, 4)]
+
+This is useful when a dataset has been submitted under more than one tag - for example, if part of it
+was submitted with a tag that no compute manager is currently claiming, this is how that shows up.
+It is also the quickest way to see which tag a dataset's outstanding work is actually sitting under,
+which is not always the dataset's ``default_compute_tag``:
+:meth:`~qcportal.dataset_models.BaseDataset.submit` can override the tag for individual submissions,
+and records can be retagged afterwards.
+
+.. important::
+
+  **Only records that still have a task or service queue entry are counted.** A record's task is
+  removed from the queue once it completes, so completed records never appear here, and the counts
+  will not add up to the counts from :meth:`~qcportal.dataset_models.BaseDataset.status`. In practice
+  this method reports waiting, running, and errored records.
+
+  This is a feature rather than a limitation - the point of the method is to show outstanding work -
+  but it does mean an empty list means "nothing is queued", not "nothing exists".
+
+  Records whose computation type is a :ref:`service <glossary_service>` (torsiondrive, gridoptimization,
+  NEB, manybody, and reaction) keep their queue entry when they are cancelled, deleted, or
+  invalidated, since it holds the service's state. Those statuses can therefore appear for datasets of
+  those types, but not for singlepoint or optimization datasets.
+
+The returned list is neither sorted nor aggregated any further, so sort it yourself if you want stable
+output:
+
+.. tab-set::
+
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> from collections import defaultdict
+
+      >>> by_tag = defaultdict(dict)
+      >>> for tag, status, count in ds.status_by_compute_tag():
+      ...     by_tag[tag][status.value] = count
+
+      >>> for tag in sorted(by_tag):
+      ...     print(tag, dict(sorted(by_tag[tag].items())))
+      * {'running': 4}
+      large_mem {'error': 2, 'waiting': 12}
+
+.. note::
+
+  A related method, :meth:`~qcportal.dataset_models.BaseDataset.detailed_status`, returns a list of
+  ``(entry name, specification name, status)`` tuples - one per record in the dataset, with no
+  grouping. It is the right tool when you need to know *which* entries are in a given state rather
+  than how many.
+
+
 Specifications and Entries
 --------------------------
 
@@ -290,7 +363,7 @@ You can obtain a full entry from its name with :meth:`~qcportal.dataset_models.B
 
     .. code-block:: py3
 
-      >>> print(ds.get_entry)
+      >>> print(ds.get_entry('H2'))
       OptimizationDatasetEntry(name='H2', initial_molecule=Molecule(name='H2', formula='H2', hash='7746e69'),
       additional_keywords={}, attributes={}, comment=None)
 

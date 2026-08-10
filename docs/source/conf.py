@@ -6,6 +6,8 @@
 
 # Other packages
 import datetime
+import os
+import sys
 
 # Import the package for version info
 import qcfractal
@@ -16,9 +18,9 @@ import qcfractal
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+# Local extensions live in _ext (see the `config-table` directive used by the
+# configuration pages).
+sys.path.insert(0, os.path.abspath("_ext"))
 
 
 # -- Project information -----------------------------------------------------
@@ -48,25 +50,27 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     "sphinx.ext.extlinks",
+    "sphinx.ext.intersphinx",
     "sphinx_design",
-#    "sphinxcontrib.autodoc_pydantic",
+    "sphinxcontrib.pydantic",
     "sphinx_copybutton",
     "myst_nb",
+    # Local, in _ext/
+    "configtable",
 ]
 
 # Some options
 add_module_names = False
-autoclass_content = "both"
 autodoc_typehints = "description"
+autodoc_class_signature = "separated"
 autodoc_default_options = {
     "members": True,
     "undoc-members": True,
     "inherited-members": "BaseModel,str,int,float,bool",
     "show-inheritance": True,
     "member-order": "bysource",
+    "exclude-members": "__new__",
 }
-#autodoc_pydantic_model_show_json = False
-#autodoc_pydantic_settings_show_json = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = [
@@ -121,3 +125,18 @@ extlinks = {
     "pr": ("https://github.com/MolSSI/QCFractal/pull/%s", "PR %s"),
     "contrib": ("https://github.com/%s", "@%s"),
 }
+
+# -- intersphinx extension -------------------------------------------------
+
+# Lets type annotations pulled in by autodoc (datetime, Iterable, pydantic
+# BaseModel, and so on) link to the upstream documentation instead of
+# rendering as plain text.
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    # docs.pydantic.dev/latest redirects here; use the target directly
+    "pydantic": ("https://pydantic.dev/docs/validation/latest", None),
+    "qcelemental": ("https://molssi.github.io/QCElemental/dev", None),
+    "pandas": ("https://pandas.pydata.org/docs", None),
+}
+
+intersphinx_timeout = 30

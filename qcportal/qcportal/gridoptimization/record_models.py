@@ -86,21 +86,21 @@ class ScanDimension(BaseModel):
     A full description of a dimension to scan over.
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
-    type: ScanTypeEnum = Field(..., description=str(ScanTypeEnum.__doc__))
-    indices: list[int] = Field(
-        ...,
-        description="The indices of atoms to select for the scan. The size of this is a function of the type. e.g., "
-        "distances, angles and dihedrals require 2, 3, and 4 atoms, respectively.",
-    )
-    steps: list[float] = Field(
-        ...,
-        description="Step sizes to scan in relative to your current location in the scan. This must be a strictly "
-        "monotonic series.",
-        json_schema_extra={"units": ["Bohr", "degrees"]},
-    )
-    step_type: StepTypeEnum = Field(..., description=str(StepTypeEnum.__doc__))
+    type: ScanTypeEnum
+    """The type of scan to perform"""
+
+    indices: list[int]
+    """The indices of atoms to select for the scan. The size of this is a function of the type. e.g., distances,
+    angles and dihedrals require 2, 3, and 4 atoms, respectively.
+    """
+
+    steps: list[float] = Field(..., json_schema_extra={"units": ["Bohr", "degrees"]})
+    """Step sizes to scan in relative to your current location in the scan. This must be a strictly monotonic series."""
+
+    step_type: StepTypeEnum
+    """Whether the step values are absolute, or relative to the starting value"""
 
     @field_validator("type", "step_type", mode="before")
     @classmethod
@@ -133,16 +133,15 @@ class GridoptimizationKeywords(BaseModel):
     Keywords for grid optimizations
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
-    scans: list[ScanDimension] = Field(
-        [], description="The dimensions to scan along (along with their options) for the Gridoptimization."
-    )
-    preoptimization: bool = Field(
-        True,
-        description="If ``True``, first runs an unrestricted optimization before starting the grid computations. "
-        "This is especially useful when combined with ``relative`` ``step_types``.",
-    )
+    scans: list[ScanDimension] = []
+    """The dimensions to scan along (along with their options) for the Gridoptimization"""
+
+    preoptimization: bool = True
+    """If ``True``, first runs an unrestricted optimization before starting the grid computations. This is especially
+    useful when combined with ``relative`` ``step_types``.
+    """
 
 
 class GridoptimizationSpecification(BaseModel):

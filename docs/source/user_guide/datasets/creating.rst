@@ -85,7 +85,7 @@ Now our dataset has three entries
       ['carbon monoxide', 'difluorine', 'dibromine']
 
 Next, we will add some specifications. For an optimization dataset, this is an
-:class:`~qcportal.optimization.OptimizationSpecification`.
+:class:`~qcportal.optimization.record_models.OptimizationSpecification`.
 
 .. tab-set::
 

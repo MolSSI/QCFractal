@@ -4,7 +4,6 @@ The global qcfractal config file specification.
 
 import logging
 import os
-import re
 import secrets
 import tempfile
 from typing import Any, Annotated
@@ -59,7 +58,7 @@ def make_uri_string(
 
 
 class QCFConfigBase(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
 
 class DatabaseConfig(QCFConfigBase):
@@ -67,59 +66,61 @@ class DatabaseConfig(QCFConfigBase):
     Settings for the database used by QCFractal
     """
 
-    base_folder: str = Field(
-        ...,
-        description="The base folder to use as the default for some options (logs, etc). Default is the location of the config file.",
-    )
+    base_folder: str
+    """The base folder to use as the default for some options (logs, etc). Default is the location of the config
+    file.
+    """
 
-    full_uri: str | None = Field(
-        None, description="Full connection URI. This overrides host,username,password,port, etc"
-    )
+    full_uri: str | None = None
+    """Full connection URI. This overrides host,username,password,port, etc"""
 
-    host: str = Field(
-        "localhost",
-        description="The hostname or ip address the database is running on. If own = True, this must be localhost. May also be a path to a directory containing the database socket file",
-    )
-    port: int = Field(
-        5432,
-        description="The port the database is running on. If own = True, a database will be started, binding to this port",
-    )
-    database_name: str = Field("qcfractal_default", description="The database name to connect to.")
-    username: str = Field(..., description="The database username to connect with")
-    password: str = Field(..., description="The database password to connect with")
-    query: dict[str, str | int] = Field(
-        {}, description="Extra connection query parameters at the end of the URL string"
-    )
+    host: str = "localhost"
+    """The hostname or ip address the database is running on. If own = True, this must be localhost. May also be a
+    path to a directory containing the database socket file
+    """
 
-    own: bool = Field(
-        True,
-        description="If True, QCFractal will control the database instance. If False, you must start and manage the database yourself",
-    )
+    port: int = 5432
+    """The port the database is running on. If own = True, a database will be started, binding to this port"""
 
-    data_directory: str | None = Field(
-        None,
-        description="Location to place the database if own == True. Default is [base_folder]/database if we own the database",
-    )
-    logfile: str | None = Field(
-        None,
-        description="Path to a file to use as the database logfile (if own == True). Default is [base_folder]/qcfractal_database.log",
-    )
+    database_name: str = "qcfractal_default"
+    """The database name to connect to"""
 
-    echo_sql: bool = Field(False, description="[ADVANCED] output raw SQL queries being run")
-    pg_tool_dir: str | None = Field(
-        None,
-        description="Directory containing Postgres tools such as psql and pg_ctl (ie, /usr/bin, or /usr/lib/postgresql/13/bin). If not specified, an attempt to find them will be made. This field is only required if autodetection fails and own == True",
-    )
+    username: str
+    """The database username to connect with"""
 
-    pool_size: int = Field(
-        5,
-        description="[ADVANCED] set the size of the connection pool to use in SQLAlchemy. Set to zero to disable pooling",
-    )
+    password: str
+    """The database password to connect with"""
 
-    maintenance_db: str = Field(
-        "postgres",
-        description="[ADVANCED] An existing database (not the one you want to use/create). This is used for database management",
-    )
+    query: dict[str, str | int] = {}
+    """Extra connection query parameters at the end of the URL string"""
+
+    own: bool = True
+    """If True, QCFractal will control the database instance. If False, you must start and manage the database
+    yourself
+    """
+
+    data_directory: str | None = None
+    """Location to place the database if own == True. Default is [base_folder]/database if we own the database"""
+
+    logfile: str | None = None
+    """Path to a file to use as the database logfile (if own == True). Default is
+    [base_folder]/qcfractal_database.log
+    """
+
+    echo_sql: bool = False
+    """[ADVANCED] output raw SQL queries being run"""
+
+    pg_tool_dir: str | None = None
+    """Directory containing Postgres tools such as psql and pg_ctl (ie, /usr/bin, or /usr/lib/postgresql/13/bin). If
+    not specified, an attempt to find them will be made. This field is only required if autodetection fails and
+    own == True
+    """
+
+    pool_size: int = 5
+    """[ADVANCED] set the size of the connection pool to use in SQLAlchemy. Set to zero to disable pooling"""
+
+    maintenance_db: str = "postgres"
+    """[ADVANCED] An existing database (not the one you want to use/create). This is used for database management"""
 
     @model_validator(mode="after")
     def _check_paths(self):
@@ -190,13 +191,29 @@ class DatabaseConfig(QCFConfigBase):
 
 class AutoResetConfig(QCFConfigBase):
     """
-    Limits on the number of records returned per query. This can be specified per object (molecule, etc)
+    How many times the server will automatically retry a failed computation
     """
 
-    enabled: bool = Field(False, description="Enable/disable automatic restart. True = enabled")
-    unknown_error: int = Field(2, description="Max restarts for unknown errors")
-    compute_lost: int = Field(5, description="Max restarts for computations where the compute resource disappeared")
-    random_error: int = Field(5, description="Max restarts for random errors")
+    enabled: bool = False
+    """Whether to automatically reset errored records at all.
+
+    With this disabled, every errored record waits for someone to reset it by hand.
+    """
+
+    unknown_error: int = 2
+    """Maximum automatic restarts for errors that could not be classified"""
+
+    compute_lost: int = 5
+    """Maximum automatic restarts for computations whose compute resource disappeared.
+
+    This covers the ordinary ways a batch job ends without reporting back - a walltime kill,
+    a preempted node, a manager killed mid-task. These failures say nothing about whether the computation
+    itself is sound, which is why the default is more generous than for
+    ``unknown_error``.
+    """
+
+    random_error: int = 5
+    """Maximum automatic restarts for errors the server recognises as intermittent"""
 
 
 class APILimitConfig(QCFConfigBase):
@@ -204,22 +221,38 @@ class APILimitConfig(QCFConfigBase):
     Limits on the number of records returned per query. This can be specified per object (molecule, etc)
     """
 
-    get_records: int = Field(1000, description="Number of calculation records that can be retrieved")
-    add_records: int = Field(500, description="Number of calculation records that can be added")
+    get_records: int = 1000
+    """Number of calculation records that can be retrieve in a single request"""
 
-    get_dataset_entries: int = Field(2000, description="Number of dataset entries that can be retrieved")
+    add_records: int = 500
+    """Number of calculation records that can be added in a single request"""
 
-    get_molecules: int = Field(1000, description="Number of molecules that can be retrieved")
-    add_molecules: int = Field(1000, description="Number of molecules that can be added")
+    get_dataset_entries: int = 2000
+    """Number of dataset entries that can be retrieved in a single request"""
 
-    get_managers: int = Field(1000, description="Number of manager records to return")
+    get_molecules: int = 1000
+    """Number of molecules that can be retrieved in a single request"""
 
-    manager_tasks_claim: int = Field(200, description="Number of tasks a single manager can pull down")
-    manager_tasks_return: int = Field(10, description="Number of tasks a single manager can return at once")
+    add_molecules: int = 1000
+    """Number of molecules that can be added in a single request"""
 
-    get_access_logs: int = Field(1000, description="Number of access log records to return")
-    get_error_logs: int = Field(100, description="Number of error log records to return")
-    get_internal_jobs: int = Field(1000, description="Number of internal jobs to return")
+    get_managers: int = 1000
+    """Number of manager records to return"""
+
+    manager_tasks_claim: int = 200
+    """Number of tasks a single manager can pull down"""
+
+    manager_tasks_return: int = 10
+    """Number of tasks a single manager can return at once"""
+
+    get_access_logs: int = 1000
+    """Number of access log records to return"""
+
+    get_error_logs: int = 100
+    """Number of error log records to return"""
+
+    get_internal_jobs: int = 1000
+    """Number of internal jobs to return"""
 
 
 class WebAPIConfig(QCFConfigBase):
@@ -227,51 +260,58 @@ class WebAPIConfig(QCFConfigBase):
     Settings for the Web API (api) interface
     """
 
-    num_threads_per_worker: int = Field(4, description="Number of threads per worker")
-    worker_timeout: int = Field(
-        120,
-        description="If the master process does not hear from a worker for the given amount of time (in seconds),"
-        "kill it. This effectively limits the time a worker has to respond to a request",
-    )
-    host: str = Field("localhost", description="The IP address or hostname to bind to")
-    port: int = Field(7777, description="The port on which to run the REST interface.")
+    num_threads_per_worker: int = 4
+    """Number of threads per worker"""
 
-    secret_key: str = Field(..., description="Secret key for flask api. See documentation")
-    jwt_secret_key: str = Field(..., description="Secret key for web tokens. See documentation")
-    jwt_access_token_expires: int = Field(
-        60 * 60, description="The time (in seconds) an access token is valid for. Default is 1 hour"
-    )
-    jwt_refresh_token_expires: int = Field(
-        60 * 60 * 24, description="The time (in seconds) a refresh token is valid for. Default is 1 day"
-    )
-    user_session_max_age: int = Field(
-        60 * 60 * 24, description="The time (in seconds) that a user session can be idle (for browser-based sessions)"
-    )
-    user_session_cookie_name: str = Field(
-        "qcf_session", description="Name to use for a session cookie (for browser-based sessions)"
-    )
-    user_session_cookie_domain: str | None = Field(
-        None, description="Domain to use for the user-session cookie (for browser-based sessions)"
-    )
-    user_session_cookie_samesite: str | None = Field(
-        None, description="Set the SameSite flag for the user-session cookie (for browser-based sessions)"
-    )
-    user_session_cookie_partitioned: bool = Field(
-        False, description="Use the Partitioned flag for the user-session cookie (for browser-based sessions)"
-    )
-    user_session_cookie_secure: bool = Field(
-        False, description="Use Secure flag for the user-session cookie (for browser-based sessions)"
-    )
-    user_session_cookie_httponly: bool = Field(
-        False, description="Use Secure flag for the user-session cookie (for browser-based sessions)"
-    )
+    worker_timeout: int = 120
+    """If the master process does not hear from a worker for the given amount of time (in seconds),kill it. This
+    effectively limits the time a worker has to respond to a request
+    """
 
-    extra_flask_options: dict[str, Any] | None = Field(
-        None, description="Any additional options to pass directly to flask"
-    )
-    extra_waitress_options: dict[str, Any] | None = Field(
-        None, description="Any additional options to pass directly to the waitress serve function"
-    )
+    host: str = "localhost"
+    """The IP address or hostname to bind to"""
+
+    port: int = 7777
+    """The port on which to run the REST interface"""
+
+    secret_key: str
+    """Secret key for flask api. See documentation"""
+
+    jwt_secret_key: str
+    """Secret key for web tokens. See documentation"""
+
+    jwt_access_token_expires: int = 60 * 60
+    """The time (in seconds) an access token is valid for. Default is 1 hour"""
+
+    jwt_refresh_token_expires: int = 60 * 60 * 24
+    """The time (in seconds) a refresh token is valid for. Default is 1 day"""
+
+    user_session_max_age: int = 60 * 60 * 24
+    """The time (in seconds) that a user session can be idle (for browser-based sessions)"""
+
+    user_session_cookie_name: str = "qcf_session"
+    """Name to use for a session cookie (for browser-based sessions)"""
+
+    user_session_cookie_domain: str | None = None
+    """Domain to use for the user-session cookie (for browser-based sessions)"""
+
+    user_session_cookie_samesite: str | None = None
+    """Set the SameSite flag for the user-session cookie (for browser-based sessions)"""
+
+    user_session_cookie_partitioned: bool = False
+    """Use the Partitioned flag for the user-session cookie (for browser-based sessions)"""
+
+    user_session_cookie_secure: bool = False
+    """Use Secure flag for the user-session cookie (for browser-based sessions)"""
+
+    user_session_cookie_httponly: bool = False
+    """Use Secure flag for the user-session cookie (for browser-based sessions)"""
+
+    extra_flask_options: dict[str, Any] | None = None
+    """Any additional options to pass directly to flask"""
+
+    extra_waitress_options: dict[str, Any] | None = None
+    """Any additional options to pass directly to the waitress serve function"""
 
     @field_validator(
         "jwt_access_token_expires",
@@ -288,8 +328,11 @@ class WebAPIConfig(QCFConfigBase):
 S3BucketName = Annotated[str, StringConstraints(min_length=3, max_length=63, pattern=r"^[a-z0-9\-]+[a-z0-9]$")]
 
 class S3BucketMap(QCFConfigBase):
-    dataset_attachment: S3BucketName = Field("dataset-attachments", description="Bucket to hold dataset views")
-    project_attachment: S3BucketName = Field("project-attachments", description="Bucket to hold project attachments")
+    dataset_attachment: S3BucketName = "dataset-attachments"
+    """Bucket to hold dataset views"""
+
+    project_attachment: S3BucketName = "project-attachments"
+    """Bucket to hold project attachments"""
 
 
 class S3Config(QCFConfigBase):
@@ -298,16 +341,36 @@ class S3Config(QCFConfigBase):
     """
 
     enabled: bool = False
-    verify: bool = True
-    passthrough: bool = False
-    endpoint_url: str | None = Field(None, description="S3 endpoint URL")
-    access_key_id: str | None = Field(None, description="AWS/S3 access key")
-    secret_access_key: str | None = Field(None, description="AWS/S3 secret key")
-    auto_create_buckets: bool = False
+    """Whether to store large external files (dataset views, attachments) in S3.
 
-    bucket_map: S3BucketMap = Field(
-        default_factory=S3BucketMap, description="Configuration for where to store various files"
-    )
+    When enabled, ``endpoint_url``, ``access_key_id`` and ``secret_access_key`` are all
+    required; the server refuses to start otherwise.
+    """
+
+    verify: bool = True
+    """Verify TLS certificates when connecting to S3"""
+
+    passthrough: bool = False
+    """Whether clients may download directly from the S3 endpoint.
+
+    With this off, file contents are proxied through the server, so clients never need
+    to reach S3 themselves.
+    """
+
+    endpoint_url: str | None = None
+    """S3 endpoint URL"""
+
+    access_key_id: str | None = None
+    """AWS/S3 access key"""
+
+    secret_access_key: str | None = None
+    """AWS/S3 secret key"""
+
+    auto_create_buckets: bool = False
+    """Create the buckets named in ``bucket_map`` at startup if they do not already exist"""
+
+    bucket_map: S3BucketMap = Field(default_factory=S3BucketMap)
+    """Configuration for where to store various files"""
 
     @model_validator(mode="after")
     def _check_enabled(self):
@@ -324,10 +387,19 @@ class CORSconfig(QCFConfigBase):
     """
 
     enabled: bool = False
-    origins: list[str] = Field([])
+    """Whether to send CORS headers at all. With this off the other options here do nothing."""
+
+    origins: list[str] = []
+    """Origins permitted to make cross-origin requests. Use ``["*"]`` to allow any origin."""
+
     supports_credentials: bool = False
-    headers: list[str] = Field([])
-    methods: list[str] = Field([])
+    """Whether cross-origin requests may carry credentials (cookies, authorization headers)"""
+
+    headers: list[str] = []
+    """Request headers a cross-origin request is allowed to set, such as ``Authorization``"""
+
+    methods: list[str] = []
+    """HTTP methods permitted for cross-origin requests. Empty means the CORS default."""
 
 
 class FractalConfig(BaseSettings):
@@ -335,114 +407,121 @@ class FractalConfig(BaseSettings):
     Fractal Server settings
     """
 
-    base_folder: str = Field(
-        ...,
-        description="The base directory to use as the default for some options (logs, etc). Default is the location of the config file.",
-    )
+    base_folder: str
+    """The base directory to use as the default for some options (logs, etc). Default is the location of the config
+    file.
+    """
 
-    temporary_dir: str | None = Field(
-        None,
-        description="Temporary directory to use for things such as view creation. If None, uses system default. This may require a lot of space!",
-    )
+    temporary_dir: str | None = None
+    """Temporary directory to use for things such as view creation. If None, uses system default. This may require a
+    lot of space!
+    """
 
     # Info for the REST interface
-    name: str = Field("QCFractal Server", description="The QCFractal server name")
+    name: str = "QCFractal Server"
+    """The QCFractal server name"""
 
-    enable_security: bool = Field(True, description="Enable user authentication and authorization")
-    allow_unauthenticated_read: bool = Field(
-        True,
-        description="Allows unauthenticated read access to this instance. This does not extend to sensitive tables (such as user information)",
-    )
-    strict_compute_tags: bool = Field(
-        False,
-        description="If True, disables wildcard behavior for compute tags. This disables managers from claiming all "
-        "tags if they specify a wildcard ('*') tag. Managers will still be able to claim tasks with an "
-        "explicit '*' tag if they specify the '*' queue tag in their config",
-    )
+    enable_security: bool = True
+    """Enable user authentication and authorization"""
+
+    allow_unauthenticated_read: bool = True
+    """Allows unauthenticated read access to this instance. This does not extend to sensitive tables (such as user
+    information)
+    """
+
+    strict_compute_tags: bool = False
+    """If True, disables wildcard behavior for compute tags. This disables managers from claiming all tags if they
+    specify a wildcard ('*') tag. Managers will still be able to claim tasks with an explicit '*' tag if they
+    specify the '*' queue tag in their config
+    """
 
     # Logging and profiling
-    logfile: str | None = Field(
-        None,
-        description="Path to a file to use for server logging. If not specified, logs will be printed to standard output",
-    )
-    loglevel: str = Field(
-        "INFO", description="Level of logging to enable (debug, info, warning, error, critical). Case insensitive"
-    )
+    logfile: str | None = None
+    """Path to a file to use for server logging. If not specified, logs will be printed to standard output"""
 
-    hide_internal_errors: bool = Field(
-        True,
-        description="If True, internal errors will only be reported as an error "
-        "number to the user. If False, the entire error/backtrace "
-        "will be sent (which could rarely contain sensitive info). "
-        "In either case, errors will be stored in the database",
-    )
+    loglevel: str = "INFO"
+    """Level of logging to enable (debug, info, warning, error, critical). Case insensitive"""
+
+    hide_internal_errors: bool = True
+    """If True, internal errors will only be reported as an error number to the user. If False, the entire
+    error/backtrace will be sent (which could rarely contain sensitive info). In either case, errors will be
+    stored in the database
+    """
 
     # Periodics
-    service_frequency: int = Field(60, description="The frequency at which to update services (in seconds)")
-    max_active_services: int = Field(20, description="The maximum number of concurrent active services")
-    heartbeat_frequency: int = Field(
-        1800,
-        description="The frequency (in seconds) to check the heartbeat of compute managers",
-        gt=0,
-    )
-    heartbeat_frequency_jitter: float = Field(
-        0.1, description="Jitter fraction to be applied to the heartbeat frequency", ge=0
-    )
-    heartbeat_max_missed: int = Field(
-        5,
-        description="The maximum number of heartbeats that a compute manager can miss. If more are missed, the worker is considered dead",
-        ge=0,
-    )
+    service_frequency: int = 60
+    """The frequency at which to update services (in seconds)"""
+
+    max_active_services: int = 20
+    """The maximum number of concurrent active services"""
+
+    heartbeat_frequency: int = Field(1800, gt=0)
+    """The frequency (in seconds) to check the heartbeat of compute managers"""
+
+    heartbeat_frequency_jitter: float = Field(0.1, ge=0)
+    """Jitter fraction to be applied to the heartbeat frequency"""
+
+    heartbeat_max_missed: int = Field(5, ge=0)
+    """The maximum number of heartbeats that a compute manager can miss. If more are missed, the worker is considered
+    dead
+    """
 
     # Access logging
-    log_access: bool = Field(False, description="Store API access in the database")
-    access_log_keep: int = Field(
-        0, description="How far back to keep access logs (in days or as a duration string). 0 means keep all"
-    )
+    log_access: bool = False
+    """Store API access in the database"""
 
-    # maxmind_account_id: int | None = Field(None, description="Account ID for MaxMind GeoIP2 service")
-    maxmind_license_key: str | None = Field(
-        None,
-        description="License key for MaxMind GeoIP2 service. If provided, the GeoIP2 database will be downloaded and updated automatically",
-    )
+    access_log_keep: int = 0
+    """How far back to keep access logs (in days or as a duration string). 0 means keep all"""
 
-    geoip2_dir: str | None = Field(
-        None,
-        description="Directory containing the Maxmind GeoIP2 Cities file (GeoLite2-City.mmdb) Defaults to [base_folder]/geoip2. This directory will be created if needed.",
-    )
+    maxmind_license_key: str | None = None
+    """License key for MaxMind GeoIP2 service. If provided, the GeoIP2 database will be downloaded and updated
+    automatically
+    """
 
-    geoip2_filename: str = Field(
-        "GeoLite2-City.mmdb", description="Filename of the Maxmind GeoIP2 Cities file (GeoLite2-City.mmdb)"
-    )
+    geoip2_dir: str | None = None
+    """Directory containing the Maxmind GeoIP2 Cities file (GeoLite2-City.mmdb) Defaults to [base_folder]/geoip2.
+    This directory will be created if needed.
+    """
+
+    geoip2_filename: str = "GeoLite2-City.mmdb"
+    """Filename of the Maxmind GeoIP2 Cities file (GeoLite2-City.mmdb)"""
 
     # Internal jobs
-    internal_job_processes: int = Field(
-        1, description="Number of processes for processing internal jobs and async requests"
-    )
-    internal_job_keep: int = Field(
-        0, description="How far back to keep finished internal jobs (in days or as a duration string). 0 means keep all"
-    )
+    internal_job_processes: int = 1
+    """Number of processes for processing internal jobs and async requests"""
+
+    internal_job_keep: int = 0
+    """How far back to keep finished internal jobs (in days or as a duration string). 0 means keep all"""
 
     # Homepage settings
-    homepage_redirect_url: str | None = Field(None, description="Redirect to this URL when going to the root path")
-    homepage_directory: str | None = Field(None, description="Use this directory to serve the homepage")
+    homepage_redirect_url: str | None = None
+    """Redirect to this URL when going to the root path"""
+
+    homepage_directory: str | None = None
+    """Use this directory to serve the homepage"""
 
     # File uploads
-    upload_directory: str | None = Field(None, description="Directory to store user-uploaded files for processing")
+    upload_directory: str | None = None
+    """Directory to store user-uploaded files for processing"""
 
     # Other settings blocks
-    database: DatabaseConfig = Field(..., description="Configuration of the settings for the database")
-    api: WebAPIConfig = Field(..., description="Configuration of the REST interface")
-    s3: S3Config = Field(default_factory=S3Config, description="Configuration of the S3 file storage (optional)")
-    api_limits: APILimitConfig = Field(
-        default_factory=APILimitConfig, description="Configuration of the limits to the api"
-    )
-    cors: CORSconfig = Field(
-        default_factory=CORSconfig, description="Configuration Cross Origin Resource sharing (advanced)"
-    )
-    auto_reset: AutoResetConfig = Field(
-        default_factory=AutoResetConfig, description="Configuration for automatic resetting of tasks"
-    )
+    database: DatabaseConfig
+    """Configuration of the settings for the database"""
+
+    api: WebAPIConfig
+    """Configuration of the REST interface"""
+
+    s3: S3Config = Field(default_factory=S3Config)
+    """Configuration of the S3 file storage (optional)"""
+
+    api_limits: APILimitConfig = Field(default_factory=APILimitConfig)
+    """Configuration of the limits to the api"""
+
+    cors: CORSconfig = Field(default_factory=CORSconfig)
+    """Configuration Cross Origin Resource sharing (advanced)"""
+
+    auto_reset: AutoResetConfig = Field(default_factory=AutoResetConfig)
+    """Configuration for automatic resetting of tasks"""
 
     @field_validator("loglevel", mode="after")
     @classmethod
@@ -497,7 +576,11 @@ class FractalConfig(BaseSettings):
         return self
 
     model_config = SettingsConfigDict(
-        extra="forbid", case_sensitive=False, env_prefix="QCF_", env_nested_delimiter="__"
+        extra="forbid",
+        case_sensitive=False,
+        env_prefix="QCF_",
+        env_nested_delimiter="__",
+        use_attribute_docstrings=True,
     )
 
     # Since we manually read the yaml files, the values passed into the init
@@ -512,6 +595,58 @@ class FractalConfig(BaseSettings):
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         return env_settings, dotenv_settings, init_settings, file_secret_settings
+
+
+# Environment variable prefixes that were removed when the configuration moved from one
+# BaseSettings per section (each with its own flat prefix) to a single BaseSettings at
+# the top level with env_nested_delimiter="__". Maps the old prefix to its replacement.
+_DEPRECATED_ENV_PREFIXES: list[tuple[str, str]] = [
+    ("QCF_DB_", "QCF_DATABASE__"),
+    ("QCF_APILIMIT_", "QCF_API_LIMITS__"),
+    ("QCF_AUTORESET_", "QCF_AUTO_RESET__"),
+    ("QCF_S3_", "QCF_S3__"),
+    ("QCF_API_", "QCF_API__"),
+]
+
+
+def check_deprecated_env_vars() -> None:
+    """
+    Raise if the environment contains one of the removed per-section variable prefixes
+
+    These no longer have any effect, so without this check a stale ``QCF_DB_HOST`` would
+    leave the setting at its default with no indication that anything was wrong.
+
+    Raises
+    ------
+    RuntimeError
+        If a deprecated environment variable is set. The message names the replacement.
+    """
+
+    # Checked first: a valid variable can begin with a deprecated prefix. QCF_API_LIMITS__
+    # starts with QCF_API_, and used to be rejected as if it were the old QCF_API_ prefix,
+    # which made api_limits impossible to set from the environment at all.
+    current_prefixes = tuple(
+        f"QCF_{name.upper()}__"
+        for name, field in FractalConfig.model_fields.items()
+        if isinstance(field.annotation, type) and issubclass(field.annotation, BaseModel)
+    )
+
+    for key in os.environ:
+        upper_key = key.upper()
+
+        if upper_key.startswith(current_prefixes):
+            continue
+
+        for old_prefix, new_prefix in _DEPRECATED_ENV_PREFIXES:
+            if not upper_key.startswith(old_prefix):
+                continue
+            # A further underscore means a nested-style name that simply does not exist
+            # (eg QCF_DB__HOST); leave it to pydantic rather than suggesting a mangled
+            # replacement.
+            if upper_key.startswith(old_prefix + "_"):
+                continue
+            new_key = new_prefix + upper_key[len(old_prefix) :]
+            raise RuntimeError(f"Environment variable {key} is deprecated. Use {new_key} instead.")
 
 
 def read_configuration(file_paths: list[str], extra_config: dict[str, Any] | None = None) -> FractalConfig:
@@ -547,20 +682,7 @@ def read_configuration(file_paths: list[str], extra_config: dict[str, Any] | Non
 
     config_data["base_folder"] = os.path.abspath(base_dir)
 
-    # Test environment values for old names
-    for key in os.environ.keys():
-        if re.match(r"QCF_DB_[^_]", key):
-            new_key = key.replace("QCF_DB_", "QCF_DATABASE__")
-            raise RuntimeError(f"Environment variable {key} is deprecated. Use {new_key} instead.")
-        if re.match(r"QCF_API_[^_]", key):
-            new_key = key.replace("QCF_API_", "QCF_API__")
-            raise RuntimeError(f"Environment variable {key} is deprecated. Use {new_key} instead.")
-        if re.match("QCF_AUTORESET_[^_]", key):
-            new_key = key.replace("QCF_AUTORESET_", "QCF_AUTO_RESET__")
-            raise RuntimeError(f"Environment variable {key} is deprecated. Use {new_key} instead.")
-        if re.match("QCF_S3_[^_]", key):
-            new_key = key.replace("QCF_S3_", "QCF_S3__")
-            raise RuntimeError(f"Environment variable {key} is deprecated. Use {new_key} instead.")
+    check_deprecated_env_vars()
 
     # Pydantic will handle reading from environment variables
     # See if it can assemble a config. If there was a problem, and no

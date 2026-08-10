@@ -36,7 +36,7 @@ class ManybodySpecification(BaseModel):
     program: LowerStr = "qcmanybody"
     levels: dict[int | Literal["supersystem"], QCSpecification]
     bsse_correction: list[BSSECorrectionEnum]
-    keywords: ManybodyKeywords = Field(ManybodyKeywords())
+    keywords: ManybodyKeywords = ManybodyKeywords()
     protocols: dict[str, Any] = Field(default_factory=dict)
 
 

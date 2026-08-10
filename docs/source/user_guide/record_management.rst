@@ -156,7 +156,10 @@ If ``soft_delete=False`` ("hard delete"), then the record is deleted permanently
 
 .. important::
 
-  A record cannot be hard-deleted if it is being referenced somewhere (another record or a dataset).
+  A record cannot be hard-deleted if it is being referenced somewhere - another record, a dataset,
+  or a :doc:`project <projects/index>`. Such records are reported in the ``errors`` field of the
+  returned :class:`~qcportal.metadata_models.DeleteMetadata` rather than raising, so check it if it
+  matters.
 
 .. tab-set::
 
@@ -222,9 +225,7 @@ Records that are ``waiting`` or ``running`` can be cancelled with
 be picked up by a compute manager.
 
 Cancelling can be undone with :meth:`~qcportal.client.PortalClient.uncancel_records`. If the record was ``running``
-before it was cancelled, with will go back to a ``waiting state``.
-
-Invalidation can be undone with :meth:`~qcportal.client.PortalClient.uncancel_records`.
+before it was cancelled, it will go back to a ``waiting`` state.
 
 .. tab-set::
 

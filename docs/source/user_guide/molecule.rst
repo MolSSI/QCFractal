@@ -56,7 +56,7 @@ with more):
       ...   O   0.000000 0.000000 0.000000
       ... """
       >>> water = Molecule.from_data(mol_xyz)
-      >>> print(water2)
+      >>> print(water)
       Molecule(name='H2O', formula='H2O', hash='246998b')
 
 Note that in the case of XYZ files, the units are angstroms.
@@ -66,7 +66,7 @@ Similarly, you can construct the molecule from a file. If the above XYZ data was
 .. code-block:: py3
 
   >>> water = Molecule.from_file('water.xyz')
-  >>> print(water2)
+  >>> print(water)
   Molecule(name='H2O', formula='H2O', hash='246998b')
 
 
@@ -80,7 +80,8 @@ Adding molecules to the server
   :meth:`~qcportal.client.PortalClient.add_singlepoints` and they will be automatically added
   to the database as needed. However, in some cases, this may be useful.
 
-Molecules can be added to the server database with `~qcportal.client.PortalClient.add_molecules`. This returns
+Molecules can be added to the server database with
+:meth:`~qcportal.client.PortalClient.add_molecules`. This returns
 some metadata about the insertion, and the molecule IDs.
 
 .. tab-set::

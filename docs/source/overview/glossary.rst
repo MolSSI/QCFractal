@@ -28,7 +28,7 @@ specification
 --------------------------
 
 A *specification* details how a computation should be run. For example, an
-:class:`~qcportal.optimization.OptimizationSpecification` contains
+:class:`~qcportal.optimization.record_models.OptimizationSpecification` contains
 information about the program used to run the optimization, which method or basis, and other
 input information.
 
@@ -131,6 +131,22 @@ Specifications are then applied to :ref:`entries <glossary_dataset_entry>` to
 form :ref:`records <glossary_record>` that are associated with the dataset.
 
 See :doc:`../user_guide/datasets/index`
+
+
+.. _glossary_project:
+
+project
+--------------------------
+
+A *project* is a named container that groups together the :ref:`records <glossary_record>` and
+:ref:`datasets <glossary_dataset>` belonging to a single piece of work, along with any files
+you want to keep with them.
+
+Within a project, records and datasets are given names, so they can be referred to by name
+rather than by ID. A record or dataset may be created directly in a project, or an existing
+one that already lives on the server may be linked into it.
+
+See :doc:`../user_guide/projects/index`
 
 
 .. _glossary_dataset_view:

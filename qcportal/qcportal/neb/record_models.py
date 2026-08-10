@@ -26,51 +26,44 @@ class NEBKeywords(BaseModel):
     NEBRecord options
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 
-    images: int = Field(
-        11,
-        description="Number of images that will be used to locate a rough transition state structure.",
-        gt=5,
-    )
+    images: int = Field(11, gt=5)
+    """Number of images that will be used to locate a rough transition state structure"""
 
-    spring_constant: float = Field(
-        1.0,
-        description="Spring constant in kcal/mol/Ang^2.",
-    )
+    spring_constant: float = 1.0
+    """Spring constant in kcal/mol/Ang^2"""
 
-    spring_type: int = Field(
-        0,
-        description="0: Nudged Elastic Band (parallel spring force + perpendicular gradients)\n"
-        "1: Hybrid Elastic Band (full spring force + perpendicular gradients)\n"
-        "2: Plain Elastic Band (full spring force + full gradients)\n",
-    )
+    spring_type: int = 0
+    """Which spring and gradient terms to use.
 
-    maximum_force: float = Field(
-        0.05,
-        description="Convergence criteria. Converge when maximum RMS-gradient (ev/Ang) of the chain fall below maximum_force.",
-    )
+    * ``0`` - Nudged Elastic Band (parallel spring force + perpendicular gradients)
+    * ``1`` - Hybrid Elastic Band (full spring force + perpendicular gradients)
+    * ``2`` - Plain Elastic Band (full spring force + full gradients)
+    """
 
-    average_force: float = Field(
-        0.025,
-        description="Convergence criteria. Converge when average RMS-gradient (ev/Ang) of the chain fall below average_force.",
-    )
+    maximum_force: float = 0.05
+    """Convergence criteria. Converge when maximum RMS-gradient (ev/Ang) of the chain fall below maximum_force."""
 
-    maximum_cycle: int = Field(100, description="Maximum iteration number for NEB calculation.")
+    average_force: float = 0.025
+    """Convergence criteria. Converge when average RMS-gradient (ev/Ang) of the chain fall below average_force."""
 
-    optimize_ts: bool = Field(
-        False,
-        description="Setting it equal to true will perform a transition sate optimization starting with the guessed transition state structure from the NEB calculation result.",
-    )
+    maximum_cycle: int = 100
+    """Maximum iteration number for NEB calculation"""
 
-    optimize_endpoints: bool = Field(
-        False,
-        description="Setting it equal to True will optimize two end points of the initial chain before starting NEB.",
-    )
+    optimize_ts: bool = False
+    """Perform a transition state optimization, starting from the transition state structure guessed by the
+    NEB calculation
+    """
 
-    align: bool = Field(True, description="Align the images before starting the NEB calculation.")
+    optimize_endpoints: bool = False
+    """Optimize the two end points of the initial chain before starting NEB"""
 
-    epsilon: float = Field(1e-5, description="Small eigenvalue threshold for resetting Hessian.")
+    align: bool = True
+    """Align the images before starting the NEB calculation"""
+
+    epsilon: float = 1e-5
+    """Small eigenvalue threshold for resetting Hessian"""
 
     @model_validator(mode="before")
     @classmethod
