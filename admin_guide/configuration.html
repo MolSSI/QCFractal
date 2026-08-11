@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=64b8918b"></script>
+    <script src="../_static/documentation_options.js?v=c0585f77"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCFractal Installation and Setup" href="setup.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post116+gd57ba756e" />
+  <meta name="docsearch:version" content="0.65.post119+gade2bc557" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1126,8 +1126,8 @@ you.</p>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">jwt_access_token_expires</span></code>
 <em>(int)</em></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">3600</span></code></p></td>
-<td><p>The time (in seconds) an access token is valid for. Default is 1 hour</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">900</span></code></p></td>
+<td><p>The time (in seconds) an access token is valid for. Default is 15 minutes</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">jwt_refresh_token_expires</span></code>
 <em>(int)</em></p></td>
@@ -2330,7 +2330,7 @@ own == True</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcfractal.config.WebAPIConfig.jwt_access_token_expires" title="qcfractal.config.WebAPIConfig.jwt_access_token_expires"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jwt_access_token_expires</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>No</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">3600</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">900</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcfractal.config.WebAPIConfig.jwt_refresh_token_expires" title="qcfractal.config.WebAPIConfig.jwt_refresh_token_expires"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jwt_refresh_token_expires</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
@@ -2440,7 +2440,7 @@ effectively limits the time a worker has to respond to a request</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcfractal.config.WebAPIConfig.jwt_access_token_expires">
 <span class="sig-name descname"><span class="pre">jwt_access_token_expires</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcfractal.config.WebAPIConfig.jwt_access_token_expires" title="Link to this definition">#</a></dt>
-<dd><p>The time (in seconds) an access token is valid for. Default is 1 hour</p>
+<dd><p>The time (in seconds) an access token is valid for. Default is 15 minutes</p>
 </dd></dl>
 
 <dl class="py attribute">
