@@ -882,7 +882,7 @@ class RecordQueryIterator(QueryIteratorBase[_Record_T]):
         self,
         client,
         query_filters: RecordQueryFilters,
-        record_type: Type[_Record_T],
+        record_type: Type[_Record_T] | None,
         include: Iterable[str] | None = None,
     ):
         """
@@ -895,7 +895,9 @@ class RecordQueryIterator(QueryIteratorBase[_Record_T]):
         query_filters
             The actual query information to send to the server
         record_type
-            What type of record we are querying for
+            What type of record we are querying for. If None, records of all types are returned
+        include
+            Additional fields to include in the returned records
         """
 
         batch_limit = client.api_limits["get_records"] // 4

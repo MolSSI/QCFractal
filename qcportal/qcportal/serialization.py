@@ -1,6 +1,6 @@
 import base64
 import json
-from typing import Any, Type, TypeVar
+from typing import Any, Type, TypeVar, overload
 
 import msgpack
 import numpy as np
@@ -45,7 +45,18 @@ class _JSONEncoder(json.JSONEncoder):
         return pydantic_core.to_jsonable_python(obj)
 
 
-def deserialize(data: bytes | str, content_type: str, model: Type[_V]) -> _V:
+@overload
+def deserialize(data: bytes | str, content_type: str, model: Type[_V]) -> _V: ...
+
+
+# Second overload for anything that is not a plain class - typing special forms (Dict[str, Any],
+# List[int], ...), None, or Any. These cannot be expressed as a type[...], but are all valid
+# pydantic TypeAdapter arguments
+@overload
+def deserialize(data: bytes | str, content_type: str, model: Any) -> Any: ...
+
+
+def deserialize(data: bytes | str, content_type: str, model: Any) -> Any:
     if content_type.startswith("application/"):
         content_type = content_type[12:]
 
