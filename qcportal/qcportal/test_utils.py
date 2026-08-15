@@ -1,4 +1,84 @@
-from qcportal.utils import chunk_iterable, seconds_to_hms, duration_to_seconds, is_included
+import numpy as np
+import pytest
+
+from qcportal.record_models import RecordQueryFilters, RecordStatusEnum
+from qcportal.utils import chunk_iterable, seconds_to_hms, duration_to_seconds, is_included, is_scalar, make_list
+
+# Things that represent a single value, even if some of them are iterable
+# (RecordStatusEnum is a str-based enum, so it is a single value the same way a str is)
+scalar_objects = [7, np.int64(7), "abc", "", RecordStatusEnum.complete, {"a": 1}, {}, RecordQueryFilters()]
+
+# Things that represent multiple values
+collection_objects = [
+    [1, 2],
+    [],
+    (1, 2),
+    (),
+    {1, 2},
+    frozenset([1, 2]),
+    ["abc"],
+    range(3),
+    {1: "a", 2: "b"}.keys(),
+    {1: "a", 2: "b"}.values(),
+    np.array([1, 2, 3]),
+    np.array(5),  # 0-d array - a scalar as far as numpy is concerned, but still expanded
+]
+
+
+@pytest.mark.parametrize("obj", scalar_objects)
+def test_is_scalar_true(obj):
+    assert is_scalar(obj) is True
+
+
+@pytest.mark.parametrize("obj", collection_objects)
+def test_is_scalar_false(obj):
+    assert is_scalar(obj) is False
+
+
+@pytest.mark.parametrize("obj", scalar_objects + collection_objects)
+def test_is_scalar_matches_make_list(obj):
+    # is_scalar and make_list must always agree about what counts as a single value.
+    # If they disagree, functions taking "one or many" silently return the wrong shape
+    made = make_list(obj)
+
+    if is_scalar(obj):
+        assert made == [obj]
+    else:
+        assert made == list(np.atleast_1d(obj) if isinstance(obj, np.ndarray) else obj)
+
+
+def test_make_list_numpy():
+    # Arrays are expanded, and elements come back as plain python types (not numpy scalars)
+    made = make_list(np.array([1, 2, 3]))
+    assert made == [1, 2, 3]
+    assert all(type(x) is int for x in made)
+
+    # 0-d arrays hold a single value, but the return must still be a list
+    assert make_list(np.array(5)) == [5]
+
+    # Higher dimensions are kept as nested lists
+    assert make_list(np.array([[1, 2], [3, 4]])) == [[1, 2], [3, 4]]
+
+    # A numpy scalar is a single value
+    assert make_list(np.int64(5)) == [5]
+
+
+def test_make_list_dict_views():
+    d = {1: "a", 2: "b"}
+
+    assert make_list(d.keys()) == [1, 2]
+    assert make_list(d.values()) == ["a", "b"]
+    assert make_list(d.items()) == [(1, "a"), (2, "b")]
+
+    # ... but the dict itself is a single value
+    assert make_list(d) == [d]
+
+
+def test_make_list_generator():
+    # Generators are iterable but not sized, and are currently wrapped rather than expanded.
+    # If that changes, is_scalar must change with it (see test_is_scalar_matches_make_list)
+    gen = (x for x in [1, 2])
+    assert make_list(gen) == [gen]
 
 
 def test_chunk_iterable():

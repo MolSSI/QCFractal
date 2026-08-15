@@ -5,7 +5,8 @@ import logging
 import os
 import random
 import time
-from typing import Any, Dict, Optional, Union, TypeVar, Type, overload, Tuple, Iterable
+from collections.abc import Iterable
+from typing import Any, TypeVar, overload
 
 import jwt
 import pydantic
@@ -26,9 +27,11 @@ AllowedConnectionExceptions = (
     urllib3.exceptions.TimeoutError,
 )
 
-_T = TypeVar("_T")
-_U = TypeVar("_U")
+# Type of the model a response is deserialized into
 _V = TypeVar("_V")
+
+# Used for classmethods that construct a client - they return the derived class they are called on
+_ClientType = TypeVar("_ClientType", bound="PortalClientBase")
 
 
 _ssl_error_msg = (
@@ -38,14 +41,15 @@ _ssl_error_msg = (
 _connection_error_msg = "\n\nCould not connect to server {}, please check the address and try again."
 
 
-def pretty_print_request(req):
+def pretty_print_request(req: requests.PreparedRequest) -> None:
     print("----------------------")
     print(f"{req.method} {req.url}")
-    print("\n".join(f"{k}: {v}" for k, v in req.headers.items()))
+    # Header values may be bytes, so convert explicitly
+    print("\n".join(f"{k}: {str(v)}" for k, v in req.headers.items()))
     print("----------------------")
 
 
-def pretty_print_response(res):
+def pretty_print_response(res: requests.Response) -> None:
     print("----------------------")
     print(f"RESPONSE {res.url} -> {res.status_code}")
     print(f"Content: {len(res.content)} bytes")
@@ -54,13 +58,13 @@ def pretty_print_response(res):
 
 
 class PortalRequestError(Exception):
-    def __init__(self, msg: str, status_code: int, details: Dict[str, Any]):
+    def __init__(self, msg: str, status_code: int, details: dict[str, Any]) -> None:
         Exception.__init__(self, msg)
         self.msg = msg
         self.status_code = status_code
         self.details = details
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.msg} (HTTP status {self.status_code})"
 
 
@@ -68,8 +72,8 @@ class PortalClientBase:
     def __init__(
         self,
         address: str,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
+        username: str | None = None,
+        password: str | None = None,
         verify: bool = True,
         show_motd: bool = True,
         *,
@@ -112,8 +116,8 @@ class PortalClientBase:
             address += "/"
 
         self.address = address
-        self.username = username
-        self.user_id = None
+        self.username: str | None = username
+        self.user_id: int | None = None
         self._verify = verify
 
         # A persistent session
@@ -145,18 +149,21 @@ class PortalClientBase:
         if self._verify is False:
             requests.packages.urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
 
+        # Credentials and JWT tokens/expirations. These are all set by _get_JWT_token
+        self._username: str | None = None
+        self._password: str | None = None
+        self._jwt_access_token: str | None = None
+        self._jwt_refresh_token: str | None = None
+        self._jwt_access_exp: int | None = None
+        self._jwt_refresh_exp: int | None = None
+
         if username is not None and password is not None:
             self._username = username
             self._password = password
             self._get_JWT_token()
-        else:
-            self._username = None
-            self._password = None
-            self._jwt_access_exp = None
-            self._jwt_refresh_exp = None
 
         # Try to connect and pull the server info
-        self.server_info = self.get_server_information()
+        self.server_info: dict[str, Any] = self.get_server_information()
         self.server_name = self.server_info["name"]
         self.api_limits = self.server_info["api_limits"]
 
@@ -180,7 +187,9 @@ class PortalClientBase:
             print("*" * 14 + "- End of Message-of-the-Day -" + "*" * 15)
 
     @classmethod
-    def from_file(cls, server_name: Optional[str] = None, config_path: Optional[str] = None):
+    def from_file(
+        cls: type[_ClientType], server_name: str | None = None, config_path: str | None = None
+    ) -> _ClientType:
         """Creates a new client given information in a file.
 
         If no path is passed in, the current working directory and finally ~/.qca
@@ -192,6 +201,11 @@ class PortalClientBase:
             Name/alias of the server in the yaml file
         config_path
             Full path to a configuration file, or a directory containing "qcportal_config.yaml".
+
+        Returns
+        -------
+        :
+            A new client, constructed with the settings found in the file
         """
 
         # Search canonical paths
@@ -232,7 +246,7 @@ class PortalClientBase:
         return cls(**data)
 
     @classmethod
-    def from_env(cls):
+    def from_env(cls: type[_ClientType]) -> _ClientType:
         """Creates a new client given information stored in environment variables
 
         The environment variables are:
@@ -242,6 +256,11 @@ class PortalClientBase:
           * QCPORTAL_PASSWORD (optional)
           * QCPORTAL_VERIFY (optional, defaults to True)
           * QCPORTAL_CACHE_DIR (optional)
+
+        Returns
+        -------
+        :
+            A new client, constructed with the settings found in the environment
         """
 
         address = os.environ.get("QCPORTAL_ADDRESS", None)
@@ -253,7 +272,7 @@ class PortalClientBase:
         if address is None:
             raise KeyError("Required environment variable 'QCPORTAL_ADDRESS' not found")
 
-        data = {"address": address}
+        data: dict[str, Any] = {"address": address}
 
         if username is not None:
             data["username"] = username
@@ -273,7 +292,7 @@ class PortalClientBase:
         return self._encoding
 
     @encoding.setter
-    def encoding(self, encoding: str):
+    def encoding(self, encoding: str) -> None:
         self._encoding = encoding
         enc_headers = {"Accept": encoding}
         self._req_session.headers.update(enc_headers)
@@ -416,12 +435,12 @@ class PortalClientBase:
         method: str,
         endpoint: str,
         *,
-        body: Optional[Union[bytes, str]] = None,
-        url_params: Optional[Dict[str, Any]] = None,
-        file_data: Optional[Iterable[Tuple[str, Any]]] = None,
-        internal_retry: Optional[bool] = True,
+        body: bytes | str | None = None,
+        url_params: dict[str, Any] | None = None,
+        file_data: Iterable[tuple[str, Any]] | None = None,
+        internal_retry: bool | None = True,
         allow_retries: bool = True,
-        additional_headers: Optional[Dict[str, Any]] = None,
+        additional_headers: dict[str, Any] | None = None,
     ) -> requests.Response:
         # If refresh token has expired, log in again
         if self._jwt_refresh_exp and self._jwt_refresh_exp < time.time():
@@ -469,24 +488,24 @@ class PortalClientBase:
 
         return r
 
-    # Overload for giving a response model
+    # Overload for giving a plain class as the response model
     @overload
     def make_request(
         self,
         method: str,
         endpoint: str,
-        response_model: Type[_V],
+        response_model: type[_V],
         *,
-        body_model: Optional[Type[_T]] = None,
-        url_params_model: Optional[Type[_U]] = None,
-        body: Optional[Union[_T, Dict[str, Any]]] = None,
-        url_params: Optional[Union[_U, Dict[str, Any]]] = None,
-        upload_files: Optional[Iterable[Tuple[str, str]]] = None,
+        body_model: Any = None,
+        url_params_model: Any = None,
+        body: Any = None,
+        url_params: Any = None,
+        upload_files: Iterable[tuple[str, str]] | None = None,
         allow_retries: bool = True,
-        additional_headers: Optional[Dict[str, Any]] = None,
+        additional_headers: dict[str, Any] | None = None,
     ) -> _V: ...
 
-    # Overload for no response model
+    # Overload for no response model (nothing is returned by the endpoint)
     @overload
     def make_request(
         self,
@@ -494,29 +513,48 @@ class PortalClientBase:
         endpoint: str,
         response_model: None,
         *,
-        body_model: Optional[Type[_T]] = None,
-        url_params_model: Optional[Type[_U]] = None,
-        body: Optional[Union[_T, Dict[str, Any]]] = None,
-        url_params: Optional[Union[_U, Dict[str, Any]]] = None,
-        upload_files: Optional[Iterable[Tuple[str, str]]] = None,
+        body_model: Any = None,
+        url_params_model: Any = None,
+        body: Any = None,
+        url_params: Any = None,
+        upload_files: Iterable[tuple[str, str]] | None = None,
         allow_retries: bool = True,
-        additional_headers: Optional[Dict[str, Any]] = None,
+        additional_headers: dict[str, Any] | None = None,
     ) -> None: ...
+
+    # Overload for anything that is not a plain class - typing special forms like dict[str, Any],
+    # list[int], tuple[InsertMetadata, list[int]], etc. These are all valid pydantic TypeAdapter
+    # arguments, but cannot be expressed as a type[...], so the return type is not knowable here
+    @overload
+    def make_request(
+        self,
+        method: str,
+        endpoint: str,
+        response_model: Any,
+        *,
+        body_model: Any = None,
+        url_params_model: Any = None,
+        body: Any = None,
+        url_params: Any = None,
+        upload_files: Iterable[tuple[str, str]] | None = None,
+        allow_retries: bool = True,
+        additional_headers: dict[str, Any] | None = None,
+    ) -> Any: ...
 
     def make_request(
         self,
         method: str,
         endpoint: str,
-        response_model: Type[_V] | None,
+        response_model: Any,
         *,
-        body_model: Optional[Type[_T]] = None,
-        url_params_model: Optional[Type[_U]] = None,
-        body: Optional[Union[_T, Dict[str, Any]]] = None,
-        url_params: Optional[Union[_U, Dict[str, Any]]] = None,
-        upload_files: Optional[Iterable[Tuple[str, str]]] = None,
+        body_model: Any = None,
+        url_params_model: Any = None,
+        body: Any = None,
+        url_params: Any = None,
+        upload_files: Iterable[tuple[str, str]] | None = None,
         allow_retries: bool = True,
-        additional_headers: Optional[Dict[str, Any]] = None,
-    ) -> _V | None:
+        additional_headers: dict[str, Any] | None = None,
+    ) -> Any:
         # If body_model or url_params_model are None, then use the type given
         if body_model is None and body is not None:
             body_model = type(body)
@@ -536,6 +574,7 @@ class PortalClientBase:
         if isinstance(parsed_url_params, pydantic.BaseModel):
             parsed_url_params = parsed_url_params.model_dump()
 
+        file_data: list[tuple[str, tuple[Any, ...]]] | None = None
         if upload_files is not None:
             # Yes, a list of tuples. We always use the "files" key, and doing it this way
             # allows for multiple files to be uploaded in a single request.
@@ -545,8 +584,6 @@ class PortalClientBase:
             if serialized_body is not None:
                 file_data.append(("body_data", ("body_data", serialized_body, self.encoding)))
                 serialized_body = None
-        else:
-            file_data = None
 
         assert (serialized_body is None) or (file_data is None)  # Just to check my logic
 
@@ -567,9 +604,9 @@ class PortalClientBase:
         endpoint: str,
         destination_path: str,
         overwrite: bool = False,
-        expected_size: Optional[int] = None,
+        expected_size: int | None = None,
         show_progress: bool = False,
-    ) -> Tuple[int, str]:
+    ) -> tuple[int, str]:
         """
         Download a file with optional progress bar
 
@@ -585,6 +622,11 @@ class PortalClientBase:
             Expected size of the file in bytes (used for progress bar if enabled)
         show_progress
             Whether to show a progress bar during download
+
+        Returns
+        -------
+        :
+            A tuple of the size of the downloaded file (in bytes) and its sha256 checksum
         """
 
         sha256 = hashlib.sha256()
@@ -661,7 +703,7 @@ class PortalClientBase:
         except AllowedConnectionExceptions:
             return False
 
-    def get_server_information(self) -> Dict[str, Any]:
+    def get_server_information(self) -> dict[str, Any]:
         """Request general information about the server
 
         Returns
@@ -673,6 +715,6 @@ class PortalClientBase:
         # Request the info, and store here for later use
         # TODO - this fallback is temporary - remove in a future version
         try:
-            return self.make_request("get", self._information_endpoint, Dict[str, Any])
+            return self.make_request("get", self._information_endpoint, dict[str, Any])
         except PortalRequestError as e:
-            return self.make_request("get", "api/v1/information", Dict[str, Any])
+            return self.make_request("get", "api/v1/information", dict[str, Any])
