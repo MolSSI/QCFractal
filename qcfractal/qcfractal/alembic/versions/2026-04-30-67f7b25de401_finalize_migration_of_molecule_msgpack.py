@@ -83,8 +83,11 @@ def _add_temporary_columns():
     bind = op.get_bind()
     existing = {c["name"] for c in sa.inspect(bind).get_columns("molecule")}
 
+    print("Adding temporary columns. Please wait...")
+
     for col_name, col_type in TEMPORARY_COLUMNS:
         if col_name not in existing:
+            print("   Adding column", col_name)
             op.add_column("molecule", sa.Column(col_name, col_type, nullable=True))
 
     # Needed to find the rows left to do without scanning the whole table. Always rebuild:
@@ -222,7 +225,7 @@ def upgrade():
     )
 
     op.drop_column("molecule", "_migrated_status")
-    print("DONE")
+    print("Done. Committing may take some time, however")
 
 
 def downgrade():

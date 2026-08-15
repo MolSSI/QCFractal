@@ -98,9 +98,11 @@ def add_temporary_columns(uri):
 
     engine = create_engine(uri)
 
+    print("Adding temporary columns. Please wait...")
     with engine.begin() as conn:
         conn.execute(text(f"SET LOCAL lock_timeout = '{DDL_LOCK_TIMEOUT}'"))
         for col_name, col_type in TEMPORARY_COLUMNS:
+            print("   Adding column", col_name)
             conn.execute(text(f"ALTER TABLE molecule ADD COLUMN IF NOT EXISTS {col_name} {col_type}"))
 
     # Without this index, finding the rows left to do is a sequential scan of the whole
