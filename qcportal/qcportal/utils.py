@@ -13,69 +13,104 @@ import math
 import random
 import re
 import time
+from collections.abc import Callable, Collection, Generator, Iterable, Mapping, Sequence
+from collections.abc import Set as AbstractSet
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from hashlib import sha256
-from typing import (
-    Optional,
-    Union,
-    Sequence,
-    List,
-    TypeVar,
-    Any,
-    Dict,
-    Generator,
-    Iterable,
-    Callable,
-    Set,
-    Tuple,
-    overload,
-)
+from typing import Any, TypeVar, overload
 
 import numpy as np
 
 from qcportal.serialization import _JSONEncoder
 
 _T = TypeVar("_T")
+_U = TypeVar("_U")
+_M = TypeVar("_M", bound=Mapping)
+_S = TypeVar("_S", bound=str)
 
 
-@overload
-def make_list(obj: Union[Sequence[_T], Set[_T], Iterable[_T], _T]) -> List[_T]: ...
+def is_scalar(obj: Any) -> bool:
+    """
+    Returns True if `obj` represents a single value rather than a collection of values
+
+    This is the rule used by `make_list`, and by functions that accept either a single value
+    or a collection of values (and whose return value has a matching shape). With the
+    exception of None, `is_scalar(obj)` is True exactly when `make_list(obj)` wraps `obj` in a
+    new list instead of expanding it.
+
+    Anything sized and iterable (a list, tuple, set, frozenset, range, numpy array, or a view
+    such as `dict.keys()`) is a collection of values. Strings and mappings are not - they are
+    iterable, but are always treated as single values. Neither are objects that are merely
+    iterable without being sized, such as generators or pydantic models.
+
+    None is a special case. It is neither a scalar nor a collection - `make_list` passes it
+    through unchanged - and `is_scalar(None)` is True.
+    """
+
+    # Strings and dicts are iterable, but we always treat them as single values.
+    # Note that pydantic models are iterable too, but they are not Collections (they are
+    # not sized), so they fall out of the check below as scalars
+    if isinstance(obj, (str, Mapping)):
+        return True
+
+    # numpy arrays are not registered as Collections, but are certainly collections of values
+    return not isinstance(obj, (np.ndarray, Collection))
 
 
-@overload
-def make_list(obj: Optional[Union[Sequence[_T], Set[_T], Iterable[_T], _T]]) -> Optional[List[_T]]: ...
-
-
+# NOTE: The overloads below mirror what this function actually does at runtime, and their order
+#       matters. Strings and mappings are handled before the collection cases, and the catch-all
+#       (anything that is not a collection gets wrapped in a list) must come last.
+#       Note that there is deliberately no overload for a general Iterable - iterables that are
+#       not sized (generators, map/filter objects) are wrapped, not expanded
 @overload
 def make_list(obj: None) -> None: ...
 
 
-def make_list(obj: Optional[Union[Sequence[_T], Set[_T], Iterable[_T], _T]]) -> Optional[List[_T]]:
-    """
-    Returns a list containing obj if obj is not a list or other iterable type object
+# Note the TypeVar - str subclasses (str-based enums, for example) must not be widened to str
+@overload
+def make_list(obj: _S) -> list[_S]: ...
 
-    This will also work with sets
-    """
 
-    # NOTE - you might be tempted to change this to work with Iterable rather than Sequence. However,
-    # pydantic models and dicts and stuff are sequences, too, which we usually just want to return
-    # within a list
+@overload
+def make_list(obj: _M) -> list[_M]: ...
+
+
+@overload
+def make_list(obj: AbstractSet[_T]) -> list[_T]: ...
+
+
+@overload
+def make_list(obj: Sequence[_T]) -> list[_T]: ...
+
+
+@overload
+def make_list(obj: Any) -> list[Any]: ...
+
+
+def make_list(obj: Any) -> Any:
+    """
+    Returns a list of the values in obj, or a list containing obj if it is a single value
+
+    See `is_scalar` for what counts as a single value. Sets, numpy arrays, and views such as
+    `dict.keys()` are all expanded into a list. None is passed through unchanged.
+    """
 
     if isinstance(obj, list):
         return obj
     if obj is None:
         return None
-    # Be careful. strings are sequences
-    if isinstance(obj, str):
+    if is_scalar(obj):
         return [obj]
-    if isinstance(obj, set):
-        return list(obj)
-    if not isinstance(obj, Sequence):
-        return [obj]
+
+    # tolist() also converts numpy scalar types (np.int64 and friends) to plain python types.
+    # atleast_1d handles 0-d arrays, whose tolist() returns a scalar rather than a list
+    if isinstance(obj, np.ndarray):
+        return np.atleast_1d(obj).tolist()
+
     return list(obj)
 
 
-def chunk_iterable(it: Iterable[_T], chunk_size: int) -> Generator[List[_T], None, None]:
+def chunk_iterable(it: Iterable[_T], chunk_size: int) -> Generator[list[_T], None, None]:
     """
     Split an iterable (such as a list) into batches/chunks
     """
@@ -92,7 +127,7 @@ def chunk_iterable(it: Iterable[_T], chunk_size: int) -> Generator[List[_T], Non
 
 def chunk_iterable_time(
     it: Iterable[_T], chunk_time: float, max_chunk_size: int, initial_chunk_size: int
-) -> Generator[List[_T], None, None]:
+) -> Generator[list[_T], None, None]:
     """
     Split an iterable into chunks, trying to keep a constant time per chunk
 
@@ -131,7 +166,7 @@ def chunk_iterable_time(
 
 
 def process_chunk_iterable(
-    fn: Callable[[Iterable[_T]], Any],
+    fn: Callable[[list[_T]], _U],
     it: Iterable[_T],
     chunk_time: float,
     max_chunk_size: int,
@@ -139,7 +174,7 @@ def process_chunk_iterable(
     max_workers: int = 1,
     *,
     keep_order: bool = False,
-) -> Generator[List[_T], None, None]:
+) -> Generator[_U, None, None]:
     """
     Process an iterable in chunks, trying to keep a constant time per chunk
 
@@ -148,7 +183,7 @@ def process_chunk_iterable(
 
     The first chunk will be of size 'initial_chunk_size' (assuming there is enough elements in the iterable to fill it).
 
-    This function returns the results as chunks (lists) of the original iterable. If 'keep_order' is True, the results
+    This function yields whatever `fn` returned for each chunk. If 'keep_order' is True, the results
     will be returned in the same order as the original iterable. If 'keep_order' is False, the results will be returned
     in the order they are completed.
     """
@@ -252,7 +287,7 @@ def process_chunk_iterable(
 
 
 def process_iterable(
-    fn: Callable[[Iterable[_T]], Any],
+    fn: Callable[[list[_T]], Iterable[_U]],
     it: Iterable[_T],
     chunk_time: float,
     max_chunk_size: int,
@@ -260,9 +295,9 @@ def process_iterable(
     max_workers: int = 1,
     *,
     keep_order: bool = False,
-) -> Generator[List[_T], None, None]:
+) -> Generator[_U, None, None]:
     """
-    Similar to process_chunk_iterable, but returns individual elements ranther than chunks
+    Similar to process_chunk_iterable, but returns individual elements rather than chunks
     """
 
     for chunk in process_chunk_iterable(
@@ -271,7 +306,7 @@ def process_iterable(
         yield from chunk
 
 
-def seconds_to_hms(seconds: Union[float, int]) -> str:
+def seconds_to_hms(seconds: float | int) -> str:
     """
     Converts a number of seconds (as an integer) to a string representing hh:mm:ss
     """
@@ -291,7 +326,7 @@ def seconds_to_hms(seconds: Union[float, int]) -> str:
         return f"{hours:02d}:{minutes:02d}:{seconds+fraction:02.2f}"
 
 
-def duration_to_seconds(s: Union[int, str, float]) -> int:
+def duration_to_seconds(s: int | str | float) -> int:
     """
     Parses a string in dd:hh:mm:ss or 1d2h3m4s to an integer number of seconds
     """
@@ -385,7 +420,7 @@ def recursive_normalizer(value: Any, digits: int = 10, lowercase: bool = True) -
     return value
 
 
-def calculate_limit(max_limit: int, given_limit: Optional[int]) -> int:
+def calculate_limit(max_limit: int, given_limit: int | None) -> int:
     """Get the allowed limit on results to return for a particular or type of object
 
     If 'given_limit' is given (ie, by the user), this will return min(limit, max_limit)
@@ -398,7 +433,7 @@ def calculate_limit(max_limit: int, given_limit: Optional[int]) -> int:
     return min(given_limit, max_limit)
 
 
-def hash_dict(d: Dict[str, Any]) -> str:
+def hash_dict(d: dict[str, Any]) -> str:
     j = json.dumps(d, ensure_ascii=True, sort_keys=True, cls=_JSONEncoder).encode("utf-8")
     return sha256(j).hexdigest()
 
@@ -451,11 +486,9 @@ def now_at_utc() -> datetime.datetime:
 
 
 @functools.lru_cache
-def _is_included(
-    key: str, include: Optional[Tuple[str, ...]], exclude: Optional[Tuple[str, ...]], default: bool
-) -> bool:
+def _is_included(key: str, include: tuple[str, ...] | None, exclude: tuple[str, ...] | None, default: bool) -> bool:
     if exclude is None:
-        exclude = []
+        exclude = ()
 
     if include is not None:
         in_include = ("*" in include and default) or "**" in include or key in include
@@ -467,7 +500,7 @@ def _is_included(
     return in_include and not in_exclude
 
 
-def is_included(key: str, include: Optional[Iterable[str]], exclude: Optional[Iterable[str]], default: bool) -> bool:
+def is_included(key: str, include: Iterable[str] | None, exclude: Iterable[str] | None, default: bool) -> bool:
     """
     Determine if a field should be included given the include and exclude lists
 
@@ -482,7 +515,7 @@ def is_included(key: str, include: Optional[Iterable[str]], exclude: Optional[It
     return _is_included(key, include, exclude, default)
 
 
-def update_nested_dict(d: Dict[str, Any], u: Dict[str, Any]):
+def update_nested_dict(d: dict[str, Any], u: dict[str, Any]):
     for k, v in u.items():
         if isinstance(v, dict):
             d[k] = update_nested_dict(d.get(k, {}), v)
@@ -491,12 +524,12 @@ def update_nested_dict(d: Dict[str, Any], u: Dict[str, Any]):
     return d
 
 
-def apply_jitter(t: Union[int, float], jitter_fraction: float) -> float:
+def apply_jitter(t: int | float, jitter_fraction: float) -> float:
     f = random.uniform(-jitter_fraction, jitter_fraction)
     return max(t * (1 + f), 0.0)
 
 
-def time_based_cache(seconds: int = 10, maxsize: Optional[int] = None):
+def time_based_cache(seconds: int = 10, maxsize: int | None = None):
     def decorator(func):
         cache = collections.OrderedDict()
 
