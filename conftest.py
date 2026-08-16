@@ -10,13 +10,13 @@ def pytest_addoption(parser):
     Additional PyTest CLI flags to add
 
     See `pytest_collection_modifyitems` for handling and `pytest_configure` for adding known in-line marks.
+
+    Note that --client-encoding and --fractal-uri are added by the qcarchivetesting pytest plugin,
+    since they are used by fixtures distributed in that package (this file is not distributed
+    anywhere, so options defined here are not available to other projects).
     """
 
     parser.addoption("--runslow", action="store_true", default=False, help="run slow tests")
-    parser.addoption("--client-encoding", type=str, default="application/json", help="set client encoding to test")
-    parser.addoption(
-        "--fractal-uri", type=str, default="snowflake", help="URI of the fractal instance to run full tests against"
-    )
 
 
 def pytest_collection_modifyitems(config, items):

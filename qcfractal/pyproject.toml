@@ -61,7 +61,7 @@ qcfractal-server = "qcfractal.qcfractal_server_cli:main"
 
 
 [tool.setuptools.package-data]
-qcfractal = ["alembic.ini", "alembic/script.py.mako"]
+qcfractal = ["alembic.ini", "alembic/script.py.mako", "components/auth/global_role_permissions.yaml"]
 
 
 [tool.versioningit]

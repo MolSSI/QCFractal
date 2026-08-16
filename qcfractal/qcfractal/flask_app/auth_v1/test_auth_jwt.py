@@ -54,15 +54,14 @@ def test_jwt_refresh_user_disabled(secure_snowflake):
 
 
 @pytest.mark.slow
-def test_jwt_disabled_before_refresh(postgres_server, pytestconfig):
+def test_jwt_disabled_before_refresh(postgres_server, client_encoding):
     # Disabling an account must take effect within the server-side re-verify cache lifetime (~5s),
     # not only after the access token expires and is refreshed. Use a long access-token lifetime
     # so the token is still valid (and no refresh happens) when we make the post-disable request.
     pg_harness = postgres_server.get_new_harness("jwt_disabled_before_refresh")
-    encoding = pytestconfig.getoption("--client-encoding")
     with QCATestingSnowflake(
         pg_harness,
-        encoding=encoding,
+        encoding=client_encoding,
         create_users=True,
         enable_security=True,
         allow_unauthenticated_read=False,
@@ -88,14 +87,13 @@ def test_jwt_disabled_before_refresh(postgres_server, pytestconfig):
 
 
 @pytest.mark.slow
-def test_jwt_role_downgrade_before_refresh(postgres_server, pytestconfig):
+def test_jwt_role_downgrade_before_refresh(postgres_server, client_encoding):
     # Downgrading a user's role must take effect within the re-verify cache lifetime, even though
     # the still-valid access token carries the old (higher) role in its claims.
     pg_harness = postgres_server.get_new_harness("jwt_role_downgrade_before_refresh")
-    encoding = pytestconfig.getoption("--client-encoding")
     with QCATestingSnowflake(
         pg_harness,
-        encoding=encoding,
+        encoding=client_encoding,
         create_users=True,
         enable_security=True,
         allow_unauthenticated_read=False,
@@ -125,15 +123,14 @@ def test_jwt_role_downgrade_before_refresh(postgres_server, pytestconfig):
 
 
 @pytest.mark.slow
-def test_jwt_refresh_user_deleted(postgres_server, pytestconfig):
+def test_jwt_refresh_user_deleted(postgres_server, client_encoding):
     # Need its own snowflake because we need logging disabled
     # Otherwise, the user cannot be deleted because it is referenced in the access log table
 
     pg_harness = postgres_server.get_new_harness("jwt_user_deleted")
-    encoding = pytestconfig.getoption("--client-encoding")
     with QCATestingSnowflake(
         pg_harness,
-        encoding=encoding,
+        encoding=client_encoding,
         create_users=True,
         enable_security=True,
         allow_unauthenticated_read=False,

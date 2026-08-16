@@ -18,6 +18,53 @@ from qcportal.utils import update_nested_dict
 from .helpers import geoip_path, geoip_filename, ip_tests_enabled, s3_tests_enabled
 from .testing_classes import QCATestingPostgresServer, QCATestingSnowflake, _activated_manager_programs
 
+_default_client_encoding = "application/json"
+_default_fractal_uri = "snowflake"
+
+
+def pytest_addoption(parser):
+    """
+    Additional PyTest CLI flags used by the fixtures in this module
+
+    These are added here, rather than in a conftest.py, since this module is registered as a
+    pytest plugin (see the pytest11 entry point). That way, the options are available to any
+    project that installs qcarchivetesting and uses these fixtures.
+    """
+
+    parser.addoption(
+        "--client-encoding", type=str, default=_default_client_encoding, help="set client encoding to test"
+    )
+    parser.addoption(
+        "--fractal-uri",
+        type=str,
+        default=_default_fractal_uri,
+        help="URI of the fractal instance to run full tests against",
+    )
+
+
+@pytest.fixture(scope="session")
+def client_encoding(pytestconfig) -> str:
+    """
+    The encoding used by clients created by these fixtures
+
+    This defaults to the value of the --client-encoding CLI flag, but may be overridden by
+    a project that uses these fixtures (for example, to parametrize over encodings).
+    """
+
+    return pytestconfig.getoption("--client-encoding", default=_default_client_encoding)
+
+
+@pytest.fixture(scope="session")
+def fractal_uri(pytestconfig) -> str:
+    """
+    The URI of the fractal instance to run full tests against
+
+    This defaults to the value of the --fractal-uri CLI flag, but may be overridden by
+    a project that uses these fixtures.
+    """
+
+    return pytestconfig.getoption("--fractal-uri", default=_default_fractal_uri)
+
 
 def _generate_default_config(pg_harness, extra_config=None) -> FractalConfig:
     # Create a configuration. Since this is mostly just for a storage socket,
@@ -110,14 +157,13 @@ def session(storage_socket):
 
 
 @pytest.fixture(scope="session")
-def session_snowflake(postgres_server, pytestconfig):
+def session_snowflake(postgres_server, client_encoding):
     """
     A QCFractal testing snowflake, existing for the entire session
     """
 
     pg_harness = postgres_server.get_new_harness("session_snowflake")
-    encoding = pytestconfig.getoption("--client-encoding")
-    with QCATestingSnowflake(pg_harness, encoding) as snowflake:
+    with QCATestingSnowflake(pg_harness, client_encoding) as snowflake:
         pg_harness.create_template()
         yield snowflake
 
@@ -135,15 +181,14 @@ def snowflake(session_snowflake):
 
 
 @pytest.fixture(scope="session")
-def session_secure_snowflake(postgres_server, pytestconfig):
+def session_secure_snowflake(postgres_server, client_encoding):
     """
     A QCFractal snowflake with authorization/authentication enabled
     """
 
     pg_harness = postgres_server.get_new_harness("session_secure_snowflake")
-    encoding = pytestconfig.getoption("--client-encoding")
     with QCATestingSnowflake(
-        pg_harness, encoding, create_users=True, enable_security=True, allow_unauthenticated_read=False
+        pg_harness, client_encoding, create_users=True, enable_security=True, allow_unauthenticated_read=False
     ) as snowflake:
         pg_harness.create_template()
         yield snowflake
@@ -160,15 +205,14 @@ def secure_snowflake(session_secure_snowflake):
 
 
 @pytest.fixture(scope="session")
-def session_secure_snowflake_allow_read(postgres_server, pytestconfig):
+def session_secure_snowflake_allow_read(postgres_server, client_encoding):
     """
     A QCFractal snowflake with authorization/authentication enabled, but allowing unauthenticated read
     """
 
     pg_harness = postgres_server.get_new_harness("session_secure_snowflake_allow_read")
-    encoding = pytestconfig.getoption("--client-encoding")
     with QCATestingSnowflake(
-        pg_harness, encoding, create_users=True, enable_security=True, allow_unauthenticated_read=True
+        pg_harness, client_encoding, create_users=True, enable_security=True, allow_unauthenticated_read=True
     ) as snowflake:
         pg_harness.create_template()
         yield snowflake
@@ -241,18 +285,16 @@ def activated_manager_programs(activated_manager) -> ManagerName:
 
 
 @pytest.fixture(scope="function")
-def fulltest_client(pytestconfig):
+def fulltest_client(fractal_uri):
     """
     A portal client used for full end-to-end tests
     """
 
-    uri = pytestconfig.getoption("--fractal-uri")
-
-    if uri == "snowflake":
+    if fractal_uri == "snowflake":
         from qcfractal.snowflake import FractalSnowflake
 
         s = FractalSnowflake()
         yield s.client()
 
     else:
-        yield PortalClient(address=uri)
+        yield PortalClient(address=fractal_uri)
