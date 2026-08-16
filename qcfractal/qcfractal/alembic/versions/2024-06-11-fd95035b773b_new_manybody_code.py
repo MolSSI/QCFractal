@@ -177,11 +177,9 @@ def upgrade():
     )
     op.create_index("ix_manybody_dataset_record_record_id", "manybody_dataset_record", ["record_id"], unique=False)
 
-    op.execute(
-        """CREATE TRIGGER qca_manybody_record_delete_base_tr
+    op.execute("""CREATE TRIGGER qca_manybody_record_delete_base_tr
                   AFTER DELETE ON public.manybody_record
-                  FOR EACH ROW EXECUTE FUNCTION qca_base_record_delete();"""
-    )
+                  FOR EACH ROW EXECUTE FUNCTION qca_base_record_delete();""")
 
     # ### end Alembic commands ###
 

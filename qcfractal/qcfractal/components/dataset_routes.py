@@ -261,7 +261,9 @@ def fetch_all_dataset_specifications_v1(dataset_type: str, dataset_id: int) -> d
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkFetch", methods=["POST"])
 @check_permissions("datasets", "read")
 @serialization()
-def fetch_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchSpecificationBody) -> dict[str, Any]:
+def fetch_dataset_specifications_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetFetchSpecificationBody
+) -> dict[str, Any]:
     # use the entry limit I guess?
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_dataset_entries
 
@@ -279,7 +281,9 @@ def fetch_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_dat
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkDelete", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def delete_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: DatasetDeleteStrBody) -> DeleteMetadata:
+def delete_dataset_specifications_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetDeleteStrBody
+) -> DeleteMetadata:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.delete_specifications(dataset_id, body_data.names, body_data.delete_records)
 
@@ -368,7 +372,9 @@ def modify_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dat
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkFetch", methods=["POST"])
 @check_permissions("datasets", "read")
 @serialization()
-def fetch_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchRecordsBody) -> list[tuple[str, str, int]]:
+def fetch_dataset_records_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetFetchRecordsBody
+) -> list[tuple[str, str, int]]:
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
 
     n_requested = len(body_data.entry_names) * len(body_data.specification_names)
@@ -388,7 +394,9 @@ def fetch_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Data
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkDelete", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def remove_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRemoveRecordsBody) -> DeleteMetadata:
+def remove_dataset_records_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetRemoveRecordsBody
+) -> DeleteMetadata:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.remove_records(
         dataset_id,

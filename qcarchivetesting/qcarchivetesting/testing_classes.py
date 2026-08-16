@@ -155,7 +155,7 @@ class QCATestingSnowflake(FractalSnowflake):
             qcf_config["geoip2_filename"] = geoip_filename
 
         if s3_tests_enabled:
-            qcf_config['s3'] = {
+            qcf_config["s3"] = {
                 "enabled": True,
                 "verify": False,
                 "passthrough": False,

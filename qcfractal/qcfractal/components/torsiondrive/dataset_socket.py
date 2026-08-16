@@ -226,7 +226,9 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
         """
 
         if from_dataset_id is None and (from_dataset_type is None or from_dataset_name is None):
-            raise InvalidArgumentsError("from_dataset_id or both from_dataset_type and from_dataset_name must be provided")
+            raise InvalidArgumentsError(
+                "from_dataset_id or both from_dataset_type and from_dataset_name must be provided"
+            )
 
         with self.root_socket.optional_session(session) as session:
             # Make sure dataset exists
@@ -315,7 +317,6 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
                     n_existing=0,
                 )
 
-
             elif from_dataset_type == "optimization":
 
                 if from_specification_name is None:
@@ -390,7 +391,6 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
                         "specification_name": from_specification_name,
                     },
                 ).scalar_one()
-
 
                 meta = InsertCountsMetadata(n_inserted=n_inserted, n_existing=0)
             else:

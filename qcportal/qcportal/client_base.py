@@ -372,7 +372,7 @@ class PortalClientBase:
             )
             self._jwt_access_exp = decoded_access_token["exp"]
             self._jwt_refresh_exp = decoded_refresh_token["exp"]
-            self.user_id = int(decoded_access_token["sub"]) # "identity" "subject"
+            self.user_id = int(decoded_access_token["sub"])  # "identity" "subject"
         else:
             try:
                 msg = ret.json()["msg"]

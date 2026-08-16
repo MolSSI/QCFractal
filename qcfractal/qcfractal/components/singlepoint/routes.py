@@ -17,7 +17,6 @@ from qcportal.singlepoint import (
 )
 from qcportal.utils import calculate_limit
 
-
 #####################
 # Record
 #####################
@@ -89,9 +88,7 @@ def add_singlepoint_dataset_entries_v1(dataset_id: int, body_data: list[Singlepo
 @api_v1.route("/datasets/singlepoint/<int:dataset_id>/background_add_entries", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def background_add_singlepoint_dataset_entries_v1(
-    dataset_id: int, body_data: list[SinglepointDatasetNewEntry]
-) -> int:
+def background_add_singlepoint_dataset_entries_v1(dataset_id: int, body_data: list[SinglepointDatasetNewEntry]) -> int:
     return storage_socket.datasets.singlepoint.background_add_entries(dataset_id, new_entries=body_data)
 
 

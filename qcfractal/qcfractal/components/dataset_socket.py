@@ -250,7 +250,7 @@ class DatasetSocket:
                     "description": x[5],
                     "record_count": x[6],
                     "creator_user": x[7],
-                    "owner_user": x[7], # Same as creator_user for now
+                    "owner_user": x[7],  # Same as creator_user for now
                 }
                 for x in r
             ]

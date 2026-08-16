@@ -9,7 +9,6 @@ Create Date: 2025-01-02 08:48:50.123907
 from alembic import op
 import sqlalchemy as sa
 
-
 # revision identifiers, used by Alembic.
 revision = "e798462e0c03"
 down_revision = "0587bb0220aa"
@@ -22,8 +21,7 @@ def upgrade():
     op.add_column("internal_jobs", sa.Column("repeat_delay", sa.Integer(), nullable=True))
 
     # Remove old periodic tasks
-    op.execute(
-        """DELETE FROM internal_jobs WHERE status IN ('waiting', 'running') AND name IN (
+    op.execute("""DELETE FROM internal_jobs WHERE status IN ('waiting', 'running') AND name IN (
                        'delete_old_internal_jobs',
                        'delete_old_access_log',
                        'iterate_services',
@@ -31,8 +29,7 @@ def upgrade():
                        'check_manager_heartbeats',
                        'update_geoip2_file'
                   )
-               """
-    )
+               """)
     # ### end Alembic commands ###
 
 

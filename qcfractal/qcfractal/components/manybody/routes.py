@@ -15,7 +15,6 @@ from qcportal.manybody import (
 )
 from qcportal.utils import calculate_limit
 
-
 #####################
 # Record
 #####################

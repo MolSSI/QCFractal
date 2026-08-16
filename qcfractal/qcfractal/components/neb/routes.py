@@ -10,7 +10,6 @@ from qcportal.metadata_models import InsertMetadata
 from qcportal.neb import NEBDatasetSpecification, NEBDatasetNewEntry, NEBAddBody, NEBQueryFilters
 from qcportal.utils import calculate_limit
 
-
 #####################
 # Record
 #####################

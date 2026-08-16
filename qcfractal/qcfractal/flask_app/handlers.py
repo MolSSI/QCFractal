@@ -16,7 +16,6 @@ from qcportal.exceptions import (
 )
 from .home_v1 import home_v1
 
-
 #####################################################################
 # This registers "global" error handlers and before/after
 # request functions. Not that we are using _app_ decorators,

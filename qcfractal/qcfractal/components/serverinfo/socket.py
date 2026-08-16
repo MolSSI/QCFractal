@@ -649,8 +649,7 @@ class ServerInfoSocket:
 
         # We go 3 days to update the various stats. This will leave the historical values in case
         # of large deletions, etc.
-        sql = text(
-            """
+        sql = text("""
             INSERT
             INTO server_stats (date, record_count, cpu_hours, timestamp, record_count_details, database_size)
                 SELECT DATE(rch.modified_on) AS date,
@@ -672,8 +671,7 @@ class ServerInfoSocket:
                 DO UPDATE SET record_count              = EXCLUDED.record_count,
                               cpu_hours                 = EXCLUDED.cpu_hours,
                               timestamp                 = EXCLUDED.timestamp
-            """
-        )
+            """)
 
         with self.root_socket.optional_session(session, False) as session:
             session.execute(sql)
@@ -693,16 +691,14 @@ class ServerInfoSocket:
             db_size = session.execute(size_sql).scalar()
 
             # Update today's row
-            update_sql = text(
-                """
+            update_sql = text("""
                 INSERT INTO server_stats (date, record_count, cpu_hours, record_count_details, database_size, timestamp)
                 VALUES (CURRENT_DATE, 0, 0, :counts, :size, NOW())
                 ON CONFLICT (date) DO UPDATE SET
                     record_count_details = EXCLUDED.record_count_details,
                     database_size = EXCLUDED.database_size,
                     timestamp = EXCLUDED.timestamp
-                """
-            )
+                """)
             session.execute(update_sql, {"counts": json.dumps(record_counts), "size": db_size})
 
             session.commit()

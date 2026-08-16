@@ -1,4 +1,3 @@
-
 from flask import current_app, g
 
 from qcfractal.flask_app import storage_socket
@@ -13,7 +12,6 @@ from qcportal.optimization import (
     OptimizationQueryFilters,
 )
 from qcportal.utils import calculate_limit
-
 
 #####################
 # Record

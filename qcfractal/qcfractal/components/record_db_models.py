@@ -289,8 +289,7 @@ class BaseRecordORM(BaseORM):
 
 
 # Function for deleting large binary when derived classes are deleted
-_del_baserecord_triggerfunc = DDL(
-    """
+_del_baserecord_triggerfunc = DDL("""
     CREATE OR REPLACE FUNCTION public.qca_base_record_delete()
     RETURNS trigger
     LANGUAGE plpgsql
@@ -301,7 +300,6 @@ _del_baserecord_triggerfunc = DDL(
         END
         $_$
     ;
-"""
-)
+""")
 
 event.listen(BaseRecordORM.__table__, "after_create", _del_baserecord_triggerfunc.execute_if(dialect=("postgresql")))

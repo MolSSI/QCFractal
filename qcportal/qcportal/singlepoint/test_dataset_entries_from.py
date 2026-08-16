@@ -194,7 +194,6 @@ def test_singlepoint_dataset_model_entries_from_errors(snowflake: QCATestingSnow
         sp_ds.add_entries_from(dataset_id=src_opt_ds.id)
 
 
-
 @pytest.mark.parametrize("use_id", [True, False])
 def test_torsiondrive_dataset_model_entries_from_opt_1(snowflake: QCATestingSnowflake, use_id: bool):
     snowflake_client = snowflake.client()

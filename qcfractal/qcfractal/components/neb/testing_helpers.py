@@ -108,7 +108,7 @@ def load_procedure_data(
         pydantic.TypeAdapter(NEBSpecification).validate_python(data["specification"]),
         pydantic.TypeAdapter(list[Molecule]).validate_python(data["initial_chain"]),
         pydantic.TypeAdapter(
-            Dict[str, QCEl_AtomicResult | QCEl_OptimizationResult |GenericTaskResult]
+            Dict[str, QCEl_AtomicResult | QCEl_OptimizationResult | GenericTaskResult]
         ).validate_python(data["results"]),
     )
 

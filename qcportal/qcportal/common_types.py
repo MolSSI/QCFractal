@@ -12,9 +12,9 @@ Max128Str = Annotated[str, StringConstraints(max_length=128)]
 class BytesAnnotation:
     @classmethod
     def __get_pydantic_core_schema__(
-            cls,
-            _source_type: Any,
-            _handler: GetCoreSchemaHandler,
+        cls,
+        _source_type: Any,
+        _handler: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
         """
         An annotation for bytes

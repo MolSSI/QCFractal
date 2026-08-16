@@ -48,6 +48,7 @@ def query_general_project_v1(body_data: ProjectQueryModel) -> dict[str, Any] | N
         project_id = storage_socket.projects.lookup_id(body_data.project_name, session=session)
         return storage_socket.projects.get(project_id, body_data.include, body_data.exclude, session=session)
 
+
 @api_v1.route("/projects/queryrecords", methods=["POST"])
 @check_permissions("projects", "read")
 @serialization()
@@ -273,7 +274,9 @@ def delete_project_attachment_v1(project_id: int, attachment_id: int) -> None:
 @check_permissions("projects", "modify")
 @serialization()
 @allow_uploads(allowed_file_extensions=None)
-def upload_project_attachment_v1(project_id: int, body_data: ProjectAttachmentUploadBody, files: list[tuple[str, str]]) -> int:
+def upload_project_attachment_v1(
+    project_id: int, body_data: ProjectAttachmentUploadBody, files: list[tuple[str, str]]
+) -> int:
     if len(files) != 1:
         raise SingleFileRequiredError("Exactly one file must be uploaded for project attachments")
 
@@ -287,4 +290,3 @@ def upload_project_attachment_v1(project_id: int, body_data: ProjectAttachmentUp
         tags=body_data.tags,
         provenance=body_data.provenance,
     )
-

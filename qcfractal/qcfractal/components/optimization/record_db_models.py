@@ -146,13 +146,11 @@ class OptimizationRecordORM(BaseRecordORM):
 
 
 # Delete base record if this record is deleted
-_del_baserecord_trigger = DDL(
-    """
+_del_baserecord_trigger = DDL("""
     CREATE TRIGGER qca_optimization_record_delete_base_tr
     AFTER DELETE ON optimization_record
     FOR EACH ROW EXECUTE PROCEDURE qca_base_record_delete();
-    """
-)
+    """)
 
 event.listen(
     OptimizationRecordORM.__table__, "after_create", _del_baserecord_trigger.execute_if(dialect=("postgresql"))

@@ -149,11 +149,13 @@ def upgrade():
         select(sa.func.count()).select_from(mol_table).where(mol_table.c._migrated_status.is_(None))
     ).scalar_one()
 
-    print("-"*80)
+    print("-" * 80)
     print("Performing final migration of molecule table")
     print("Total molecules to migrate:", total_to_migrate)
     if total_to_migrate > 50000:
-        print("WARNING: This migration may take a long time for large numbers of molecules (100,000+). Please be patient.")
+        print(
+            "WARNING: This migration may take a long time for large numbers of molecules (100,000+). Please be patient."
+        )
         print("         The server is unavailable until it finishes, and it cannot be undone (restoring")
         print("         a backup is the only way back).")
 

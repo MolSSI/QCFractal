@@ -10,8 +10,6 @@ if TYPE_CHECKING:
 
 import pydantic
 
-
-
 _PATH_PARAM_RE = re.compile(r"<(?:(?P<converter>[^:]+):)?(?P<name>[^>]+)>")
 
 
