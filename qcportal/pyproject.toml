@@ -37,7 +37,6 @@ dependencies = [
     "pyjwt>=2.10",
     "packaging",
     "python-dateutil",
-    "pytz",
 ]
 
 

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import time
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 import pytest
-import pytz
 
 from qcfractal.components.testing_helpers import populate_records_status
 from qcportal import PortalClient
@@ -142,7 +142,7 @@ def test_record_client_query(queryable_records_client: PortalClient):
 
 @pytest.mark.parametrize("timezone", [None, "UTC", "Asia/Singapore"])
 def test_record_client_query_timezones(queryable_records_client: PortalClient, timezone: Optional[str]):
-    tzinfo = pytz.timezone(timezone) if timezone is not None else None
+    tzinfo = ZoneInfo(timezone) if timezone is not None else None
     query_res = queryable_records_client.query_records(record_type="singlepoint")
     all_records = list(query_res)
     assert len(all_records) == 325
