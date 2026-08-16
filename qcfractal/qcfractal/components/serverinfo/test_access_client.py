@@ -61,11 +61,10 @@ def test_serverinfo_client_access_logged(secure_snowflake_allow_read: QCATesting
     assert accesses[3].request_bytes == 0
 
 
-def test_serverinfo_client_access_not_logged(postgres_server, pytestconfig):
+def test_serverinfo_client_access_not_logged(postgres_server, client_encoding):
     pg_harness = postgres_server.get_new_harness("serverinfo_client_access_not_logged")
-    encoding = pytestconfig.getoption("--client-encoding")
 
-    with QCATestingSnowflake(pg_harness, encoding, log_access=False) as server:
+    with QCATestingSnowflake(pg_harness, client_encoding, log_access=False) as server:
         client = server.client()
         client.query_access_log()
         client.query_molecules(molecular_formula=["C"])

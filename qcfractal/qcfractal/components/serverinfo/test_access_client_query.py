@@ -9,12 +9,13 @@ from qcportal.utils import now_at_utc
 
 
 @pytest.fixture(scope="module")
-def queryable_access_client(postgres_server, pytestconfig):
+def queryable_access_client(postgres_server, client_encoding):
     pg_harness = postgres_server.get_new_harness("serverinfo_test_access")
-    encoding = pytestconfig.getoption("--client-encoding")
 
     # Don't log accesses
-    with QCATestingSnowflake(pg_harness, encoding, enable_security=True, create_users=True, log_access=False) as server:
+    with QCATestingSnowflake(
+        pg_harness, client_encoding, enable_security=True, create_users=True, log_access=False
+    ) as server:
         # generate a bunch of test data
         storage_socket = server.get_storage_socket()
 

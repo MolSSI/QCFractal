@@ -12,10 +12,9 @@ from qcportal.qcschema_v1 import ComputeError, FailedOperation
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 
 
-def test_reset_logic_dict_comprehension_bug(postgres_server, pytestconfig):
+def test_reset_logic_dict_comprehension_bug(postgres_server, client_encoding):
 
     pg_harness = postgres_server.get_new_harness("reset_logic_dict_bug")
-    encoding = pytestconfig.getoption("--client-encoding")
     
     # Configure auto_reset with a limit of 2 unknown_errors
     extra_config = {
@@ -25,7 +24,7 @@ def test_reset_logic_dict_comprehension_bug(postgres_server, pytestconfig):
         }
     }
     
-    with QCATestingSnowflake(pg_harness, encoding=encoding, extra_config=extra_config) as snowflake:
+    with QCATestingSnowflake(pg_harness, encoding=client_encoding, extra_config=extra_config) as snowflake:
         storage_socket = snowflake.get_storage_socket()
         activated_manager_name, _ = snowflake.activate_manager()
         activated_manager_programs = snowflake.activated_manager_programs()
