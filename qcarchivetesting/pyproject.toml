@@ -39,7 +39,7 @@ qcarchive_fixtures = "qcarchivetesting.testing_fixtures"
 
 
 [tool.setuptools.package-data]
-qcarchivetesting = ["*_data/**", "config_files/**"]
+qcarchivetesting = ["*_data/**", "config_files/**", "data_generator/*.json.xz"]
 
 
 [tool.versioningit]
