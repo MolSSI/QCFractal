@@ -357,7 +357,6 @@ def test_project_client_query_records(snowflake_client: PortalClient):
     assert qr[0]["project_name"] == proj2.name
     assert qr[0]["record_name"] == "test_record 2"
 
-
     # Query records by project
     proj_records = snowflake_client.query_records(project_id=proj1.id)
     proj_records_l = list(proj_records)
@@ -365,7 +364,7 @@ def test_project_client_query_records(snowflake_client: PortalClient):
     assert proj_records_l[0].id == r1.id
 
     # Other projects
-    proj_records = snowflake_client.query_records(project_id=proj1.id+proj2.id+1)
+    proj_records = snowflake_client.query_records(project_id=proj1.id + proj2.id + 1)
     assert len(list(proj_records)) == 0
 
     # Remove/unlink the record from the dataset
@@ -399,7 +398,7 @@ def test_project_client_query_datasets(snowflake_client: PortalClient):
     assert qr[0]["dataset_name"] == "test dataset 2"
 
     # Other projects
-    proj_records = snowflake_client.query_records(project_id=proj1.id+proj2.id+1)
+    proj_records = snowflake_client.query_records(project_id=proj1.id + proj2.id + 1)
     assert len(list(proj_records)) == 0
 
     # Remove/unlink the record from the dataset

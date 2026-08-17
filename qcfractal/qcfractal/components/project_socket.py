@@ -197,7 +197,7 @@ class ProjectSocket:
                     "description": x[4],
                     "record_count": x[5],
                     "dataset_count": x[6],
-                    "creator_user": x[7], # Same as owner_user for now
+                    "creator_user": x[7],  # Same as owner_user for now
                     "owner_user": x[7],
                 }
                 for x in r
@@ -243,10 +243,10 @@ class ProjectSocket:
             session.execute(stmt)
 
     def query_project_records(
-            self,
-            record_id: Iterable[int],
-            *,
-            session: Optional[Session] = None,
+        self,
+        record_id: Iterable[int],
+        *,
+        session: Optional[Session] = None,
     ):
         """
         Query which projects the specified records belong to
@@ -276,12 +276,11 @@ class ProjectSocket:
                 for x in ret
             ]
 
-
     def query_project_datasets(
-            self,
-            dataset_id: Iterable[int],
-            *,
-            session: Optional[Session] = None,
+        self,
+        dataset_id: Iterable[int],
+        *,
+        session: Optional[Session] = None,
     ):
         """
         Query which projects the specified datasets belong to

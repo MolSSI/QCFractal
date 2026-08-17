@@ -342,7 +342,9 @@ class MoleculeSocket:
 
                 if overwrite_identifiers:
                     # Always keep hash & formula
-                    mol.identifiers = identifiers.model_dump(exclude_unset=True, exclude_defaults=True, exclude_none=True)
+                    mol.identifiers = identifiers.model_dump(
+                        exclude_unset=True, exclude_defaults=True, exclude_none=True
+                    )
                 else:
                     id_dict = identifiers.model_dump(exclude_unset=True, exclude_defaults=True)
                     mol.identifiers.update(id_dict)

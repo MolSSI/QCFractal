@@ -27,16 +27,12 @@ def upgrade():
         unique=False,
     )
 
-    op.execute(
-        sa.text(
-            """
+    op.execute(sa.text("""
         UPDATE task_queue
         SET sort_date = br.created_on
         FROM base_record br
         WHERE task_queue.record_id = br.id
-        """
-        )
-    )
+        """))
 
     op.alter_column("task_queue", "sort_date", nullable=False)
 

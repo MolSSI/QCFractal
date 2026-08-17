@@ -14,7 +14,21 @@ import re
 import time
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from hashlib import sha256
-from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict, Generator, Iterable, Callable, Set, Tuple, overload
+from typing import (
+    Optional,
+    Union,
+    Sequence,
+    List,
+    TypeVar,
+    Any,
+    Dict,
+    Generator,
+    Iterable,
+    Callable,
+    Set,
+    Tuple,
+    overload,
+)
 
 import numpy as np
 
@@ -26,11 +40,14 @@ _T = TypeVar("_T")
 @overload
 def make_list(obj: Union[Sequence[_T], Set[_T], Iterable[_T], _T]) -> List[_T]: ...
 
+
 @overload
 def make_list(obj: Optional[Union[Sequence[_T], Set[_T], Iterable[_T], _T]]) -> Optional[List[_T]]: ...
 
+
 @overload
 def make_list(obj: None) -> None: ...
+
 
 def make_list(obj: Optional[Union[Sequence[_T], Set[_T], Iterable[_T], _T]]) -> Optional[List[_T]]:
     """

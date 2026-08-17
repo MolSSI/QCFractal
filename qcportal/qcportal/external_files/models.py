@@ -29,7 +29,6 @@ class ExternalFileUploadBase(BaseModel):
     provenance: dict[str, Any]
 
 
-
 class ExternalFile(BaseModel):
     id: int
     file_type: ExternalFileTypeEnum

@@ -16,7 +16,6 @@ from qcportal.torsiondrive import (
 )
 from qcportal.utils import calculate_limit
 
-
 #####################
 # Record
 #####################

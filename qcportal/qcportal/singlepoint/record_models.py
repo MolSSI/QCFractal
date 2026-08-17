@@ -34,6 +34,7 @@ class Model(BaseModel):
     basis sets. For molecular mechanics, name of the atom-typer.
     """
 
+
 class SinglepointDriver(str, Enum):
     # Copied from qcelemental to add "deferred"
     energy = "energy"

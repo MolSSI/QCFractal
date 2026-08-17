@@ -23,6 +23,7 @@ if s3_tests_enabled:
 # Adding/getting is generally tested elsewhere (with various client model tests). But
 # a few other core things should be tested
 
+
 @pytest.mark.skipif(not s3_tests_enabled, reason="S3 tests not enabled")
 def test_external_file_socket_delete(storage_socket: SQLAlchemySocket):
 

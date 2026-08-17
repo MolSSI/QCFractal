@@ -2,7 +2,6 @@ import sqlalchemy as sa
 from sqlalchemy.ext import compiler
 from sqlalchemy.schema import DDLElement
 
-
 # Taken from https://github.com/sqlalchemy/sqlalchemy/wiki/Views
 
 

@@ -327,6 +327,7 @@ class WebAPIConfig(QCFConfigBase):
 # S3 bucket names are all lowercase characters and numbers
 S3BucketName = Annotated[str, StringConstraints(min_length=3, max_length=63, pattern=r"^[a-z0-9\-]+[a-z0-9]$")]
 
+
 class S3BucketMap(QCFConfigBase):
     dataset_attachment: S3BucketName = "dataset-attachments"
     """Bucket to hold dataset views"""

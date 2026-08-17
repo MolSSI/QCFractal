@@ -3360,7 +3360,7 @@ class PortalClient(PortalClientBase):
             The updated user information as it appears on the server
         """
 
-        is_me = (user_info.id == self.user_id and user_info.username == self.username)
+        is_me = user_info.id == self.user_id and user_info.username == self.username
 
         if is_me:
             return self.make_request("patch", f"api/v1/me", UserInfo, body=user_info)
@@ -3395,7 +3395,6 @@ class PortalClient(PortalClientBase):
                 raise RuntimeError("Cannot get user - not logged in?")
             username_or_id = self.username
 
-
         if isinstance(username_or_id, str):
             is_valid_username(username_or_id)
 
@@ -3408,9 +3407,7 @@ class PortalClient(PortalClientBase):
             is_me = username_or_id == self.username
 
         if is_me:
-            return self.make_request(
-            "put", f"api/v1/me/password", str, body_model=Optional[str], body=new_password
-        )
+            return self.make_request("put", f"api/v1/me/password", str, body_model=Optional[str], body=new_password)
         else:
             return self.make_request(
                 "put", f"api/v1/users/{username_or_id}/password", str, body_model=Optional[str], body=new_password

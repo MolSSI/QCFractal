@@ -177,6 +177,7 @@ def test_manybody_dataset_model_modify_records(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("manybody", "Test dataset")
     ds_helpers.run_dataset_model_modify_records(ds, test_entries, test_specs[0])
 
+
 @pytest.mark.skipif(not s3_tests_enabled, reason="S3 tests not enabled")
 def test_manybody_dataset_model_create_view(dataset_submit_test_client: PortalClient, tmp_path_factory):
     ds = dataset_submit_test_client.add_dataset("manybody", "Test dataset")

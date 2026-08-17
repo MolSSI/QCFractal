@@ -29,7 +29,7 @@ def _get_openapi_meta_dict(fn):
     return original.__openapi_meta__
 
 
-def _get_file_extension(filename, allowed_extensions = None):
+def _get_file_extension(filename, allowed_extensions=None):
     """Return a normalized extension (including leading period) for ``filename``.
 
     Matching is case-insensitive and supports multi-part extensions such as
@@ -58,7 +58,7 @@ def _get_file_extension(filename, allowed_extensions = None):
         # Return the actual extension of the file, including the period
         # This is largely for tmp files, so don't care about compound extensions like .tar.gz
         if "." in filename:
-            return filename[filename.rfind("."):]
+            return filename[filename.rfind(".") :]
         else:
             raise BadRequest("No file extension found in filename. Uploaded files must have an extension, such as .gz")
 
@@ -73,9 +73,9 @@ def _get_file_extension(filename, allowed_extensions = None):
 
 
 def check_permissions(
-        requested_resource,
-        requested_action,
-        require_security: bool = False,
+    requested_resource,
+    requested_action,
+    require_security: bool = False,
 ) -> Callable:
     """
     Route decorator that enforces global authorization for a resource/action pair.
@@ -145,6 +145,7 @@ def check_permissions(
 
     return decorate
 
+
 def no_permission_required() -> Callable:
     """
     Mark a route as intentionally not requiring permission checks.
@@ -163,6 +164,7 @@ def no_permission_required() -> Callable:
 
         wrapper._has_permission_check = True
         return wrapper
+
     return decorate
 
 
@@ -236,8 +238,7 @@ def allow_uploads(allowed_file_extensions: Optional[Iterable[str]]) -> Callable:
     return decorate
 
 
-def handle_session(
-) -> Callable:
+def handle_session() -> Callable:
     """
     Route decorator that injects a managed SQLAlchemy session.
 
@@ -249,6 +250,7 @@ def handle_session(
     argument. If neither annotated parameter exists, a ``RuntimeError`` is
     raised.
     """
+
     def decorate(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -269,8 +271,7 @@ def handle_session(
     return decorate
 
 
-def serialization(
-) -> Callable:
+def serialization() -> Callable:
     """
     Route decorator that deserializes request data and serializes return values.
 

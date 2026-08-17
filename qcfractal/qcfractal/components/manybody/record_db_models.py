@@ -155,13 +155,11 @@ class ManybodyRecordORM(BaseRecordORM):
 
 
 # Delete base record if this record is deleted
-_del_baserecord_trigger = DDL(
-    """
+_del_baserecord_trigger = DDL("""
     CREATE TRIGGER qca_manybody_record_delete_base_tr
     AFTER DELETE ON manybody_record
     FOR EACH ROW EXECUTE PROCEDURE qca_base_record_delete();
-    """
-)
+    """)
 
 event.listen(ManybodyRecordORM.__table__, "after_create", _del_baserecord_trigger.execute_if(dialect=("postgresql")))
 

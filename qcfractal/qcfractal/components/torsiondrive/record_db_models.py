@@ -199,13 +199,11 @@ class TorsiondriveRecordORM(BaseRecordORM):
 
 
 # Delete base record if this record is deleted
-_del_baserecord_trigger = DDL(
-    """
+_del_baserecord_trigger = DDL("""
     CREATE TRIGGER qca_torsiondrive_record_delete_base_tr
     AFTER DELETE ON torsiondrive_record
     FOR EACH ROW EXECUTE PROCEDURE qca_base_record_delete();
-    """
-)
+    """)
 
 event.listen(
     TorsiondriveRecordORM.__table__, "after_create", _del_baserecord_trigger.execute_if(dialect=("postgresql"))

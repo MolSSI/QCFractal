@@ -15,7 +15,6 @@ from qcportal.gridoptimization import (
 )
 from qcportal.utils import calculate_limit
 
-
 #####################
 # Record
 #####################

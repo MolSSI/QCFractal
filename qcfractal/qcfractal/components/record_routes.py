@@ -17,7 +17,6 @@ from qcportal.record_models import (
     RecordStatusEnum,
 )
 
-
 #################################################################
 # Base record route
 # A few things can be done directly through /records (rather than
@@ -116,7 +115,9 @@ def bulk_get_records_v1(body_data: CommonBulkGetBody, record_type: str | None = 
 @api_v1.route("/records/<int:record_id>", methods=["GET"])
 @check_permissions("records", "read")
 @serialization()
-def get_general_records_v1(record_id: int, url_params: ProjURLParameters, record_type: str | None = None) -> dict[str, Any]:
+def get_general_records_v1(
+    record_id: int, url_params: ProjURLParameters, record_type: str | None = None
+) -> dict[str, Any]:
     # Getting is handled a little differently. If no type specified, use the more generic version
     # in the upper-level record socket
     if record_type is None:
@@ -201,7 +202,9 @@ def get_record_outputs_single_v1(record_id: int, history_id: int, output_type: s
 )
 @check_permissions("records", "read")
 @serialization()
-def get_record_outputs_data_v1(record_id: int, history_id: int, output_type: str, record_type: str) -> tuple[bytes, CompressionEnum]:
+def get_record_outputs_data_v1(
+    record_id: int, history_id: int, output_type: str, record_type: str
+) -> tuple[bytes, CompressionEnum]:
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get_single_output_rawdata(record_id, history_id, output_type)
 

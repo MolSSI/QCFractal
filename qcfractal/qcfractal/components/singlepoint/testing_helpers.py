@@ -82,6 +82,7 @@ def load_record_data(name: str) -> SinglepointRecord:
     data = read_record_data(name)
     return SinglepointRecord(**data)
 
+
 def load_error_record_data(name: str) -> FailedOperation:
     data = read_record_data(name)
     return FailedOperation(**data)

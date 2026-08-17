@@ -84,7 +84,7 @@ def _generate_default_config(pg_harness, extra_config=None) -> FractalConfig:
         cfg_dict["geoip2_filename"] = geoip_filename
 
     if s3_tests_enabled:
-        cfg_dict['s3'] = {
+        cfg_dict["s3"] = {
             "enabled": True,
             "verify": False,
             "passthrough": False,

@@ -16,7 +16,6 @@ from qcportal.managers import (
 )
 from qcportal.utils import calculate_limit
 
-
 ##################################################
 # Routes that deal with manager activation, etc
 ##################################################

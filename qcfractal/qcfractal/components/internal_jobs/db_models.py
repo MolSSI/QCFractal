@@ -88,8 +88,7 @@ class InternalJobORM(BaseORM):
 # Function that sends a postgres NOTIFY to internal job workers
 # (always do notify, even if the job is in the future. The worker can calculate
 # the time difference and sleep until the job is ready)
-_insert_internal_job_triggerfunc = DDL(
-    """
+_insert_internal_job_triggerfunc = DDL("""
     CREATE OR REPLACE FUNCTION public.qca_internal_jobs_notify()
     RETURNS trigger
     LANGUAGE plpgsql
@@ -100,17 +99,14 @@ _insert_internal_job_triggerfunc = DDL(
         END
         $_$
     ;
-"""
-)
+""")
 
 # Trigger the above function whenever a new internal job is added
-_insert_internal_job_trigger = DDL(
-    """
+_insert_internal_job_trigger = DDL("""
     CREATE TRIGGER qca_internal_jobs_insert_tr
     AFTER INSERT ON internal_jobs
     FOR EACH ROW EXECUTE PROCEDURE qca_internal_jobs_notify();
-    """
-)
+    """)
 
 event.listen(
     InternalJobORM.__table__, "after_create", _insert_internal_job_triggerfunc.execute_if(dialect=("postgresql"))

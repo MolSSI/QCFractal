@@ -9,7 +9,6 @@ Create Date: 2025-04-17 10:26:09.369279
 from alembic import op
 import sqlalchemy as sa
 
-
 # revision identifiers, used by Alembic.
 revision = "0390661b91bf"
 down_revision = "56ef8ac1765b"
@@ -18,9 +17,7 @@ depends_on = None
 
 
 def upgrade():
-    op.execute(
-        sa.text(
-            """
+    op.execute(sa.text("""
                 create or replace view project_records_view as  SELECT project_record.project_id,
                     project_record.record_id
                    FROM project_record
@@ -34,9 +31,7 @@ def upgrade():
                     dataset_direct_records_view.record_id
                    FROM (project_dataset
                      JOIN dataset_direct_records_view ON ((project_dataset.dataset_id = dataset_direct_records_view.dataset_id))); 
-    """
-        )
-    )
+    """))
 
 
 def downgrade():

@@ -2,7 +2,20 @@ from __future__ import annotations
 
 from typing import Optional, Iterable, Dict, Any
 
-from sqlalchemy import Column, Integer, TIMESTAMP, String, Float, BigInteger, Double, JSON, Index, CHAR, ForeignKey, Date
+from sqlalchemy import (
+    Column,
+    Integer,
+    TIMESTAMP,
+    String,
+    Float,
+    BigInteger,
+    Double,
+    JSON,
+    Index,
+    CHAR,
+    ForeignKey,
+    Date,
+)
 from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.orm import relationship
 

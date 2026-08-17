@@ -133,7 +133,7 @@ def test_auth_global_no_unauth_read(secure_snowflake):
     for endpoint, info in perms.items():
         method, resource = info["method"], info["resource"]
         if resource == "none":
-            continue # no login required
+            continue  # no login required
 
         # Replace various values in the route with placeholders (ie, 1234 for <int:dataset_id>)
         endpoint = substitute_route_url(endpoint)
@@ -145,7 +145,7 @@ def test_auth_global_no_unauth_read(secure_snowflake):
 @pytest.mark.parametrize("as_admin", [True, False])
 def test_auth_protected_endpoints(snowflake, as_admin):
     # Cannot add or modify users/groups when security is disabled
-    uinfo = UserInfo(username='test', role="read", enabled=True)
+    uinfo = UserInfo(username="test", role="read", enabled=True)
     ginfo = GroupInfo(groupname="testg")
 
     snowflake.create_users()
