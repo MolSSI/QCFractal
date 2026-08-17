@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -467,48 +467,48 @@
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/tasks_services.html#qcportal.tasks.models.TaskClaimBody">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TaskClaimBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">name_data</span><span class="p">:</span> <span class="n">ManagerName</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name information about this manager&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Name information about this manager"""</span>
 
     <span class="n">programs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">LowerStr</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subset of programs to claim tasks for&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Subset of programs to claim tasks for"""</span>
 
     <span class="n">compute_tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subset of tags to claim tasks from&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Subset of tags to claim tasks from"""</span>
 
     <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Limit on the number of tasks to claim&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Limit on the number of tasks to claim"""</span>
 
 <div class="viewcode-block" id="TaskClaimBody.validate_tags">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/tasks_services.html#qcportal.tasks.models.TaskClaimBody.validate_tags">[docs]</a>
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;compute_tags&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"compute_tags"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">validate_tags</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="n">v</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;tags&#39; field contains no non-zero-length tags&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"'tags' field contains no non-zero-length tags"</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>  <span class="c1"># remove duplicates, maintaining order (in python 3.6+)</span></div>
 
 
 <div class="viewcode-block" id="TaskClaimBody.validate_programs">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/tasks_services.html#qcportal.tasks.models.TaskClaimBody.validate_programs">[docs]</a>
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;programs&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"programs"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">validate_programs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="c1"># Remove programs of zero length</span>
         <span class="n">v</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">}</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;programs&#39; field contains no non-zero-length programs&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"'programs' field contains no non-zero-length programs"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">v</span></div>
 
 
-    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_old_tags</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">if</span> <span class="s2">&quot;tags&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
-                <span class="n">values</span><span class="p">[</span><span class="s2">&quot;compute_tags&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tags&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">"tags"</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                <span class="n">values</span><span class="p">[</span><span class="s2">"compute_tags"</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"tags"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">values</span></div>
 
 
@@ -517,10 +517,10 @@
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/tasks_services.html#qcportal.tasks.models.TaskReturnBody">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TaskReturnBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
     <span class="n">name_data</span><span class="p">:</span> <span class="n">ManagerName</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name information about this manager&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Name information about this manager"""</span>
 
     <span class="n">results_compressed</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">QCPortalBytes</span><span class="p">]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compressed results of the completed computations, keyed by task id&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">"""Compressed results of the completed computations, keyed by task id"""</span></div>
 
 </pre></div>
 

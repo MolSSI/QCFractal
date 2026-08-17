@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -473,26 +473,26 @@
 <div class="viewcode-block" id="InternalJobStatusEnum">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJobStatusEnum">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">InternalJobStatusEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The state of a record object. The states which are available are a finite set.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">complete</span> <span class="o">=</span> <span class="s2">&quot;complete&quot;</span>
-    <span class="n">waiting</span> <span class="o">=</span> <span class="s2">&quot;waiting&quot;</span>
-    <span class="n">running</span> <span class="o">=</span> <span class="s2">&quot;running&quot;</span>
-    <span class="n">error</span> <span class="o">=</span> <span class="s2">&quot;error&quot;</span>
-    <span class="n">cancelled</span> <span class="o">=</span> <span class="s2">&quot;cancelled&quot;</span>
+    <span class="n">complete</span> <span class="o">=</span> <span class="s2">"complete"</span>
+    <span class="n">waiting</span> <span class="o">=</span> <span class="s2">"waiting"</span>
+    <span class="n">running</span> <span class="o">=</span> <span class="s2">"running"</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="s2">"error"</span>
+    <span class="n">cancelled</span> <span class="o">=</span> <span class="s2">"cancelled"</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_missing_</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Attempts to find the correct status in a case-insensitive way</span>
+<span class="w">        </span><span class="sd">"""Attempts to find the correct status in a case-insensitive way</span>
 
 <span class="sd">        If a string being converted to an InternalJobStatusEnum is missing, then this function</span>
 <span class="sd">        will convert the case and try to find the appropriate status.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
-        <span class="c1"># Search this way rather than doing &#39;in&#39; since we are comparing</span>
+        <span class="c1"># Search this way rather than doing 'in' since we are comparing</span>
         <span class="c1"># a string to an enum</span>
         <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="bp">cls</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="n">status</span><span class="p">:</span>
@@ -503,7 +503,7 @@
 <div class="viewcode-block" id="InternalJob">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">InternalJob</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
 
     <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
@@ -542,17 +542,17 @@
 <div class="viewcode-block" id="InternalJob.refresh">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.refresh">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">refresh</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Updates the data of this object with information from the server</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Client is not set&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Client is not set"</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_url</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">server_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get_internal_job</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">server_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_url</span><span class="p">,</span> <span class="n">InternalJob</span><span class="p">)</span>
+            <span class="n">server_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">"get"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_url</span><span class="p">,</span> <span class="n">InternalJob</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">server_data</span><span class="p">:</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span></div>
@@ -561,7 +561,7 @@
 <div class="viewcode-block" id="InternalJob.watch">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.watch">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">watch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Watch an internal job for completion</span>
 
 <span class="sd">        Will poll every `interval` seconds until the job is finished (complete, error, cancelled, etc).</span>
@@ -576,7 +576,7 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">InternalJobStatusEnum</span><span class="o">.</span><span class="n">waiting</span><span class="p">,</span> <span class="n">InternalJobStatusEnum</span><span class="o">.</span><span class="n">running</span><span class="p">]:</span>
             <span class="k">return</span>
@@ -597,14 +597,14 @@
             <span class="n">pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">progress_description</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">end_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">t</span> <span class="o">&gt;=</span> <span class="n">end_time</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">TimeoutError</span><span class="p">(</span><span class="s2">&quot;Timed out waiting for job to complete&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">TimeoutError</span><span class="p">(</span><span class="s2">"Timed out waiting for job to complete"</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InternalJobStatusEnum</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Internal job resulted in an error:&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">"Internal job resulted in an error:"</span><span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">)</span>
                 <span class="k">break</span>
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">InternalJobStatusEnum</span><span class="o">.</span><span class="n">waiting</span><span class="p">,</span> <span class="n">InternalJobStatusEnum</span><span class="o">.</span><span class="n">running</span><span class="p">]:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Internal job final status: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Internal job final status: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
                 <span class="k">break</span>
 
             <span class="n">curtime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
@@ -650,13 +650,13 @@
 <div class="viewcode-block" id="InternalJobQueryFilters.parse_dates">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJobQueryFilters.parse_dates">[docs]</a>
     <span class="nd">@field_validator</span><span class="p">(</span>
-        <span class="s2">&quot;last_updated_before&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;last_updated_after&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;added_before&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;added_after&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;scheduled_before&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;scheduled_after&quot;</span><span class="p">,</span>
-        <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">,</span>
+        <span class="s2">"last_updated_before"</span><span class="p">,</span>
+        <span class="s2">"last_updated_after"</span><span class="p">,</span>
+        <span class="s2">"added_before"</span><span class="p">,</span>
+        <span class="s2">"added_after"</span><span class="p">,</span>
+        <span class="s2">"scheduled_before"</span><span class="p">,</span>
+        <span class="s2">"scheduled_after"</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">parse_dates</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
@@ -670,17 +670,17 @@
 <div class="viewcode-block" id="InternalJobQueryIterator">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJobQueryIterator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">InternalJobQueryIterator</span><span class="p">(</span><span class="n">QueryIteratorBase</span><span class="p">[</span><span class="n">InternalJob</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Iterator for internal job queries</span>
 
 <span class="sd">    This iterator transparently handles batching and pagination over the results</span>
 <span class="sd">    of an internal job query.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="InternalJobQueryIterator.__init__">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJobQueryIterator.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">:</span> <span class="n">InternalJobQueryFilters</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Construct an iterator</span>
 
 <span class="sd">        Parameters</span>
@@ -689,16 +689,16 @@
 <span class="sd">            QCPortal client object used to contact/retrieve data from the server</span>
 <span class="sd">        query_filters</span>
 <span class="sd">            The actual query information to send to the server</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
-        <span class="n">batch_limit</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_internal_jobs&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
+        <span class="n">batch_limit</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">"get_internal_jobs"</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
         <span class="n">QueryIteratorBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">,</span> <span class="n">batch_limit</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">InternalJob</span><span class="p">]:</span>
         <span class="n">ij_dicts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-            <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;api/v1/internal_jobs/query&quot;</span><span class="p">,</span>
+            <span class="s2">"post"</span><span class="p">,</span>
+            <span class="s2">"api/v1/internal_jobs/query"</span><span class="p">,</span>
             <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
             <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="p">,</span>
         <span class="p">)</span>

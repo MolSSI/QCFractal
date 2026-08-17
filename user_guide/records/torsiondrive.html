@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Gridoptimization calculations" href="gridoptimization.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -615,10 +615,10 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">td_spec</span> <span class="o">=</span> <span class="n">TorsiondriveSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;torsiondrive&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"torsiondrive"</span><span class="p">,</span>
     <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
-        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">),</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"geometric"</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"deferred"</span><span class="p">),</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">TorsiondriveKeywords</span><span class="p">(</span>
         <span class="n">dihedrals</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)],</span>
@@ -642,10 +642,10 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">td_spec</span> <span class="o">=</span> <span class="n">TorsiondriveSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;torsiondrive&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"torsiondrive"</span><span class="p">,</span>
     <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
-        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;wb97x-d&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-tzvp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">),</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"geometric"</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"wb97x-d"</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-tzvp"</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"deferred"</span><span class="p">),</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">TorsiondriveKeywords</span><span class="p">(</span>
         <span class="n">dihedrals</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)],</span>
@@ -708,7 +708,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-4">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_torsiondrives</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;optimizations&quot;</span><span class="p">,</span> <span class="s2">&quot;**&quot;</span><span class="p">])</span>  <span class="c1"># include full child data</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_torsiondrives</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s2">"optimizations"</span><span class="p">,</span> <span class="s2">"**"</span><span class="p">])</span>  <span class="c1"># include full child data</span>
 <span class="c1"># Access optimizations via a mapping from grid keys (tuples) to lists of OptimizationRecord</span>
 <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">opt_list</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">optimizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[</span><span class="n">opt</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="n">opt_list</span><span class="p">])</span>
@@ -724,7 +724,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-5">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_torsiondrives</span><span class="p">(</span><span class="n">qc_method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">qc_basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;optimizations&#39;</span><span class="p">])</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_torsiondrives</span><span class="p">(</span><span class="n">qc_method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span> <span class="n">qc_basis</span><span class="o">=</span><span class="s1">'def2-svp'</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">'optimizations'</span><span class="p">])</span>
 <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">optimizations</span><span class="p">))</span>
 </pre></div>
@@ -744,10 +744,10 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">td_spec</span> <span class="o">=</span> <span class="n">TorsiondriveSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;torsiondrive&#39;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s1">'torsiondrive'</span><span class="p">,</span>
     <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span>
-        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;deferred&#39;</span><span class="p">),</span>
+        <span class="n">program</span><span class="o">=</span><span class="s1">'geometric'</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">'def2-svp'</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">'deferred'</span><span class="p">),</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">TorsiondriveKeywords</span><span class="p">(</span>
         <span class="n">dihedrals</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)],</span>
@@ -758,7 +758,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="c1"># Two initial conformers for a single torsiondrive</span>
 <span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_torsiondrives</span><span class="p">(</span>
     <span class="n">initial_molecules</span><span class="o">=</span><span class="p">[[</span><span class="n">mol_conf1</span><span class="p">,</span> <span class="n">mol_conf2</span><span class="p">]],</span>
-    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;torsiondrive&#39;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s1">'torsiondrive'</span><span class="p">,</span>
     <span class="n">optimization_specification</span><span class="o">=</span><span class="n">td_spec</span><span class="o">.</span><span class="n">optimization_specification</span><span class="p">,</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">td_spec</span><span class="o">.</span><span class="n">keywords</span><span class="p">,</span>
 <span class="p">)</span>
@@ -850,8 +850,8 @@ fields, at the point where the merged specification is built - that is, on
 <input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-7">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Note the typo - &#39;grid_spacings&#39;. This is accepted without complaint</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;butane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">butane_conf1</span><span class="p">],</span> <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;grid_spacings&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">15</span><span class="p">]})</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Note the typo - 'grid_spacings'. This is accepted without complaint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">"butane"</span><span class="p">,</span> <span class="p">[</span><span class="n">butane_conf1</span><span class="p">],</span> <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">"grid_spacings"</span><span class="p">:</span> <span class="p">[</span><span class="mi">15</span><span class="p">]})</span>
 </pre></div>
 </div>
 </div>
@@ -876,7 +876,7 @@ program. A misspelled key there is silently ignored, or rejected later by the op
 <input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-8">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;torsiondrive&quot;</span><span class="p">,</span> <span class="s2">&quot;Torsion Scan Dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;A demonstration torsiondrive dataset&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">"torsiondrive"</span><span class="p">,</span> <span class="s2">"Torsion Scan Dataset"</span><span class="p">,</span> <span class="s2">"A demonstration torsiondrive dataset"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -896,15 +896,15 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">td_spec</span> <span class="o">=</span> <span class="n">TorsiondriveSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;torsiondrive&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"torsiondrive"</span><span class="p">,</span>
     <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
-        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">),</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"geometric"</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"deferred"</span><span class="p">),</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">TorsiondriveKeywords</span><span class="p">(),</span>
 <span class="p">)</span>
 
-<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;td-geometric/psi4-b3lyp-def2-svp&quot;</span><span class="p">,</span> <span class="n">td_spec</span><span class="p">)</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">"td-geometric/psi4-b3lyp-def2-svp"</span><span class="p">,</span> <span class="n">td_spec</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -922,15 +922,15 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># The central C-C torsion of butane, and the C-C torsion of ethane -</span>
 <span class="c1"># different atom indices in each molecule</span>
 <span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span>
-    <span class="s2">&quot;butane&quot;</span><span class="p">,</span>
+    <span class="s2">"butane"</span><span class="p">,</span>
     <span class="p">[</span><span class="n">butane_conf1</span><span class="p">,</span> <span class="n">butane_conf2</span><span class="p">],</span>
-    <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)],</span> <span class="s2">&quot;grid_spacing&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">15</span><span class="p">]},</span>
+    <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">"dihedrals"</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)],</span> <span class="s2">"grid_spacing"</span><span class="p">:</span> <span class="p">[</span><span class="mi">15</span><span class="p">]},</span>
 <span class="p">)</span>
 
 <span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span>
-    <span class="s2">&quot;ethane&quot;</span><span class="p">,</span>
+    <span class="s2">"ethane"</span><span class="p">,</span>
     <span class="p">[</span><span class="n">ethane_conf</span><span class="p">],</span>
-    <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)],</span> <span class="s2">&quot;grid_spacing&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">15</span><span class="p">]},</span>
+    <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">"dihedrals"</span><span class="p">:</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)],</span> <span class="s2">"grid_spacing"</span><span class="p">:</span> <span class="p">[</span><span class="mi">15</span><span class="p">]},</span>
 <span class="p">)</span>
 
 <span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span>
@@ -950,16 +950,16 @@ PYTHON</label><div class="sd-tab-content docutils">
 
 <span class="c1"># Molecules and the dihedral to drive in each, worked out beforehand</span>
 <span class="n">to_scan</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">(</span><span class="s2">&quot;butane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">butane_conf1</span><span class="p">,</span> <span class="n">butane_conf2</span><span class="p">],</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
-    <span class="p">(</span><span class="s2">&quot;ethane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">ethane_conf</span><span class="p">],</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span>
-    <span class="p">(</span><span class="s2">&quot;propane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">propane_conf</span><span class="p">],</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s2">"butane"</span><span class="p">,</span> <span class="p">[</span><span class="n">butane_conf1</span><span class="p">,</span> <span class="n">butane_conf2</span><span class="p">],</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s2">"ethane"</span><span class="p">,</span> <span class="p">[</span><span class="n">ethane_conf</span><span class="p">],</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s2">"propane"</span><span class="p">,</span> <span class="p">[</span><span class="n">propane_conf</span><span class="p">],</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)),</span>
 <span class="p">]</span>
 
 <span class="n">entries</span> <span class="o">=</span> <span class="p">[</span>
     <span class="n">TorsiondriveDatasetNewEntry</span><span class="p">(</span>
         <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
         <span class="n">initial_molecules</span><span class="o">=</span><span class="n">mols</span><span class="p">,</span>
-        <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">dihedral</span><span class="p">],</span> <span class="s2">&quot;grid_spacing&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">15</span><span class="p">]},</span>
+        <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">"dihedrals"</span><span class="p">:</span> <span class="p">[</span><span class="n">dihedral</span><span class="p">],</span> <span class="s2">"grid_spacing"</span><span class="p">:</span> <span class="p">[</span><span class="mi">15</span><span class="p">]},</span>
     <span class="p">)</span>
     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">mols</span><span class="p">,</span> <span class="n">dihedral</span> <span class="ow">in</span> <span class="n">to_scan</span>
 <span class="p">]</span>
@@ -986,10 +986,10 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">td_spec</span> <span class="o">=</span> <span class="n">TorsiondriveSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;torsiondrive&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"torsiondrive"</span><span class="p">,</span>
     <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
-        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">),</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"geometric"</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"deferred"</span><span class="p">),</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">TorsiondriveKeywords</span><span class="p">(</span>
         <span class="n">grid_spacing</span><span class="o">=</span><span class="p">[</span><span class="mi">15</span><span class="p">],</span>
@@ -998,11 +998,11 @@ PYTHON</label><div class="sd-tab-content docutils">
     <span class="p">),</span>
 <span class="p">)</span>
 
-<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;coarse&quot;</span><span class="p">,</span> <span class="n">td_spec</span><span class="p">)</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">"coarse"</span><span class="p">,</span> <span class="n">td_spec</span><span class="p">)</span>
 
 <span class="c1"># Entries only need to say which dihedral to drive</span>
-<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;butane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">butane_conf1</span><span class="p">],</span> <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]})</span>
-<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;ethane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">ethane_conf</span><span class="p">],</span> <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)]})</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">"butane"</span><span class="p">,</span> <span class="p">[</span><span class="n">butane_conf1</span><span class="p">],</span> <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">"dihedrals"</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]})</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">"ethane"</span><span class="p">,</span> <span class="p">[</span><span class="n">ethane_conf</span><span class="p">],</span> <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">"dihedrals"</span><span class="p">:</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)]})</span>
 </pre></div>
 </div>
 </div>
@@ -1017,14 +1017,14 @@ entry can deviate from the dataset-wide settings. With the <code class="docutils
 <input checked="checked" id="sd-tab-item-13" name="sd-tab-set-13" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-13">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Uses the specification&#39;s grid_spacing of 15</span>
-<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;butane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">butane_conf1</span><span class="p">],</span> <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]})</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Uses the specification's grid_spacing of 15</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">"butane"</span><span class="p">,</span> <span class="p">[</span><span class="n">butane_conf1</span><span class="p">],</span> <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">"dihedrals"</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]})</span>
 
 <span class="c1"># Scanned more finely, but still inherits dihedral_ranges and energy_upper_limit</span>
 <span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span>
-    <span class="s2">&quot;butane_fine&quot;</span><span class="p">,</span>
+    <span class="s2">"butane_fine"</span><span class="p">,</span>
     <span class="p">[</span><span class="n">butane_conf1</span><span class="p">],</span>
-    <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)],</span> <span class="s2">&quot;grid_spacing&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">5</span><span class="p">]},</span>
+    <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">"dihedrals"</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)],</span> <span class="s2">"grid_spacing"</span><span class="p">:</span> <span class="p">[</span><span class="mi">5</span><span class="p">]},</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -1043,26 +1043,26 @@ same way, which is useful when one awkward molecule needs different optimizer se
 <label class="sd-tab-label" for="sd-tab-item-14">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">td_spec</span> <span class="o">=</span> <span class="n">TorsiondriveSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;torsiondrive&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"torsiondrive"</span><span class="p">,</span>
     <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
-        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">),</span>
-        <span class="n">keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">},</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"geometric"</span><span class="p">,</span>
+        <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"deferred"</span><span class="p">),</span>
+        <span class="n">keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">"maxiter"</span><span class="p">:</span> <span class="mi">200</span><span class="p">},</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">TorsiondriveKeywords</span><span class="p">(</span><span class="n">grid_spacing</span><span class="o">=</span><span class="p">[</span><span class="mi">15</span><span class="p">]),</span>
 <span class="p">)</span>
 
-<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">td_spec</span><span class="p">)</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">"default"</span><span class="p">,</span> <span class="n">td_spec</span><span class="p">)</span>
 
 <span class="c1"># Inherits maxiter=200</span>
-<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;butane&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">butane_conf1</span><span class="p">],</span> <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]})</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">"butane"</span><span class="p">,</span> <span class="p">[</span><span class="n">butane_conf1</span><span class="p">],</span> <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">"dihedrals"</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]})</span>
 
 <span class="c1"># Overrides maxiter and adds another optimizer keyword</span>
 <span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span>
-    <span class="s2">&quot;stubborn_molecule&quot;</span><span class="p">,</span>
+    <span class="s2">"stubborn_molecule"</span><span class="p">,</span>
     <span class="p">[</span><span class="n">stubborn_conf</span><span class="p">],</span>
-    <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dihedrals&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">)]},</span>
-    <span class="n">additional_optimization_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span> <span class="s2">&quot;coordsys&quot;</span><span class="p">:</span> <span class="s2">&quot;dlc&quot;</span><span class="p">},</span>
+    <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">"dihedrals"</span><span class="p">:</span> <span class="p">[(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">)]},</span>
+    <span class="n">additional_optimization_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">"maxiter"</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span> <span class="s2">"coordsys"</span><span class="p">:</span> <span class="s2">"dlc"</span><span class="p">},</span>
 <span class="p">)</span>
 </pre></div>
 </div>

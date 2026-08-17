@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -469,13 +469,13 @@
 <div class="viewcode-block" id="CompressionEnum">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.compression.CompressionEnum">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CompressionEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    How data is compressed (compression method only, ie lzma, zstd)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">none</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
-    <span class="n">lzma</span> <span class="o">=</span> <span class="s2">&quot;lzma&quot;</span>
-    <span class="n">zstd</span> <span class="o">=</span> <span class="s2">&quot;zstd&quot;</span></div>
+    <span class="n">none</span> <span class="o">=</span> <span class="s2">"none"</span>
+    <span class="n">lzma</span> <span class="o">=</span> <span class="s2">"lzma"</span>
+    <span class="n">zstd</span> <span class="o">=</span> <span class="s2">"zstd"</span></div>
 
 
 
@@ -483,12 +483,12 @@
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.compression.get_compressed_ext">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_compressed_ext</span><span class="p">(</span><span class="n">compression_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">compression_type</span> <span class="o">==</span> <span class="n">CompressionEnum</span><span class="o">.</span><span class="n">none</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">""</span>
     <span class="k">elif</span> <span class="n">compression_type</span> <span class="o">==</span> <span class="n">CompressionEnum</span><span class="o">.</span><span class="n">zstd</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;.zstd&quot;</span>
+        <span class="k">return</span> <span class="s2">".zstd"</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Shouldn&#39;t ever happen, unless we change CompressionEnum but not the rest of this function</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown compression type: </span><span class="si">{</span><span class="n">compression_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+        <span class="c1"># Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown compression type: </span><span class="si">{</span><span class="n">compression_type</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
 
 
 
@@ -499,13 +499,13 @@
     <span class="n">compression_type</span><span class="p">:</span> <span class="n">CompressionEnum</span> <span class="o">=</span> <span class="n">CompressionEnum</span><span class="o">.</span><span class="n">zstd</span><span class="p">,</span>
     <span class="n">compression_level</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">CompressionEnum</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Serializes and compresses data given a compression scheme and level</span>
+<span class="w">    </span><span class="sd">"""Serializes and compresses data given a compression scheme and level</span>
 
 <span class="sd">    If compression_level is None, but a compression_type is specified, an appropriate default level is chosen</span>
 
 <span class="sd">    Returns a tuple containing the compressed data, applied compression type, and compression level (which may</span>
 <span class="sd">    be different from the provided arguments)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">data</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">packb</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">use_bin_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -533,8 +533,8 @@
                 <span class="n">compression_level</span> <span class="o">=</span> <span class="mi">16</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">zstandard</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">compression_level</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Shouldn&#39;t ever happen, unless we change CompressionEnum but not the rest of this function</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown compression type: </span><span class="si">{</span><span class="n">compression_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown compression type: </span><span class="si">{</span><span class="n">compression_type</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">compression_type</span><span class="p">,</span> <span class="n">compression_level</span><span class="p">)</span></div>
 
@@ -543,9 +543,9 @@
 <div class="viewcode-block" id="decompress">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/utils_misc.html#qcportal.compression.decompress">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">decompress</span><span class="p">(</span><span class="n">compressed_data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">compression_type</span><span class="p">:</span> <span class="n">CompressionEnum</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Decompresses and deserializes data into python objects</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">compression_type</span> <span class="o">==</span> <span class="n">CompressionEnum</span><span class="o">.</span><span class="n">none</span><span class="p">:</span>
         <span class="n">decompressed_data</span> <span class="o">=</span> <span class="n">compressed_data</span>
     <span class="k">elif</span> <span class="n">compression_type</span> <span class="o">==</span> <span class="n">CompressionEnum</span><span class="o">.</span><span class="n">lzma</span><span class="p">:</span>
@@ -553,8 +553,8 @@
     <span class="k">elif</span> <span class="n">compression_type</span> <span class="o">==</span> <span class="n">CompressionEnum</span><span class="o">.</span><span class="n">zstd</span><span class="p">:</span>
         <span class="n">decompressed_data</span> <span class="o">=</span> <span class="n">zstandard</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">compressed_data</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Shouldn&#39;t ever happen, unless we change CompressionEnum but not the rest of this function</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown compression type: </span><span class="si">{</span><span class="n">compression_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown compression type: </span><span class="si">{</span><span class="n">compression_type</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">unpackb</span><span class="p">(</span><span class="n">decompressed_data</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 

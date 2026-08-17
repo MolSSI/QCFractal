@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -466,24 +466,24 @@
 <div class="viewcode-block" id="ExternalFileStatusEnum">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/external_files.html#qcportal.external_files.models.ExternalFileStatusEnum">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ExternalFileStatusEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The state of an external file</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">available</span> <span class="o">=</span> <span class="s2">&quot;available&quot;</span>
-    <span class="n">processing</span> <span class="o">=</span> <span class="s2">&quot;processing&quot;</span></div>
+    <span class="n">available</span> <span class="o">=</span> <span class="s2">"available"</span>
+    <span class="n">processing</span> <span class="o">=</span> <span class="s2">"processing"</span></div>
 
 
 
 <div class="viewcode-block" id="ExternalFileTypeEnum">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/external_files.html#qcportal.external_files.models.ExternalFileTypeEnum">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ExternalFileTypeEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The state of an external file</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">dataset_attachment</span> <span class="o">=</span> <span class="s2">&quot;dataset_attachment&quot;</span>
-    <span class="n">project_attachment</span> <span class="o">=</span> <span class="s2">&quot;project_attachment&quot;</span></div>
+    <span class="n">dataset_attachment</span> <span class="o">=</span> <span class="s2">"dataset_attachment"</span>
+    <span class="n">project_attachment</span> <span class="o">=</span> <span class="s2">"project_attachment"</span></div>
 
 
 
@@ -493,7 +493,6 @@
     <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">provenance</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span></div>
-
 
 
 
@@ -525,7 +524,7 @@
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/external_files.html#qcportal.external_files.models.ExternalFile.get_direct_url">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_direct_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No client to use with this ExternalFile&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"No client to use with this ExternalFile"</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get_external_file_direct_link</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div>
 
@@ -533,7 +532,7 @@
 <div class="viewcode-block" id="ExternalFile.download">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/external_files.html#qcportal.external_files.models.ExternalFile.download">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">download</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Downloads an external file to the given path</span>
 
 <span class="sd">        The file size and checksum will be checked against the metadata stored on the server</span>
@@ -545,10 +544,10 @@
 <span class="sd">        overwrite</span>
 <span class="sd">            If True, allow for overwriting an existing file. If False, and a file already exists at the given</span>
 <span class="sd">            destination path, an exception will be raised.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No client to use with this ExternalFile&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"No client to use with this ExternalFile"</span><span class="p">)</span>
 
         <span class="c1"># Swallow return value - no one cares</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">download_external_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">)</span></div>

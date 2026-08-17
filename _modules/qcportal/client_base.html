@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -484,36 +484,36 @@
     <span class="n">urllib3</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="n">_T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_T&quot;</span><span class="p">)</span>
-<span class="n">_U</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_U&quot;</span><span class="p">)</span>
-<span class="n">_V</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_V&quot;</span><span class="p">)</span>
+<span class="n">_T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"_T"</span><span class="p">)</span>
+<span class="n">_U</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"_U"</span><span class="p">)</span>
+<span class="n">_V</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"_V"</span><span class="p">)</span>
 
 
 <span class="n">_ssl_error_msg</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">SSL handshake failed. This is likely caused by a failure to retrieve 3rd party SSL certificates.</span><span class="se">\n</span><span class="s2">&quot;</span>
-    <span class="s2">&quot;If you trust the server you are connecting to, try &#39;PortalClient(... verify=False)&#39;&quot;</span>
+    <span class="s2">"</span><span class="se">\n\n</span><span class="s2">SSL handshake failed. This is likely caused by a failure to retrieve 3rd party SSL certificates.</span><span class="se">\n</span><span class="s2">"</span>
+    <span class="s2">"If you trust the server you are connecting to, try 'PortalClient(... verify=False)'"</span>
 <span class="p">)</span>
-<span class="n">_connection_error_msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Could not connect to server </span><span class="si">{}</span><span class="s2">, please check the address and try again.&quot;</span>
+<span class="n">_connection_error_msg</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n\n</span><span class="s2">Could not connect to server </span><span class="si">{}</span><span class="s2">, please check the address and try again."</span>
 
 
 <div class="viewcode-block" id="pretty_print_request">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client_base.pretty_print_request">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">pretty_print_request</span><span class="p">(</span><span class="n">req</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----------------------&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">req</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">req</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----------------------&quot;</span><span class="p">)</span></div>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"----------------------"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">req</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">req</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"----------------------"</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="pretty_print_response">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client_base.pretty_print_response">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">pretty_print_response</span><span class="p">(</span><span class="n">res</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----------------------&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;RESPONSE </span><span class="si">{</span><span class="n">res</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">res</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Content: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">content</span><span class="p">)</span><span class="si">}</span><span class="s2"> bytes&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----------------------&quot;</span><span class="p">)</span></div>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"----------------------"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"RESPONSE </span><span class="si">{</span><span class="n">res</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">res</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Content: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">content</span><span class="p">)</span><span class="si">}</span><span class="s2"> bytes"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"----------------------"</span><span class="p">)</span></div>
 
 
 
@@ -530,7 +530,7 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="si">}</span><span class="s2"> (HTTP status </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="si">}</span><span class="s2"> (HTTP status </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">)"</span></div>
 
 
 
@@ -547,14 +547,14 @@
         <span class="n">verify</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">show_motd</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">information_endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;api/v1/information&quot;</span><span class="p">,</span>
+        <span class="n">information_endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"api/v1/information"</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes a PortalClient instance from an address and verification information.</span>
+<span class="w">        </span><span class="sd">"""Initializes a PortalClient instance from an address and verification information.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        address</span>
-<span class="sd">            The IP and port of the FractalServer instance (&quot;192.168.1.1:8888&quot;)</span>
+<span class="sd">            The IP and port of the FractalServer instance ("192.168.1.1:8888")</span>
 <span class="sd">        username</span>
 <span class="sd">            The username to authenticate with.</span>
 <span class="sd">        password</span>
@@ -565,25 +565,25 @@
 <span class="sd">            SSL keys.</span>
 <span class="sd">        show_motd</span>
 <span class="sd">            If a Message-of-the-Day is available, display it</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;PortalClientBase&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">"PortalClientBase"</span><span class="p">)</span>
 
         <span class="c1"># For developer use and debugging</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">debug_requests</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="c1"># Where we get the server information from</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_information_endpoint</span> <span class="o">=</span> <span class="n">information_endpoint</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_information_endpoint</span> <span class="o">=</span> <span class="n">information_endpoint</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">address</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;http://&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">address</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;https://&quot;</span><span class="p">):</span>
-            <span class="n">address</span> <span class="o">=</span> <span class="s2">&quot;https://&quot;</span> <span class="o">+</span> <span class="n">address</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">address</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"http://"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">address</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"https://"</span><span class="p">):</span>
+            <span class="n">address</span> <span class="o">=</span> <span class="s2">"https://"</span> <span class="o">+</span> <span class="n">address</span>
 
         <span class="c1"># If we are `http`, ignore all SSL directives</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">address</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;https&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">address</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"https"</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_verify</span> <span class="o">=</span> <span class="kc">True</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">address</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">):</span>
-            <span class="n">address</span> <span class="o">+=</span> <span class="s2">&quot;/&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">address</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"/"</span><span class="p">):</span>
+            <span class="n">address</span> <span class="o">+=</span> <span class="s2">"/"</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">address</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">username</span>
@@ -595,9 +595,9 @@
         <span class="c1"># https://docs.python-requests.org/en/master/user/advanced/#session-objects</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_req_session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_req_session</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;User-Agent&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;qcportal/</span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_req_session</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"User-Agent"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"qcportal/</span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="s2">"</span><span class="p">})</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="s2">&quot;application/json&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="s2">"application/json"</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">60</span>
 
@@ -631,60 +631,60 @@
 
         <span class="c1"># Try to connect and pull the server info</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">server_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_server_information</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">api_limits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="p">[</span><span class="s2">&quot;api_limits&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_limits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="p">[</span><span class="s2">"api_limits"</span><span class="p">]</span>
 
-        <span class="n">server_version</span> <span class="o">=</span> <span class="n">parse_version</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">])</span>
+        <span class="n">server_version</span> <span class="o">=</span> <span class="n">parse_version</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="p">[</span><span class="s2">"version"</span><span class="p">])</span>
         <span class="n">client_version</span> <span class="o">=</span> <span class="n">parse_version</span><span class="p">(</span><span class="n">__version__</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">client_version</span> <span class="o">&gt;</span> <span class="n">server_version</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;WARNING: This client version is newer than the server version. This may work if the &quot;</span>
-                <span class="s2">&quot;versions are close, but expect exceptions and errors if attempting things the server &quot;</span>
-                <span class="s2">&quot;does not support. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;client version: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">__version__</span><span class="p">)</span><span class="si">}</span><span class="s2">, server version: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="s2">"WARNING: This client version is newer than the server version. This may work if the "</span>
+                <span class="s2">"versions are close, but expect exceptions and errors if attempting things the server "</span>
+                <span class="s2">"does not support. "</span>
+                <span class="sa">f</span><span class="s2">"client version: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">__version__</span><span class="p">)</span><span class="si">}</span><span class="s2">, server version: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="p">[</span><span class="s1">'version'</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
 
-        <span class="n">motd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;motd&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">motd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"motd"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">show_motd</span> <span class="ow">and</span> <span class="n">motd</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;*&quot;</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="s2">&quot;- Message-of-the-Day from the server -&quot;</span> <span class="o">+</span> <span class="s2">&quot;*&quot;</span> <span class="o">*</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"*"</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="s2">"- Message-of-the-Day from the server -"</span> <span class="o">+</span> <span class="s2">"*"</span> <span class="o">*</span> <span class="mi">10</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">()</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">motd</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">()</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;*&quot;</span> <span class="o">*</span> <span class="mi">14</span> <span class="o">+</span> <span class="s2">&quot;- End of Message-of-the-Day -&quot;</span> <span class="o">+</span> <span class="s2">&quot;*&quot;</span> <span class="o">*</span> <span class="mi">15</span><span class="p">)</span></div>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"*"</span> <span class="o">*</span> <span class="mi">14</span> <span class="o">+</span> <span class="s2">"- End of Message-of-the-Day -"</span> <span class="o">+</span> <span class="s2">"*"</span> <span class="o">*</span> <span class="mi">15</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="PortalClientBase.from_file">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client_base.PortalClientBase.from_file">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">server_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a new client given information in a file.</span>
+<span class="w">        </span><span class="sd">"""Creates a new client given information in a file.</span>
 
 <span class="sd">        If no path is passed in, the current working directory and finally ~/.qca</span>
-<span class="sd">        are searched for &quot;qcportal_config.yaml&quot;</span>
+<span class="sd">        are searched for "qcportal_config.yaml"</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        server_name</span>
 <span class="sd">            Name/alias of the server in the yaml file</span>
 <span class="sd">        config_path</span>
-<span class="sd">            Full path to a configuration file, or a directory containing &quot;qcportal_config.yaml&quot;.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            Full path to a configuration file, or a directory containing "qcportal_config.yaml".</span>
+<span class="sd">        """</span>
 
         <span class="c1"># Search canonical paths</span>
         <span class="k">if</span> <span class="n">config_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">test_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">&quot;~&quot;</span><span class="p">),</span> <span class="s2">&quot;.qca&quot;</span><span class="p">)]</span>
+            <span class="n">test_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">"~"</span><span class="p">),</span> <span class="s2">".qca"</span><span class="p">)]</span>
 
             <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">test_paths</span><span class="p">:</span>
-                <span class="n">local_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;qcportal_config.yaml&quot;</span><span class="p">)</span>
+                <span class="n">local_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"qcportal_config.yaml"</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">local_path</span><span class="p">):</span>
                     <span class="n">config_path</span> <span class="o">=</span> <span class="n">local_path</span>
                     <span class="k">break</span>
 
             <span class="k">if</span> <span class="n">config_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
-                    <span class="s2">&quot;Could not find `qcportal_config.yaml` in the following paths:</span><span class="se">\n</span><span class="s2">    </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">test_paths</span><span class="p">)</span>
+                    <span class="s2">"Could not find `qcportal_config.yaml` in the following paths:</span><span class="se">\n</span><span class="s2">    </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">test_paths</span><span class="p">)</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
 
@@ -693,18 +693,18 @@
 
             <span class="c1"># Gave folder, not file</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">config_path</span><span class="p">):</span>
-                <span class="n">config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s2">&quot;qcportal_config.yaml&quot;</span><span class="p">)</span>
+                <span class="n">config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s2">"qcportal_config.yaml"</span><span class="p">)</span>
 
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">server_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">server_name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Server &#39;</span><span class="si">{</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&#39; does not exist in the configuration file&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Server '</span><span class="si">{</span><span class="n">server_name</span><span class="si">}</span><span class="s2">' does not exist in the configuration file"</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="s2">&quot;address&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Config file must at least contain an address field.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"address"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">"Config file must at least contain an address field."</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span></div>
 
@@ -713,7 +713,7 @@
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client_base.PortalClientBase.from_env">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_env</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a new client given information stored in environment variables</span>
+<span class="w">        </span><span class="sd">"""Creates a new client given information stored in environment variables</span>
 
 <span class="sd">        The environment variables are:</span>
 
@@ -722,29 +722,29 @@
 <span class="sd">          * QCPORTAL_PASSWORD (optional)</span>
 <span class="sd">          * QCPORTAL_VERIFY (optional, defaults to True)</span>
 <span class="sd">          * QCPORTAL_CACHE_DIR (optional)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
-        <span class="n">address</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;QCPORTAL_ADDRESS&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">username</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;QCPORTAL_USERNAME&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">password</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;QCPORTAL_PASSWORD&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">verify</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;QCPORTAL_VERIFY&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-        <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;QCPORTAL_CACHE_DIR&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">address</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"QCPORTAL_ADDRESS"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">username</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"QCPORTAL_USERNAME"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"QCPORTAL_PASSWORD"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">verify</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"QCPORTAL_VERIFY"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"QCPORTAL_CACHE_DIR"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">address</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Required environment variable &#39;QCPORTAL_ADDRESS&#39; not found&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">"Required environment variable 'QCPORTAL_ADDRESS' not found"</span><span class="p">)</span>
 
-        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="n">address</span><span class="p">}</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"address"</span><span class="p">:</span> <span class="n">address</span><span class="p">}</span>
 
         <span class="k">if</span> <span class="n">username</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">username</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">"username"</span><span class="p">]</span> <span class="o">=</span> <span class="n">username</span>
 
         <span class="k">if</span> <span class="n">password</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;password&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">password</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">"password"</span><span class="p">]</span> <span class="o">=</span> <span class="n">password</span>
 
         <span class="k">if</span> <span class="n">cache_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;cache_dir&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cache_dir</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">"cache_dir"</span><span class="p">]</span> <span class="o">=</span> <span class="n">cache_dir</span>
 
-        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;verify&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">verify</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"verify"</span><span class="p">]</span> <span class="o">=</span> <span class="n">verify</span>
 
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span></div>
 
@@ -756,11 +756,11 @@
     <span class="nd">@encoding</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">encoding</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_encoding</span> <span class="o">=</span> <span class="n">encoding</span>
-        <span class="n">enc_headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="n">encoding</span><span class="p">}</span>
+        <span class="n">enc_headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"Accept"</span><span class="p">:</span> <span class="n">encoding</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_req_session</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">enc_headers</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_send_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">:</span> <span class="n">requests</span><span class="o">.</span><span class="n">Request</span><span class="p">,</span> <span class="n">allow_retries</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">requests</span><span class="o">.</span><span class="n">Response</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Sends a prepared request, optionally retrying on errors</span>
 
 <span class="sd">        Parameters</span>
@@ -774,7 +774,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        :</span>
 <span class="sd">            The response returned from the request</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">prep_req</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_req_session</span><span class="o">.</span><span class="n">prepare_request</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
 
@@ -788,7 +788,7 @@
                 <span class="n">pretty_print_response</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">ret</span><span class="o">.</span><span class="n">is_redirect</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Redirection is not allowed&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Redirection is not allowed"</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">ret</span>
 
         <span class="n">retry_count</span> <span class="o">=</span> <span class="mi">0</span>
@@ -812,8 +812,8 @@
 
                     <span class="n">retry_count</span> <span class="o">+=</span> <span class="mi">1</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Connection error for </span><span class="si">{</span><span class="n">prep_req</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> - retrying in </span><span class="si">{</span><span class="n">time_to_wait</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> seconds &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">retry_count</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">retry_max</span><span class="si">}</span><span class="s2">]&quot;</span>
+                        <span class="sa">f</span><span class="s2">"Connection error for </span><span class="si">{</span><span class="n">prep_req</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> - retrying in </span><span class="si">{</span><span class="n">time_to_wait</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> seconds "</span>
+                        <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">retry_count</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">retry_max</span><span class="si">}</span><span class="s2">]"</span>
                     <span class="p">)</span>
                     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">time_to_wait</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">SSLError</span><span class="p">:</span>
@@ -825,72 +825,72 @@
             <span class="n">pretty_print_response</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">ret</span><span class="o">.</span><span class="n">is_redirect</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Redirection is not allowed&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Redirection is not allowed"</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">ret</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_JWT_token</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
-        <span class="n">full_uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">+</span> <span class="s2">&quot;auth/v1/login&quot;</span>
-        <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_password</span><span class="p">}</span>
+        <span class="n">full_uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">+</span> <span class="s2">"auth/v1/login"</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"username"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="p">,</span> <span class="s2">"password"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_password</span><span class="p">}</span>
 
-        <span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">full_uri</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">)</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">"POST"</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">full_uri</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">)</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
             <span class="n">ret_json</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_refresh_token</span> <span class="o">=</span> <span class="n">ret_json</span><span class="p">[</span><span class="s2">&quot;refresh_token&quot;</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_token</span> <span class="o">=</span> <span class="n">ret_json</span><span class="p">[</span><span class="s2">&quot;access_token&quot;</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_req_session</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Bearer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_refresh_token</span> <span class="o">=</span> <span class="n">ret_json</span><span class="p">[</span><span class="s2">"refresh_token"</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_token</span> <span class="o">=</span> <span class="n">ret_json</span><span class="p">[</span><span class="s2">"access_token"</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_req_session</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"Authorization"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Bearer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_token</span><span class="si">}</span><span class="s2">"</span><span class="p">})</span>
 
             <span class="c1"># Store the expiration time of the access and refresh tokens</span>
             <span class="c1"># (these are unix epoch timestamps)</span>
             <span class="n">decoded_access_token</span> <span class="o">=</span> <span class="n">jwt</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_token</span><span class="p">,</span> <span class="n">algorithms</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;HS256&quot;</span><span class="p">],</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;verify_signature&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_token</span><span class="p">,</span> <span class="n">algorithms</span><span class="o">=</span><span class="p">[</span><span class="s2">"HS256"</span><span class="p">],</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">"verify_signature"</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
             <span class="p">)</span>
             <span class="n">decoded_refresh_token</span> <span class="o">=</span> <span class="n">jwt</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_refresh_token</span><span class="p">,</span> <span class="n">algorithms</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;HS256&quot;</span><span class="p">],</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;verify_signature&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_refresh_token</span><span class="p">,</span> <span class="n">algorithms</span><span class="o">=</span><span class="p">[</span><span class="s2">"HS256"</span><span class="p">],</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">"verify_signature"</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_exp</span> <span class="o">=</span> <span class="n">decoded_access_token</span><span class="p">[</span><span class="s2">&quot;exp&quot;</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_refresh_exp</span> <span class="o">=</span> <span class="n">decoded_refresh_token</span><span class="p">[</span><span class="s2">&quot;exp&quot;</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">decoded_access_token</span><span class="p">[</span><span class="s2">&quot;sub&quot;</span><span class="p">])</span> <span class="c1"># &quot;identity&quot; &quot;subject&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_exp</span> <span class="o">=</span> <span class="n">decoded_access_token</span><span class="p">[</span><span class="s2">"exp"</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_refresh_exp</span> <span class="o">=</span> <span class="n">decoded_refresh_token</span><span class="p">[</span><span class="s2">"exp"</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">decoded_access_token</span><span class="p">[</span><span class="s2">"sub"</span><span class="p">])</span>  <span class="c1"># "identity" "subject"</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;msg&quot;</span><span class="p">]</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"msg"</span><span class="p">]</span>
             <span class="k">except</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">reason</span>
             <span class="k">raise</span> <span class="n">AuthenticationFailure</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_refresh_JWT_token</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
-        <span class="n">full_uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">+</span> <span class="s2">&quot;auth/v1/refresh&quot;</span>
-        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Bearer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_jwt_refresh_token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">}</span>
+        <span class="n">full_uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">+</span> <span class="s2">"auth/v1/refresh"</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"Authorization"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Bearer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_jwt_refresh_token</span><span class="si">}</span><span class="s2">"</span><span class="p">}</span>
 
-        <span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">full_uri</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">"POST"</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">full_uri</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
             <span class="n">ret_json</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_token</span> <span class="o">=</span> <span class="n">ret_json</span><span class="p">[</span><span class="s2">&quot;access_token&quot;</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_req_session</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Bearer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_token</span> <span class="o">=</span> <span class="n">ret_json</span><span class="p">[</span><span class="s2">"access_token"</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_req_session</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"Authorization"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Bearer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_token</span><span class="si">}</span><span class="s2">"</span><span class="p">})</span>
 
             <span class="c1"># Store the expiration time of the access and refresh tokens</span>
             <span class="c1"># (these are unix epoch timestamps)</span>
             <span class="n">decoded_access_token</span> <span class="o">=</span> <span class="n">jwt</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_token</span><span class="p">,</span> <span class="n">algorithms</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;HS256&quot;</span><span class="p">],</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;verify_signature&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_token</span><span class="p">,</span> <span class="n">algorithms</span><span class="o">=</span><span class="p">[</span><span class="s2">"HS256"</span><span class="p">],</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">"verify_signature"</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_exp</span> <span class="o">=</span> <span class="n">decoded_access_token</span><span class="p">[</span><span class="s2">&quot;exp&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_exp</span> <span class="o">=</span> <span class="n">decoded_access_token</span><span class="p">[</span><span class="s2">"exp"</span><span class="p">]</span>
 
-        <span class="k">elif</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span> <span class="ow">and</span> <span class="s2">&quot;Token has expired&quot;</span> <span class="ow">in</span> <span class="n">ret</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;msg&quot;</span><span class="p">]:</span>
+        <span class="k">elif</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span> <span class="ow">and</span> <span class="s2">"Token has expired"</span> <span class="ow">in</span> <span class="n">ret</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"msg"</span><span class="p">]:</span>
             <span class="c1"># If the refresh token has expired, try to log in again</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_get_JWT_token</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span> <span class="ow">and</span> <span class="sa">f</span><span class="s2">&quot; is disabled&quot;</span> <span class="ow">in</span> <span class="n">ret</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;msg&quot;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="n">AuthenticationFailure</span><span class="p">(</span><span class="s2">&quot;User account has been disabled&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span> <span class="ow">and</span> <span class="sa">f</span><span class="s2">&quot; does not exist&quot;</span> <span class="ow">in</span> <span class="n">ret</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;msg&quot;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="n">AuthenticationFailure</span><span class="p">(</span><span class="s2">&quot;User account no longer exists&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># shouldn&#39;t happen unless user is blacklisted or something</span>
+        <span class="k">elif</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span> <span class="ow">and</span> <span class="sa">f</span><span class="s2">" is disabled"</span> <span class="ow">in</span> <span class="n">ret</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"msg"</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">AuthenticationFailure</span><span class="p">(</span><span class="s2">"User account has been disabled"</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span> <span class="ow">and</span> <span class="sa">f</span><span class="s2">" does not exist"</span> <span class="ow">in</span> <span class="n">ret</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"msg"</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">AuthenticationFailure</span><span class="p">(</span><span class="s2">"User account no longer exists"</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># shouldn't happen unless user is blacklisted or something</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">ret</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ConnectionRefusedError</span><span class="p">(</span><span class="s2">&quot;Unable to refresh JWT authorization token! This is a server issue!!&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ConnectionRefusedError</span><span class="p">(</span><span class="s2">"Unable to refresh JWT authorization token! This is a server issue!!"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_request</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -919,7 +919,7 @@
         <span class="c1"># Let requests handle content-type if doing multipart</span>
         <span class="c1"># but specify our encoding otherwise</span>
         <span class="k">if</span> <span class="n">file_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">}</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"Content-Type"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">}</span>
 
         <span class="k">if</span> <span class="n">additional_headers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">additional_headers</span><span class="p">)</span>
@@ -932,21 +932,21 @@
         <span class="c1"># If JWT token expired, automatically renew it and retry once. This should have been caught above,</span>
         <span class="c1"># but can happen in rare instances where the token expires between the time we check it and the time</span>
         <span class="c1"># we use it.</span>
-        <span class="k">if</span> <span class="n">internal_retry</span> <span class="ow">and</span> <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;Token has expired&quot;</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;msg&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">internal_retry</span> <span class="ow">and</span> <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"Token has expired"</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"msg"</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_JWT_token</span><span class="p">()</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">url_params</span><span class="o">=</span><span class="n">url_params</span><span class="p">,</span> <span class="n">internal_retry</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="c1"># For many errors returned by our code, the error details are returned as json</span>
-                <span class="c1"># with the error message stored under &quot;msg&quot;</span>
+                <span class="c1"># with the error message stored under "msg"</span>
                 <span class="n">details</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
             <span class="k">except</span><span class="p">:</span>
                 <span class="c1"># If this error comes from, ie, the web server or something else, then</span>
-                <span class="c1"># we have to use &#39;reason&#39;</span>
-                <span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;msg&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reason</span><span class="p">}</span>
+                <span class="c1"># we have to use 'reason'</span>
+                <span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"msg"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reason</span><span class="p">}</span>
 
-            <span class="k">raise</span> <span class="n">PortalRequestError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Request failed: </span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s1">&#39;msg&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">PortalRequestError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Request failed: </span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s1">'msg'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">r</span>
 
@@ -1020,13 +1020,13 @@
             <span class="n">parsed_url_params</span> <span class="o">=</span> <span class="n">parsed_url_params</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">upload_files</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Yes, a list of tuples. We always use the &quot;files&quot; key, and doing it this way</span>
+            <span class="c1"># Yes, a list of tuples. We always use the "files" key, and doing it this way</span>
             <span class="c1"># allows for multiple files to be uploaded in a single request.</span>
-            <span class="n">file_data</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;files&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)))</span> <span class="k">for</span> <span class="n">fname</span><span class="p">,</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="n">upload_files</span><span class="p">]</span>
+            <span class="n">file_data</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">"files"</span><span class="p">,</span> <span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)))</span> <span class="k">for</span> <span class="n">fname</span><span class="p">,</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="n">upload_files</span><span class="p">]</span>
 
             <span class="c1"># We must also send the serialized body as part of the multipart upload</span>
             <span class="k">if</span> <span class="n">serialized_body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">file_data</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;body_data&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;body_data&quot;</span><span class="p">,</span> <span class="n">serialized_body</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">)))</span>
+                <span class="n">file_data</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">"body_data"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"body_data"</span><span class="p">,</span> <span class="n">serialized_body</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">)))</span>
                 <span class="n">serialized_body</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">file_data</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1043,7 +1043,7 @@
             <span class="n">additional_headers</span><span class="o">=</span><span class="n">additional_headers</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">],</span> <span class="n">response_model</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"Content-Type"</span><span class="p">],</span> <span class="n">response_model</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="PortalClientBase.download_file">
@@ -1056,7 +1056,7 @@
         <span class="n">expected_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Download a file with optional progress bar</span>
 
 <span class="sd">        Parameters</span>
@@ -1071,7 +1071,7 @@
 <span class="sd">            Expected size of the file in bytes (used for progress bar if enabled)</span>
 <span class="sd">        show_progress</span>
 <span class="sd">            Whether to show a progress bar during download</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">sha256</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
         <span class="n">file_size</span> <span class="o">=</span> <span class="mi">0</span>
@@ -1082,15 +1082,15 @@
             <span class="k">if</span> <span class="n">overwrite</span><span class="p">:</span>
                 <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">destination_path</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File already exists at </span><span class="si">{</span><span class="n">destination_path</span><span class="si">}</span><span class="s2">. To overwrite, use `overwrite=True`&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"File already exists at </span><span class="si">{</span><span class="n">destination_path</span><span class="si">}</span><span class="s2">. To overwrite, use `overwrite=True`"</span><span class="p">)</span>
 
         <span class="n">full_uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">+</span> <span class="n">endpoint</span>
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_req_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">full_uri</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">allow_redirects</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">is_redirect</span><span class="p">:</span>
             <span class="c1"># send again, but using a plain requests object</span>
-            <span class="c1"># that way, we don&#39;t pass the JWT to someone else</span>
-            <span class="n">new_location</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Location&quot;</span><span class="p">]</span>
+            <span class="c1"># that way, we don't pass the JWT to someone else</span>
+            <span class="n">new_location</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"Location"</span><span class="p">]</span>
             <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">new_location</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">allow_redirects</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
@@ -1098,15 +1098,15 @@
         <span class="c1"># Get filename for display in progress bar</span>
         <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">destination_path</span><span class="p">)</span>
 
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">destination_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">destination_path</span><span class="p">,</span> <span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
                 <span class="c1"># Show progress bar with expected_size (which can be None)</span>
                 <span class="k">with</span> <span class="n">tqdm</span><span class="p">(</span>
                     <span class="n">total</span><span class="o">=</span><span class="n">expected_size</span><span class="p">,</span>
-                    <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">,</span>
+                    <span class="n">unit</span><span class="o">=</span><span class="s2">"B"</span><span class="p">,</span>
                     <span class="n">unit_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                     <span class="n">unit_divisor</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
-                    <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Downloading to </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Downloading to </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
                     <span class="n">miniters</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># Update after each iteration</span>
                     <span class="n">mininterval</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>  <span class="c1"># Allow updates as frequently as every 0.1 seconds</span>
                 <span class="p">)</span> <span class="k">as</span> <span class="n">pbar</span><span class="p">:</span>
@@ -1133,20 +1133,20 @@
 <div class="viewcode-block" id="PortalClientBase.ping">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client_base.PortalClientBase.ping">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">ping</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Pings the server to see if it is up</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        :</span>
 <span class="sd">            True if the server is up and responded to the ping. False otherwise</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
-        <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">/api/v1/ping&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">/api/v1/ping"</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">uri</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;success&quot;</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"success"</span><span class="p">]</span>
         <span class="k">except</span> <span class="n">AllowedConnectionExceptions</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span></div>
 
@@ -1154,20 +1154,20 @@
 <div class="viewcode-block" id="PortalClientBase.get_server_information">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client_base.PortalClientBase.get_server_information">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_server_information</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Request general information about the server</span>
+<span class="w">        </span><span class="sd">"""Request general information about the server</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        :</span>
 <span class="sd">            Server information.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="c1"># Request the info, and store here for later use</span>
         <span class="c1"># TODO - this fallback is temporary - remove in a future version</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_information_endpoint</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">"get"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_information_endpoint</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span>
         <span class="k">except</span> <span class="n">PortalRequestError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="s2">&quot;api/v1/information&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span></div>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">"get"</span><span class="p">,</span> <span class="s2">"api/v1/information"</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span></div>
 </div>
 
 </pre></div>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Creating datasets" href="creating.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -560,8 +560,8 @@ See the following functions:</p>
 <label class="sd-tab-label" for="sd-tab-item-0">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">set_default_compute_priority</span><span class="p">(</span><span class="s2">&quot;low&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="s2">&quot;New Dataset Name&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">set_default_compute_priority</span><span class="p">(</span><span class="s2">"low"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="s2">"New Dataset Name"</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 <span class="go">New Dataset Name</span>
@@ -583,10 +583,10 @@ take a dictionary of old name to new name</p>
 <input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-1">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">rename_entries</span><span class="p">({</span><span class="s1">&#39;difluorine&#39;</span><span class="p">:</span> <span class="s1">&#39;F2 molecule&#39;</span><span class="p">})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ent</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_entry</span><span class="p">(</span><span class="s1">&#39;F2 molecule&#39;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">rename_entries</span><span class="p">({</span><span class="s1">'difluorine'</span><span class="p">:</span> <span class="s1">'F2 molecule'</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ent</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_entry</span><span class="p">(</span><span class="s1">'F2 molecule'</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ent</span><span class="o">.</span><span class="n">initial_molecule</span><span class="p">)</span>
-<span class="go">initial_molecule=Molecule(name=&#39;F2&#39;, formula=&#39;F2&#39;, hash=&#39;7ffa835&#39;)</span>
+<span class="go">initial_molecule=Molecule(name='F2', formula='F2', hash='7ffa835')</span>
 </pre></div>
 </div>
 </div>
@@ -600,10 +600,10 @@ Note that deleting entries and specifications by default do not delete the recor
 <label class="sd-tab-label" for="sd-tab-item-2">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keeps any records, but removes from dataset</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">delete_entries</span><span class="p">([</span><span class="s1">&#39;carbon monoxide&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">delete_entries</span><span class="p">([</span><span class="s1">'carbon monoxide'</span><span class="p">])</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Deletes the records too</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">delete_specification</span><span class="p">(</span><span class="s1">&#39;hf/sto-3g&#39;</span><span class="p">,</span> <span class="n">delete_records</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">delete_specification</span><span class="p">(</span><span class="s1">'hf/sto-3g'</span><span class="p">,</span> <span class="n">delete_records</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -627,10 +627,10 @@ However, datasets have convenient methods for management, which use entry and sp
 <label class="sd-tab-label" for="sd-tab-item-3">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Reset carbon monoxide records</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">reset_records</span><span class="p">(</span><span class="n">entry_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;carbon monoxide&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">reset_records</span><span class="p">(</span><span class="n">entry_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'carbon monoxide'</span><span class="p">])</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Cancel pbe0/def2-qzvp computations</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">cancel_records</span><span class="p">(</span><span class="n">specification_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;pbe0/def2-qzvp&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">cancel_records</span><span class="p">(</span><span class="n">specification_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'pbe0/def2-qzvp'</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -645,7 +645,7 @@ These are <a class="reference internal" href="../qcportal_reference/internal_job
 <label class="sd-tab-label" for="sd-tab-item-4">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">list_internal_jobs</span><span class="p">()</span>
-<span class="go">[InternalJob(id=1614530, name=&#39;create_attach_view_ds_414&#39;, status=&lt;InternalJobStatusEnum.complete: &#39;complete&#39;&gt;, ...</span>
+<span class="go">[InternalJob(id=1614530, name='create_attach_view_ds_414', status=&lt;InternalJobStatusEnum.complete: 'complete'&gt;, ...</span>
 </pre></div>
 </div>
 </div>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../_static/documentation_options.js?v=44078078"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Server administration via the CLI" href="cli_admin.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -508,9 +508,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 
 <span class="c1"># Connect with an admin-capable account</span>
 <span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span>
-    <span class="s2">&quot;http://localhost:7777&quot;</span><span class="p">,</span>
-    <span class="n">username</span><span class="o">=</span><span class="s2">&quot;admin&quot;</span><span class="p">,</span>
-    <span class="n">password</span><span class="o">=</span><span class="s2">&quot;your-admin-password&quot;</span><span class="p">,</span>
+    <span class="s2">"http://localhost:7777"</span><span class="p">,</span>
+    <span class="n">username</span><span class="o">=</span><span class="s2">"admin"</span><span class="p">,</span>
+    <span class="n">password</span><span class="o">=</span><span class="s2">"your-admin-password"</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -542,7 +542,7 @@ PYTHON</label><div class="sd-tab-content docutils">
     <span class="nb">print</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">role</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">enabled</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
 
 <span class="c1"># Get a specific user (by username or id)</span>
-<span class="n">alice</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="s2">&quot;alice&quot;</span><span class="p">)</span>
+<span class="n">alice</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="s2">"alice"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">alice</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -561,20 +561,20 @@ PYTHON</label><div class="sd-tab-content docutils">
 
 <span class="c1"># Minimal required fields: username, role, enabled</span>
 <span class="n">new_user</span> <span class="o">=</span> <span class="n">UserInfo</span><span class="p">(</span>
-    <span class="n">username</span><span class="o">=</span><span class="s2">&quot;alice&quot;</span><span class="p">,</span>
-    <span class="n">role</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span><span class="p">,</span>         <span class="c1"># see the list of roles above</span>
-    <span class="n">groups</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;chemistry&quot;</span><span class="p">],</span>  <span class="c1"># optional group memberships</span>
+    <span class="n">username</span><span class="o">=</span><span class="s2">"alice"</span><span class="p">,</span>
+    <span class="n">role</span><span class="o">=</span><span class="s2">"submit"</span><span class="p">,</span>         <span class="c1"># see the list of roles above</span>
+    <span class="n">groups</span><span class="o">=</span><span class="p">[</span><span class="s2">"chemistry"</span><span class="p">],</span>  <span class="c1"># optional group memberships</span>
     <span class="n">enabled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">fullname</span><span class="o">=</span><span class="s2">&quot;Alice Example&quot;</span><span class="p">,</span>
-    <span class="n">email</span><span class="o">=</span><span class="s2">&quot;alice@example.org&quot;</span><span class="p">,</span>
+    <span class="n">fullname</span><span class="o">=</span><span class="s2">"Alice Example"</span><span class="p">,</span>
+    <span class="n">email</span><span class="o">=</span><span class="s2">"alice@example.org"</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># Let the server generate a password</span>
 <span class="n">generated_pw</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_user</span><span class="p">(</span><span class="n">new_user</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generated password:&quot;</span><span class="p">,</span> <span class="n">generated_pw</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Generated password:"</span><span class="p">,</span> <span class="n">generated_pw</span><span class="p">)</span>
 
 <span class="c1"># Or specify an initial password yourself</span>
-<span class="n">client</span><span class="o">.</span><span class="n">add_user</span><span class="p">(</span><span class="n">new_user</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;ChangeMe123&quot;</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">add_user</span><span class="p">(</span><span class="n">new_user</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">"ChangeMe123"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -588,14 +588,14 @@ PYTHON</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-3">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Disable a user account</span>
-<span class="n">bob</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="s2">&quot;bob&quot;</span><span class="p">)</span>
+<span class="n">bob</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="s2">"bob"</span><span class="p">)</span>
 <span class="n">bob</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="n">bob</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">modify_user</span><span class="p">(</span><span class="n">bob</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Bob enabled?&quot;</span><span class="p">,</span> <span class="n">bob</span><span class="o">.</span><span class="n">enabled</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Bob enabled?"</span><span class="p">,</span> <span class="n">bob</span><span class="o">.</span><span class="n">enabled</span><span class="p">)</span>
 
 <span class="c1"># Change role or groups</span>
-<span class="n">bob</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="s2">&quot;maintain&quot;</span>
-<span class="n">bob</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">bob</span><span class="o">.</span><span class="n">groups</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;theory&quot;</span><span class="p">]))</span>
+<span class="n">bob</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="s2">"maintain"</span>
+<span class="n">bob</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">bob</span><span class="o">.</span><span class="n">groups</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"theory"</span><span class="p">]))</span>
 <span class="n">bob</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">modify_user</span><span class="p">(</span><span class="n">bob</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -610,15 +610,15 @@ password by omitting the username.</p>
 <input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-4">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Admin changes a user&#39;s password (returns the new password)</span>
-<span class="n">new_pw</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">change_user_password</span><span class="p">(</span><span class="s2">&quot;alice&quot;</span><span class="p">,</span> <span class="n">new_password</span><span class="o">=</span><span class="s2">&quot;BetterPW!1&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Admin changes a user's password (returns the new password)</span>
+<span class="n">new_pw</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">change_user_password</span><span class="p">(</span><span class="s2">"alice"</span><span class="p">,</span> <span class="n">new_password</span><span class="o">=</span><span class="s2">"BetterPW!1"</span><span class="p">)</span>
 
 <span class="c1"># Ask the server to generate a random password</span>
-<span class="n">random_pw</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">change_user_password</span><span class="p">(</span><span class="s2">&quot;alice&quot;</span><span class="p">)</span>
+<span class="n">random_pw</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">change_user_password</span><span class="p">(</span><span class="s2">"alice"</span><span class="p">)</span>
 
 <span class="c1"># User changes their own password (assumes logged in as alice)</span>
-<span class="c1"># client = PortalClient(..., username=&quot;alice&quot;, password=&quot;old&quot;)</span>
-<span class="c1"># new_pw = client.change_user_password(new_password=&quot;my-new-secret&quot;)</span>
+<span class="c1"># client = PortalClient(..., username="alice", password="old")</span>
+<span class="c1"># new_pw = client.change_user_password(new_password="my-new-secret")</span>
 </pre></div>
 </div>
 </div>
@@ -630,7 +630,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-5">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">client</span><span class="o">.</span><span class="n">delete_user</span><span class="p">(</span><span class="s2">&quot;alice&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">client</span><span class="o">.</span><span class="n">delete_user</span><span class="p">(</span><span class="s2">"alice"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -653,7 +653,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">groupname</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
 
-<span class="n">chem</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_group</span><span class="p">(</span><span class="s2">&quot;chemistry&quot;</span><span class="p">)</span>
+<span class="n">chem</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_group</span><span class="p">(</span><span class="s2">"chemistry"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">chem</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -668,11 +668,11 @@ PYTHON</label><div class="sd-tab-content docutils">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">GroupInfo</span>
 
-<span class="n">new_group</span> <span class="o">=</span> <span class="n">GroupInfo</span><span class="p">(</span><span class="n">groupname</span><span class="o">=</span><span class="s2">&quot;chemistry&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Chemistry users&quot;</span><span class="p">)</span>
+<span class="n">new_group</span> <span class="o">=</span> <span class="n">GroupInfo</span><span class="p">(</span><span class="n">groupname</span><span class="o">=</span><span class="s2">"chemistry"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Chemistry users"</span><span class="p">)</span>
 <span class="n">client</span><span class="o">.</span><span class="n">add_group</span><span class="p">(</span><span class="n">new_group</span><span class="p">)</span>
 
 <span class="c1"># Remove a group (users will have it removed from their memberships)</span>
-<span class="n">client</span><span class="o">.</span><span class="n">delete_group</span><span class="p">(</span><span class="s2">&quot;chemistry&quot;</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">delete_group</span><span class="p">(</span><span class="s2">"chemistry"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -697,16 +697,16 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">managers</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">cluster</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">compute_tags</span><span class="p">)</span>
 
-<span class="c1"># Filter by name or status. Managers are either &#39;active&#39; or &#39;inactive&#39;</span>
-<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">query_managers</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;my_manager&quot;</span><span class="p">],</span> <span class="n">status</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">]):</span>
+<span class="c1"># Filter by name or status. Managers are either 'active' or 'inactive'</span>
+<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">query_managers</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="p">[</span><span class="s2">"my_manager"</span><span class="p">],</span> <span class="n">status</span><span class="o">=</span><span class="p">[</span><span class="s2">"active"</span><span class="p">]):</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
 
 <span class="c1"># Ask which managers could handle a task with certain tags/programs</span>
 <span class="n">possible</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_active_managers</span><span class="p">(</span>
-    <span class="n">compute_tag</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cpu-ephemeral&quot;</span><span class="p">,</span> <span class="s2">&quot;bigmem&quot;</span><span class="p">],</span>
-    <span class="n">programs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;psi4&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;1.8&quot;</span><span class="p">],</span> <span class="s2">&quot;torchani&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;2.2&quot;</span><span class="p">]},</span>
+    <span class="n">compute_tag</span><span class="o">=</span><span class="p">[</span><span class="s2">"cpu-ephemeral"</span><span class="p">,</span> <span class="s2">"bigmem"</span><span class="p">],</span>
+    <span class="n">programs</span><span class="o">=</span><span class="p">{</span><span class="s2">"psi4"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"1.8"</span><span class="p">],</span> <span class="s2">"torchani"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"2.2"</span><span class="p">]},</span>
 <span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Candidate managers:&quot;</span><span class="p">,</span> <span class="n">possible</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Candidate managers:"</span><span class="p">,</span> <span class="n">possible</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -727,11 +727,11 @@ PYTHON</label><div class="sd-tab-content docutils">
 
 <span class="c1"># Recent entries for a specific user</span>
 <span class="n">one_day_ago</span> <span class="o">=</span> <span class="n">now_at_utc</span><span class="p">()</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">query_access_log</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;alice&quot;</span><span class="p">],</span> <span class="n">after</span><span class="o">=</span><span class="n">one_day_ago</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+<span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">query_access_log</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="p">[</span><span class="s2">"alice"</span><span class="p">],</span> <span class="n">after</span><span class="o">=</span><span class="n">one_day_ago</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">full_uri</span><span class="p">)</span>
 
 <span class="c1"># Summarize accesses per day</span>
-<span class="n">summary</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_access_summary</span><span class="p">(</span><span class="n">group_by</span><span class="o">=</span><span class="s2">&quot;day&quot;</span><span class="p">,</span> <span class="n">after</span><span class="o">=</span><span class="n">one_day_ago</span><span class="p">)</span>
+<span class="n">summary</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_access_summary</span><span class="p">(</span><span class="n">group_by</span><span class="o">=</span><span class="s2">"day"</span><span class="p">,</span> <span class="n">after</span><span class="o">=</span><span class="n">one_day_ago</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">day</span><span class="p">,</span> <span class="n">entries</span> <span class="ow">in</span> <span class="n">summary</span><span class="o">.</span><span class="n">entries</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">day</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">count</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">))</span>
 </pre></div>
@@ -755,7 +755,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 
 <span class="n">cutoff</span> <span class="o">=</span> <span class="n">now_at_utc</span><span class="p">()</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
 <span class="n">deleted</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">delete_access_log</span><span class="p">(</span><span class="n">before</span><span class="o">=</span><span class="n">cutoff</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Deleted entries:&quot;</span><span class="p">,</span> <span class="n">deleted</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Deleted entries:"</span><span class="p">,</span> <span class="n">deleted</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

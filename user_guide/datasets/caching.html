@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Maintenance" href="maintenance.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -555,7 +555,7 @@ you are using.</p>
 <label class="sd-tab-label" for="sd-tab-item-0">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalClient</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">&quot;https://ml.qcarchive.molssi.org&quot;</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="s1">&#39;/path/to/dir&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">"https://ml.qcarchive.molssi.org"</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="s1">'/path/to/dir'</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">cache_dir</span><span class="p">)</span>
 <span class="go">/path/to/dir/ml.qcarchive.molssi.org_None</span>
 </pre></div>
@@ -579,9 +579,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">377</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_entries</span><span class="p">(</span><span class="n">force_refetch</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">initial_molecule</span><span class="p">)</span>
-<span class="go">Molecule(name=&#39;000280960&#39;, formula=&#39;C5H10N2O2&#39;, hash=&#39;e883492&#39;)</span>
-<span class="go">Molecule(name=&#39;000524682&#39;, formula=&#39;C7H12&#39;, hash=&#39;0416c77&#39;)</span>
-<span class="go">Molecule(name=&#39;010464300&#39;, formula=&#39;C5H8O&#39;, hash=&#39;2f5a6ea&#39;)</span>
+<span class="go">Molecule(name='000280960', formula='C5H10N2O2', hash='e883492')</span>
+<span class="go">Molecule(name='000524682', formula='C7H12', hash='0416c77')</span>
+<span class="go">Molecule(name='010464300', formula='C5H8O', hash='2f5a6ea')</span>
 <span class="go">...</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">ename</span><span class="p">,</span> <span class="n">sname</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_records</span><span class="p">(</span><span class="n">force_refetch</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -606,7 +606,7 @@ to your computer.</p>
 <label class="sd-tab-label" for="sd-tab-item-2">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dataset_view</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dsv</span> <span class="o">=</span> <span class="n">load_dataset_view</span><span class="p">(</span><span class="s1">&#39;/path/to/view.sqlite&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dsv</span> <span class="o">=</span> <span class="n">load_dataset_view</span><span class="p">(</span><span class="s1">'/path/to/view.sqlite'</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">ename</span><span class="p">,</span> <span class="n">sname</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">dsv</span><span class="o">.</span><span class="n">iterate_records</span><span class="p">():</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">ename</span><span class="p">,</span> <span class="n">sname</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
@@ -634,9 +634,9 @@ server and download to the current working directory.</p>
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">377</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">list_views</span><span class="p">()</span>
-<span class="go">[DatasetAttachment(id=6, file_type=&lt;ExternalFileTypeEnum.dataset_attachment: &#39;dataset_attachment&#39;&gt;,...</span>
+<span class="go">[DatasetAttachment(id=6, file_type=&lt;ExternalFileTypeEnum.dataset_attachment: 'dataset_attachment'&gt;,...</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">download_view</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="s1">&#39;/path/to/file.sqlite&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">download_view</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="s1">'/path/to/file.sqlite'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -652,7 +652,7 @@ the <a class="reference internal" href="../qcportal_reference/internal_jobs.html
 <label class="sd-tab-label" for="sd-tab-item-4">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">377</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ij</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">create_view</span><span class="p">(</span><span class="s2">&quot;A test view&quot;</span><span class="p">,</span> <span class="p">{})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ij</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">create_view</span><span class="p">(</span><span class="s2">"A test view"</span><span class="p">,</span> <span class="p">{})</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Then go on and do other things</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># If you want to watch the progress with a progress bar</span>
@@ -704,7 +704,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">preload_cache</span><span class="p">()</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Manually use a downloaded file as a cache file</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">use_view_cache</span><span class="p">(</span><span class="s1">&#39;./dataset_377_view.sqlite&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">use_view_cache</span><span class="p">(</span><span class="s1">'./dataset_377_view.sqlite'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -722,7 +722,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">381</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Manually use a downloaded file as a cache file</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">use_view_cache</span><span class="p">(</span><span class="s1">&#39;./dataset_377_view.sqlite&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">use_view_cache</span><span class="p">(</span><span class="s1">'./dataset_377_view.sqlite'</span><span class="p">)</span>
 <span class="go">---------------------------------------------------------------------------</span>
 <span class="go">ValueError                                Traceback (most recent call last)</span>
 

@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -461,19 +461,19 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">field_validator</span>
 
-<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"T"</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="validate_list_to_single">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/base_models.html#qcportal.base_models.validate_list_to_single">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">validate_list_to_single</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Converts a list to a single value (the last element of the list)</span>
 
 <span class="sd">    Query parameters (in a URI) can be specified multiple times. Therefore, we will always</span>
 <span class="sd">    convert them to a list in flask. But that means we have to convert them</span>
 <span class="sd">    to single values here</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="c1"># take the last value, if specified multiple times</span>
         <span class="k">return</span> <span class="n">v</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
@@ -485,18 +485,18 @@
 <div class="viewcode-block" id="RestModelBase">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/base_models.html#qcportal.base_models.RestModelBase">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RestModelBase</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">validate_assignment</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">validate_assignment</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="CommonBulkGetBody">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/base_models.html#qcportal.base_models.CommonBulkGetBody">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CommonBulkGetBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Common URL parameters for &quot;get_*&quot; functions</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Common URL parameters for "get_*" functions</span>
 
 <span class="sd">    These functions typically take a list for ids, and a bool for missing_ok</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
     <span class="n">include</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -508,11 +508,11 @@
 <div class="viewcode-block" id="CommonBulkGetNamesBody">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/base_models.html#qcportal.base_models.CommonBulkGetNamesBody">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CommonBulkGetNamesBody</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Common URL parameters for &quot;get_*&quot; functions</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Common URL parameters for "get_*" functions</span>
 
 <span class="sd">    These functions typically take a list for ids, and a bool for missing_ok</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">include</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -532,18 +532,18 @@
 <div class="viewcode-block" id="QueryModelBase">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/base_models.html#qcportal.base_models.QueryModelBase">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">QueryModelBase</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Common parameters for query_* functions, without include/exclude</span>
 
 <span class="sd">    These can be either URL parameters or part of a POST body</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">cursor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="QueryModelBase.validate_lists">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/base_models.html#qcportal.base_models.QueryModelBase.validate_lists">[docs]</a>
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;limit&quot;</span><span class="p">,</span> <span class="s2">&quot;cursor&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"limit"</span><span class="p">,</span> <span class="s2">"cursor"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">validate_lists</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">validate_list_to_single</span><span class="p">(</span><span class="n">v</span><span class="p">)</span></div>
@@ -554,11 +554,11 @@
 <div class="viewcode-block" id="QueryProjModelBase">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/base_models.html#qcportal.base_models.QueryProjModelBase">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">QueryProjModelBase</span><span class="p">(</span><span class="n">QueryModelBase</span><span class="p">,</span> <span class="n">ProjURLParameters</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Common parameters for query_* functions, with include/exclude (projection)</span>
 
 <span class="sd">    These can be either URL parameters or part of a POST body</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">pass</span></div>
 
@@ -567,12 +567,12 @@
 <div class="viewcode-block" id="QueryIteratorBase">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/base_models.html#qcportal.base_models.QueryIteratorBase">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">QueryIteratorBase</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Base class for all query result iterators</span>
 
 <span class="sd">    Query iterators are used to iterate intelligently over the result of a query.</span>
 <span class="sd">    This handles pagination, where only batches are downloaded from the server.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="QueryIteratorBase.__init__">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/base_models.html#qcportal.base_models.QueryIteratorBase.__init__">[docs]</a>
@@ -592,9 +592,9 @@
 <div class="viewcode-block" id="QueryIteratorBase.reset">
 <a class="viewcode-back" href="../../user_guide/qcportal_reference/base_models.html#qcportal.base_models.QueryIteratorBase.reset">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Starts retrieval of results from the beginning again</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_current_batch</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">T</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fetched</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
@@ -603,7 +603,7 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;_request must be overridden by a derived class&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"_request must be overridden by a derived class"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_fetch_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># We have already fetched something before</span>
@@ -635,7 +635,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
         <span class="c1"># This can happen if there is none returned on the first iteration</span>
-        <span class="c1"># Check here so we don&#39;t fetch twice</span>
+        <span class="c1"># Check here so we don't fetch twice</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_batch</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">StopIteration</span>
 
@@ -643,7 +643,7 @@
             <span class="c1"># At the end of the current batch. Fetch the next</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_batch</span><span class="p">()</span>
 
-            <span class="c1"># If we didn&#39;t get any, then that&#39;s all there is</span>
+            <span class="c1"># If we didn't get any, then that's all there is</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_batch</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">StopIteration</span>
 

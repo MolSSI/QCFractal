@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../_static/documentation_options.js?v=44078078"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCPortal Installation &amp; Setup" href="client_setup.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -547,7 +547,7 @@ This class handles connecting to the server and exposing all the functionality o
 <label class="sd-tab-label" for="sd-tab-item-0">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalClient</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">&quot;https://ml.qcarchive.molssi.org&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">"https://ml.qcarchive.molssi.org"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">server_name</span><span class="p">)</span>
 <span class="go">The MolSSI ML QCFractal Server</span>
 </pre></div>
@@ -561,7 +561,7 @@ public demonstration server</p>
 <label class="sd-tab-label" for="sd-tab-item-1">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalClient</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">&quot;https://qcademo.molssi.org&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">"https://qcademo.molssi.org"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">server_name</span><span class="p">)</span>
 <span class="go">MolSSI QCArchive Demo Server</span>
 </pre></div>
@@ -575,7 +575,7 @@ these can also be specified in the constructor.</p>
 <label class="sd-tab-label" for="sd-tab-item-2">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalClient</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">&quot;https://my.qcarchive.server&quot;</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="s1">&#39;grad_student_123&#39;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s1">&#39;abc123XYZ&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">"https://my.qcarchive.server"</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="s1">'grad_student_123'</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s1">'abc123XYZ'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -601,9 +601,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="n">MolSSI</span> <span class="n">QCArchive</span> <span class="n">Demo</span> <span class="n">Server</span>
 
 <span class="c1"># Manually specify a path to the config file</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s1">&#39;group_server&#39;</span><span class="p">,</span> <span class="s1">&#39;/path/to/config&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s1">'group_server'</span><span class="p">,</span> <span class="s1">'/path/to/config'</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">server_name</span><span class="p">)</span>
-<span class="n">Professor</span><span class="s1">&#39;s Group Server</span>
+<span class="n">Professor</span><span class="s1">'s Group Server</span>
 </pre></div>
 </div>
 </div>
@@ -637,25 +637,25 @@ the server administrator wishes to include.</p>
 <label class="sd-tab-label" for="sd-tab-item-5">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalClient</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s1">&#39;https://qcademo.molssi.org&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s1">'https://qcademo.molssi.org'</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">server_info</span><span class="p">)</span>
-<span class="go">{&#39;name&#39;: &#39;MolSSI QCArchive Demo Server&#39;,</span>
-<span class="go">&#39;manager_heartbeat_frequency&#39;: 1800,</span>
-<span class="go">&#39;version&#39;: &#39;0.50b4.post4+ged0d0270&#39;,</span>
-<span class="go">&#39;api_limits&#39;: {&#39;get_records&#39;: 1000,</span>
-<span class="go">  &#39;add_records&#39;: 500,</span>
-<span class="go">  &#39;get_dataset_entries&#39;: 2000,</span>
-<span class="go">  &#39;get_molecules&#39;: 1000,</span>
-<span class="go">  &#39;add_molecules&#39;: 1000,</span>
-<span class="go">  &#39;get_managers&#39;: 1000,</span>
-<span class="go">  &#39;manager_tasks_claim&#39;: 200,</span>
-<span class="go">  &#39;manager_tasks_return&#39;: 10,</span>
-<span class="go">  &#39;get_access_logs&#39;: 1000,</span>
-<span class="go">  &#39;get_error_logs&#39;: 100,</span>
-<span class="go">  &#39;get_internal_jobs&#39;: 1000},</span>
-<span class="go">&#39;client_version_lower_limit&#39;: &#39;0&#39;,</span>
-<span class="go">&#39;client_version_upper_limit&#39;: &#39;1&#39;,</span>
-<span class="go">&#39;motd&#39;: &#39;&#39;}</span>
+<span class="go">{'name': 'MolSSI QCArchive Demo Server',</span>
+<span class="go">'manager_heartbeat_frequency': 1800,</span>
+<span class="go">'version': '0.50b4.post4+ged0d0270',</span>
+<span class="go">'api_limits': {'get_records': 1000,</span>
+<span class="go">  'add_records': 500,</span>
+<span class="go">  'get_dataset_entries': 2000,</span>
+<span class="go">  'get_molecules': 1000,</span>
+<span class="go">  'add_molecules': 1000,</span>
+<span class="go">  'get_managers': 1000,</span>
+<span class="go">  'manager_tasks_claim': 200,</span>
+<span class="go">  'manager_tasks_return': 10,</span>
+<span class="go">  'get_access_logs': 1000,</span>
+<span class="go">  'get_error_logs': 100,</span>
+<span class="go">  'get_internal_jobs': 1000},</span>
+<span class="go">'client_version_lower_limit': '0',</span>
+<span class="go">'client_version_upper_limit': '1',</span>
+<span class="go">'motd': ''}</span>
 </pre></div>
 </div>
 </div>

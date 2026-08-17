@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -479,16 +479,16 @@
 <div class="viewcode-block" id="BSSECorrectionEnum">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.BSSECorrectionEnum">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BSSECorrectionEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-    <span class="n">nocp</span> <span class="o">=</span> <span class="s2">&quot;nocp&quot;</span>
-    <span class="n">cp</span> <span class="o">=</span> <span class="s2">&quot;cp&quot;</span>
-    <span class="n">vmfc</span> <span class="o">=</span> <span class="s2">&quot;vmfc&quot;</span></div>
+    <span class="n">nocp</span> <span class="o">=</span> <span class="s2">"nocp"</span>
+    <span class="n">cp</span> <span class="o">=</span> <span class="s2">"cp"</span>
+    <span class="n">vmfc</span> <span class="o">=</span> <span class="s2">"vmfc"</span></div>
 
 
 
 <div class="viewcode-block" id="ManybodyKeywords">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyKeywords">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ManybodyKeywords</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
 
     <span class="n">return_total_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
 
@@ -497,10 +497,10 @@
 <div class="viewcode-block" id="ManybodySpecification">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodySpecification">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ManybodySpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
 
-    <span class="n">program</span><span class="p">:</span> <span class="n">LowerStr</span> <span class="o">=</span> <span class="s2">&quot;qcmanybody&quot;</span>
-    <span class="n">levels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;supersystem&quot;</span><span class="p">],</span> <span class="n">QCSpecification</span><span class="p">]</span>
+    <span class="n">program</span><span class="p">:</span> <span class="n">LowerStr</span> <span class="o">=</span> <span class="s2">"qcmanybody"</span>
+    <span class="n">levels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"supersystem"</span><span class="p">],</span> <span class="n">QCSpecification</span><span class="p">]</span>
     <span class="n">bsse_correction</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">BSSECorrectionEnum</span><span class="p">]</span>
     <span class="n">keywords</span><span class="p">:</span> <span class="n">ManybodyKeywords</span> <span class="o">=</span> <span class="n">ManybodyKeywords</span><span class="p">()</span>
     <span class="n">protocols</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
@@ -510,7 +510,7 @@
 <div class="viewcode-block" id="ManybodyInput">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyInput">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ManybodyInput</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
-    <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;manybody&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;manybody&quot;</span>
+    <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"manybody"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"manybody"</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">ManybodySpecification</span>
     <span class="n">initial_molecule</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">Molecule</span></div>
 
@@ -545,7 +545,7 @@
 <div class="viewcode-block" id="ManybodyClusterMeta">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyClusterMeta">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ManybodyClusterMeta</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
 
     <span class="n">molecule_id</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">mc_level</span><span class="p">:</span> <span class="nb">str</span>
@@ -566,7 +566,7 @@
 <div class="viewcode-block" id="ManybodyRecord">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ManybodyRecord</span><span class="p">(</span><span class="n">BaseRecord</span><span class="p">):</span>
-    <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;manybody&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;manybody&quot;</span>
+    <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"manybody"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"manybody"</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">ManybodySpecification</span>
 
     <span class="n">initial_molecule_id</span><span class="p">:</span> <span class="nb">int</span>
@@ -574,14 +574,14 @@
     <span class="c1">######################################################</span>
     <span class="c1"># Fields not always included when fetching the record</span>
     <span class="c1">######################################################</span>
-    <span class="n">initial_molecule_</span><span class="p">:</span> <span class="n">Molecule</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;initial_molecule&quot;</span><span class="p">)</span>
-    <span class="n">clusters_meta_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ManybodyClusterMeta</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;clusters&quot;</span><span class="p">)</span>
+    <span class="n">initial_molecule_</span><span class="p">:</span> <span class="n">Molecule</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">"initial_molecule"</span><span class="p">)</span>
+    <span class="n">clusters_meta_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ManybodyClusterMeta</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">"clusters"</span><span class="p">)</span>
 
     <span class="c1">##############################################</span>
     <span class="c1"># Fields with child records</span>
     <span class="c1"># (generally not received from the server)</span>
     <span class="c1">##############################################</span>
-    <span class="n">cluster_records_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ManybodyCluster</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;cluster_records&quot;</span><span class="p">)</span>
+    <span class="n">cluster_records_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ManybodyCluster</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">"cluster_records"</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ManybodyRecord.propagate_client">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord.propagate_client">[docs]</a>
@@ -605,7 +605,7 @@
         <span class="n">base_url_prefix</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">records</span><span class="p">))</span><span class="o">.</span><span class="n">_base_url_prefix</span>
         <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">_base_url_prefix</span> <span class="o">==</span> <span class="n">base_url_prefix</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="s2">&quot;clusters&quot;</span> <span class="ow">in</span> <span class="n">include</span> <span class="ow">or</span> <span class="s2">&quot;**&quot;</span> <span class="ow">in</span> <span class="n">include</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">"clusters"</span> <span class="ow">in</span> <span class="n">include</span> <span class="ow">or</span> <span class="s2">"**"</span> <span class="ow">in</span> <span class="n">include</span><span class="p">:</span>
             <span class="c1"># collect all singlepoint ids for all manybody records</span>
             <span class="n">sp_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
@@ -648,17 +648,17 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">clusters_meta_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">clusters_meta_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-                <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;api/v1/records/manybody/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/clusters&quot;</span><span class="p">,</span>
+                <span class="s2">"get"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"api/v1/records/manybody/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/clusters"</span><span class="p">,</span>
                 <span class="nb">list</span><span class="p">[</span><span class="n">ManybodyClusterMeta</span><span class="p">],</span>
             <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_children</span><span class="p">([</span><span class="s2">&quot;clusters&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_children</span><span class="p">([</span><span class="s2">"clusters"</span><span class="p">])</span>
 
 <div class="viewcode-block" id="ManybodyRecord.get_cache_dict">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodyRecord.get_cache_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_cache_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cluster_records_&quot;</span><span class="p">},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">{</span><span class="s2">"cluster_records_"</span><span class="p">},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
     <span class="nd">@property</span>

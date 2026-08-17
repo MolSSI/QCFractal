@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Attachments" href="../datasets/attachments.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -572,7 +572,7 @@ case-insensitively.</p>
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-0">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_project</span><span class="p">(</span><span class="s2">&quot;Peroxide barrier heights&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_project</span><span class="p">(</span><span class="s2">"Peroxide barrier heights"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">proj</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 <span class="go">7</span>
 
@@ -600,13 +600,13 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.record_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">PriorityEnum</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_project</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="s2">&quot;Peroxide barrier heights&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Barrier heights for a set of peroxides, at several levels of theory&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">tagline</span><span class="o">=</span><span class="s2">&quot;Peroxide barriers&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;peroxide&quot;</span><span class="p">,</span> <span class="s2">&quot;barriers&quot;</span><span class="p">],</span>
-<span class="gp">... </span>    <span class="n">default_compute_tag</span><span class="o">=</span><span class="s2">&quot;big_mem&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">"Peroxide barrier heights"</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">description</span><span class="o">=</span><span class="s2">"Barrier heights for a set of peroxides, at several levels of theory"</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">tagline</span><span class="o">=</span><span class="s2">"Peroxide barriers"</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"peroxide"</span><span class="p">,</span> <span class="s2">"barriers"</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">default_compute_tag</span><span class="o">=</span><span class="s2">"big_mem"</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">default_compute_priority</span><span class="o">=</span><span class="n">PriorityEnum</span><span class="o">.</span><span class="n">low</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">extras</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;grant&quot;</span><span class="p">:</span> <span class="s2">&quot;OAC-1547580&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="n">extras</span><span class="o">=</span><span class="p">{</span><span class="s2">"grant"</span><span class="p">:</span> <span class="s2">"OAC-1547580"</span><span class="p">},</span>
 <span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
@@ -621,15 +621,15 @@ existing project back instead - useful in a script that may be run more than onc
 <input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-2">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_project</span><span class="p">(</span><span class="s2">&quot;Peroxide barrier heights&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_project</span><span class="p">(</span><span class="s2">"Peroxide barrier heights"</span><span class="p">)</span>
 <span class="go">---------------------------------------------------------------------------</span>
 <span class="go">PortalRequestError                        Traceback (most recent call last)</span>
 
 <span class="go">...</span>
 
-<span class="go">PortalRequestError: Request failed: Project with name=&#39;Peroxide barrier heights&#39; already exists (HTTP status 400)</span>
+<span class="go">PortalRequestError: Request failed: Project with name='Peroxide barrier heights' already exists (HTTP status 400)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_project</span><span class="p">(</span><span class="s2">&quot;Peroxide barrier heights&quot;</span><span class="p">,</span> <span class="n">existing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_project</span><span class="p">(</span><span class="s2">"Peroxide barrier heights"</span><span class="p">,</span> <span class="n">existing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">proj</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 <span class="go">7</span>
 </pre></div>
@@ -646,7 +646,7 @@ case-insensitively.</p>
 <input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-3">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_project</span><span class="p">(</span><span class="s2">&quot;peroxide BARRIER heights&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_project</span><span class="p">(</span><span class="s2">"peroxide BARRIER heights"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">proj</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 <span class="go">7</span>
 
@@ -666,7 +666,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="go">Peroxide barriers</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">proj</span><span class="o">.</span><span class="n">tags</span><span class="p">)</span>
-<span class="go">[&#39;peroxide&#39;, &#39;barriers&#39;]</span>
+<span class="go">['peroxide', 'barriers']</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">proj</span><span class="o">.</span><span class="n">default_compute_tag</span><span class="p">,</span> <span class="n">proj</span><span class="o">.</span><span class="n">default_compute_priority</span><span class="p">)</span>
 <span class="go">big_mem PriorityEnum.low</span>
@@ -693,7 +693,7 @@ project ID and metadata, plus a count of the records and datasets it holds.</p>
 <label class="sd-tab-label" for="sd-tab-item-5">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">list_projects</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;record_count&quot;</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;dataset_count&quot;</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;project_name&quot;</span><span class="p">])</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s2">"id"</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="s2">"record_count"</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="s2">"dataset_count"</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="s2">"project_name"</span><span class="p">])</span>
 <span class="go">6 0 3 Diatomic geometries</span>
 <span class="go">7 12 2 Peroxide barrier heights</span>
 </pre></div>
@@ -720,10 +720,10 @@ entry counts the records of every dataset in the project, summed together.</p>
 <label class="sd-tab-label" for="sd-tab-item-6">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
-<span class="go">{&#39;records&#39;: {&lt;RecordStatusEnum.complete: &#39;complete&#39;&gt;: 10,</span>
-<span class="go">             &lt;RecordStatusEnum.error: &#39;error&#39;&gt;: 2},</span>
-<span class="go"> &#39;datasets&#39;: {&lt;RecordStatusEnum.complete: &#39;complete&#39;&gt;: 340,</span>
-<span class="go">              &lt;RecordStatusEnum.waiting: &#39;waiting&#39;&gt;: 60}}</span>
+<span class="go">{'records': {&lt;RecordStatusEnum.complete: 'complete'&gt;: 10,</span>
+<span class="go">             &lt;RecordStatusEnum.error: 'error'&gt;: 2},</span>
+<span class="go"> 'datasets': {&lt;RecordStatusEnum.complete: 'complete'&gt;: 340,</span>
+<span class="go">              &lt;RecordStatusEnum.waiting: 'waiting'&gt;: 60}}</span>
 </pre></div>
 </div>
 </div>
@@ -742,14 +742,14 @@ attachment type is <code class="docutils literal notranslate"><span class="pre">
 <input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-7">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">file_id</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">upload_attachment</span><span class="p">(</span><span class="s2">&quot;./barriers.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;other&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;analysis&quot;</span><span class="p">])</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">file_id</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">upload_attachment</span><span class="p">(</span><span class="s2">"./barriers.csv"</span><span class="p">,</span> <span class="s2">"other"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"analysis"</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">file_id</span><span class="p">)</span>
 <span class="go">14</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># With a description, and stored under a different name</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">upload_attachment</span><span class="p">(</span><span class="s2">&quot;./notes.md&quot;</span><span class="p">,</span> <span class="s2">&quot;other&quot;</span><span class="p">,</span> <span class="p">[],</span>
-<span class="gp">... </span>                       <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Working notes&quot;</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="n">new_file_name</span><span class="o">=</span><span class="s2">&quot;lab_notes.md&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">upload_attachment</span><span class="p">(</span><span class="s2">"./notes.md"</span><span class="p">,</span> <span class="s2">"other"</span><span class="p">,</span> <span class="p">[],</span>
+<span class="gp">... </span>                       <span class="n">description</span><span class="o">=</span><span class="s2">"Working notes"</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">new_file_name</span><span class="o">=</span><span class="s2">"lab_notes.md"</span><span class="p">)</span>
 <span class="go">15</span>
 </pre></div>
 </div>
@@ -764,7 +764,7 @@ file metadata but not the contents.</p>
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">att</span> <span class="ow">in</span> <span class="n">proj</span><span class="o">.</span><span class="n">attachments</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">att</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">att</span><span class="o">.</span><span class="n">file_size</span><span class="p">,</span> <span class="n">att</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span> <span class="n">att</span><span class="o">.</span><span class="n">tags</span><span class="p">)</span>
-<span class="go">14 20418 barriers.csv [&#39;analysis&#39;]</span>
+<span class="go">14 20418 barriers.csv ['analysis']</span>
 <span class="go">15 1044 lab_notes.md []</span>
 </pre></div>
 </div>
@@ -776,7 +776,7 @@ remove an attachment with <a class="reference internal" href="../qcportal_refere
 <input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-9">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">attachments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">&quot;/path/to/barriers.csv&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">attachments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">"/path/to/barriers.csv"</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">delete_attachment</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
 </pre></div>
@@ -806,14 +806,14 @@ under what name.</p>
 <label class="sd-tab-label" for="sd-tab-item-10">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">query_project_records</span><span class="p">(</span><span class="mi">118326390</span><span class="p">)</span>
-<span class="go">[{&#39;record_id&#39;: 118326390, &#39;project_id&#39;: 7, &#39;project_name&#39;: &#39;Peroxide barrier heights&#39;,</span>
-<span class="go">  &#39;record_name&#39;: &#39;water_scan&#39;}]</span>
+<span class="go">[{'record_id': 118326390, 'project_id': 7, 'project_name': 'Peroxide barrier heights',</span>
+<span class="go">  'record_name': 'water_scan'}]</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">query_project_datasets</span><span class="p">([</span><span class="mi">377</span><span class="p">,</span> <span class="mi">381</span><span class="p">])</span>
-<span class="go">[{&#39;record_id&#39;: 377, &#39;project_id&#39;: 7, &#39;project_name&#39;: &#39;Peroxide barrier heights&#39;,</span>
-<span class="go">  &#39;dataset_name&#39;: &#39;b3lyp barriers&#39;},</span>
-<span class="go"> {&#39;record_id&#39;: 381, &#39;project_id&#39;: 6, &#39;project_name&#39;: &#39;Diatomic geometries&#39;,</span>
-<span class="go">  &#39;dataset_name&#39;: &#39;geometries&#39;}]</span>
+<span class="go">[{'record_id': 377, 'project_id': 7, 'project_name': 'Peroxide barrier heights',</span>
+<span class="go">  'dataset_name': 'b3lyp barriers'},</span>
+<span class="go"> {'record_id': 381, 'project_id': 6, 'project_name': 'Diatomic geometries',</span>
+<span class="go">  'dataset_name': 'geometries'}]</span>
 </pre></div>
 </div>
 </div>
@@ -831,7 +831,7 @@ restrict a record query to a single project. See <a class="reference internal" h
 <input checked="checked" id="sd-tab-item-11" name="sd-tab-set-11" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-11">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">query_singlepoints</span><span class="p">(</span><span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">):</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">query_singlepoints</span><span class="p">(</span><span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s1">'error'</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
 <span class="go">118326391 RecordStatusEnum.error</span>
 <span class="go">118326404 RecordStatusEnum.error</span>
@@ -921,7 +921,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="go">[0, 1, 2]</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
-<span class="go">[(3, &#39;Integrity Error - may still be referenced&#39;)]</span>
+<span class="go">[(3, 'Integrity Error - may still be referenced')]</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">delete_project</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
 </pre></div>
@@ -939,7 +939,7 @@ handled - it surfaces as an internal server error rather than being skipped. Che
 <label class="sd-tab-label" for="sd-tab-item-16">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">query_project_datasets</span><span class="p">(</span><span class="mi">381</span><span class="p">)</span>
-<span class="go">[{&#39;record_id&#39;: 381, &#39;project_id&#39;: 6, ...}, {&#39;record_id&#39;: 381, &#39;project_id&#39;: 7, ...}]</span>
+<span class="go">[{'record_id': 381, 'project_id': 6, ...}, {'record_id': 381, 'project_id': 7, ...}]</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Dataset 381 is in two projects - do not use delete_datasets=True here</span>
 </pre></div>

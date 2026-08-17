@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -483,8 +483,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.postgres_harness</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_snowflake_postgres</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.process_targets</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCFJobRunnerThread</span><span class="p">,</span> <span class="n">QCFAPIThread</span>
 
-<span class="k">if</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;qcfractalcompute&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;qcfractalcompute is not installed. Snowflake is useless without it&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">"qcfractalcompute"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"qcfractalcompute is not installed. Snowflake is useless without it"</span><span class="p">)</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcfractalcompute.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">FractalComputeConfig</span><span class="p">,</span> <span class="n">FractalServerSettings</span><span class="p">,</span> <span class="n">LocalExecutorConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcfractalcompute.process_targets</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCFComputeThread</span>
@@ -505,10 +505,10 @@
         <span class="n">database_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DatabaseConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">extra_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
+        <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"localhost"</span><span class="p">,</span>
         <span class="n">tmpdir_parent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;A temporary, self-contained server</span>
+<span class="w">        </span><span class="sd">"""A temporary, self-contained server</span>
 
 <span class="sd">        A snowflake contains the server and compute manager, and can be used to test</span>
 <span class="sd">        QCFractal/QCPortal, or to experiment.</span>
@@ -516,31 +516,31 @@
 <span class="sd">        All data is lost when the server is shutdown.</span>
 
 <span class="sd">        This can also be used as a context manager (`with FractalSnowflake(...) as s:`)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;fractal_snowflake&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">"fractal_snowflake"</span><span class="p">)</span>
 
         <span class="c1"># Create a temporary directory for everything</span>
-        <span class="c1"># Don&#39;t use TemporaryDirectory with autodelete - we will cleanup in the snowflake finalizer</span>
+        <span class="c1"># Don't use TemporaryDirectory with autodelete - we will cleanup in the snowflake finalizer</span>
         <span class="c1"># If allowed to do it automatically, it may be cleaned up before the finalizer runs, and</span>
-        <span class="c1"># the pg_harness won&#39;t like that (since the db files are stored there)</span>
-        <span class="c1"># tempfile.TemporaryDirectory doesn&#39;t have a &quot;delete&quot; parameter in older versions of python.</span>
-        <span class="c1"># So let&#39;s just use mkdtemp and delete it manually.</span>
+        <span class="c1"># the pg_harness won't like that (since the db files are stored there)</span>
+        <span class="c1"># tempfile.TemporaryDirectory doesn't have a "delete" parameter in older versions of python.</span>
+        <span class="c1"># So let's just use mkdtemp and delete it manually.</span>
         <span class="c1"># mktemp will return relative paths in some versions of python with some parameters of `dir`,</span>
         <span class="c1"># but I always feel more comfortable with absolute paths.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">tmpdir_parent</span><span class="p">))</span>
 
         <span class="c1"># also parsl run directory and scratch directories</span>
-        <span class="n">parsl_run_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="p">,</span> <span class="s2">&quot;parsl_run_dir&quot;</span><span class="p">)</span>
-        <span class="n">compute_scratch_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="p">,</span> <span class="s2">&quot;compute_scratch_dir&quot;</span><span class="p">)</span>
+        <span class="n">parsl_run_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="p">,</span> <span class="s2">"parsl_run_dir"</span><span class="p">)</span>
+        <span class="n">compute_scratch_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="p">,</span> <span class="s2">"compute_scratch_dir"</span><span class="p">)</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">parsl_run_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">compute_scratch_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using temporary directory: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Using temporary directory: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">database_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># db and socket are subdirs of the base temporary directory</span>
-            <span class="n">db_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="p">,</span> <span class="s2">&quot;db&quot;</span><span class="p">)</span>
+            <span class="n">db_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="p">,</span> <span class="s2">"db"</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_pg_harness</span> <span class="o">=</span> <span class="n">create_snowflake_postgres</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">db_dir</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_pg_harness</span><span class="o">.</span><span class="n">create_database</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">db_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pg_harness</span><span class="o">.</span><span class="n">config</span>
@@ -550,27 +550,27 @@
             <span class="n">db_config</span> <span class="o">=</span> <span class="n">database_config</span>
 
         <span class="n">api_port</span> <span class="o">=</span> <span class="n">find_open_port</span><span class="p">(</span><span class="n">host</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fractal_uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;http://</span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">api_port</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fractal_uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"http://</span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">api_port</span><span class="si">}</span><span class="s2">"</span>
 
         <span class="c1"># Create a configuration for QCFractal</span>
         <span class="c1"># Assign the log level for subprocesses. Use the same level as what is assigned for this object</span>
         <span class="n">loglevel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">getEffectiveLevel</span><span class="p">()</span>
 
         <span class="n">qcf_cfg</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;base_folder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span>
-        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;loglevel&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLevelName</span><span class="p">(</span><span class="n">loglevel</span><span class="p">)</span>
-        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;database&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db_config</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
-        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;enable_security&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;hide_internal_errors&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;service_frequency&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
-        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;heartbeat_frequency&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
-        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;heartbeat_frequency_jitter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;heartbeat_max_missed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
-        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">&quot;api&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="n">host</span><span class="p">,</span>
-            <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="n">api_port</span><span class="p">,</span>
-            <span class="s2">&quot;secret_key&quot;</span><span class="p">:</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>
-            <span class="s2">&quot;jwt_secret_key&quot;</span><span class="p">:</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>
+        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">"base_folder"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span>
+        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">"loglevel"</span><span class="p">]</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLevelName</span><span class="p">(</span><span class="n">loglevel</span><span class="p">)</span>
+        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">"database"</span><span class="p">]</span> <span class="o">=</span> <span class="n">db_config</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
+        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">"enable_security"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">"hide_internal_errors"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">"service_frequency"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">"heartbeat_frequency"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">"heartbeat_frequency_jitter"</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">"heartbeat_max_missed"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="n">qcf_cfg</span><span class="p">[</span><span class="s2">"api"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"host"</span><span class="p">:</span> <span class="n">host</span><span class="p">,</span>
+            <span class="s2">"port"</span><span class="p">:</span> <span class="n">api_port</span><span class="p">,</span>
+            <span class="s2">"secret_key"</span><span class="p">:</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>
+            <span class="s2">"jwt_secret_key"</span><span class="p">:</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>
         <span class="p">}</span>
 
         <span class="c1"># Add in any options passed to this Snowflake</span>
@@ -590,12 +590,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_api_initialized</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
 
         <span class="c1"># For the compute manager</span>
-        <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;http://</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"http://</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">"</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_config</span> <span class="o">=</span> <span class="n">FractalComputeConfig</span><span class="p">(</span>
             <span class="n">base_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span><span class="p">,</span>
             <span class="n">loglevel</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">getLevelName</span><span class="p">(</span><span class="n">loglevel</span><span class="p">),</span>
             <span class="n">parsl_run_dir</span><span class="o">=</span><span class="n">parsl_run_dir</span><span class="p">,</span>
-            <span class="n">cluster</span><span class="o">=</span><span class="s2">&quot;snowflake_compute&quot;</span><span class="p">,</span>
+            <span class="n">cluster</span><span class="o">=</span><span class="s2">"snowflake_compute"</span><span class="p">,</span>
             <span class="n">update_frequency</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
             <span class="n">update_frequency_jitter</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
             <span class="n">server</span><span class="o">=</span><span class="n">FractalServerSettings</span><span class="p">(</span>
@@ -603,11 +603,11 @@
                 <span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="p">),</span>
             <span class="n">executors</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">&quot;local&quot;</span><span class="p">:</span> <span class="n">LocalExecutorConfig</span><span class="p">(</span>
+                <span class="s2">"local"</span><span class="p">:</span> <span class="n">LocalExecutorConfig</span><span class="p">(</span>
                     <span class="n">cores_per_worker</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                     <span class="n">memory_per_worker</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                     <span class="n">max_workers</span><span class="o">=</span><span class="n">compute_workers</span><span class="p">,</span>
-                    <span class="n">compute_tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">],</span>
+                    <span class="n">compute_tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"*"</span><span class="p">],</span>
                     <span class="n">scratch_directory</span><span class="o">=</span><span class="n">compute_scratch_dir</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">},</span>
@@ -736,18 +736,18 @@
 <div class="viewcode-block" id="FractalSnowflake.wait_for_api">
 <a class="viewcode-back" href="../../overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.wait_for_api">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">wait_for_api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Wait for the flask/api server to come up and then exit</span>
 
 <span class="sd">        If it does not come up after some time, an exception will be raised</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="c1"># Seems there still may be a small time after the event is triggered and before</span>
         <span class="c1"># it can handle requests</span>
-        <span class="c1"># Can&#39;t use ping that is part of the client - we haven&#39;t instantiated one yet</span>
+        <span class="c1"># Can't use ping that is part of the client - we haven't instantiated one yet</span>
         <span class="n">host</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">host</span>
         <span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">port</span>
-        <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;http://</span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2">/api/v1/ping&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"http://</span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2">/api/v1/ping"</span>
 
         <span class="n">max_iter</span> <span class="o">=</span> <span class="mi">100</span>
         <span class="nb">iter</span> <span class="o">=</span> <span class="mi">0</span>
@@ -755,7 +755,7 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">uri</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Error pinging snowflake fractal server: &quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Error pinging snowflake fractal server: "</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
                 <span class="k">break</span>
 
             <span class="k">except</span> <span class="n">AllowedConnectionExceptions</span><span class="p">:</span>
@@ -768,9 +768,9 @@
 <div class="viewcode-block" id="FractalSnowflake.start">
 <a class="viewcode-back" href="../../overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.start">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Starts all the components of the snowflake</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="c1"># Start all in parallel, then wait on all independently</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_api</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -792,9 +792,9 @@
 <div class="viewcode-block" id="FractalSnowflake.stop">
 <a class="viewcode-back" href="../../overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.stop">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Stops all components of the snowflake</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_stop_api</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stop_compute</span><span class="p">()</span>
@@ -804,22 +804,22 @@
 <div class="viewcode-block" id="FractalSnowflake.get_uri">
 <a class="viewcode-back" href="../../overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.get_uri">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_uri</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Obtain the URI/address of the REST interface of this server</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        :</span>
-<span class="sd">            Address/URI of the rest interface (ie, &#39;http://127.0.0.1:1234&#39;)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            Address/URI of the rest interface (ie, 'http://127.0.0.1:1234')</span>
+<span class="sd">        """</span>
 
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;http://</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">&quot;</span></div>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"http://</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_qcf_config</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">"</span></div>
 
 
 <div class="viewcode-block" id="FractalSnowflake.await_results">
 <a class="viewcode-back" href="../../overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.await_results">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">await_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Wait for computations to complete</span>
 
 <span class="sd">        This function will block until the specified computations are complete (either success for failure).</span>
@@ -840,7 +840,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        :</span>
 <span class="sd">            True if all the results were received, False if timeout has elapsed without receiving a completed computation</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -852,20 +852,20 @@
         <span class="n">remaining_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_completed</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">remaining_ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;All tasks are already finished&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"All tasks are already finished"</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">True</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Waiting for ids: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">remaining_ids</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Waiting for ids: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">remaining_ids</span><span class="p">))</span>
 
         <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">remaining_ids</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="c1"># The queue stores a tuple of (id, status)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">finished_id</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finished_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">Empty</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Not all records finished in </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Not all records finished in </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2"> seconds"</span><span class="p">)</span>
                 <span class="k">return</span> <span class="kc">False</span>
 
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Record finished: id=</span><span class="si">{</span><span class="n">finished_id</span><span class="si">}</span><span class="s2">, status=</span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Record finished: id=</span><span class="si">{</span><span class="n">finished_id</span><span class="si">}</span><span class="s2">, status=</span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
             <span class="c1"># Add it to the list of all completed results we have seen</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_all_completed</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">finished_id</span><span class="p">)</span>
@@ -874,8 +874,8 @@
             <span class="c1"># we are watching</span>
             <span class="k">if</span> <span class="n">finished_id</span> <span class="ow">in</span> <span class="n">remaining_ids</span><span class="p">:</span>
                 <span class="n">remaining_ids</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">finished_id</span><span class="p">)</span>
-                <span class="n">remaining_str</span> <span class="o">=</span> <span class="s2">&quot;None&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">remaining_ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">remaining_ids</span><span class="p">)</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Removed id=</span><span class="si">{</span><span class="n">finished_id</span><span class="si">}</span><span class="s2">. Remaining ids: </span><span class="si">{</span><span class="n">remaining_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">remaining_str</span> <span class="o">=</span> <span class="s2">"None"</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">remaining_ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">remaining_ids</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Removed id=</span><span class="si">{</span><span class="n">finished_id</span><span class="si">}</span><span class="s2">. Remaining ids: </span><span class="si">{</span><span class="n">remaining_str</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">True</span></div>
 
@@ -883,9 +883,9 @@
 <div class="viewcode-block" id="FractalSnowflake.client">
 <a class="viewcode-back" href="../../overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.client">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">client</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PortalClient</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Obtain a PortalClient connected to this server</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="c1"># Shorten the timeout parameter - should be pretty quick in a snowflake</span>
         <span class="n">c</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_uri</span><span class="p">())</span>
@@ -896,14 +896,14 @@
 <div class="viewcode-block" id="FractalSnowflake.dump_database">
 <a class="viewcode-back" href="../../overview/snowflake.html#qcfractal.snowflake.FractalSnowflake.dump_database">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">dump_database</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Dumps the database to a file</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        filepath</span>
 <span class="sd">            Path to the output file to create</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_pg_harness</span><span class="o">.</span><span class="n">backup_database</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span></div>
 

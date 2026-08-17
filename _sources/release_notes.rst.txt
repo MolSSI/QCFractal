@@ -1,6 +1,43 @@
 Release Notes
 =============
 
+0.70 / 2026-08-16
+-----------------
+
+The big v0.70 release is here! Main thing is full pydantic v2. support (which was holding
+back python 3.14 compatibility). This has been fairly thoroughly test, although
+I wouldn't be surprised for compatibility bugs to pop up.
+
+One other big internal change is the move away from a custom msgpack-based column type
+for molecule fields towards postgres-native fields. This will allow for some cool features
+in the future related to molecule organization.
+
+**Warning**: The molecule migration can take a very long time, depending on how many
+molecules you have. If you have on the order of 100M, this could take several hours to a day.
+If constant uptime is required, you can use the script `server_admin/migrate_molecule_msgpack.py`
+on a current v0.65 installation to cut down some of the time. However, there still is some lengthy
+time and heavy I/O required during the alembic migration. If you want details, contact the developers.
+
+This release also includes a security fix related to a delay between disabling a user and that user's access
+actually being restricted. This was pointed out by security researchers Corban Villa & Sohee Sohee Kim.
+While this is relatively benign at the moment, it may become more serious in
+future deployments - see :pr:`1022` for details!
+
+Notable PRs:
+
+- (:pr:`1004`) Full pydantic v2 and python 3.14 compatibility
+- (:pr:`1014`) Rework internal RBAC/permissions handling and route decorators
+- (:pr:`1015`) Add more project attachment functionality and querying of projects by dataset id
+- (:pr:`1016`) Add typing to all routes and the ability to generate/fetch an OpenAPI spec
+- (:pr:`1018`) Use simpler/faster query for compute history manager name
+- (:pr:`1019`) Add roles to the docs (:contrib:`cgbriggs99`)
+- (:pr:`1020`) Fix default argument in the NEB query model
+- (:pr:`1021`) Migrate molecule storage away from opaque msgpack columns to postgres-native types
+- (:pr:`1022`) Improve JWT security for disabling/downgrading accounts (credit to :contrib:`corbanvilla`, :contrib:`soh3e`, :contrib:`dderpym` for discovery).
+- (:pr:`1023`) Greatly clean up and expand the documentation
+- (:pr:`1024`) Better handling of testing command line options and remove unneeded dependencies
+
+
 0.65 / 2026-06-02
 -----------------
 
@@ -18,7 +55,7 @@ Notable PRs:
 - (:pr:`1005`) Add more querying ability for records (including querying which project a record belongs to)
 - (:pr:`1007`) Implement some server stats tracking
 - (:pr:`1008`) Add ability to create torsiondrive dataset entries from an optimization dataset
-- (:pr:`1011`) Swallow/ignore stdout/stderr from qcenging to prevent json parsing issues
+- (:pr:`1011`) Swallow/ignore stdout/stderr from qcengine to prevent json parsing issues
 
 
 0.64 / 2026-03-04

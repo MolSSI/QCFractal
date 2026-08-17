@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -467,7 +467,7 @@
 <div class="viewcode-block" id="AuthTypeEnum">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.AuthTypeEnum">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">AuthTypeEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-    <span class="n">password</span> <span class="o">=</span> <span class="s2">&quot;password&quot;</span></div>
+    <span class="n">password</span> <span class="o">=</span> <span class="s2">"password"</span></div>
 
 
 
@@ -475,15 +475,15 @@
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.is_valid_password">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_valid_password</span><span class="p">(</span><span class="n">password</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="c1"># Null character not allowed</span>
-    <span class="k">if</span> <span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">password</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">InvalidPasswordError</span><span class="p">(</span><span class="s2">&quot;Password contains a NUL character&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"</span><span class="se">\x00</span><span class="s2">"</span> <span class="ow">in</span> <span class="n">password</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidPasswordError</span><span class="p">(</span><span class="s2">"Password contains a NUL character"</span><span class="p">)</span>
 
     <span class="c1"># Password should be somewhat long</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">password</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">InvalidPasswordError</span><span class="p">(</span><span class="s2">&quot;Password is empty&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">InvalidPasswordError</span><span class="p">(</span><span class="s2">"Password is empty"</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">password</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">6</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">InvalidPasswordError</span><span class="p">(</span><span class="s2">&quot;Password must contain at least 6 characters&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="n">InvalidPasswordError</span><span class="p">(</span><span class="s2">"Password must contain at least 6 characters"</span><span class="p">)</span></div>
 
 
 
@@ -491,19 +491,19 @@
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.is_valid_username">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_valid_username</span><span class="p">(</span><span class="n">username</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">username</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">InvalidUsernameError</span><span class="p">(</span><span class="s2">&quot;Username is empty&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">InvalidUsernameError</span><span class="p">(</span><span class="s2">"Username is empty"</span><span class="p">)</span>
 
     <span class="c1"># Null character not allowed</span>
-    <span class="k">if</span> <span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">username</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">InvalidUsernameError</span><span class="p">(</span><span class="s2">&quot;Username contains a NUL character&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"</span><span class="se">\x00</span><span class="s2">"</span> <span class="ow">in</span> <span class="n">username</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidUsernameError</span><span class="p">(</span><span class="s2">"Username contains a NUL character"</span><span class="p">)</span>
 
     <span class="c1"># Spaces are not allowed</span>
-    <span class="k">if</span> <span class="s2">&quot; &quot;</span> <span class="ow">in</span> <span class="n">username</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">InvalidUsernameError</span><span class="p">(</span><span class="s2">&quot;Username contains spaces&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">" "</span> <span class="ow">in</span> <span class="n">username</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidUsernameError</span><span class="p">(</span><span class="s2">"Username contains spaces"</span><span class="p">)</span>
 
     <span class="c1"># Username cannot be all numbers</span>
     <span class="k">if</span> <span class="n">username</span><span class="o">.</span><span class="n">isdecimal</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="n">InvalidUsernameError</span><span class="p">(</span><span class="s2">&quot;Username cannot be all numbers&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="n">InvalidUsernameError</span><span class="p">(</span><span class="s2">"Username cannot be all numbers"</span><span class="p">)</span></div>
 
 
 
@@ -511,44 +511,44 @@
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.is_valid_groupname">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_valid_groupname</span><span class="p">(</span><span class="n">groupname</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">groupname</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">InvalidGroupnameError</span><span class="p">(</span><span class="s2">&quot;Groupname is empty&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">InvalidGroupnameError</span><span class="p">(</span><span class="s2">"Groupname is empty"</span><span class="p">)</span>
 
     <span class="c1"># Null character not allowed</span>
-    <span class="k">if</span> <span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">groupname</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">InvalidGroupnameError</span><span class="p">(</span><span class="s2">&quot;Groupname contains a NUL character&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"</span><span class="se">\x00</span><span class="s2">"</span> <span class="ow">in</span> <span class="n">groupname</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidGroupnameError</span><span class="p">(</span><span class="s2">"Groupname contains a NUL character"</span><span class="p">)</span>
 
     <span class="c1"># Spaces are not allowed</span>
-    <span class="k">if</span> <span class="s2">&quot; &quot;</span> <span class="ow">in</span> <span class="n">groupname</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">InvalidGroupnameError</span><span class="p">(</span><span class="s2">&quot;Groupname contains spaces&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">" "</span> <span class="ow">in</span> <span class="n">groupname</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidGroupnameError</span><span class="p">(</span><span class="s2">"Groupname contains spaces"</span><span class="p">)</span>
 
     <span class="c1"># Groupname cannot be all numbers</span>
     <span class="k">if</span> <span class="n">groupname</span><span class="o">.</span><span class="n">isdecimal</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="n">InvalidGroupnameError</span><span class="p">(</span><span class="s2">&quot;Groupname cannot be all numbers&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="n">InvalidGroupnameError</span><span class="p">(</span><span class="s2">"Groupname cannot be all numbers"</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="GroupInfo">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.GroupInfo">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GroupInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Information about a group</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;ID of the group&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""ID of the group"""</span>
 
     <span class="n">groupname</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The name of the group&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The name of the group"""</span>
 
-    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Text description of the group&quot;&quot;&quot;</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="w">    </span><span class="sd">"""Text description of the group"""</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;groupname&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"groupname"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_valid_groupname</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Makes sure the groupname is a valid string&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Makes sure the groupname is a valid string"""</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">is_valid_groupname</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
@@ -561,44 +561,44 @@
 <div class="viewcode-block" id="UserInfo">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.UserInfo">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">UserInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Information about a user</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="c1"># id may be None when used for initial creation</span>
     <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The id of the user&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The id of the user"""</span>
 
     <span class="n">auth_type</span><span class="p">:</span> <span class="n">AuthTypeEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">AuthTypeEnum</span><span class="o">.</span><span class="n">password</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Type of authentication the user uses&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Type of authentication the user uses"""</span>
 
     <span class="n">username</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The username of this user&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The username of this user"""</span>
 
     <span class="n">role</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The role this user belongs to&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The role this user belongs to"""</span>
 
     <span class="n">groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Groups this user belongs to&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Groups this user belongs to"""</span>
 
     <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether this user is enabled or not&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Whether this user is enabled or not"""</span>
 
-    <span class="n">fullname</span><span class="p">:</span> <span class="n">Max128Str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The full name or description of the user&quot;&quot;&quot;</span>
+    <span class="n">fullname</span><span class="p">:</span> <span class="n">Max128Str</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="w">    </span><span class="sd">"""The full name or description of the user"""</span>
 
-    <span class="n">organization</span><span class="p">:</span> <span class="n">Max128Str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The organization the user belongs to&quot;&quot;&quot;</span>
+    <span class="n">organization</span><span class="p">:</span> <span class="n">Max128Str</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="w">    </span><span class="sd">"""The organization the user belongs to"""</span>
 
-    <span class="n">email</span><span class="p">:</span> <span class="n">Max128Str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The email address for the user&quot;&quot;&quot;</span>
+    <span class="n">email</span><span class="p">:</span> <span class="n">Max128Str</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="w">    </span><span class="sd">"""The email address for the user"""</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"username"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_valid_username</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Makes sure the username is a valid string&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Makes sure the username is a valid string"""</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">is_valid_username</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
@@ -606,10 +606,10 @@
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;groups&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"groups"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_valid_groupnames</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Makes sure the groupnames are valid strings&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Makes sure the groupnames are valid strings"""</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>

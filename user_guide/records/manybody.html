@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Torsiondrive calculations" href="torsiondrive.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -616,20 +616,20 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.manybody</span><span class="w"> </span><span class="kn">import</span> <span class="n">ManybodySpecification</span>
 
 <span class="n">ManybodySpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;qcmanybody&quot;</span><span class="p">,</span>
-    <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nocp&quot;</span><span class="p">],</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"qcmanybody"</span><span class="p">,</span>
+    <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s2">"nocp"</span><span class="p">],</span>
     <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
         <span class="mi">1</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
-            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">"6-31G*"</span><span class="p">,</span>
         <span class="p">),</span>
         <span class="mi">2</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
-            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">"6-31G*"</span><span class="p">,</span>
         <span class="p">),</span>
     <span class="p">},</span>
 <span class="p">)</span>
@@ -648,20 +648,20 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.manybody</span><span class="w"> </span><span class="kn">import</span> <span class="n">ManybodySpecification</span>
 
 <span class="n">ManybodySpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;qcmanybody&quot;</span><span class="p">,</span>
-    <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nocp&quot;</span><span class="p">,</span> <span class="s2">&quot;cp&quot;</span><span class="p">],</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"qcmanybody"</span><span class="p">,</span>
+    <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s2">"nocp"</span><span class="p">,</span> <span class="s2">"cp"</span><span class="p">],</span>
     <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
         <span class="mi">1</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
-            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">"6-31G*"</span><span class="p">,</span>
         <span class="p">),</span>
         <span class="mi">2</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
-            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">"6-31G*"</span><span class="p">,</span>
         <span class="p">),</span>
     <span class="p">},</span>
 <span class="p">)</span>
@@ -680,23 +680,23 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.manybody</span><span class="w"> </span><span class="kn">import</span> <span class="n">ManybodySpecification</span>
 
 <span class="n">ManybodySpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;qcmanybody&quot;</span><span class="p">,</span>
-    <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cp&quot;</span><span class="p">],</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"qcmanybody"</span><span class="p">,</span>
+    <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s2">"cp"</span><span class="p">],</span>
     <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
         <span class="mi">1</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
-            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">"6-31G*"</span><span class="p">,</span>
         <span class="p">),</span>
         <span class="mi">2</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
-            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">"6-31G*"</span><span class="p">,</span>
         <span class="p">),</span>
     <span class="p">},</span>
-    <span class="n">keywords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;return_total_data&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="p">{</span><span class="s1">'return_total_data'</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -713,26 +713,26 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.manybody</span><span class="w"> </span><span class="kn">import</span> <span class="n">ManybodySpecification</span>
 
 <span class="n">ManybodySpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;qcmanybody&quot;</span><span class="p">,</span>
-    <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nocp&quot;</span><span class="p">,</span> <span class="s2">&quot;cp&quot;</span><span class="p">],</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"qcmanybody"</span><span class="p">,</span>
+    <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s2">"nocp"</span><span class="p">,</span> <span class="s2">"cp"</span><span class="p">],</span>
     <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
         <span class="mi">1</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
-            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ccsd&quot;</span><span class="p">,</span>
-            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvqz&quot;</span><span class="p">,</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"ccsd"</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">"cc-pvqz"</span><span class="p">,</span>
         <span class="p">),</span>
         <span class="mi">2</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
-            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ccsd&quot;</span><span class="p">,</span>
-            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvtz&quot;</span><span class="p">,</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"ccsd"</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">"cc-pvtz"</span><span class="p">,</span>
         <span class="p">),</span>
         <span class="mi">3</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
-            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ccsd&quot;</span><span class="p">,</span>
-            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvdz&quot;</span><span class="p">,</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"ccsd"</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">"cc-pvdz"</span><span class="p">,</span>
         <span class="p">),</span>
     <span class="p">}</span>
 <span class="p">)</span>
@@ -813,7 +813,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-7">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_lst</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_manybodys</span><span class="p">([</span><span class="mi">123</span><span class="p">,</span> <span class="mi">456</span><span class="p">],</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;**&#39;</span><span class="p">])</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_lst</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_manybodys</span><span class="p">([</span><span class="mi">123</span><span class="p">,</span> <span class="mi">456</span><span class="p">],</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">'**'</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -829,7 +829,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOTE - we are querying by the program actually used in the singlepoint calculations here</span>
 <span class="c1">#        not the overarching manybody program</span>
 
-<span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_manybodys</span><span class="p">(</span><span class="n">qc_program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">qc_method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">qc_basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">)</span>
+<span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_manybodys</span><span class="p">(</span><span class="n">qc_program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span> <span class="n">qc_method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span> <span class="n">qc_basis</span><span class="o">=</span><span class="s1">'def2-svp'</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 </pre></div>
@@ -847,9 +847,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOTE - we are querying by the program actually used in the singlepoint calculations here</span>
 <span class="c1">#        not the overarching manybody program</span>
 
-<span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_manybodys</span><span class="p">(</span><span class="n">qc_program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span>
-                                <span class="n">created_after</span><span class="o">=</span><span class="s1">&#39;2024-03-21 12:34:56&#39;</span><span class="p">,</span>
-                                <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;**&#39;</span><span class="p">],</span>
+<span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_manybodys</span><span class="p">(</span><span class="n">qc_program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span>
+                                <span class="n">created_after</span><span class="o">=</span><span class="s1">'2024-03-21 12:34:56'</span><span class="p">,</span>
+                                <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">'**'</span><span class="p">],</span>
                                 <span class="n">limit</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
@@ -865,7 +865,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-10" name="sd-tab-set-10" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-10">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">water_dimer</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">],</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">water_dimer</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">'O'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">,</span> <span class="s1">'O'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">],</span>
                        <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">2.81211079</span><span class="p">,</span>  <span class="mf">0.1255717</span><span class="p">,</span>   <span class="mf">0.0</span><span class="p">,</span>
                                  <span class="mf">3.48216662</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5543998</span><span class="p">,</span>   <span class="mf">0.0</span><span class="p">,</span>
                                  <span class="mf">1.00578203</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1092573</span><span class="p">,</span>   <span class="mf">0.0</span><span class="p">,</span>
@@ -875,7 +875,7 @@ PYTHON</label><div class="sd-tab-content docutils">
                        <span class="n">fragments</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]],</span>
                       <span class="p">)</span>
 
-<span class="n">water_stacked</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">],</span>
+<span class="n">water_stacked</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">'O'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">,</span> <span class="s1">'O'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">,</span> <span class="s1">'O'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">,</span> <span class="s1">'O'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">],</span>
                          <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">2.81211079</span><span class="p">,</span>  <span class="mf">0.1255717</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>
                                    <span class="mf">3.48216662</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5543998</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>
                                    <span class="mf">1.00578203</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1092573</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span>
@@ -904,19 +904,19 @@ PYTHON</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-11">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">qc_spec</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
-            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">"6-31G*"</span><span class="p">,</span>
           <span class="p">)</span>
 
 <span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_manybodys</span><span class="p">([</span><span class="n">water_dimer</span><span class="p">],</span>
-                                  <span class="n">program</span><span class="o">=</span><span class="s1">&#39;qcmanybody&#39;</span><span class="p">,</span>
+                                  <span class="n">program</span><span class="o">=</span><span class="s1">'qcmanybody'</span><span class="p">,</span>
                                   <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
                                     <span class="mi">1</span><span class="p">:</span> <span class="n">qc_spec</span><span class="p">,</span>
                                     <span class="mi">2</span><span class="p">:</span> <span class="n">qc_spec</span><span class="p">,</span>
                                   <span class="p">},</span>
-                                  <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;nocp&#39;</span><span class="p">],</span>
+                                  <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s1">'nocp'</span><span class="p">],</span>
                                   <span class="n">keywords</span><span class="o">=</span><span class="p">{}</span>
                                  <span class="p">)</span>
 </pre></div>
@@ -932,19 +932,19 @@ PYTHON</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-12">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">qc_spec</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
-            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-            <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31G*&quot;</span><span class="p">,</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+            <span class="n">basis</span><span class="o">=</span><span class="s2">"6-31G*"</span><span class="p">,</span>
           <span class="p">)</span>
 
 <span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_manybodys</span><span class="p">([</span><span class="n">water_dimer</span><span class="p">],</span>
-                                  <span class="n">program</span><span class="o">=</span><span class="s1">&#39;qcmanybody&#39;</span><span class="p">,</span>
+                                  <span class="n">program</span><span class="o">=</span><span class="s1">'qcmanybody'</span><span class="p">,</span>
                                   <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
                                     <span class="mi">1</span><span class="p">:</span> <span class="n">qc_spec</span><span class="p">,</span>
                                     <span class="mi">2</span><span class="p">:</span> <span class="n">qc_spec</span><span class="p">,</span>
                                   <span class="p">},</span>
-                                  <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cp&#39;</span><span class="p">],</span>
+                                  <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s1">'cp'</span><span class="p">],</span>
                                   <span class="n">keywords</span><span class="o">=</span><span class="p">{}</span>
                                  <span class="p">)</span>
 </pre></div>
@@ -960,26 +960,26 @@ PYTHON</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-13">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">qc_spec_1</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
-              <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-              <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-              <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-              <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-tzvp&quot;</span><span class="p">,</span>
+              <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+              <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+              <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+              <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-tzvp"</span><span class="p">,</span>
             <span class="p">)</span>
 
 <span class="n">qc_spec_2</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
-              <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-              <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-              <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-              <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+              <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+              <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+              <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+              <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span>
             <span class="p">)</span>
 
 <span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_manybodys</span><span class="p">([</span><span class="n">water_dimer</span><span class="p">],</span>
-                                  <span class="n">program</span><span class="o">=</span><span class="s1">&#39;qcmanybody&#39;</span><span class="p">,</span>
+                                  <span class="n">program</span><span class="o">=</span><span class="s1">'qcmanybody'</span><span class="p">,</span>
                                   <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
                                     <span class="mi">1</span><span class="p">:</span> <span class="n">qc_spec_1</span><span class="p">,</span>
                                     <span class="mi">2</span><span class="p">:</span> <span class="n">qc_spec_2</span><span class="p">,</span>
                                   <span class="p">},</span>
-                                  <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;nocp&#39;</span><span class="p">],</span>
+                                  <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s1">'nocp'</span><span class="p">],</span>
                                   <span class="n">keywords</span><span class="o">=</span><span class="p">{}</span>
                                  <span class="p">)</span>
 </pre></div>
@@ -998,9 +998,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-14">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span>
-         <span class="s2">&quot;manybody&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;Dataset Name&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;An example of a manybody dataset&quot;</span>
+         <span class="s2">"manybody"</span><span class="p">,</span>
+         <span class="s2">"Dataset Name"</span><span class="p">,</span>
+         <span class="s2">"An example of a manybody dataset"</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -1014,7 +1014,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-15" name="sd-tab-set-15" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-15">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">water_dimer</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">],</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">water_dimer</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">'O'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">,</span> <span class="s1">'O'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">,</span> <span class="s1">'H'</span><span class="p">],</span>
                        <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">2.81211079</span><span class="p">,</span>  <span class="mf">0.1255717</span><span class="p">,</span>   <span class="mf">0.0</span><span class="p">,</span>
                                  <span class="mf">3.48216662</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5543998</span><span class="p">,</span>   <span class="mf">0.0</span><span class="p">,</span>
                                  <span class="mf">1.00578203</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1092573</span><span class="p">,</span>   <span class="mf">0.0</span><span class="p">,</span>
@@ -1024,7 +1024,7 @@ PYTHON</label><div class="sd-tab-content docutils">
                        <span class="n">fragments</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]],</span>
                       <span class="p">)</span>
 
-<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;water_dimer&quot;</span><span class="p">,</span> <span class="n">water_dimer</span><span class="p">)</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">"water_dimer"</span><span class="p">,</span> <span class="n">water_dimer</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1040,8 +1040,8 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.manybody</span><span class="w"> </span><span class="kn">import</span> <span class="n">ManybodyDatasetEntry</span>
 
 <span class="c1"># Construct a list of entries to add somehow</span>
-<span class="n">ent_1</span> <span class="o">=</span> <span class="n">ManybodyDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;water_dimer&quot;</span><span class="p">,</span> <span class="n">initial_molecule</span><span class="o">=</span><span class="n">water_dimer</span><span class="p">)</span>
-<span class="n">ent_2</span> <span class="o">=</span> <span class="n">ManybodyDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;water_stacked&quot;</span><span class="p">,</span> <span class="n">initial_molecule</span><span class="o">=</span><span class="n">water_stacked</span><span class="p">)</span>
+<span class="n">ent_1</span> <span class="o">=</span> <span class="n">ManybodyDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"water_dimer"</span><span class="p">,</span> <span class="n">initial_molecule</span><span class="o">=</span><span class="n">water_dimer</span><span class="p">)</span>
+<span class="n">ent_2</span> <span class="o">=</span> <span class="n">ManybodyDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"water_stacked"</span><span class="p">,</span> <span class="n">initial_molecule</span><span class="o">=</span><span class="n">water_stacked</span><span class="p">)</span>
 
 <span class="n">new_entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">ent_1</span><span class="p">,</span> <span class="n">ent_2</span><span class="p">]</span>
 
@@ -1062,31 +1062,31 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.manybody</span><span class="w"> </span><span class="kn">import</span> <span class="n">ManybodySpecification</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">ManybodySpecification</span><span class="p">(</span>
-           <span class="n">program</span><span class="o">=</span><span class="s2">&quot;qcmanybody&quot;</span><span class="p">,</span>
-           <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nocp&quot;</span><span class="p">,</span> <span class="s2">&quot;cp&quot;</span><span class="p">],</span>
+           <span class="n">program</span><span class="o">=</span><span class="s2">"qcmanybody"</span><span class="p">,</span>
+           <span class="n">bsse_correction</span><span class="o">=</span><span class="p">[</span><span class="s2">"nocp"</span><span class="p">,</span> <span class="s2">"cp"</span><span class="p">],</span>
            <span class="n">levels</span><span class="o">=</span><span class="p">{</span>
                <span class="mi">1</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
-                   <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-                   <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-                   <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ccsd&quot;</span><span class="p">,</span>
-                   <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvqz&quot;</span><span class="p">,</span>
+                   <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+                   <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+                   <span class="n">method</span><span class="o">=</span><span class="s2">"ccsd"</span><span class="p">,</span>
+                   <span class="n">basis</span><span class="o">=</span><span class="s2">"cc-pvqz"</span><span class="p">,</span>
                <span class="p">),</span>
                <span class="mi">2</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
-                   <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-                   <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-                   <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ccsd&quot;</span><span class="p">,</span>
-                   <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvtz&quot;</span><span class="p">,</span>
+                   <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+                   <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+                   <span class="n">method</span><span class="o">=</span><span class="s2">"ccsd"</span><span class="p">,</span>
+                   <span class="n">basis</span><span class="o">=</span><span class="s2">"cc-pvtz"</span><span class="p">,</span>
                <span class="p">),</span>
                <span class="mi">3</span><span class="p">:</span> <span class="n">QCSpecification</span><span class="p">(</span>
-                   <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-                   <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-                   <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ccsd&quot;</span><span class="p">,</span>
-                   <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvdz&quot;</span><span class="p">,</span>
+                   <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+                   <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+                   <span class="n">method</span><span class="o">=</span><span class="s2">"ccsd"</span><span class="p">,</span>
+                   <span class="n">basis</span><span class="o">=</span><span class="s2">"cc-pvdz"</span><span class="p">,</span>
                <span class="p">),</span>
            <span class="p">}</span>
        <span class="p">)</span>
 
-<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;psi4/ccsd/multi&quot;</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">"psi4/ccsd/multi"</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

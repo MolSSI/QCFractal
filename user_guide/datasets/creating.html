@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Using datasets" href="basics.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -549,7 +549,7 @@ function of the <a class="reference internal" href="../qcportal_reference/client
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-0">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="s2">&quot;Optimization of important molecules&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">"optimization"</span><span class="p">,</span> <span class="s2">"Optimization of important molecules"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 <span class="go">27</span>
 </pre></div>
@@ -562,8 +562,8 @@ some for descriptions of the dataset as well as default compute priority and <a 
 <input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-1">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="s2">&quot;Optimization of large molecules&quot;</span><span class="p">,</span>
-<span class="gp">... </span>                         <span class="n">default_compute_tag</span><span class="o">=</span><span class="s2">&quot;large_mem&quot;</span><span class="p">,</span> <span class="n">default_compute_priority</span><span class="o">=</span><span class="s2">&quot;low&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">"optimization"</span><span class="p">,</span> <span class="s2">"Optimization of large molecules"</span><span class="p">,</span>
+<span class="gp">... </span>                         <span class="n">default_compute_tag</span><span class="o">=</span><span class="s2">"large_mem"</span><span class="p">,</span> <span class="n">default_compute_priority</span><span class="o">=</span><span class="s2">"low"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 <span class="go">28</span>
 </pre></div>
@@ -588,16 +588,16 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.molecules</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationDatasetEntry</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;carbon monoxide&quot;</span><span class="p">,</span> <span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">'C'</span><span class="p">,</span> <span class="s1">'O'</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">"carbon monoxide"</span><span class="p">,</span> <span class="n">mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
 <span class="go">InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Can also create lots of entries and add them at once</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mol2</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mol3</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Br&#39;</span><span class="p">,</span> <span class="s1">&#39;Br&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">entry2</span> <span class="o">=</span> <span class="n">OptimizationDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;difluorine&#39;</span><span class="p">,</span> <span class="n">initial_molecule</span><span class="o">=</span><span class="n">mol2</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">entry3</span> <span class="o">=</span> <span class="n">OptimizationDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;dibromine&#39;</span><span class="p">,</span> <span class="n">initial_molecule</span><span class="o">=</span><span class="n">mol3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol2</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">'F'</span><span class="p">,</span> <span class="s1">'F'</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol3</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">'Br'</span><span class="p">,</span> <span class="s1">'Br'</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">entry2</span> <span class="o">=</span> <span class="n">OptimizationDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'difluorine'</span><span class="p">,</span> <span class="n">initial_molecule</span><span class="o">=</span><span class="n">mol2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">entry3</span> <span class="o">=</span> <span class="n">OptimizationDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'dibromine'</span><span class="p">,</span> <span class="n">initial_molecule</span><span class="o">=</span><span class="n">mol3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">add_entries</span><span class="p">([</span><span class="n">entry2</span><span class="p">,</span> <span class="n">entry3</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
 <span class="go">InsertMetadata(error_description=None, errors=[], inserted_idx=[0, 1], existing_idx=[])</span>
@@ -611,7 +611,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-3">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">entry_names</span><span class="p">)</span>
-<span class="go">[&#39;carbon monoxide&#39;, &#39;difluorine&#39;, &#39;dibromine&#39;]</span>
+<span class="go">['carbon monoxide', 'difluorine', 'dibromine']</span>
 </pre></div>
 </div>
 </div>
@@ -627,16 +627,16 @@ PYTHON</label><div class="sd-tab-content docutils">
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Use geometric, compute gradients with psi4. Optimize with b3lyp/def2-tzvp</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">OptimizationSpecification</span><span class="p">(</span>
-<span class="gp">... </span>  <span class="n">program</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span>
+<span class="gp">... </span>  <span class="n">program</span><span class="o">=</span><span class="s1">'geometric'</span><span class="p">,</span>
 <span class="gp">... </span>  <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;deferred&#39;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-tzvp&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">driver</span><span class="o">=</span><span class="s1">'deferred'</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">basis</span><span class="o">=</span><span class="s1">'def2-tzvp'</span><span class="p">,</span>
 <span class="gp">... </span>  <span class="p">)</span>
 <span class="gp">... </span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;psi4/b3lyp/def2-tzvp&#39;</span><span class="p">,</span> <span class="n">specification</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'psi4/b3lyp/def2-tzvp'</span><span class="p">,</span> <span class="n">specification</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
 <span class="go">InsertMetadata(error_description=None, errors=[], inserted_idx=[0], existing_idx=[])</span>
 </pre></div>
@@ -670,10 +670,10 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span> <span class="c1"># Create everything</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Submit missing difluorine computations with a special tag</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">([</span><span class="s1">&#39;difluorine&#39;</span><span class="p">],</span> <span class="n">compute_tag</span><span class="o">=</span><span class="s1">&#39;special_tag&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">([</span><span class="s1">'difluorine'</span><span class="p">],</span> <span class="n">compute_tag</span><span class="o">=</span><span class="s1">'special_tag'</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Submit dibromine hf/sto-3g computation at a high priority</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">([</span><span class="s1">&#39;dibromine&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;hf/sto-3g&#39;</span><span class="p">],</span> <span class="n">compute_priority</span><span class="o">=</span><span class="s1">&#39;high&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">([</span><span class="s1">'dibromine'</span><span class="p">],</span> <span class="p">[</span><span class="s1">'hf/sto-3g'</span><span class="p">],</span> <span class="n">compute_priority</span><span class="o">=</span><span class="s1">'high'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -705,7 +705,7 @@ by both datasets.</p>
 <input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-7">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cloned_ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">clone_dataset</span><span class="p">(</span><span class="mi">432</span><span class="p">,</span> <span class="s2">&quot;New dataset name&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cloned_ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">clone_dataset</span><span class="p">(</span><span class="mi">432</span><span class="p">,</span> <span class="s2">"New dataset name"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">cloned_ds</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 <span class="go">New dataset name</span>
 
@@ -739,19 +739,19 @@ the records. The records themselves are not duplicated - instead, the records wi
 <input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-8">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span> <span class="s2">&quot;New combined dataset&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">"singlepoint"</span><span class="p">,</span> <span class="s2">"New combined dataset"</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># If no entry_names are given, all entries will be copied</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">copy_entries_from</span><span class="p">(</span><span class="mi">432</span><span class="p">,</span> <span class="n">entry_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;010 ALA-0&#39;</span><span class="p">,</span> <span class="s1">&#39;010 ALA-1&#39;</span><span class="p">,</span> <span class="s1">&#39;010 ALA-2&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">copy_entries_from</span><span class="p">(</span><span class="mi">432</span><span class="p">,</span> <span class="n">entry_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'010 ALA-0'</span><span class="p">,</span> <span class="s1">'010 ALA-1'</span><span class="p">,</span> <span class="s1">'010 ALA-2'</span><span class="p">])</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">entry_names</span><span class="p">)</span>
-<span class="go">[&#39;010 ALA-0&#39;, &#39;010 ALA-1&#39;, &#39;010 ALA-2&#39;]</span>
+<span class="go">['010 ALA-0', '010 ALA-1', '010 ALA-2']</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># If no specification_names are given, all specifications will be copied</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">copy_specifications_from</span><span class="p">(</span><span class="mi">432</span><span class="p">,</span> <span class="n">specification_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;wb97m-d3bj/def2-tzvppd&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">copy_specifications_from</span><span class="p">(</span><span class="mi">432</span><span class="p">,</span> <span class="n">specification_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'wb97m-d3bj/def2-tzvppd'</span><span class="p">])</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">specification_names</span><span class="p">)</span>
-<span class="go">[&#39;wb97m-d3bj/def2-tzvppd&#39;]</span>
+<span class="go">['wb97m-d3bj/def2-tzvppd']</span>
 </pre></div>
 </div>
 </div>
@@ -761,19 +761,19 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-9">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span> <span class="s2">&quot;New combined dataset&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">"singlepoint"</span><span class="p">,</span> <span class="s2">"New combined dataset"</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># If no entry_names or specification_names are given, all will be copied from the source</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">copy_records_from</span><span class="p">(</span><span class="mi">432</span><span class="p">,</span> <span class="n">entry_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;010 ALA-0&#39;</span><span class="p">,</span> <span class="s1">&#39;010 ALA-1&#39;</span><span class="p">,</span> <span class="s1">&#39;010 ALA-2&#39;</span><span class="p">],</span> <span class="n">specification_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;wb97m-d3bj/def2-tzvppd&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">copy_records_from</span><span class="p">(</span><span class="mi">432</span><span class="p">,</span> <span class="n">entry_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'010 ALA-0'</span><span class="p">,</span> <span class="s1">'010 ALA-1'</span><span class="p">,</span> <span class="s1">'010 ALA-2'</span><span class="p">],</span> <span class="n">specification_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'wb97m-d3bj/def2-tzvppd'</span><span class="p">])</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">entry_names</span><span class="p">)</span>
-<span class="go">[&#39;010 ALA-0&#39;, &#39;010 ALA-1&#39;, &#39;010 ALA-2&#39;]</span>
+<span class="go">['010 ALA-0', '010 ALA-1', '010 ALA-2']</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># If no specification_names are given, all specifications will be copied</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">copy_specifications_from</span><span class="p">(</span><span class="mi">432</span><span class="p">,</span> <span class="n">specification_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;wb97m-d3bj/def2-tzvppd&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">copy_specifications_from</span><span class="p">(</span><span class="mi">432</span><span class="p">,</span> <span class="n">specification_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'wb97m-d3bj/def2-tzvppd'</span><span class="p">])</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">specification_names</span><span class="p">)</span>
-<span class="go">[&#39;wb97m-d3bj/def2-tzvppd&#39;]</span>
+<span class="go">['wb97m-d3bj/def2-tzvppd']</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">print_status</span><span class="p">()</span>
 <span class="go">         specification    complete</span>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Record &amp; Computation Types" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -612,7 +612,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="go">RecordStatusEnum.error</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">compute_history</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">provenance</span><span class="p">)</span>
-<span class="go">Provenance(creator=&#39;Psi4&#39;, version=&#39;1.9.1&#39;...</span>
+<span class="go">Provenance(creator='Psi4', version='1.9.1'...</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">compute_history</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">modified_on</span><span class="p">)</span>
 <span class="go">2024-04-19 15:14:31.128937+00:00</span>
@@ -684,7 +684,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
 <span class="go">RecordStatusEnum.error</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">error</span><span class="p">[</span><span class="s2">&quot;error_message&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">error</span><span class="p">[</span><span class="s2">"error_message"</span><span class="p">])</span>
 <span class="go">QCEngine Unknown Error:</span>
 <span class="go">    -----------------------------------------------------------------------</span>
 <span class="go">          Psi4: An Open-Source Ab Initio Electronic Structure Package</span>
@@ -698,10 +698,10 @@ PYTHON</label><div class="sd-tab-content docutils">
 
 <span class="go">...</span>
 
-<span class="go">File &quot;/home/users/qcfuser/miniconda3/envs/qcfractal-worker-psi4-18.1/lib/python3.10/site-packages/psi4/driver/procrouting/scf_proc/scf_iterator.py&quot;, line 85, in scf_compute_energy</span>
+<span class="go">File "/home/users/qcfuser/miniconda3/envs/qcfractal-worker-psi4-18.1/lib/python3.10/site-packages/psi4/driver/procrouting/scf_proc/scf_iterator.py", line 85, in scf_compute_energy</span>
 <span class="go">  self.iterations()</span>
-<span class="go">File &quot;/home/users/qcfuser/miniconda3/envs/qcfractal-worker-psi4-18.1/lib/python3.10/site-packages/psi4/driver/procrouting/scf_proc/scf_iterator.py&quot;, line 526, in scf_iterate</span>
-<span class="go">  raise SCFConvergenceError(&quot;&quot;&quot;SCF iterations&quot;&quot;&quot;, self.iteration_, self, Ediff, Dnorm)</span>
+<span class="go">File "/home/users/qcfuser/miniconda3/envs/qcfractal-worker-psi4-18.1/lib/python3.10/site-packages/psi4/driver/procrouting/scf_proc/scf_iterator.py", line 526, in scf_iterate</span>
+<span class="go">  raise SCFConvergenceError("""SCF iterations""", self.iteration_, self, Ediff, Dnorm)</span>
 <span class="go">psi4.driver.p4util.exceptions.SCFConvergenceError: Could not converge SCF iterations in 200 iterations.</span>
 </pre></div>
 </div>
@@ -721,9 +721,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-<span class="go">dict_keys([&#39;pe energy&#39;, &#39;scf dipole&#39;, &#39;calcinfo_nmo&#39;,...</span>
+<span class="go">dict_keys(['pe energy', 'scf dipole', 'calcinfo_nmo',...</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s2">&quot;scf dipole&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s2">"scf dipole"</span><span class="p">])</span>
 <span class="go">[0.5734967483313045, 0.5734967483328919, 0.0]</span>
 </pre></div>
 </div>
@@ -748,12 +748,12 @@ in python. See <a class="reference internal" href="../qcportal_reference/records
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">native_files</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-<span class="go">dict_keys([&#39;output.dat&#39;, &#39;input.dat&#39;])</span>
+<span class="go">dict_keys(['output.dat', 'input.dat'])</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">native_files</span><span class="p">[</span><span class="s2">&quot;input.dat&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">native_files</span><span class="p">[</span><span class="s2">"input.dat"</span><span class="p">])</span>
 <span class="go">Input file contents</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">native_files</span><span class="p">[</span><span class="s2">&quot;input.dat&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">save_file</span><span class="p">(</span><span class="s2">&quot;./&quot;</span><span class="p">,</span> <span class="n">new_name</span><span class="o">=</span><span class="s2">&quot;input_copy.dat&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">native_files</span><span class="p">[</span><span class="s2">"input.dat"</span><span class="p">]</span><span class="o">.</span><span class="n">save_file</span><span class="p">(</span><span class="s2">"./"</span><span class="p">,</span> <span class="n">new_name</span><span class="o">=</span><span class="s2">"input_copy.dat"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -766,11 +766,11 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-6" name="sd-tab-set-6" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-6">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">add_comment</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;My very first computation&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">add_comment</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="s2">"My very first computation"</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">comments</span><span class="p">)</span>
-<span class="go">[RecordComment(id=1, record_id=1, username=&#39;ben&#39;,...</span>
+<span class="go">[RecordComment(id=1, record_id=1, username='ben',...</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">comments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">comment</span><span class="p">)</span>
 <span class="go">My very first computation</span>

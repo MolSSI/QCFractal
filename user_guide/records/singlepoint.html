@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Base Record" href="base.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -580,10 +580,10 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-    <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+    <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -600,10 +600,10 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-    <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;gradient&quot;</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+    <span class="n">driver</span><span class="o">=</span><span class="s2">"gradient"</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -620,9 +620,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;rdkit&quot;</span><span class="p">,</span>
-    <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;uff&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"rdkit"</span><span class="p">,</span>
+    <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">"uff"</span><span class="p">,</span>
     <span class="n">basis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
@@ -640,18 +640,18 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-    <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+    <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span>
     <span class="n">keywords</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;guess&quot;</span><span class="p">:</span> <span class="s2">&quot;sad&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
-        <span class="s2">&quot;mp2_type&quot;</span><span class="p">:</span> <span class="s2">&quot;df&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;scf_type&quot;</span><span class="p">:</span> <span class="s2">&quot;df&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;freeze_core&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s2">&quot;d_convergence&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
-        <span class="s2">&quot;e_convergence&quot;</span><span class="p">:</span> <span class="mi">8</span>
+        <span class="s2">"guess"</span><span class="p">:</span> <span class="s2">"sad"</span><span class="p">,</span>
+        <span class="s2">"maxiter"</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="s2">"mp2_type"</span><span class="p">:</span> <span class="s2">"df"</span><span class="p">,</span>
+        <span class="s2">"scf_type"</span><span class="p">:</span> <span class="s2">"df"</span><span class="p">,</span>
+        <span class="s2">"freeze_core"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"d_convergence"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+        <span class="s2">"e_convergence"</span><span class="p">:</span> <span class="mi">8</span>
     <span class="p">}</span>
 <span class="p">)</span>
 </pre></div>
@@ -669,12 +669,12 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-    <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+    <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span>
     <span class="n">protocols</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;stdout&quot;</span><span class="p">:</span> <span class="kc">False</span>
+        <span class="s2">"stdout"</span><span class="p">:</span> <span class="kc">False</span>
     <span class="p">}</span>
 <span class="p">)</span>
 </pre></div>
@@ -692,12 +692,12 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-    <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+    <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span>
     <span class="n">protocols</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;wavefunction&quot;</span><span class="p">:</span> <span class="s2">&quot;all&quot;</span>
+        <span class="s2">"wavefunction"</span><span class="p">:</span> <span class="s2">"all"</span>
     <span class="p">}</span>
 <span class="p">)</span>
 </pre></div>
@@ -715,13 +715,13 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-    <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+    <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span>
     <span class="n">protocols</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;wavefunction&quot;</span><span class="p">:</span> <span class="s2">&quot;orbitals_and_eigenvalues&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;native_files&quot;</span><span class="p">:</span> <span class="s2">&quot;all&quot;</span>
+        <span class="s2">"wavefunction"</span><span class="p">:</span> <span class="s2">"orbitals_and_eigenvalues"</span><span class="p">,</span>
+        <span class="s2">"native_files"</span><span class="p">:</span> <span class="s2">"all"</span>
     <span class="p">}</span>
 <span class="p">)</span>
 </pre></div>
@@ -764,19 +764,19 @@ an optimization dataset resets them to an empty dictionary, since an optimizatio
 <input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-7">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span> <span class="s2">&quot;Dataset from optimization&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">"singlepoint"</span><span class="p">,</span> <span class="s2">"Dataset from optimization"</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># From an optimization dataset, identified by ID</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_entries_from</span><span class="p">(</span><span class="n">dataset_id</span><span class="o">=</span><span class="mi">377</span><span class="p">,</span> <span class="n">specification_name</span><span class="o">=</span><span class="s1">&#39;default&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_entries_from</span><span class="p">(</span><span class="n">dataset_id</span><span class="o">=</span><span class="mi">377</span><span class="p">,</span> <span class="n">specification_name</span><span class="o">=</span><span class="s1">'default'</span><span class="p">)</span>
 <span class="go">InsertCountsMetadata(n_inserted=20, n_existing=0, error_description=None, errors=[])</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">entry_names</span><span class="p">)</span>
-<span class="go">[&#39;000280960&#39;, &#39;000524682&#39;, &#39;010464300&#39;, ...</span>
+<span class="go">['000280960', '000524682', '010464300', ...</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># The source may also be given by type and name</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_entries_from</span><span class="p">(</span><span class="n">dataset_type</span><span class="o">=</span><span class="s1">&#39;optimization&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                    <span class="n">dataset_name</span><span class="o">=</span><span class="s1">&#39;Diatomic geometries&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                    <span class="n">specification_name</span><span class="o">=</span><span class="s1">&#39;default&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_entries_from</span><span class="p">(</span><span class="n">dataset_type</span><span class="o">=</span><span class="s1">'optimization'</span><span class="p">,</span>
+<span class="gp">... </span>                    <span class="n">dataset_name</span><span class="o">=</span><span class="s1">'Diatomic geometries'</span><span class="p">,</span>
+<span class="gp">... </span>                    <span class="n">specification_name</span><span class="o">=</span><span class="s1">'default'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -831,7 +831,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-11" name="sd-tab-set-11" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-11">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_lst</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_singlepoints</span><span class="p">([</span><span class="mi">123</span><span class="p">,</span> <span class="mi">456</span><span class="p">],</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;**&#39;</span><span class="p">])</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_lst</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_singlepoints</span><span class="p">([</span><span class="mi">123</span><span class="p">,</span> <span class="mi">456</span><span class="p">],</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">'**'</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -844,7 +844,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-12" name="sd-tab-set-12" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-12">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_singlepoints</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_singlepoints</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">'def2-svp'</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 </pre></div>
@@ -859,9 +859,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-13" name="sd-tab-set-13" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-13">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_singlepoints</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span>
-                                   <span class="n">created_after</span><span class="o">=</span><span class="s1">&#39;2024-03-21 12:34:56&#39;</span><span class="p">,</span>
-                                   <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;**&#39;</span><span class="p">],</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_singlepoints</span><span class="p">(</span><span class="n">program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span>
+                                   <span class="n">created_after</span><span class="o">=</span><span class="s1">'2024-03-21 12:34:56'</span><span class="p">,</span>
+                                   <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">'**'</span><span class="p">],</span>
                                    <span class="n">limit</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
@@ -878,10 +878,10 @@ PYTHON</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-14">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">([</span><span class="n">mol1</span><span class="p">,</span> <span class="n">mol2</span><span class="p">],</span>
-                                    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span>
-                                    <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span>
-                                    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span>
-                                    <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">)</span>
+                                    <span class="n">program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span>
+                                    <span class="n">driver</span><span class="o">=</span><span class="s1">'energy'</span><span class="p">,</span>
+                                    <span class="n">method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span>
+                                    <span class="n">basis</span><span class="o">=</span><span class="s1">'def2-svp'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -895,11 +895,11 @@ PYTHON</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-15">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">([</span><span class="n">mol1</span><span class="p">,</span> <span class="n">mol2</span><span class="p">],</span>
-                                    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span>
-                                    <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span>
-                                    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span>
-                                    <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">,</span>
-                                    <span class="n">keywords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;scf_type&#39;</span><span class="p">:</span> <span class="s1">&#39;df&#39;</span><span class="p">})</span>
+                                    <span class="n">program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span>
+                                    <span class="n">driver</span><span class="o">=</span><span class="s1">'energy'</span><span class="p">,</span>
+                                    <span class="n">method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span>
+                                    <span class="n">basis</span><span class="o">=</span><span class="s1">'def2-svp'</span><span class="p">,</span>
+                                    <span class="n">keywords</span><span class="o">=</span><span class="p">{</span><span class="s1">'scf_type'</span><span class="p">:</span> <span class="s1">'df'</span><span class="p">})</span>
 </pre></div>
 </div>
 </div>
@@ -913,11 +913,11 @@ PYTHON</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-16">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">([</span><span class="n">mol1</span><span class="p">,</span> <span class="n">mol2</span><span class="p">],</span>
-                                    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span>
-                                    <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span>
-                                    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span>
-                                    <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">,</span>
-                                    <span class="n">protocols</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;stdout&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
+                                    <span class="n">program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span>
+                                    <span class="n">driver</span><span class="o">=</span><span class="s1">'energy'</span><span class="p">,</span>
+                                    <span class="n">method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span>
+                                    <span class="n">basis</span><span class="o">=</span><span class="s1">'def2-svp'</span><span class="p">,</span>
+                                    <span class="n">protocols</span><span class="o">=</span><span class="p">{</span><span class="s1">'stdout'</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
 </pre></div>
 </div>
 </div>
@@ -931,11 +931,11 @@ PYTHON</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-17">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">([</span><span class="n">mol1</span><span class="p">,</span> <span class="n">mol2</span><span class="p">],</span>
-                                    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span>
-                                    <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span>
-                                    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span>
-                                    <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">,</span>
-                                    <span class="n">protocols</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;wavefunction&#39;</span><span class="p">:</span> <span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;native_files&#39;</span><span class="p">:</span> <span class="s1">&#39;all&#39;</span><span class="p">})</span>
+                                    <span class="n">program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span>
+                                    <span class="n">driver</span><span class="o">=</span><span class="s1">'energy'</span><span class="p">,</span>
+                                    <span class="n">method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span>
+                                    <span class="n">basis</span><span class="o">=</span><span class="s1">'def2-svp'</span><span class="p">,</span>
+                                    <span class="n">protocols</span><span class="o">=</span><span class="p">{</span><span class="s1">'wavefunction'</span><span class="p">:</span> <span class="s1">'all'</span><span class="p">,</span> <span class="s1">'native_files'</span><span class="p">:</span> <span class="s1">'all'</span><span class="p">})</span>
 </pre></div>
 </div>
 </div>
@@ -954,9 +954,9 @@ See the <a class="reference internal" href="#singlepoint-specification"><span cl
 <label class="sd-tab-label" for="sd-tab-item-18">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span>
-         <span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;Dataset Name&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;An example of a singlepoint dataset&quot;</span>
+         <span class="s2">"singlepoint"</span><span class="p">,</span>
+         <span class="s2">"Dataset Name"</span><span class="p">,</span>
+         <span class="s2">"An example of a singlepoint dataset"</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -970,8 +970,8 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-19" name="sd-tab-set-19" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-19">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">h2_mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">])</span>
-<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;hydrogen&quot;</span><span class="p">,</span> <span class="n">h2_mol</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">h2_mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">'h'</span><span class="p">,</span> <span class="s1">'h'</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">])</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">"hydrogen"</span><span class="p">,</span> <span class="n">h2_mol</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -988,9 +988,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 
 <span class="c1"># Construct a list of entries to add somehow</span>
 <span class="n">new_entries</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">]:</span>
+<span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'h'</span><span class="p">,</span> <span class="s1">'n'</span><span class="p">,</span> <span class="s1">'o'</span><span class="p">]:</span>
     <span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="n">element</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-    <span class="n">ent</span> <span class="o">=</span> <span class="n">SinglepointDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">element</span><span class="si">}</span><span class="s2">_atom&quot;</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">)</span>
+    <span class="n">ent</span> <span class="o">=</span> <span class="n">SinglepointDatasetEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">element</span><span class="si">}</span><span class="s2">_atom"</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">)</span>
     <span class="n">new_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ent</span><span class="p">)</span>
 
 <span class="c1"># Efficiently add all entries in a single call</span>
@@ -1010,13 +1010,13 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-    <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+    <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;psi4/b3lyp/def2-svp&quot;</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">"psi4/b3lyp/def2-svp"</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Manybody calculations" href="manybody.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -635,12 +635,12 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">rxn_spec</span> <span class="o">=</span> <span class="n">ReactionSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;reaction&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"reaction"</span><span class="p">,</span>
     <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-        <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-        <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+        <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">ReactionKeywords</span><span class="p">(),</span>
 <span class="p">)</span>
@@ -661,11 +661,11 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">rxn_spec</span> <span class="o">=</span> <span class="n">ReactionSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;reaction&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"reaction"</span><span class="p">,</span>
     <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"geometric"</span><span class="p">,</span>
         <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"deferred"</span>
         <span class="p">),</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">ReactionKeywords</span><span class="p">(),</span>
@@ -687,20 +687,20 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">rxn_spec</span> <span class="o">=</span> <span class="n">ReactionSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;reaction&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"reaction"</span><span class="p">,</span>
     <span class="c1"># Optimize with b3lyp/def2-svp ...</span>
     <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"geometric"</span><span class="p">,</span>
         <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-            <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span>
+            <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"deferred"</span>
         <span class="p">),</span>
     <span class="p">),</span>
     <span class="c1"># ... but take the energies from ccsd(t)/def2-tzvp</span>
     <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-        <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ccsd(t)&quot;</span><span class="p">,</span>
-        <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-tzvp&quot;</span><span class="p">,</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">"ccsd(t)"</span><span class="p">,</span>
+        <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-tzvp"</span><span class="p">,</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">ReactionKeywords</span><span class="p">(),</span>
 <span class="p">)</span>
@@ -806,7 +806,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-6" name="sd-tab-set-6" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-6">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_reactions</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;**&#39;</span><span class="p">])</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_reactions</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">'**'</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -819,7 +819,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-7">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_reactions</span><span class="p">(</span><span class="n">qc_method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">qc_basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_reactions</span><span class="p">(</span><span class="n">qc_method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span> <span class="n">qc_basis</span><span class="o">=</span><span class="s1">'def2-svp'</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">total_energy</span><span class="p">)</span>
 </pre></div>
@@ -855,9 +855,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="c1"># Dissociation of a water dimer</span>
 <span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_reactions</span><span class="p">(</span>
     <span class="p">[[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">water_dimer</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">water</span><span class="p">)]],</span>
-    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;reaction&#39;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s1">'reaction'</span><span class="p">,</span>
     <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span>
+        <span class="n">program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">'energy'</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">'def2-svp'</span>
     <span class="p">),</span>
     <span class="n">optimization_specification</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">ReactionKeywords</span><span class="p">(),</span>
@@ -880,14 +880,14 @@ PYTHON</label><div class="sd-tab-content docutils">
 
 <span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_reactions</span><span class="p">(</span>
     <span class="p">[[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">water_dimer</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">water</span><span class="p">)]],</span>
-    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;reaction&#39;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s1">'reaction'</span><span class="p">,</span>
     <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;ccsd(t)&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-tzvp&#39;</span>
+        <span class="n">program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">'energy'</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'ccsd(t)'</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">'def2-tzvp'</span>
     <span class="p">),</span>
     <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span>
+        <span class="n">program</span><span class="o">=</span><span class="s1">'geometric'</span><span class="p">,</span>
         <span class="n">qc_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-            <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;deferred&#39;</span>
+            <span class="n">program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">'def2-svp'</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">'deferred'</span>
         <span class="p">),</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">ReactionKeywords</span><span class="p">(),</span>
@@ -913,9 +913,9 @@ PYTHON</label><div class="sd-tab-content docutils">
         <span class="p">[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">water_dimer</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">water</span><span class="p">)],</span>
         <span class="p">[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">methanol_dimer</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">methanol</span><span class="p">)],</span>
     <span class="p">],</span>
-    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;reaction&#39;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s1">'reaction'</span><span class="p">,</span>
     <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span>
+        <span class="n">program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">'energy'</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">'def2-svp'</span>
     <span class="p">),</span>
     <span class="n">optimization_specification</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">ReactionKeywords</span><span class="p">(),</span>
@@ -937,7 +937,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="go">-0.008132215079</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">coefficient</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">molecule</span><span class="o">.</span><span class="n">get_molecular_formula</span><span class="p">(),</span> <span class="n">c</span><span class="o">.</span><span class="n">singlepoint_record</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s1">&#39;return_energy&#39;</span><span class="p">])</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">coefficient</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">molecule</span><span class="o">.</span><span class="n">get_molecular_formula</span><span class="p">(),</span> <span class="n">c</span><span class="o">.</span><span class="n">singlepoint_record</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s1">'return_energy'</span><span class="p">])</span>
 <span class="go">-1.0 H4O2 -152.1032871</span>
 <span class="go">2.0 H2O -76.0475774</span>
 </pre></div>
@@ -959,9 +959,9 @@ specifications.</p>
 <label class="sd-tab-label" for="sd-tab-item-13">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span>
-         <span class="s2">&quot;reaction&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;Dataset Name&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;An example of a reaction dataset&quot;</span>
+         <span class="s2">"reaction"</span><span class="p">,</span>
+         <span class="s2">"Dataset Name"</span><span class="p">,</span>
+         <span class="s2">"An example of a reaction dataset"</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -975,7 +975,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-14" name="sd-tab-set-14" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-14">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;water dimer dissociation&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">water_dimer</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">water</span><span class="p">)])</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">"water dimer dissociation"</span><span class="p">,</span> <span class="p">[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">water_dimer</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">water</span><span class="p">)])</span>
 </pre></div>
 </div>
 </div>
@@ -992,14 +992,14 @@ PYTHON</label><div class="sd-tab-content docutils">
 
 <span class="c1"># Dimer/monomer pairs worked out beforehand</span>
 <span class="n">dissociations</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">(</span><span class="s2">&quot;water&quot;</span><span class="p">,</span> <span class="n">water_dimer</span><span class="p">,</span> <span class="n">water</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">&quot;methanol&quot;</span><span class="p">,</span> <span class="n">methanol_dimer</span><span class="p">,</span> <span class="n">methanol</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">&quot;ammonia&quot;</span><span class="p">,</span> <span class="n">ammonia_dimer</span><span class="p">,</span> <span class="n">ammonia</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"water"</span><span class="p">,</span> <span class="n">water_dimer</span><span class="p">,</span> <span class="n">water</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"methanol"</span><span class="p">,</span> <span class="n">methanol_dimer</span><span class="p">,</span> <span class="n">methanol</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"ammonia"</span><span class="p">,</span> <span class="n">ammonia_dimer</span><span class="p">,</span> <span class="n">ammonia</span><span class="p">),</span>
 <span class="p">]</span>
 
 <span class="n">new_entries</span> <span class="o">=</span> <span class="p">[</span>
     <span class="n">ReactionDatasetNewEntry</span><span class="p">(</span>
-        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> dimer dissociation&quot;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> dimer dissociation"</span><span class="p">,</span>
         <span class="n">stoichiometries</span><span class="o">=</span><span class="p">[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">dimer</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">monomer</span><span class="p">)],</span>
     <span class="p">)</span>
     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dimer</span><span class="p">,</span> <span class="n">monomer</span> <span class="ow">in</span> <span class="n">dissociations</span>
@@ -1024,7 +1024,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.reaction.dataset_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReactionDatasetEntryStoichiometry</span>
 
 <span class="n">ent</span> <span class="o">=</span> <span class="n">ReactionDatasetNewEntry</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;methane combustion&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"methane combustion"</span><span class="p">,</span>
     <span class="n">stoichiometries</span><span class="o">=</span><span class="p">[</span>
         <span class="n">ReactionDatasetEntryStoichiometry</span><span class="p">(</span><span class="n">coefficient</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="n">methane</span><span class="p">),</span>
         <span class="n">ReactionDatasetEntryStoichiometry</span><span class="p">(</span><span class="n">coefficient</span><span class="o">=-</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">molecule</span><span class="o">=</span><span class="n">o2</span><span class="p">),</span>
@@ -1050,17 +1050,17 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">rxn_spec</span> <span class="o">=</span> <span class="n">ReactionSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;reaction&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"reaction"</span><span class="p">,</span>
     <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-        <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-        <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s2">"energy"</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+        <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">ReactionKeywords</span><span class="p">(),</span>
 <span class="p">)</span>
 
-<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;psi4/b3lyp/def2-svp&quot;</span><span class="p">,</span> <span class="n">rxn_spec</span><span class="p">)</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">"psi4/b3lyp/def2-svp"</span><span class="p">,</span> <span class="n">rxn_spec</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1073,7 +1073,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-18" name="sd-tab-set-18" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-18">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_records</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s1">&#39;complete&#39;</span><span class="p">):</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">iterate_records</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s1">'complete'</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">e_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">total_energy</span><span class="p">)</span>
 <span class="go">water dimer dissociation psi4/b3lyp/def2-svp -0.008132215079</span>
 <span class="go">water dimer dissociation psi4/mp2/def2-tzvp -0.007984120012</span>

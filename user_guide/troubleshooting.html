@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../_static/documentation_options.js?v=44078078"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Managing Records" href="record_management.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -556,15 +556,15 @@ object.</p>
 <label class="sd-tab-label" for="sd-tab-item-0">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">get_waiting_reason</span><span class="p">(</span><span class="mi">118326390</span><span class="p">)</span>
-<span class="go">{&#39;reason&#39;: &#39;No manager matches programs &amp; tags&#39;,</span>
-<span class="go"> &#39;details&#39;: {&#39;test_cluster-a_host1-1234-5678&#39;: &quot;Manager missing programs: {&#39;psi4&#39;}&quot;,</span>
-<span class="go">             &#39;test_cluster-a_host2-8765-4321&#39;: &#39;Manager does not handle tag &quot;big_mem&quot;&#39;}}</span>
+<span class="go">{'reason': 'No manager matches programs &amp; tags',</span>
+<span class="go"> 'details': {'test_cluster-a_host1-1234-5678': "Manager missing programs: {'psi4'}",</span>
+<span class="go">             'test_cluster-a_host2-8765-4321': 'Manager does not handle tag "big_mem"'}}</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Or from the record</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">118326390</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">get_waiting_reason</span><span class="p">()</span>
-<span class="go">{&#39;reason&#39;: &#39;Waiting for a free manager&#39;,</span>
-<span class="go"> &#39;details&#39;: {&#39;test_cluster-a_host1-1234-5678&#39;: &#39;Manager is busy&#39;}}</span>
+<span class="go">{'reason': 'Waiting for a free manager',</span>
+<span class="go"> 'details': {'test_cluster-a_host1-1234-5678': 'Manager is busy'}}</span>
 </pre></div>
 </div>
 </div>
@@ -613,10 +613,10 @@ can check with <a class="reference internal" href="qcportal_reference/clients.ht
 <input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-1">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">query_managers</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s1">&#39;active&#39;</span><span class="p">):</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">query_managers</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s1">'active'</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">compute_tags</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">programs</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
-<span class="go">test_cluster-a_host1-1234-5678 [&#39;big_mem&#39;] [&#39;geometric&#39;, &#39;qcengine&#39;]</span>
-<span class="go">test_cluster-a_host2-8765-4321 [&#39;*&#39;] [&#39;psi4&#39;, &#39;qcengine&#39;, &#39;rdkit&#39;]</span>
+<span class="go">test_cluster-a_host1-1234-5678 ['big_mem'] ['geometric', 'qcengine']</span>
+<span class="go">test_cluster-a_host2-8765-4321 ['*'] ['psi4', 'qcengine', 'rdkit']</span>
 </pre></div>
 </div>
 </div>
@@ -632,9 +632,9 @@ also has <code class="docutils literal notranslate"><span class="pre">*</span></
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">118326390</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">compute_tag</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">required_programs</span><span class="p">)</span>
-<span class="go">big_mem [&#39;psi4&#39;, &#39;qcengine&#39;]</span>
+<span class="go">big_mem ['psi4', 'qcengine']</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">modify_records</span><span class="p">(</span><span class="mi">118326390</span><span class="p">,</span> <span class="n">new_compute_tag</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">modify_records</span><span class="p">(</span><span class="mi">118326390</span><span class="p">,</span> <span class="n">new_compute_tag</span><span class="o">=</span><span class="s1">'*'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -645,11 +645,11 @@ time - given a tag and a set of programs, which managers could take such a task.
 <input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-3">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">query_active_managers</span><span class="p">(</span><span class="n">compute_tag</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;big_mem&#39;</span><span class="p">],</span> <span class="n">programs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;psi4&#39;</span><span class="p">:</span> <span class="p">[]})</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">query_active_managers</span><span class="p">(</span><span class="n">compute_tag</span><span class="o">=</span><span class="p">[</span><span class="s1">'big_mem'</span><span class="p">],</span> <span class="n">programs</span><span class="o">=</span><span class="p">{</span><span class="s1">'psi4'</span><span class="p">:</span> <span class="p">[]})</span>
 <span class="go">[]</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">query_active_managers</span><span class="p">(</span><span class="n">compute_tag</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;*&#39;</span><span class="p">],</span> <span class="n">programs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;psi4&#39;</span><span class="p">:</span> <span class="p">[]})</span>
-<span class="go">[&#39;test_cluster-a_host2-8765-4321&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">query_active_managers</span><span class="p">(</span><span class="n">compute_tag</span><span class="o">=</span><span class="p">[</span><span class="s1">'*'</span><span class="p">],</span> <span class="n">programs</span><span class="o">=</span><span class="p">{</span><span class="s1">'psi4'</span><span class="p">:</span> <span class="p">[]})</span>
+<span class="go">['test_cluster-a_host2-8765-4321']</span>
 </pre></div>
 </div>
 </div>
@@ -678,10 +678,10 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
 <span class="go">RecordStatusEnum.error</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">error</span><span class="p">[</span><span class="s2">&quot;error_type&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">error</span><span class="p">[</span><span class="s2">"error_type"</span><span class="p">])</span>
 <span class="go">unknown_error</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">error</span><span class="p">[</span><span class="s2">&quot;error_message&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">error</span><span class="p">[</span><span class="s2">"error_message"</span><span class="p">])</span>
 <span class="go">QCEngine Unknown Error:</span>
 <span class="go">...</span>
 <span class="go">psi4.driver.p4util.exceptions.SCFConvergenceError: Could not converge SCF iterations in 200 iterations.</span>
@@ -712,8 +712,8 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-6" name="sd-tab-set-6" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-6">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">query_records</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">record_type</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">error</span><span class="p">[</span><span class="s2">&quot;error_type&quot;</span><span class="p">])</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">query_records</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s1">'error'</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">record_type</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">error</span><span class="p">[</span><span class="s2">"error_type"</span><span class="p">])</span>
 <span class="go">118326390 singlepoint unknown_error</span>
 <span class="go">118326404 optimization compute_error</span>
 
@@ -828,7 +828,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="go">https://ml.qcarchive.molssi.org/</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">info</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_server_information</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">"version"</span><span class="p">])</span>
 <span class="go">0.65</span>
 </pre></div>
 </div>

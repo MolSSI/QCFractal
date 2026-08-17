@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -456,9 +456,9 @@
                 <article class="bd-article">
                   
   <h1>Source code for qcfractal.config</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""</span>
 <span class="sd">The global qcfractal config file specification.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
@@ -481,7 +481,7 @@
     <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">default_filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="c1"># Path isn&#39;t specified, but default is given</span>
+    <span class="c1"># Path isn't specified, but default is given</span>
     <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">default_filename</span>
 
@@ -501,101 +501,101 @@
     <span class="n">dbname</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">query</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="n">username</span> <span class="o">=</span> <span class="n">username</span> <span class="k">if</span> <span class="n">username</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">password</span> <span class="o">=</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="n">password</span> <span class="k">if</span> <span class="n">password</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">sep</span> <span class="o">=</span> <span class="s2">&quot;@&quot;</span> <span class="k">if</span> <span class="n">username</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span> <span class="ow">or</span> <span class="n">password</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">query_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">query</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&amp;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">query</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">username</span> <span class="k">if</span> <span class="n">username</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="s2">":"</span> <span class="o">+</span> <span class="n">password</span> <span class="k">if</span> <span class="n">password</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="n">sep</span> <span class="o">=</span> <span class="s2">"@"</span> <span class="k">if</span> <span class="n">username</span> <span class="o">!=</span> <span class="s2">""</span> <span class="ow">or</span> <span class="n">password</span> <span class="o">!=</span> <span class="s2">""</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="n">query_str</span> <span class="o">=</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">query</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"&amp;"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">query</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
 
     <span class="c1"># If this is a socket file, move the host to the query params</span>
-    <span class="k">if</span> <span class="n">host</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">):</span>
-        <span class="n">query_str</span> <span class="o">=</span> <span class="s2">&quot;&amp;&quot;</span> <span class="o">+</span> <span class="n">query_str</span> <span class="k">if</span> <span class="n">query_str</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;postgresql://</span><span class="si">{</span><span class="n">username</span><span class="si">}{</span><span class="n">password</span><span class="si">}{</span><span class="n">sep</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">dbname</span><span class="si">}</span><span class="s2">?host=</span><span class="si">{</span><span class="n">host</span><span class="si">}{</span><span class="n">query_str</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">if</span> <span class="n">host</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"/"</span><span class="p">):</span>
+        <span class="n">query_str</span> <span class="o">=</span> <span class="s2">"&amp;"</span> <span class="o">+</span> <span class="n">query_str</span> <span class="k">if</span> <span class="n">query_str</span> <span class="o">!=</span> <span class="s2">""</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"postgresql://</span><span class="si">{</span><span class="n">username</span><span class="si">}{</span><span class="n">password</span><span class="si">}{</span><span class="n">sep</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">dbname</span><span class="si">}</span><span class="s2">?host=</span><span class="si">{</span><span class="n">host</span><span class="si">}{</span><span class="n">query_str</span><span class="si">}</span><span class="s2">"</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">query_str</span> <span class="o">=</span> <span class="s2">&quot;?&quot;</span> <span class="o">+</span> <span class="n">query_str</span> <span class="k">if</span> <span class="n">query_str</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;postgresql://</span><span class="si">{</span><span class="n">username</span><span class="si">}{</span><span class="n">password</span><span class="si">}{</span><span class="n">sep</span><span class="si">}{</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">dbname</span><span class="si">}{</span><span class="n">query_str</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">query_str</span> <span class="o">=</span> <span class="s2">"?"</span> <span class="o">+</span> <span class="n">query_str</span> <span class="k">if</span> <span class="n">query_str</span> <span class="o">!=</span> <span class="s2">""</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"postgresql://</span><span class="si">{</span><span class="n">username</span><span class="si">}{</span><span class="n">password</span><span class="si">}{</span><span class="n">sep</span><span class="si">}{</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">dbname</span><span class="si">}{</span><span class="n">query_str</span><span class="si">}</span><span class="s2">"</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">QCFConfigBase</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="DatabaseConfig">
 <a class="viewcode-back" href="../../admin_guide/configuration.html#qcfractal.config.DatabaseConfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DatabaseConfig</span><span class="p">(</span><span class="n">QCFConfigBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Settings for the database used by QCFractal</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">base_folder</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The base folder to use as the default for some options (logs, etc). Default is the location of the config</span>
+<span class="w">    </span><span class="sd">"""The base folder to use as the default for some options (logs, etc). Default is the location of the config</span>
 <span class="sd">    file.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">full_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Full connection URI. This overrides host,username,password,port, etc&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Full connection URI. This overrides host,username,password,port, etc"""</span>
 
-    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;localhost&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The hostname or ip address the database is running on. If own = True, this must be localhost. May also be a</span>
+    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"localhost"</span>
+<span class="w">    </span><span class="sd">"""The hostname or ip address the database is running on. If own = True, this must be localhost. May also be a</span>
 <span class="sd">    path to a directory containing the database socket file</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5432</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The port the database is running on. If own = True, a database will be started, binding to this port&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The port the database is running on. If own = True, a database will be started, binding to this port"""</span>
 
-    <span class="n">database_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;qcfractal_default&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The database name to connect to&quot;&quot;&quot;</span>
+    <span class="n">database_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"qcfractal_default"</span>
+<span class="w">    </span><span class="sd">"""The database name to connect to"""</span>
 
     <span class="n">username</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The database username to connect with&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The database username to connect with"""</span>
 
     <span class="n">password</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The database password to connect with&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The database password to connect with"""</span>
 
     <span class="n">query</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extra connection query parameters at the end of the URL string&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Extra connection query parameters at the end of the URL string"""</span>
 
     <span class="n">own</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;If True, QCFractal will control the database instance. If False, you must start and manage the database</span>
+<span class="w">    </span><span class="sd">"""If True, QCFractal will control the database instance. If False, you must start and manage the database</span>
 <span class="sd">    yourself</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">data_directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Location to place the database if own == True. Default is [base_folder]/database if we own the database&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Location to place the database if own == True. Default is [base_folder]/database if we own the database"""</span>
 
     <span class="n">logfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Path to a file to use as the database logfile (if own == True). Default is</span>
+<span class="w">    </span><span class="sd">"""Path to a file to use as the database logfile (if own == True). Default is</span>
 <span class="sd">    [base_folder]/qcfractal_database.log</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">echo_sql</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[ADVANCED] output raw SQL queries being run&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""[ADVANCED] output raw SQL queries being run"""</span>
 
     <span class="n">pg_tool_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Directory containing Postgres tools such as psql and pg_ctl (ie, /usr/bin, or /usr/lib/postgresql/13/bin). If</span>
+<span class="w">    </span><span class="sd">"""Directory containing Postgres tools such as psql and pg_ctl (ie, /usr/bin, or /usr/lib/postgresql/13/bin). If</span>
 <span class="sd">    not specified, an attempt to find them will be made. This field is only required if autodetection fails and</span>
 <span class="sd">    own == True</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">pool_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[ADVANCED] set the size of the connection pool to use in SQLAlchemy. Set to zero to disable pooling&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""[ADVANCED] set the size of the connection pool to use in SQLAlchemy. Set to zero to disable pooling"""</span>
 
-    <span class="n">maintenance_db</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;postgres&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[ADVANCED] An existing database (not the one you want to use/create). This is used for database management&quot;&quot;&quot;</span>
+    <span class="n">maintenance_db</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"postgres"</span>
+<span class="w">    </span><span class="sd">"""[ADVANCED] An existing database (not the one you want to use/create). This is used for database management"""</span>
 
-    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">own</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span> <span class="o">=</span> <span class="n">_make_abs_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_folder</span><span class="p">,</span> <span class="s2">&quot;postgres&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="o">=</span> <span class="n">_make_abs_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_folder</span><span class="p">,</span> <span class="s2">&quot;qcfractal_database.log&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span> <span class="o">=</span> <span class="n">_make_abs_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_directory</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_folder</span><span class="p">,</span> <span class="s2">"postgres"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="o">=</span> <span class="n">_make_abs_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_folder</span><span class="p">,</span> <span class="s2">"qcfractal_database.log"</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">database_uri</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Returns the real database URI as a string</span>
 
 <span class="sd">        It does not hide the password, so is not suitable for logging</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_uri</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_uri</span>
         <span class="k">else</span><span class="p">:</span>
@@ -610,42 +610,42 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">sqlalchemy_url</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">URL</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the SQLAlchemy URL for this database&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Returns the SQLAlchemy URL for this database"""</span>
 
         <span class="n">url</span> <span class="o">=</span> <span class="n">make_url</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database_uri</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">url</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">drivername</span><span class="o">=</span><span class="s2">&quot;postgresql+psycopg2&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">url</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">drivername</span><span class="o">=</span><span class="s2">"postgresql+psycopg2"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">psycopg2_dsn</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Returns a string suitable for use as a psycopg2 connection string</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">dsn_dict</span> <span class="o">=</span> <span class="n">parse_dsn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database_uri</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">make_dsn</span><span class="p">(</span><span class="o">**</span><span class="n">dsn_dict</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">psycopg2_maintenance_dsn</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">dsn_dict</span> <span class="o">=</span> <span class="n">parse_dsn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database_uri</span><span class="p">)</span>
-        <span class="n">dsn_dict</span><span class="p">[</span><span class="s2">&quot;dbname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maintenance_db</span>
+        <span class="n">dsn_dict</span><span class="p">[</span><span class="s2">"dbname"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maintenance_db</span>
         <span class="k">return</span> <span class="n">make_dsn</span><span class="p">(</span><span class="o">**</span><span class="n">dsn_dict</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">safe_uri</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Returns a user-readable version of the URI for logging, etc.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">dsn</span> <span class="o">=</span> <span class="n">parse_dsn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database_uri</span><span class="p">)</span>
 
-        <span class="n">host</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;host&quot;</span><span class="p">)</span>
-        <span class="n">port</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;port&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">user</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">password</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">dbname</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;dbname&quot;</span><span class="p">)</span>
+        <span class="n">host</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"host"</span><span class="p">)</span>
+        <span class="n">port</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"port"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"user"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"password"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">dbname</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"dbname"</span><span class="p">)</span>
 
         <span class="c1"># SQLAlchemy render_string has some problems sometimes, so use our own</span>
         <span class="k">return</span> <span class="n">make_uri_string</span><span class="p">(</span>
-            <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;********&quot;</span> <span class="k">if</span> <span class="n">password</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dbname</span><span class="o">=</span><span class="n">dbname</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">dsn</span>
+            <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">"********"</span> <span class="k">if</span> <span class="n">password</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dbname</span><span class="o">=</span><span class="n">dbname</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">dsn</span>
         <span class="p">)</span>  <span class="c1"># everything left over</span></div>
 
 
@@ -653,140 +653,140 @@
 <div class="viewcode-block" id="AutoResetConfig">
 <a class="viewcode-back" href="../../admin_guide/configuration.html#qcfractal.config.AutoResetConfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">AutoResetConfig</span><span class="p">(</span><span class="n">QCFConfigBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    How many times the server will automatically retry a failed computation</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether to automatically reset errored records at all.</span>
+<span class="w">    </span><span class="sd">"""Whether to automatically reset errored records at all.</span>
 
 <span class="sd">    With this disabled, every errored record waits for someone to reset it by hand.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">unknown_error</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maximum automatic restarts for errors that could not be classified&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Maximum automatic restarts for errors that could not be classified"""</span>
 
     <span class="n">compute_lost</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maximum automatic restarts for computations whose compute resource disappeared.</span>
+<span class="w">    </span><span class="sd">"""Maximum automatic restarts for computations whose compute resource disappeared.</span>
 
 <span class="sd">    This covers the ordinary ways a batch job ends without reporting back - a walltime kill,</span>
 <span class="sd">    a preempted node, a manager killed mid-task. These failures say nothing about whether the computation</span>
 <span class="sd">    itself is sound, which is why the default is more generous than for</span>
 <span class="sd">    ``unknown_error``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">random_error</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maximum automatic restarts for errors the server recognises as intermittent&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">"""Maximum automatic restarts for errors the server recognises as intermittent"""</span></div>
 
 
 
 <div class="viewcode-block" id="APILimitConfig">
 <a class="viewcode-back" href="../../admin_guide/configuration.html#qcfractal.config.APILimitConfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">APILimitConfig</span><span class="p">(</span><span class="n">QCFConfigBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Limits on the number of records returned per query. This can be specified per object (molecule, etc)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">get_records</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of calculation records that can be retrieve in a single request&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Number of calculation records that can be retrieve in a single request"""</span>
 
     <span class="n">add_records</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">500</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of calculation records that can be added in a single request&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Number of calculation records that can be added in a single request"""</span>
 
     <span class="n">get_dataset_entries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of dataset entries that can be retrieved in a single request&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Number of dataset entries that can be retrieved in a single request"""</span>
 
     <span class="n">get_molecules</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of molecules that can be retrieved in a single request&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Number of molecules that can be retrieved in a single request"""</span>
 
     <span class="n">add_molecules</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of molecules that can be added in a single request&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Number of molecules that can be added in a single request"""</span>
 
     <span class="n">get_managers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of manager records to return&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Number of manager records to return"""</span>
 
     <span class="n">manager_tasks_claim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of tasks a single manager can pull down&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Number of tasks a single manager can pull down"""</span>
 
     <span class="n">manager_tasks_return</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of tasks a single manager can return at once&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Number of tasks a single manager can return at once"""</span>
 
     <span class="n">get_access_logs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of access log records to return&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Number of access log records to return"""</span>
 
     <span class="n">get_error_logs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of error log records to return&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Number of error log records to return"""</span>
 
     <span class="n">get_internal_jobs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of internal jobs to return&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">"""Number of internal jobs to return"""</span></div>
 
 
 
 <div class="viewcode-block" id="WebAPIConfig">
 <a class="viewcode-back" href="../../admin_guide/configuration.html#qcfractal.config.WebAPIConfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">WebAPIConfig</span><span class="p">(</span><span class="n">QCFConfigBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Settings for the Web API (api) interface</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">num_threads_per_worker</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of threads per worker&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Number of threads per worker"""</span>
 
     <span class="n">worker_timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">120</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;If the master process does not hear from a worker for the given amount of time (in seconds),kill it. This</span>
+<span class="w">    </span><span class="sd">"""If the master process does not hear from a worker for the given amount of time (in seconds),kill it. This</span>
 <span class="sd">    effectively limits the time a worker has to respond to a request</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;localhost&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The IP address or hostname to bind to&quot;&quot;&quot;</span>
+    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"localhost"</span>
+<span class="w">    </span><span class="sd">"""The IP address or hostname to bind to"""</span>
 
     <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7777</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The port on which to run the REST interface&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The port on which to run the REST interface"""</span>
 
     <span class="n">secret_key</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Secret key for flask api. See documentation&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Secret key for flask api. See documentation"""</span>
 
     <span class="n">jwt_secret_key</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Secret key for web tokens. See documentation&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Secret key for web tokens. See documentation"""</span>
 
     <span class="n">jwt_access_token_expires</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15</span> <span class="o">*</span> <span class="mi">60</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The time (in seconds) an access token is valid for. Default is 15 minutes&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The time (in seconds) an access token is valid for. Default is 15 minutes"""</span>
 
     <span class="n">jwt_refresh_token_expires</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">24</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The time (in seconds) a refresh token is valid for. Default is 1 day&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The time (in seconds) a refresh token is valid for. Default is 1 day"""</span>
 
     <span class="n">user_session_max_age</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">24</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The time (in seconds) that a user session can be idle (for browser-based sessions)&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The time (in seconds) that a user session can be idle (for browser-based sessions)"""</span>
 
-    <span class="n">user_session_cookie_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;qcf_session&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name to use for a session cookie (for browser-based sessions)&quot;&quot;&quot;</span>
+    <span class="n">user_session_cookie_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"qcf_session"</span>
+<span class="w">    </span><span class="sd">"""Name to use for a session cookie (for browser-based sessions)"""</span>
 
     <span class="n">user_session_cookie_domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Domain to use for the user-session cookie (for browser-based sessions)&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Domain to use for the user-session cookie (for browser-based sessions)"""</span>
 
     <span class="n">user_session_cookie_samesite</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the SameSite flag for the user-session cookie (for browser-based sessions)&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Set the SameSite flag for the user-session cookie (for browser-based sessions)"""</span>
 
     <span class="n">user_session_cookie_partitioned</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use the Partitioned flag for the user-session cookie (for browser-based sessions)&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Use the Partitioned flag for the user-session cookie (for browser-based sessions)"""</span>
 
     <span class="n">user_session_cookie_secure</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use Secure flag for the user-session cookie (for browser-based sessions)&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Use Secure flag for the user-session cookie (for browser-based sessions)"""</span>
 
     <span class="n">user_session_cookie_httponly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use Secure flag for the user-session cookie (for browser-based sessions)&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Use Secure flag for the user-session cookie (for browser-based sessions)"""</span>
 
     <span class="n">extra_flask_options</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Any additional options to pass directly to flask&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Any additional options to pass directly to flask"""</span>
 
     <span class="n">extra_waitress_options</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Any additional options to pass directly to the waitress serve function&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Any additional options to pass directly to the waitress serve function"""</span>
 
     <span class="nd">@field_validator</span><span class="p">(</span>
-        <span class="s2">&quot;jwt_access_token_expires&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;jwt_refresh_token_expires&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;user_session_max_age&quot;</span><span class="p">,</span>
-        <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">,</span>
+        <span class="s2">"jwt_access_token_expires"</span><span class="p">,</span>
+        <span class="s2">"jwt_refresh_token_expires"</span><span class="p">,</span>
+        <span class="s2">"user_session_max_age"</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_durations</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
@@ -795,64 +795,65 @@
 
 
 <span class="c1"># S3 bucket names are all lowercase characters and numbers</span>
-<span class="n">S3BucketName</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StringConstraints</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">63</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;^[a-z0-9\-]+[a-z0-9]$&quot;</span><span class="p">)]</span>
+<span class="n">S3BucketName</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StringConstraints</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">63</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">"^[a-z0-9\-]+[a-z0-9]$"</span><span class="p">)]</span>
+
 
 <div class="viewcode-block" id="S3BucketMap">
 <a class="viewcode-back" href="../../admin_guide/configuration.html#qcfractal.config.S3BucketMap">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">S3BucketMap</span><span class="p">(</span><span class="n">QCFConfigBase</span><span class="p">):</span>
-    <span class="n">dataset_attachment</span><span class="p">:</span> <span class="n">S3BucketName</span> <span class="o">=</span> <span class="s2">&quot;dataset-attachments&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bucket to hold dataset views&quot;&quot;&quot;</span>
+    <span class="n">dataset_attachment</span><span class="p">:</span> <span class="n">S3BucketName</span> <span class="o">=</span> <span class="s2">"dataset-attachments"</span>
+<span class="w">    </span><span class="sd">"""Bucket to hold dataset views"""</span>
 
-    <span class="n">project_attachment</span><span class="p">:</span> <span class="n">S3BucketName</span> <span class="o">=</span> <span class="s2">&quot;project-attachments&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bucket to hold project attachments&quot;&quot;&quot;</span></div>
+    <span class="n">project_attachment</span><span class="p">:</span> <span class="n">S3BucketName</span> <span class="o">=</span> <span class="s2">"project-attachments"</span>
+<span class="w">    </span><span class="sd">"""Bucket to hold project attachments"""</span></div>
 
 
 
 <div class="viewcode-block" id="S3Config">
 <a class="viewcode-back" href="../../admin_guide/configuration.html#qcfractal.config.S3Config">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">S3Config</span><span class="p">(</span><span class="n">QCFConfigBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Settings for using external files with S3</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether to store large external files (dataset views, attachments) in S3.</span>
+<span class="w">    </span><span class="sd">"""Whether to store large external files (dataset views, attachments) in S3.</span>
 
 <span class="sd">    When enabled, ``endpoint_url``, ``access_key_id`` and ``secret_access_key`` are all</span>
 <span class="sd">    required; the server refuses to start otherwise.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">verify</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify TLS certificates when connecting to S3&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Verify TLS certificates when connecting to S3"""</span>
 
     <span class="n">passthrough</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether clients may download directly from the S3 endpoint.</span>
+<span class="w">    </span><span class="sd">"""Whether clients may download directly from the S3 endpoint.</span>
 
 <span class="sd">    With this off, file contents are proxied through the server, so clients never need</span>
 <span class="sd">    to reach S3 themselves.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">endpoint_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;S3 endpoint URL&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""S3 endpoint URL"""</span>
 
     <span class="n">access_key_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;AWS/S3 access key&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""AWS/S3 access key"""</span>
 
     <span class="n">secret_access_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;AWS/S3 secret key&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""AWS/S3 secret key"""</span>
 
     <span class="n">auto_create_buckets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create the buckets named in ``bucket_map`` at startup if they do not already exist&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Create the buckets named in ``bucket_map`` at startup if they do not already exist"""</span>
 
     <span class="n">bucket_map</span><span class="p">:</span> <span class="n">S3BucketMap</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">S3BucketMap</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for where to store various files&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Configuration for where to store various files"""</span>
 
-    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;endpoint_url&quot;</span><span class="p">,</span> <span class="s2">&quot;access_key_id&quot;</span><span class="p">,</span> <span class="s2">&quot;secret_access_key&quot;</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"endpoint_url"</span><span class="p">,</span> <span class="s2">"access_key_id"</span><span class="p">,</span> <span class="s2">"secret_access_key"</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;S3 enabled but </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> not set&quot;</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"S3 enabled but </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> not set"</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 
@@ -860,196 +861,196 @@
 <div class="viewcode-block" id="CORSconfig">
 <a class="viewcode-back" href="../../admin_guide/configuration.html#qcfractal.config.CORSconfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CORSconfig</span><span class="p">(</span><span class="n">QCFConfigBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Settings for using CORS</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether to send CORS headers at all. With this off the other options here do nothing.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Whether to send CORS headers at all. With this off the other options here do nothing."""</span>
 
     <span class="n">origins</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Origins permitted to make cross-origin requests. Use ``[&quot;*&quot;]`` to allow any origin.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Origins permitted to make cross-origin requests. Use ``["*"]`` to allow any origin."""</span>
 
     <span class="n">supports_credentials</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether cross-origin requests may carry credentials (cookies, authorization headers)&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Whether cross-origin requests may carry credentials (cookies, authorization headers)"""</span>
 
     <span class="n">headers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Request headers a cross-origin request is allowed to set, such as ``Authorization``&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Request headers a cross-origin request is allowed to set, such as ``Authorization``"""</span>
 
     <span class="n">methods</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;HTTP methods permitted for cross-origin requests. Empty means the CORS default.&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">"""HTTP methods permitted for cross-origin requests. Empty means the CORS default."""</span></div>
 
 
 
 <div class="viewcode-block" id="FractalConfig">
 <a class="viewcode-back" href="../../admin_guide/configuration.html#qcfractal.config.FractalConfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">FractalConfig</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Fractal Server settings</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">base_folder</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The base directory to use as the default for some options (logs, etc). Default is the location of the config</span>
+<span class="w">    </span><span class="sd">"""The base directory to use as the default for some options (logs, etc). Default is the location of the config</span>
 <span class="sd">    file.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">temporary_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Temporary directory to use for things such as view creation. If None, uses system default. This may require a</span>
+<span class="w">    </span><span class="sd">"""Temporary directory to use for things such as view creation. If None, uses system default. This may require a</span>
 <span class="sd">    lot of space!</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="c1"># Info for the REST interface</span>
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;QCFractal Server&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The QCFractal server name&quot;&quot;&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"QCFractal Server"</span>
+<span class="w">    </span><span class="sd">"""The QCFractal server name"""</span>
 
     <span class="n">enable_security</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Enable user authentication and authorization&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Enable user authentication and authorization"""</span>
 
     <span class="n">allow_unauthenticated_read</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Allows unauthenticated read access to this instance. This does not extend to sensitive tables (such as user</span>
+<span class="w">    </span><span class="sd">"""Allows unauthenticated read access to this instance. This does not extend to sensitive tables (such as user</span>
 <span class="sd">    information)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">strict_compute_tags</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;If True, disables wildcard behavior for compute tags. This disables managers from claiming all tags if they</span>
-<span class="sd">    specify a wildcard (&#39;*&#39;) tag. Managers will still be able to claim tasks with an explicit &#39;*&#39; tag if they</span>
-<span class="sd">    specify the &#39;*&#39; queue tag in their config</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""If True, disables wildcard behavior for compute tags. This disables managers from claiming all tags if they</span>
+<span class="sd">    specify a wildcard ('*') tag. Managers will still be able to claim tasks with an explicit '*' tag if they</span>
+<span class="sd">    specify the '*' queue tag in their config</span>
+<span class="sd">    """</span>
 
     <span class="c1"># Logging and profiling</span>
     <span class="n">logfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Path to a file to use for server logging. If not specified, logs will be printed to standard output&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Path to a file to use for server logging. If not specified, logs will be printed to standard output"""</span>
 
-    <span class="n">loglevel</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;INFO&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Level of logging to enable (debug, info, warning, error, critical). Case insensitive&quot;&quot;&quot;</span>
+    <span class="n">loglevel</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"INFO"</span>
+<span class="w">    </span><span class="sd">"""Level of logging to enable (debug, info, warning, error, critical). Case insensitive"""</span>
 
     <span class="n">hide_internal_errors</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;If True, internal errors will only be reported as an error number to the user. If False, the entire</span>
+<span class="w">    </span><span class="sd">"""If True, internal errors will only be reported as an error number to the user. If False, the entire</span>
 <span class="sd">    error/backtrace will be sent (which could rarely contain sensitive info). In either case, errors will be</span>
 <span class="sd">    stored in the database</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="c1"># Periodics</span>
     <span class="n">service_frequency</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The frequency at which to update services (in seconds)&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The frequency at which to update services (in seconds)"""</span>
 
     <span class="n">max_active_services</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The maximum number of concurrent active services&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The maximum number of concurrent active services"""</span>
 
     <span class="n">heartbeat_frequency</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">1800</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The frequency (in seconds) to check the heartbeat of compute managers&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The frequency (in seconds) to check the heartbeat of compute managers"""</span>
 
     <span class="n">heartbeat_frequency_jitter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Jitter fraction to be applied to the heartbeat frequency&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Jitter fraction to be applied to the heartbeat frequency"""</span>
 
     <span class="n">heartbeat_max_missed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The maximum number of heartbeats that a compute manager can miss. If more are missed, the worker is considered</span>
+<span class="w">    </span><span class="sd">"""The maximum number of heartbeats that a compute manager can miss. If more are missed, the worker is considered</span>
 <span class="sd">    dead</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="c1"># Access logging</span>
     <span class="n">log_access</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Store API access in the database&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Store API access in the database"""</span>
 
     <span class="n">access_log_keep</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;How far back to keep access logs (in days or as a duration string). 0 means keep all&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""How far back to keep access logs (in days or as a duration string). 0 means keep all"""</span>
 
     <span class="n">maxmind_license_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;License key for MaxMind GeoIP2 service. If provided, the GeoIP2 database will be downloaded and updated</span>
+<span class="w">    </span><span class="sd">"""License key for MaxMind GeoIP2 service. If provided, the GeoIP2 database will be downloaded and updated</span>
 <span class="sd">    automatically</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">geoip2_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Directory containing the Maxmind GeoIP2 Cities file (GeoLite2-City.mmdb) Defaults to [base_folder]/geoip2.</span>
+<span class="w">    </span><span class="sd">"""Directory containing the Maxmind GeoIP2 Cities file (GeoLite2-City.mmdb) Defaults to [base_folder]/geoip2.</span>
 <span class="sd">    This directory will be created if needed.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">geoip2_filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;GeoLite2-City.mmdb&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Filename of the Maxmind GeoIP2 Cities file (GeoLite2-City.mmdb)&quot;&quot;&quot;</span>
+    <span class="n">geoip2_filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"GeoLite2-City.mmdb"</span>
+<span class="w">    </span><span class="sd">"""Filename of the Maxmind GeoIP2 Cities file (GeoLite2-City.mmdb)"""</span>
 
     <span class="c1"># Internal jobs</span>
     <span class="n">internal_job_processes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of processes for processing internal jobs and async requests&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Number of processes for processing internal jobs and async requests"""</span>
 
     <span class="n">internal_job_keep</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;How far back to keep finished internal jobs (in days or as a duration string). 0 means keep all&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""How far back to keep finished internal jobs (in days or as a duration string). 0 means keep all"""</span>
 
     <span class="c1"># Homepage settings</span>
     <span class="n">homepage_redirect_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Redirect to this URL when going to the root path&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Redirect to this URL when going to the root path"""</span>
 
     <span class="n">homepage_directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use this directory to serve the homepage&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Use this directory to serve the homepage"""</span>
 
     <span class="c1"># File uploads</span>
     <span class="n">upload_directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Directory to store user-uploaded files for processing&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Directory to store user-uploaded files for processing"""</span>
 
     <span class="c1"># Other settings blocks</span>
     <span class="n">database</span><span class="p">:</span> <span class="n">DatabaseConfig</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration of the settings for the database&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Configuration of the settings for the database"""</span>
 
     <span class="n">api</span><span class="p">:</span> <span class="n">WebAPIConfig</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration of the REST interface&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Configuration of the REST interface"""</span>
 
     <span class="n">s3</span><span class="p">:</span> <span class="n">S3Config</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">S3Config</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration of the S3 file storage (optional)&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Configuration of the S3 file storage (optional)"""</span>
 
     <span class="n">api_limits</span><span class="p">:</span> <span class="n">APILimitConfig</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">APILimitConfig</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration of the limits to the api&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Configuration of the limits to the api"""</span>
 
     <span class="n">cors</span><span class="p">:</span> <span class="n">CORSconfig</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">CORSconfig</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration Cross Origin Resource sharing (advanced)&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Configuration Cross Origin Resource sharing (advanced)"""</span>
 
     <span class="n">auto_reset</span><span class="p">:</span> <span class="n">AutoResetConfig</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">AutoResetConfig</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for automatic resetting of tasks&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Configuration for automatic resetting of tasks"""</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;loglevel&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"loglevel"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_loglevel</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">,</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="s2">&quot;CRITICAL&quot;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2"> is not a valid loglevel. Must be DEBUG, INFO, WARNING, ERROR, or CRITICAL&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"DEBUG"</span><span class="p">,</span> <span class="s2">"INFO"</span><span class="p">,</span> <span class="s2">"WARNING"</span><span class="p">,</span> <span class="s2">"ERROR"</span><span class="p">,</span> <span class="s2">"CRITICAL"</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2"> is not a valid loglevel. Must be DEBUG, INFO, WARNING, ERROR, or CRITICAL"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">v</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;service_frequency&quot;</span><span class="p">,</span> <span class="s2">&quot;heartbeat_frequency&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"service_frequency"</span><span class="p">,</span> <span class="s2">"heartbeat_frequency"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_durations</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">duration_to_seconds</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;access_log_keep&quot;</span><span class="p">,</span> <span class="s2">&quot;internal_job_keep&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"access_log_keep"</span><span class="p">,</span> <span class="s2">"internal_job_keep"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_durations_days</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()):</span>
             <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">*</span> <span class="mi">86400</span>
         <span class="k">return</span> <span class="n">duration_to_seconds</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
 
-    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_propagate_base_folder</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;base_folder&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
-            <span class="n">values</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;database&quot;</span><span class="p">,</span> <span class="p">{})</span>
-            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;database&quot;</span><span class="p">][</span><span class="s2">&quot;base_folder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;base_folder&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"base_folder"</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"database"</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">"database"</span><span class="p">][</span><span class="s2">"base_folder"</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s2">"base_folder"</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">values</span>
 
-    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_detect_deprecated_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">if</span> <span class="s2">&quot;strict_queue_tags&quot;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;strict_queue_tags is deprecated. Use strict_compute_tags instead&quot;</span><span class="p">)</span>
-                <span class="n">values</span><span class="p">[</span><span class="s2">&quot;strict_compute_tags&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;strict_queue_tags&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">"strict_queue_tags"</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"strict_queue_tags is deprecated. Use strict_compute_tags instead"</span><span class="p">)</span>
+                <span class="n">values</span><span class="p">[</span><span class="s2">"strict_compute_tags"</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"strict_queue_tags"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">values</span>
 
-    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">homepage_directory</span> <span class="o">=</span> <span class="n">_make_abs_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">homepage_directory</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_folder</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">upload_directory</span> <span class="o">=</span> <span class="n">_make_abs_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upload_directory</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_folder</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="o">=</span> <span class="n">_make_abs_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_folder</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">geoip2_dir</span> <span class="o">=</span> <span class="n">_make_abs_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geoip2_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_folder</span><span class="p">,</span> <span class="s2">&quot;geoip2&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geoip2_dir</span> <span class="o">=</span> <span class="n">_make_abs_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geoip2_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_folder</span><span class="p">,</span> <span class="s2">"geoip2"</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">temporary_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">temporary_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">temporary_dir</span> <span class="o">=</span> <span class="n">_make_abs_path</span><span class="p">(</span><span class="s2">&quot;qcf_tmp&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_folder</span><span class="p">,</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">temporary_dir</span> <span class="o">=</span> <span class="n">_make_abs_path</span><span class="p">(</span><span class="s2">"qcf_tmp"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_folder</span><span class="p">,</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">temporary_dir</span> <span class="o">=</span> <span class="n">_make_abs_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temporary_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_folder</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
@@ -1057,10 +1058,10 @@
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">SettingsConfigDict</span><span class="p">(</span>
-        <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span>
+        <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span>
         <span class="n">case_sensitive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">env_prefix</span><span class="o">=</span><span class="s2">&quot;QCF_&quot;</span><span class="p">,</span>
-        <span class="n">env_nested_delimiter</span><span class="o">=</span><span class="s2">&quot;__&quot;</span><span class="p">,</span>
+        <span class="n">env_prefix</span><span class="o">=</span><span class="s2">"QCF_"</span><span class="p">,</span>
+        <span class="n">env_nested_delimiter</span><span class="o">=</span><span class="s2">"__"</span><span class="p">,</span>
         <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
 
@@ -1081,18 +1082,18 @@
 
 <span class="c1"># Environment variable prefixes that were removed when the configuration moved from one</span>
 <span class="c1"># BaseSettings per section (each with its own flat prefix) to a single BaseSettings at</span>
-<span class="c1"># the top level with env_nested_delimiter=&quot;__&quot;. Maps the old prefix to its replacement.</span>
+<span class="c1"># the top level with env_nested_delimiter="__". Maps the old prefix to its replacement.</span>
 <span class="n">_DEPRECATED_ENV_PREFIXES</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">(</span><span class="s2">&quot;QCF_DB_&quot;</span><span class="p">,</span> <span class="s2">&quot;QCF_DATABASE__&quot;</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">&quot;QCF_APILIMIT_&quot;</span><span class="p">,</span> <span class="s2">&quot;QCF_API_LIMITS__&quot;</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">&quot;QCF_AUTORESET_&quot;</span><span class="p">,</span> <span class="s2">&quot;QCF_AUTO_RESET__&quot;</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">&quot;QCF_S3_&quot;</span><span class="p">,</span> <span class="s2">&quot;QCF_S3__&quot;</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">&quot;QCF_API_&quot;</span><span class="p">,</span> <span class="s2">&quot;QCF_API__&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"QCF_DB_"</span><span class="p">,</span> <span class="s2">"QCF_DATABASE__"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"QCF_APILIMIT_"</span><span class="p">,</span> <span class="s2">"QCF_API_LIMITS__"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"QCF_AUTORESET_"</span><span class="p">,</span> <span class="s2">"QCF_AUTO_RESET__"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"QCF_S3_"</span><span class="p">,</span> <span class="s2">"QCF_S3__"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"QCF_API_"</span><span class="p">,</span> <span class="s2">"QCF_API__"</span><span class="p">),</span>
 <span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">check_deprecated_env_vars</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Raise if the environment contains one of the removed per-section variable prefixes</span>
 
 <span class="sd">    These no longer have any effect, so without this check a stale ``QCF_DB_HOST`` would</span>
@@ -1102,13 +1103,13 @@
 <span class="sd">    ------</span>
 <span class="sd">    RuntimeError</span>
 <span class="sd">        If a deprecated environment variable is set. The message names the replacement.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="c1"># Checked first: a valid variable can begin with a deprecated prefix. QCF_API_LIMITS__</span>
     <span class="c1"># starts with QCF_API_, and used to be rejected as if it were the old QCF_API_ prefix,</span>
     <span class="c1"># which made api_limits impossible to set from the environment at all.</span>
     <span class="n">current_prefixes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;QCF_</span><span class="si">{</span><span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">__&quot;</span>
+        <span class="sa">f</span><span class="s2">"QCF_</span><span class="si">{</span><span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">__"</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">FractalConfig</span><span class="o">.</span><span class="n">model_fields</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">annotation</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">annotation</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">)</span>
     <span class="p">)</span>
@@ -1125,23 +1126,23 @@
             <span class="c1"># A further underscore means a nested-style name that simply does not exist</span>
             <span class="c1"># (eg QCF_DB__HOST); leave it to pydantic rather than suggesting a mangled</span>
             <span class="c1"># replacement.</span>
-            <span class="k">if</span> <span class="n">upper_key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">old_prefix</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">upper_key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">old_prefix</span> <span class="o">+</span> <span class="s2">"_"</span><span class="p">):</span>
                 <span class="k">continue</span>
             <span class="n">new_key</span> <span class="o">=</span> <span class="n">new_prefix</span> <span class="o">+</span> <span class="n">upper_key</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">old_prefix</span><span class="p">)</span> <span class="p">:]</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Environment variable </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> is deprecated. Use </span><span class="si">{</span><span class="n">new_key</span><span class="si">}</span><span class="s2"> instead.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Environment variable </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> is deprecated. Use </span><span class="si">{</span><span class="n">new_key</span><span class="si">}</span><span class="s2"> instead."</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">read_configuration</span><span class="p">(</span><span class="n">file_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">extra_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FractalConfig</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Reads QCFractal configuration from YAML files</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
     <span class="n">config_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="c1"># Read all the files, in order</span>
     <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">file_paths</span><span class="p">:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">yf</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading configuration data from </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">yf</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Reading configuration data from </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="n">file_data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">yf</span><span class="p">)</span>
             <span class="n">update_nested_dict</span><span class="p">(</span><span class="n">config_data</span><span class="p">,</span> <span class="n">file_data</span><span class="p">)</span>
 
@@ -1152,17 +1153,17 @@
     <span class="c1"># 1. If specified in the environment, use that</span>
     <span class="c1"># 2. Use any specified in a config file</span>
     <span class="c1"># 3. Use the path of the last (highest-priority) file given</span>
-    <span class="k">if</span> <span class="s2">&quot;QCF_BASE_FOLDER&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
-        <span class="n">base_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;QCF_BASE_FOLDER&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">config_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;base_folder&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">base_dir</span> <span class="o">=</span> <span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;base_folder&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s2">"QCF_BASE_FOLDER"</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+        <span class="n">base_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"QCF_BASE_FOLDER"</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">config_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"base_folder"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">base_dir</span> <span class="o">=</span> <span class="n">config_data</span><span class="p">[</span><span class="s2">"base_folder"</span><span class="p">]</span>
     <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_paths</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="c1"># use the location of the last file as the base directory</span>
         <span class="n">base_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">file_paths</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Base folder must be specified somehow. Maybe set QCF_BASE_FOLDER in the environment?&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Base folder must be specified somehow. Maybe set QCF_BASE_FOLDER in the environment?"</span><span class="p">)</span>
 
-    <span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;base_folder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">base_dir</span><span class="p">)</span>
+    <span class="n">config_data</span><span class="p">[</span><span class="s2">"base_folder"</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">base_dir</span><span class="p">)</span>
 
     <span class="n">check_deprecated_env_vars</span><span class="p">()</span>
 
@@ -1173,7 +1174,7 @@
         <span class="k">return</span> <span class="n">FractalConfig</span><span class="p">(</span><span class="o">**</span><span class="n">config_data</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not assemble a working configuration from environment variables:</span><span class="se">\n</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not assemble a working configuration from environment variables:</span><span class="se">\n</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">raise</span>
 
 
@@ -1185,12 +1186,12 @@
     <span class="n">jwt_secret_key</span> <span class="o">=</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
 
     <span class="n">db_config</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="s2">&quot;qcfractal&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>
+        <span class="s2">"username"</span><span class="p">:</span> <span class="s2">"qcfractal"</span><span class="p">,</span>
+        <span class="s2">"password"</span><span class="p">:</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>
     <span class="p">}</span>
 
     <span class="n">default_config</span> <span class="o">=</span> <span class="n">FractalConfig</span><span class="p">(</span>
-        <span class="n">base_folder</span><span class="o">=</span><span class="n">base_folder</span><span class="p">,</span> <span class="n">api</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;secret_key&quot;</span><span class="p">:</span> <span class="n">secret_key</span><span class="p">,</span> <span class="s2">&quot;jwt_secret_key&quot;</span><span class="p">:</span> <span class="n">jwt_secret_key</span><span class="p">},</span> <span class="n">database</span><span class="o">=</span><span class="n">db_config</span>
+        <span class="n">base_folder</span><span class="o">=</span><span class="n">base_folder</span><span class="p">,</span> <span class="n">api</span><span class="o">=</span><span class="p">{</span><span class="s2">"secret_key"</span><span class="p">:</span> <span class="n">secret_key</span><span class="p">,</span> <span class="s2">"jwt_secret_key"</span><span class="p">:</span> <span class="n">jwt_secret_key</span><span class="p">},</span> <span class="n">database</span><span class="o">=</span><span class="n">db_config</span>
     <span class="p">)</span>
 
     <span class="n">default_config</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">find_open_port</span><span class="p">(</span><span class="n">starting_port</span><span class="o">=</span><span class="mi">5432</span><span class="p">)</span>
@@ -1199,20 +1200,20 @@
     <span class="n">include</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">full_config</span><span class="p">:</span>
         <span class="n">include</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s2">&quot;enable_security&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s2">&quot;log_access&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s2">&quot;allow_unauthenticated_read&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s2">&quot;logfile&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s2">&quot;loglevel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s2">&quot;service_frequency&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s2">&quot;max_active_services&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s2">&quot;heartbeat_frequency&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s2">&quot;database&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;own&quot;</span><span class="p">,</span> <span class="s2">&quot;host&quot;</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="p">,</span> <span class="s2">&quot;database_name&quot;</span><span class="p">,</span> <span class="s2">&quot;base_folder&quot;</span><span class="p">,</span> <span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">},</span>
-            <span class="s2">&quot;api&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;secret_key&quot;</span><span class="p">,</span> <span class="s2">&quot;jwt_secret_key&quot;</span><span class="p">,</span> <span class="s2">&quot;host&quot;</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="p">},</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"enable_security"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"log_access"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"allow_unauthenticated_read"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"logfile"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"loglevel"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"service_frequency"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"max_active_services"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"heartbeat_frequency"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"database"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"own"</span><span class="p">,</span> <span class="s2">"host"</span><span class="p">,</span> <span class="s2">"port"</span><span class="p">,</span> <span class="s2">"database_name"</span><span class="p">,</span> <span class="s2">"base_folder"</span><span class="p">,</span> <span class="s2">"username"</span><span class="p">,</span> <span class="s2">"password"</span><span class="p">},</span>
+            <span class="s2">"api"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"secret_key"</span><span class="p">,</span> <span class="s2">"jwt_secret_key"</span><span class="p">,</span> <span class="s2">"host"</span><span class="p">,</span> <span class="s2">"port"</span><span class="p">},</span>
         <span class="p">}</span>
 
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">default_config</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="n">include</span><span class="p">),</span> <span class="n">f</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 

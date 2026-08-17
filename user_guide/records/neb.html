@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Reaction calculations" href="reaction.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -750,12 +750,12 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">neb_spec</span> <span class="o">=</span> <span class="n">NEBSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"geometric"</span><span class="p">,</span>
     <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-        <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">,</span>
-        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-        <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s2">"deferred"</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+        <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(),</span>
 <span class="p">)</span>
@@ -775,9 +775,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">neb_spec</span> <span class="o">=</span> <span class="n">NEBSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"geometric"</span><span class="p">,</span>
     <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;hf&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"deferred"</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"hf"</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">"sto-3g"</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span>
         <span class="n">images</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
@@ -804,9 +804,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">neb_spec</span> <span class="o">=</span> <span class="n">NEBSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"geometric"</span><span class="p">,</span>
     <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"deferred"</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span><span class="n">optimize_endpoints</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
 <span class="p">)</span>
@@ -826,9 +826,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">neb_spec</span> <span class="o">=</span> <span class="n">NEBSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"geometric"</span><span class="p">,</span>
     <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"deferred"</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span><span class="n">optimize_ts</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
 <span class="p">)</span>
@@ -849,16 +849,16 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">qc_spec</span> <span class="o">=</span> <span class="n">QCSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"deferred"</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span>
 <span class="p">)</span>
 
 <span class="n">neb_spec</span> <span class="o">=</span> <span class="n">NEBSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"geometric"</span><span class="p">,</span>
     <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">qc_spec</span><span class="p">,</span>
     <span class="n">optimization_specification</span><span class="o">=</span><span class="n">OptimizationSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"geometric"</span><span class="p">,</span>
         <span class="n">qc_specification</span><span class="o">=</span><span class="n">qc_spec</span><span class="p">,</span>
-        <span class="n">keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">},</span>
+        <span class="n">keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">"maxiter"</span><span class="p">:</span> <span class="mi">300</span><span class="p">},</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span><span class="n">optimize_ts</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
 <span class="p">)</span>
@@ -878,9 +878,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">neb_spec</span> <span class="o">=</span> <span class="n">NEBSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"geometric"</span><span class="p">,</span>
     <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"deferred"</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span>
         <span class="n">spring_type</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
@@ -1023,7 +1023,7 @@ what you need.</p>
 <input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-9">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_nebs</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;initial_chain&#39;</span><span class="p">,</span> <span class="s1">&#39;singlepoints&#39;</span><span class="p">])</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_nebs</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">'initial_chain'</span><span class="p">,</span> <span class="s1">'singlepoints'</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -1036,7 +1036,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-10" name="sd-tab-set-10" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-10">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_nebs</span><span class="p">(</span><span class="n">qc_method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">qc_basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query_nebs</span><span class="p">(</span><span class="n">qc_method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span> <span class="n">qc_basis</span><span class="o">=</span><span class="s1">'def2-svp'</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r_iter</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 </pre></div>
@@ -1072,9 +1072,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="c1"># chain is an ordered list of molecules from reactant to product</span>
 <span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_nebs</span><span class="p">(</span>
     <span class="p">[</span><span class="n">chain</span><span class="p">],</span>
-    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s1">'geometric'</span><span class="p">,</span>
     <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;deferred&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span>
+        <span class="n">program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">'deferred'</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">'def2-svp'</span>
     <span class="p">),</span>
     <span class="n">optimization_specification</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span><span class="n">images</span><span class="o">=</span><span class="mi">11</span><span class="p">),</span>
@@ -1096,9 +1096,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 
 <span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_nebs</span><span class="p">(</span>
     <span class="p">[</span><span class="n">chain</span><span class="p">],</span>
-    <span class="n">program</span><span class="o">=</span><span class="s1">&#39;geometric&#39;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s1">'geometric'</span><span class="p">,</span>
     <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;deferred&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;def2-svp&#39;</span>
+        <span class="n">program</span><span class="o">=</span><span class="s1">'psi4'</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">'deferred'</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'b3lyp'</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">'def2-svp'</span>
     <span class="p">),</span>
     <span class="n">optimization_specification</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span><span class="n">optimize_endpoints</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optimize_ts</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
@@ -1117,7 +1117,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_nebs</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">final_chain</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s1">&#39;return_energy&#39;</span><span class="p">])</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s1">'return_energy'</span><span class="p">])</span>
 <span class="go">-78.5873142</span>
 <span class="go">-78.5841027</span>
 <span class="go">-78.5766319</span>
@@ -1138,7 +1138,7 @@ calculation proceeds.</p>
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_nebs</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">singlepoints</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="n">energies</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s1">&#39;return_energy&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">singlepoints</span><span class="p">[</span><span class="n">iteration</span><span class="p">]]</span>
+<span class="gp">... </span>    <span class="n">energies</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s1">'return_energy'</span><span class="p">]</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">singlepoints</span><span class="p">[</span><span class="n">iteration</span><span class="p">]]</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">iteration</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">energies</span><span class="p">)</span> <span class="o">-</span> <span class="n">energies</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 <span class="go">1 0.0421783</span>
 <span class="go">2 0.0398215</span>
@@ -1182,9 +1182,9 @@ specifications.</p>
 <label class="sd-tab-label" for="sd-tab-item-17">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span>
-         <span class="s2">&quot;neb&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;Dataset Name&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;An example of a NEB dataset&quot;</span>
+         <span class="s2">"neb"</span><span class="p">,</span>
+         <span class="s2">"Dataset Name"</span><span class="p">,</span>
+         <span class="s2">"An example of a NEB dataset"</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -1199,7 +1199,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-18">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># hcn_chain is an ordered list of molecules</span>
-<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;HCN isomerization&quot;</span><span class="p">,</span> <span class="n">hcn_chain</span><span class="p">)</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">"HCN isomerization"</span><span class="p">,</span> <span class="n">hcn_chain</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1238,17 +1238,17 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCSpecification</span>
 
 <span class="n">neb_spec</span> <span class="o">=</span> <span class="n">NEBSpecification</span><span class="p">(</span>
-    <span class="n">program</span><span class="o">=</span><span class="s2">&quot;geometric&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="s2">"geometric"</span><span class="p">,</span>
     <span class="n">singlepoint_specification</span><span class="o">=</span><span class="n">QCSpecification</span><span class="p">(</span>
-        <span class="n">program</span><span class="o">=</span><span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-        <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;deferred&quot;</span><span class="p">,</span>
-        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-        <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+        <span class="n">program</span><span class="o">=</span><span class="s2">"psi4"</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s2">"deferred"</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">"b3lyp"</span><span class="p">,</span>
+        <span class="n">basis</span><span class="o">=</span><span class="s2">"def2-svp"</span><span class="p">,</span>
     <span class="p">),</span>
     <span class="n">keywords</span><span class="o">=</span><span class="n">NEBKeywords</span><span class="p">(</span><span class="n">images</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">optimize_ts</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
 <span class="p">)</span>
 
-<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;psi4/b3lyp/def2-svp&quot;</span><span class="p">,</span> <span class="n">neb_spec</span><span class="p">)</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">"psi4/b3lyp/def2-svp"</span><span class="p">,</span> <span class="n">neb_spec</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1262,14 +1262,14 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-21" name="sd-tab-set-21" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-21">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Uses the specification&#39;s keywords as-is</span>
-<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;HCN isomerization&quot;</span><span class="p">,</span> <span class="n">hcn_chain</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Uses the specification's keywords as-is</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">"HCN isomerization"</span><span class="p">,</span> <span class="n">hcn_chain</span><span class="p">)</span>
 
 <span class="c1"># Same level of theory, but fewer images and a looser force criterion</span>
 <span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span>
-    <span class="s2">&quot;C4H3N2 isomerization&quot;</span><span class="p">,</span>
+    <span class="s2">"C4H3N2 isomerization"</span><span class="p">,</span>
     <span class="n">c4h3n2_chain</span><span class="p">,</span>
-    <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span> <span class="s2">&quot;maximum_force&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">},</span>
+    <span class="n">additional_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">"images"</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span> <span class="s2">"maximum_force"</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">},</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -1287,9 +1287,9 @@ that converges badly.</p>
 <label class="sd-tab-label" for="sd-tab-item-22">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span>
-    <span class="s2">&quot;stubborn chain&quot;</span><span class="p">,</span>
+    <span class="s2">"stubborn chain"</span><span class="p">,</span>
     <span class="n">stubborn_chain</span><span class="p">,</span>
-    <span class="n">additional_singlepoint_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span> <span class="s2">&quot;guess&quot;</span><span class="p">:</span> <span class="s2">&quot;sad&quot;</span><span class="p">},</span>
+    <span class="n">additional_singlepoint_keywords</span><span class="o">=</span><span class="p">{</span><span class="s2">"maxiter"</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span> <span class="s2">"guess"</span><span class="p">:</span> <span class="s2">"sad"</span><span class="p">},</span>
 <span class="p">)</span>
 </pre></div>
 </div>

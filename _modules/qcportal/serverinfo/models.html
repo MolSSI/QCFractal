@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -476,11 +476,11 @@
 <div class="viewcode-block" id="GroupByEnum">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.GroupByEnum">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GroupByEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-    <span class="n">user</span> <span class="o">=</span> <span class="s2">&quot;user&quot;</span>
-    <span class="n">day</span> <span class="o">=</span> <span class="s2">&quot;day&quot;</span>
-    <span class="n">hour</span> <span class="o">=</span> <span class="s2">&quot;hour&quot;</span>
-    <span class="n">country</span> <span class="o">=</span> <span class="s2">&quot;country&quot;</span>
-    <span class="n">subdivision</span> <span class="o">=</span> <span class="s2">&quot;subdivision&quot;</span></div>
+    <span class="n">user</span> <span class="o">=</span> <span class="s2">"user"</span>
+    <span class="n">day</span> <span class="o">=</span> <span class="s2">"day"</span>
+    <span class="n">hour</span> <span class="o">=</span> <span class="s2">"hour"</span>
+    <span class="n">country</span> <span class="o">=</span> <span class="s2">"country"</span>
+    <span class="n">subdivision</span> <span class="o">=</span> <span class="s2">"subdivision"</span></div>
 
 
 
@@ -491,7 +491,7 @@
 
 <div class="viewcode-block" id="DeleteBeforeDateBody.parse_dates">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.DeleteBeforeDateBody.parse_dates">[docs]</a>
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;before&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"before"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">parse_dates</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -512,7 +512,7 @@
 
 <div class="viewcode-block" id="AccessLogQueryFilters.parse_dates">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogQueryFilters.parse_dates">[docs]</a>
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;before&quot;</span><span class="p">,</span> <span class="s2">&quot;after&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"before"</span><span class="p">,</span> <span class="s2">"after"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">parse_dates</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -525,7 +525,7 @@
 <div class="viewcode-block" id="AccessLogEntry">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogEntry">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">AccessLogEntry</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
 
     <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">timestamp</span><span class="p">:</span> <span class="n">datetime</span>
@@ -553,17 +553,17 @@
 <div class="viewcode-block" id="AccessLogQueryIterator">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogQueryIterator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">AccessLogQueryIterator</span><span class="p">(</span><span class="n">QueryIteratorBase</span><span class="p">[</span><span class="n">AccessLogEntry</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Iterator for access log queries</span>
 
 <span class="sd">    This iterator transparently handles batching and pagination over the results</span>
 <span class="sd">    of an access log query</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="AccessLogQueryIterator.__init__">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogQueryIterator.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">:</span> <span class="n">AccessLogQueryFilters</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Construct an iterator</span>
 
 <span class="sd">        Parameters</span>
@@ -572,16 +572,16 @@
 <span class="sd">            QCPortal client object used to contact/retrieve data from the server</span>
 <span class="sd">        query_filters</span>
 <span class="sd">            The actual query information to send to the server</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
-        <span class="n">batch_limit</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_access_logs&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
+        <span class="n">batch_limit</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">"get_access_logs"</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
         <span class="n">QueryIteratorBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">,</span> <span class="n">batch_limit</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">AccessLogEntry</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-            <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;api/v1/access_logs/query&quot;</span><span class="p">,</span>
+            <span class="s2">"post"</span><span class="p">,</span>
+            <span class="s2">"api/v1/access_logs/query"</span><span class="p">,</span>
             <span class="nb">list</span><span class="p">[</span><span class="n">AccessLogEntry</span><span class="p">],</span>
             <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="p">,</span>
         <span class="p">)</span></div>
@@ -597,7 +597,7 @@
 
 <div class="viewcode-block" id="AccessLogSummaryFilters.validate_lists">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummaryFilters.validate_lists">[docs]</a>
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;before&quot;</span><span class="p">,</span> <span class="s2">&quot;after&quot;</span><span class="p">,</span> <span class="s2">&quot;group_by&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"before"</span><span class="p">,</span> <span class="s2">"after"</span><span class="p">,</span> <span class="s2">"group_by"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">validate_lists</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">validate_list_to_single</span><span class="p">(</span><span class="n">v</span><span class="p">)</span></div>
@@ -605,7 +605,7 @@
 
 <div class="viewcode-block" id="AccessLogSummaryFilters.parse_dates">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummaryFilters.parse_dates">[docs]</a>
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;before&quot;</span><span class="p">,</span> <span class="s2">&quot;after&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"before"</span><span class="p">,</span> <span class="s2">"after"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">parse_dates</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -618,7 +618,7 @@
 <div class="viewcode-block" id="AccessLogSummaryEntry">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummaryEntry">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">AccessLogSummaryEntry</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
 
     <span class="n">module</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
     <span class="n">method</span><span class="p">:</span> <span class="nb">str</span>
@@ -631,7 +631,7 @@
 <div class="viewcode-block" id="AccessLogSummary">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogSummary">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">AccessLogSummary</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
 
     <span class="n">entries</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">AccessLogSummaryEntry</span><span class="p">]]</span></div>
 
@@ -647,7 +647,7 @@
 
 <div class="viewcode-block" id="ErrorLogQueryFilters.parse_dates">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogQueryFilters.parse_dates">[docs]</a>
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;before&quot;</span><span class="p">,</span> <span class="s2">&quot;after&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"before"</span><span class="p">,</span> <span class="s2">"after"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">parse_dates</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -660,7 +660,7 @@
 <div class="viewcode-block" id="ErrorLogEntry">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogEntry">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ErrorLogEntry</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
 
     <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">error_date</span><span class="p">:</span> <span class="n">datetime</span>
@@ -677,17 +677,17 @@
 <div class="viewcode-block" id="ErrorLogQueryIterator">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogQueryIterator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ErrorLogQueryIterator</span><span class="p">(</span><span class="n">QueryIteratorBase</span><span class="p">[</span><span class="n">ErrorLogEntry</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Iterator for error log queries</span>
 
 <span class="sd">    This iterator transparently handles batching and pagination over the results</span>
 <span class="sd">    of an error log query</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="ErrorLogQueryIterator.__init__">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogQueryIterator.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">:</span> <span class="n">ErrorLogQueryFilters</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Construct an iterator</span>
 
 <span class="sd">        Parameters</span>
@@ -696,16 +696,16 @@
 <span class="sd">            QCPortal client object used to contact/retrieve data from the server</span>
 <span class="sd">        query_filters</span>
 <span class="sd">            The actual query information to send to the server</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
-        <span class="n">batch_limit</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_error_logs&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
+        <span class="n">batch_limit</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">"get_error_logs"</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
         <span class="n">QueryIteratorBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">,</span> <span class="n">batch_limit</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ErrorLogEntry</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-            <span class="s2">&quot;post&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;api/v1/server_errors/query&quot;</span><span class="p">,</span>
+            <span class="s2">"post"</span><span class="p">,</span>
+            <span class="s2">"api/v1/server_errors/query"</span><span class="p">,</span>
             <span class="nb">list</span><span class="p">[</span><span class="n">ErrorLogEntry</span><span class="p">],</span>
             <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="p">,</span>
         <span class="p">)</span></div>

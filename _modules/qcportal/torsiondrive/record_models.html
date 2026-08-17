@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -476,7 +476,7 @@
 <div class="viewcode-block" id="serialize_key">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.serialize_key">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">serialize_key</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Serializes the key used to map to optimization calculations</span>
 
 <span class="sd">    Parameters</span>
@@ -488,7 +488,7 @@
 <span class="sd">    -------</span>
 <span class="sd">    :</span>
 <span class="sd">        A string representation of the key</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></div>
 
@@ -497,11 +497,11 @@
 <div class="viewcode-block" id="deserialize_key">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.deserialize_key">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">deserialize_key</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Deserializes the key used to map to optimization calculations</span>
 
 <span class="sd">    This turns the key back into a form usable for creating constraints</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">r</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">r</span><span class="p">)</span></div>
@@ -511,35 +511,35 @@
 <div class="viewcode-block" id="TorsiondriveKeywords">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TorsiondriveKeywords</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Options for torsiondrive calculations</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">dihedrals</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The list of dihedrals to select for the TorsionDrive operation. Each entry is a tuple of integers of for</span>
+<span class="w">    </span><span class="sd">"""The list of dihedrals to select for the TorsionDrive operation. Each entry is a tuple of integers of for</span>
 <span class="sd">    particle indices.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">grid_spacing</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;List of grid spacing for dihedral scan in degrees. Multiple values will be mapped to each dihedral angle.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""List of grid spacing for dihedral scan in degrees. Multiple values will be mapped to each dihedral angle."""</span>
 
     <span class="n">dihedral_ranges</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A list of dihedral range limits as a pair (lower, upper). Each range corresponds to the dihedrals in input.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A list of dihedral range limits as a pair (lower, upper). Each range corresponds to the dihedrals in input."""</span>
 
     <span class="n">energy_decrease_thresh</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The threshold of the smallest energy decrease amount to trigger activating optimizations from grid point&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The threshold of the smallest energy decrease amount to trigger activating optimizations from grid point"""</span>
 
     <span class="n">energy_upper_limit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The threshold if the energy of a grid point that is higher than the current global minimum, to start new</span>
+<span class="w">    </span><span class="sd">"""The threshold if the energy of a grid point that is higher than the current global minimum, to start new</span>
 <span class="sd">    optimizations, in unit of a.u. I.e. if energy_upper_limit = 0.05, current global minimum energy is -9.9 , then</span>
 <span class="sd">    a new task starting with energy -9.8 will be skipped.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="TorsiondriveKeywords.normalize">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveKeywords.normalize">[docs]</a>
-    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">normalize</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">recursive_normalizer</span><span class="p">(</span><span class="n">values</span><span class="p">)</span></div>
@@ -550,9 +550,9 @@
 <div class="viewcode-block" id="TorsiondriveSpecification">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveSpecification">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TorsiondriveSpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
 
-    <span class="n">program</span><span class="p">:</span> <span class="n">LowerStr</span> <span class="o">=</span> <span class="s2">&quot;torsiondrive&quot;</span>
+    <span class="n">program</span><span class="p">:</span> <span class="n">LowerStr</span> <span class="o">=</span> <span class="s2">"torsiondrive"</span>
     <span class="n">optimization_specification</span><span class="p">:</span> <span class="n">OptimizationSpecification</span>
     <span class="n">keywords</span><span class="p">:</span> <span class="n">TorsiondriveKeywords</span></div>
 
@@ -561,7 +561,7 @@
 <div class="viewcode-block" id="TorsiondriveOptimization">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveOptimization">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TorsiondriveOptimization</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
 
     <span class="n">optimization_id</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
@@ -573,7 +573,7 @@
 <div class="viewcode-block" id="TorsiondriveInput">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveInput">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TorsiondriveInput</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
-    <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;torsiondrive&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;torsiondrive&quot;</span>
+    <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"torsiondrive"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"torsiondrive"</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">TorsiondriveSpecification</span>
     <span class="n">initial_molecules</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="n">Molecule</span><span class="p">]</span>
     <span class="n">as_service</span><span class="p">:</span> <span class="nb">bool</span></div>
@@ -606,13 +606,13 @@
     <span class="n">qc_basis</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LowerStr</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">initial_molecule_id</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;qc_basis&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"qc_basis"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_basis</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="c1"># Convert empty string to None</span>
         <span class="c1"># Lowercasing is handled by constr</span>
         <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]</span>
+            <span class="k">return</span> <span class="p">[</span><span class="s2">""</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span></div>
 
@@ -621,23 +621,23 @@
 <div class="viewcode-block" id="TorsiondriveRecord">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TorsiondriveRecord</span><span class="p">(</span><span class="n">BaseRecord</span><span class="p">):</span>
-    <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;torsiondrive&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;torsiondrive&quot;</span>
+    <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"torsiondrive"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"torsiondrive"</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">TorsiondriveSpecification</span>
 
     <span class="c1">######################################################</span>
     <span class="c1"># Fields not always included when fetching the record</span>
     <span class="c1">######################################################</span>
-    <span class="n">initial_molecules_ids_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;initial_molecules_ids&quot;</span><span class="p">)</span>
-    <span class="n">initial_molecules_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;initial_molecules&quot;</span><span class="p">)</span>
+    <span class="n">initial_molecules_ids_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">"initial_molecules_ids"</span><span class="p">)</span>
+    <span class="n">initial_molecules_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">"initial_molecules"</span><span class="p">)</span>
 
-    <span class="n">optimizations_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TorsiondriveOptimization</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;optimizations&quot;</span><span class="p">)</span>
-    <span class="n">minimum_optimizations_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;minimum_optimizations&quot;</span><span class="p">)</span>
+    <span class="n">optimizations_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TorsiondriveOptimization</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">"optimizations"</span><span class="p">)</span>
+    <span class="n">minimum_optimizations_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">"minimum_optimizations"</span><span class="p">)</span>
 
     <span class="c1">##############################################</span>
     <span class="c1"># Fields with child records</span>
     <span class="c1"># (generally not received from the server)</span>
     <span class="c1">##############################################</span>
-    <span class="n">optimization_records_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">OptimizationRecord</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;optimization_records&quot;</span><span class="p">)</span>
+    <span class="n">optimization_records_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">OptimizationRecord</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">"optimization_records"</span><span class="p">)</span>
 
     <span class="c1"># Actual mapping, with tuples as keys. These will point to the same lists &amp; records as above</span>
     <span class="n">_optimization_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">OptimizationRecord</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
@@ -659,8 +659,8 @@
         <span class="n">base_url_prefix</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">records</span><span class="p">))</span><span class="o">.</span><span class="n">_base_url_prefix</span>
         <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">_base_url_prefix</span> <span class="o">==</span> <span class="n">base_url_prefix</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">)</span>
 
-        <span class="n">do_opt</span> <span class="o">=</span> <span class="n">is_included</span><span class="p">(</span><span class="s2">&quot;optimizations&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-        <span class="n">do_minopt</span> <span class="o">=</span> <span class="n">is_included</span><span class="p">(</span><span class="s2">&quot;minimum_optimizations&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">do_opt</span> <span class="o">=</span> <span class="n">is_included</span><span class="p">(</span><span class="s2">"optimizations"</span><span class="p">,</span> <span class="n">include</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">do_minopt</span> <span class="o">=</span> <span class="n">is_included</span><span class="p">(</span><span class="s2">"minimum_optimizations"</span><span class="p">,</span> <span class="n">include</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">do_opt</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">do_minopt</span><span class="p">:</span>
             <span class="k">return</span>
@@ -741,8 +741,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_molecules_ids_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">initial_molecules_ids_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-                <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;api/v1/records/torsiondrive/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/initial_molecules&quot;</span><span class="p">,</span>
+                <span class="s2">"get"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"api/v1/records/torsiondrive/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/initial_molecules"</span><span class="p">,</span>
                 <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
             <span class="p">)</span>
 
@@ -752,28 +752,28 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-                <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;api/v1/records/torsiondrive/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/optimizations&quot;</span><span class="p">,</span>
+                <span class="s2">"get"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"api/v1/records/torsiondrive/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/optimizations"</span><span class="p">,</span>
                 <span class="nb">list</span><span class="p">[</span><span class="n">TorsiondriveOptimization</span><span class="p">],</span>
             <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_children</span><span class="p">([</span><span class="s2">&quot;optimizations&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_children</span><span class="p">([</span><span class="s2">"optimizations"</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_fetch_minimum_optimizations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimum_optimizations_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">minimum_optimizations_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-                <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;api/v1/records/torsiondrive/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/minimum_optimizations&quot;</span><span class="p">,</span>
+                <span class="s2">"get"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"api/v1/records/torsiondrive/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/minimum_optimizations"</span><span class="p">,</span>
                 <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
             <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_children</span><span class="p">([</span><span class="s2">&quot;minimum_optimizations&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_children</span><span class="p">([</span><span class="s2">"minimum_optimizations"</span><span class="p">])</span>
 
 <div class="viewcode-block" id="TorsiondriveRecord.get_cache_dict">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.get_cache_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_cache_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;optimization_records_&quot;</span><span class="p">},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">{</span><span class="s2">"optimization_records_"</span><span class="p">},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
     <span class="nd">@property</span>
@@ -836,7 +836,7 @@
             <span class="k">for</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">t1_lst</span><span class="p">,</span> <span class="n">t2_lst</span><span class="p">):</span>
                 <span class="n">compare_optimization_records</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">record_1</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;complete&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">record_1</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"complete"</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">t1</span> <span class="ow">in</span> <span class="n">record_1</span><span class="o">.</span><span class="n">minimum_optimizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">t2</span> <span class="o">=</span> <span class="n">record_2</span><span class="o">.</span><span class="n">minimum_optimizations</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
                 <span class="n">compare_optimization_records</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">)</span></div>

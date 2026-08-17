@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Server administration via client and API" href="../monitoring.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -527,16 +527,16 @@ For this example, we are assuming a cluster using LSF as the scheduler; for othe
     <span class="n">cores_per_worker</span><span class="p">:</span> <span class="mi">16</span>          <span class="c1"># cores per worker</span>
     <span class="n">memory_per_worker</span><span class="p">:</span> <span class="mi">96</span>         <span class="c1"># memory per worker, in GiB</span>
     <span class="n">max_nodes</span><span class="p">:</span> <span class="mi">2</span>                  <span class="c1"># max number of jobs to have queued/running at a time</span>
-    <span class="n">walltime</span><span class="p">:</span> <span class="s2">&quot;4:00:00&quot;</span>           <span class="c1"># walltime, given in `hours:min:seconds`, alternatively in integer minutes</span>
+    <span class="n">walltime</span><span class="p">:</span> <span class="s2">"4:00:00"</span>           <span class="c1"># walltime, given in `hours:min:seconds`, alternatively in integer minutes</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">null</span>
     <span class="n">queue</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">queue_name</span><span class="o">&gt;</span>           <span class="c1"># name of queue to launch to</span>
     <span class="n">request_by_nodes</span><span class="p">:</span> <span class="n">false</span>
     <span class="n">scheduler_options</span><span class="p">:</span>            <span class="c1"># add additional options for submission command</span>
-      <span class="o">-</span> <span class="s2">&quot;-R fscratch&quot;</span>
-    <span class="n">compute_tags</span><span class="p">:</span>                 <span class="c1"># only claim tasks with these tags; &#39;*&#39; means all tags accepted</span>
-      <span class="o">-</span> <span class="s1">&#39;*&#39;</span>
+      <span class="o">-</span> <span class="s2">"-R fscratch"</span>
+    <span class="n">compute_tags</span><span class="p">:</span>                 <span class="c1"># only claim tasks with these tags; '*' means all tags accepted</span>
+      <span class="o">-</span> <span class="s1">'*'</span>
     <span class="n">environments</span><span class="p">:</span>
-      <span class="n">use_manager_environment</span><span class="p">:</span> <span class="kc">False</span>   <span class="c1"># don&#39;t use the manager environment for task execution</span>
+      <span class="n">use_manager_environment</span><span class="p">:</span> <span class="kc">False</span>   <span class="c1"># don't use the manager environment for task execution</span>
       <span class="n">conda</span><span class="p">:</span>
         <span class="o">-</span> <span class="o">&lt;</span><span class="n">worker_conda_env_name</span><span class="o">&gt;</span>      <span class="c1"># name of conda env used for task execution; see below for example</span>
     <span class="n">worker_init</span><span class="p">:</span>
@@ -550,7 +550,7 @@ For this example, we are assuming a cluster using LSF as the scheduler; for othe
 # Make sure to run bashrc
 source $HOME/.bashrc
 
-# Don&#39;t limit stack size
+# Don't limit stack size
 ulimit -s unlimited
 
 # make scratch space
@@ -1317,7 +1317,7 @@ If leaving a long-running process running on the head node is undesirable, then 
     <span class="n">cores_per_worker</span><span class="p">:</span> <span class="mi">16</span>          <span class="c1"># cores per worker</span>
     <span class="n">memory_per_worker</span><span class="p">:</span> <span class="mi">96</span>         <span class="c1"># memory per worker, in GiB</span>
     <span class="n">compute_tags</span><span class="p">:</span>
-      <span class="o">-</span> <span class="s1">&#39;*&#39;</span>
+      <span class="o">-</span> <span class="s1">'*'</span>
     <span class="n">environments</span><span class="p">:</span>
       <span class="n">use_manager_environment</span><span class="p">:</span> <span class="kc">False</span>
       <span class="n">conda</span><span class="p">:</span>

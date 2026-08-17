@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Records in a Project" href="records.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -554,12 +554,12 @@ the same arguments as <a class="reference internal" href="../qcportal_reference/
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-0">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span> <span class="s2">&quot;b3lyp barriers&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">"singlepoint"</span><span class="p">,</span> <span class="s2">"b3lyp barriers"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 <span class="go">377 b3lyp barriers</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">&quot;psi4/b3lyp/def2-svp&quot;</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">&quot;hooh&quot;</span><span class="p">,</span> <span class="n">hooh_mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_specification</span><span class="p">(</span><span class="s2">"psi4/b3lyp/def2-svp"</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">add_entry</span><span class="p">(</span><span class="s2">"hooh"</span><span class="p">,</span> <span class="n">hooh_mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -575,18 +575,18 @@ on the project.</p>
 <input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-1">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_project</span><span class="p">(</span><span class="s2">&quot;Peroxide barrier heights&quot;</span><span class="p">,</span>
-<span class="gp">... </span>                          <span class="n">default_compute_tag</span><span class="o">=</span><span class="s2">&quot;big_mem&quot;</span><span class="p">,</span>
-<span class="gp">... </span>                          <span class="n">default_compute_priority</span><span class="o">=</span><span class="s2">&quot;low&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_project</span><span class="p">(</span><span class="s2">"Peroxide barrier heights"</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">default_compute_tag</span><span class="o">=</span><span class="s2">"big_mem"</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">default_compute_priority</span><span class="o">=</span><span class="s2">"low"</span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="s2">&quot;geometries&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">"optimization"</span><span class="p">,</span> <span class="s2">"geometries"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">default_compute_tag</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">default_compute_priority</span><span class="p">)</span>
 <span class="go">big_mem PriorityEnum.low</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Or override for this one dataset</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds2</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;optimization&quot;</span><span class="p">,</span> <span class="s2">&quot;quick geometries&quot;</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="n">default_compute_tag</span><span class="o">=</span><span class="s2">&quot;small_mem&quot;</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="n">default_compute_priority</span><span class="o">=</span><span class="s2">&quot;high&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds2</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">"optimization"</span><span class="p">,</span> <span class="s2">"quick geometries"</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">default_compute_tag</span><span class="o">=</span><span class="s2">"small_mem"</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">default_compute_priority</span><span class="o">=</span><span class="s2">"high"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -607,10 +607,10 @@ unconditional. To make a script re-runnable, check
 <label class="sd-tab-label" for="sd-tab-item-2">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">existing</span> <span class="o">=</span> <span class="p">{</span><span class="n">dm</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">dm</span> <span class="ow">in</span> <span class="n">proj</span><span class="o">.</span><span class="n">dataset_metadata</span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="s2">&quot;b3lyp barriers&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;singlepoint&quot;</span><span class="p">,</span> <span class="s2">&quot;b3lyp barriers&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="s2">"b3lyp barriers"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">"singlepoint"</span><span class="p">,</span> <span class="s2">"b3lyp barriers"</span><span class="p">)</span>
 <span class="gp">... </span><span class="k">else</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="s2">&quot;b3lyp barriers&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="s2">"b3lyp barriers"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -640,10 +640,10 @@ PYTHON</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-4">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">link_dataset</span><span class="p">(</span><span class="mi">381</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="n">name</span><span class="o">=</span><span class="s2">&quot;reference geometries&quot;</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Diatomic geometries, used as a reference set&quot;</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="n">tagline</span><span class="o">=</span><span class="s2">&quot;Reference geometries&quot;</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;reference&quot;</span><span class="p">])</span>
+<span class="gp">... </span>                       <span class="n">name</span><span class="o">=</span><span class="s2">"reference geometries"</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">description</span><span class="o">=</span><span class="s2">"Diatomic geometries, used as a reference set"</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">tagline</span><span class="o">=</span><span class="s2">"Reference geometries"</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"reference"</span><span class="p">])</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 <span class="go">reference geometries</span>
@@ -660,11 +660,11 @@ dataset is fetched <em>through</em> the project.</p>
 <input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-5">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Through the project - the project&#39;s name</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Through the project - the project's name</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">proj</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="mi">381</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 <span class="go">reference geometries</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Directly from the server - the dataset&#39;s own name</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Directly from the server - the dataset's own name</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">get_dataset_by_id</span><span class="p">(</span><span class="mi">381</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 <span class="go">Diatomic geometries</span>
 </pre></div>
@@ -701,7 +701,7 @@ project-local name or by ID.</p>
 <input checked="checked" id="sd-tab-item-7" name="sd-tab-set-7" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-7">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="s2">&quot;b3lyp barriers&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="s2">"b3lyp barriers"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 <span class="go">377</span>
 
@@ -709,7 +709,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="mi">377</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">status</span><span class="p">())</span>
-<span class="go">{&#39;psi4/b3lyp/def2-svp&#39;: {&lt;RecordStatusEnum.complete: &#39;complete&#39;&gt;: 20}}</span>
+<span class="go">{'psi4/b3lyp/def2-svp': {&lt;RecordStatusEnum.complete: 'complete'&gt;: 20}}</span>
 </pre></div>
 </div>
 </div>
@@ -734,7 +734,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">dm</span> <span class="ow">in</span> <span class="n">proj</span><span class="o">.</span><span class="n">dataset_metadata</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">dm</span><span class="o">.</span><span class="n">dataset_id</span><span class="p">,</span> <span class="n">dm</span><span class="o">.</span><span class="n">dataset_type</span><span class="p">,</span> <span class="n">dm</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">dm</span><span class="o">.</span><span class="n">tags</span><span class="p">)</span>
 <span class="go">377 singlepoint b3lyp barriers []</span>
-<span class="go">381 optimization reference geometries [&#39;reference&#39;]</span>
+<span class="go">381 optimization reference geometries ['reference']</span>
 </pre></div>
 </div>
 </div>
@@ -765,9 +765,9 @@ default the datasets stay on the server and only the association with the projec
 <input checked="checked" id="sd-tab-item-10" name="sd-tab-set-10" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-10">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_datasets</span><span class="p">(</span><span class="s2">&quot;b3lyp barriers&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_datasets</span><span class="p">(</span><span class="s2">"b3lyp barriers"</span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_datasets</span><span class="p">([</span><span class="s2">&quot;reference geometries&quot;</span><span class="p">,</span> <span class="mi">377</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_datasets</span><span class="p">([</span><span class="s2">"reference geometries"</span><span class="p">,</span> <span class="mi">377</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -782,10 +782,10 @@ PYTHON</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-11">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Remove from the project and delete the dataset, but keep its records</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_datasets</span><span class="p">(</span><span class="s2">&quot;b3lyp barriers&quot;</span><span class="p">,</span> <span class="n">delete_datasets</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_datasets</span><span class="p">(</span><span class="s2">"b3lyp barriers"</span><span class="p">,</span> <span class="n">delete_datasets</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Remove from the project and delete the dataset and its records</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_datasets</span><span class="p">(</span><span class="s2">&quot;b3lyp barriers&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_datasets</span><span class="p">(</span><span class="s2">"b3lyp barriers"</span><span class="p">,</span>
 <span class="gp">... </span>                     <span class="n">delete_datasets</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="gp">... </span>                     <span class="n">delete_dataset_records</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>

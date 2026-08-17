@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Projects" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -568,16 +568,16 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.singlepoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">SinglepointInput</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">inp</span> <span class="o">=</span> <span class="n">SinglepointInput</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">molecule</span><span class="o">=</span><span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">]),</span>
+<span class="gp">... </span>    <span class="n">molecule</span><span class="o">=</span><span class="n">Molecule</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">'h'</span><span class="p">,</span> <span class="s1">'h'</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">]),</span>
 <span class="gp">... </span>    <span class="n">specification</span><span class="o">=</span><span class="p">{</span>
-<span class="gp">... </span>        <span class="s2">&quot;program&quot;</span><span class="p">:</span> <span class="s2">&quot;psi4&quot;</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="s2">&quot;driver&quot;</span><span class="p">:</span> <span class="s2">&quot;energy&quot;</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;b3lyp&quot;</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="s2">&quot;basis&quot;</span><span class="p">:</span> <span class="s2">&quot;def2-svp&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">"program"</span><span class="p">:</span> <span class="s2">"psi4"</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">"driver"</span><span class="p">:</span> <span class="s2">"energy"</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">"method"</span><span class="p">:</span> <span class="s2">"b3lyp"</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">"basis"</span><span class="p">:</span> <span class="s2">"def2-svp"</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="p">},</span>
 <span class="gp">... </span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_record</span><span class="p">(</span><span class="s2">&quot;hydrogen&quot;</span><span class="p">,</span> <span class="n">inp</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_record</span><span class="p">(</span><span class="s2">"hydrogen"</span><span class="p">,</span> <span class="n">inp</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
 <span class="go">118326390 RecordStatusEnum.waiting</span>
 </pre></div>
@@ -605,11 +605,11 @@ existing one. See <a class="reference internal" href="../record_submission.html#
 <input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-1">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_record</span><span class="p">(</span><span class="s2">&quot;hydrogen_fresh&quot;</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span>
-<span class="gp">... </span>                    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Same computation, deliberately not deduplicated&quot;</span><span class="p">,</span>
-<span class="gp">... </span>                    <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;scratch&quot;</span><span class="p">],</span>
-<span class="gp">... </span>                    <span class="n">compute_tag</span><span class="o">=</span><span class="s2">&quot;small_mem&quot;</span><span class="p">,</span>
-<span class="gp">... </span>                    <span class="n">compute_priority</span><span class="o">=</span><span class="s2">&quot;high&quot;</span><span class="p">,</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">add_record</span><span class="p">(</span><span class="s2">"hydrogen_fresh"</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span>
+<span class="gp">... </span>                    <span class="n">description</span><span class="o">=</span><span class="s2">"Same computation, deliberately not deduplicated"</span><span class="p">,</span>
+<span class="gp">... </span>                    <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"scratch"</span><span class="p">],</span>
+<span class="gp">... </span>                    <span class="n">compute_tag</span><span class="o">=</span><span class="s2">"small_mem"</span><span class="p">,</span>
+<span class="gp">... </span>                    <span class="n">compute_priority</span><span class="o">=</span><span class="s2">"high"</span><span class="p">,</span>
 <span class="gp">... </span>                    <span class="n">find_existing</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -632,8 +632,8 @@ required.</p>
 <input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-2">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="s1">&#39;hf&#39;</span><span class="p">,</span> <span class="s1">&#39;sto-3g&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">link_record</span><span class="p">(</span><span class="n">ids</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;reference_hf&quot;</span><span class="p">,</span> <span class="s2">&quot;HF reference for comparison&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;reference&quot;</span><span class="p">])</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_singlepoints</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s1">'psi4'</span><span class="p">,</span> <span class="s1">'energy'</span><span class="p">,</span> <span class="s1">'hf'</span><span class="p">,</span> <span class="s1">'sto-3g'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">link_record</span><span class="p">(</span><span class="n">ids</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"reference_hf"</span><span class="p">,</span> <span class="s2">"HF reference for comparison"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"reference"</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 <span class="go">118326412</span>
 </pre></div>
@@ -646,7 +646,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-3">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">link_record</span><span class="p">(</span><span class="n">ids</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;reference_hf_again&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">link_record</span><span class="p">(</span><span class="n">ids</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"reference_hf_again"</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="p">[])</span>
 <span class="go">---------------------------------------------------------------------------</span>
 <span class="go">PortalRequestError                        Traceback (most recent call last)</span>
 
@@ -670,12 +670,12 @@ project.</p>
 <label class="sd-tab-label" for="sd-tab-item-4">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># A record retrieved from some other server</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">other_client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">&quot;https://ml.qcarchive.molssi.org&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">external</span> <span class="o">=</span> <span class="n">other_client</span><span class="o">.</span><span class="n">get_singlepoints</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;**&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">other_client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">"https://ml.qcarchive.molssi.org"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">external</span> <span class="o">=</span> <span class="n">other_client</span><span class="o">.</span><span class="n">get_singlepoints</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">'**'</span><span class="p">])</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">import_record</span><span class="p">(</span><span class="s2">&quot;imported_hf&quot;</span><span class="p">,</span> <span class="n">external</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Imported from the ML server&quot;</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;imported&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">import_record</span><span class="p">(</span><span class="s2">"imported_hf"</span><span class="p">,</span> <span class="n">external</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">description</span><span class="o">=</span><span class="s2">"Imported from the ML server"</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"imported"</span><span class="p">])</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
 <span class="go">RecordStatusEnum.complete</span>
@@ -710,15 +710,15 @@ project-local name or by ID.</p>
 <input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-5">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">get_record</span><span class="p">(</span><span class="s2">&quot;hydrogen&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">get_record</span><span class="p">(</span><span class="s2">"hydrogen"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
 <span class="go">118326390 RecordStatusEnum.complete</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># By ID works too</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">get_record</span><span class="p">(</span><span class="mi">118326390</span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Fetch all of the record&#39;s data up front</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">get_record</span><span class="p">(</span><span class="s2">&quot;hydrogen&quot;</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;**&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Fetch all of the record's data up front</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">get_record</span><span class="p">(</span><span class="s2">"hydrogen"</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">'**'</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -745,7 +745,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">rm</span> <span class="ow">in</span> <span class="n">proj</span><span class="o">.</span><span class="n">record_metadata</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">rm</span><span class="o">.</span><span class="n">record_id</span><span class="p">,</span> <span class="n">rm</span><span class="o">.</span><span class="n">record_type</span><span class="p">,</span> <span class="n">rm</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">rm</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">rm</span><span class="o">.</span><span class="n">tags</span><span class="p">)</span>
 <span class="go">118326390 singlepoint RecordStatusEnum.complete hydrogen []</span>
-<span class="go">118326412 singlepoint RecordStatusEnum.complete reference_hf [&#39;reference&#39;]</span>
+<span class="go">118326412 singlepoint RecordStatusEnum.complete reference_hf ['reference']</span>
 </pre></div>
 </div>
 </div>
@@ -775,9 +775,9 @@ this is the reverse of linking, and it applies equally to records that were adde
 <input checked="checked" id="sd-tab-item-8" name="sd-tab-set-8" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-8">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_records</span><span class="p">(</span><span class="s2">&quot;hydrogen&quot;</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_records</span><span class="p">(</span><span class="s2">"hydrogen"</span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_records</span><span class="p">([</span><span class="s2">&quot;reference_hf&quot;</span><span class="p">,</span> <span class="mi">118326390</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_records</span><span class="p">([</span><span class="s2">"reference_hf"</span><span class="p">,</span> <span class="mi">118326390</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -787,7 +787,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-9">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_records</span><span class="p">(</span><span class="s2">&quot;hydrogen_fresh&quot;</span><span class="p">,</span> <span class="n">delete_records</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">unlink_records</span><span class="p">(</span><span class="s2">"hydrogen_fresh"</span><span class="p">,</span> <span class="n">delete_records</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

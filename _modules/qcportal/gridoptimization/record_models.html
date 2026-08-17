@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../../_static/documentation_options.js?v=fd90850b"></script>
+    <script src="../../../_static/documentation_options.js?v=44078078"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.65.post130+g95eea223e" />
+  <meta name="docsearch:version" content="0.65.post133+g71c3c30fd" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -481,7 +481,7 @@
 <div class="viewcode-block" id="serialize_key">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.serialize_key">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">serialize_key</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Serializes the key used to map to optimization calculations</span>
 
 <span class="sd">    A string `key` is used for preoptimization</span>
@@ -495,9 +495,9 @@
 <span class="sd">    -------</span>
 <span class="sd">    :</span>
 <span class="sd">        A string representation of the key</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;preoptimization&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"preoptimization"</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">key</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -510,13 +510,13 @@
 <div class="viewcode-block" id="deserialize_key">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.deserialize_key">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">deserialize_key</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Deserializes the key used to map to optimization calculations</span>
 
 <span class="sd">    This turns the key back into a form usable for creating constraints</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;preoptimization&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"preoptimization"</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">key</span>
 
     <span class="n">r</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
@@ -527,56 +527,56 @@
 <div class="viewcode-block" id="ScanTypeEnum">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.ScanTypeEnum">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ScanTypeEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The type of scan to perform. This choice is limited to the scan types allowed by the scan dimensions.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">distance</span> <span class="o">=</span> <span class="s2">&quot;distance&quot;</span>
-    <span class="n">angle</span> <span class="o">=</span> <span class="s2">&quot;angle&quot;</span>
-    <span class="n">dihedral</span> <span class="o">=</span> <span class="s2">&quot;dihedral&quot;</span></div>
+    <span class="n">distance</span> <span class="o">=</span> <span class="s2">"distance"</span>
+    <span class="n">angle</span> <span class="o">=</span> <span class="s2">"angle"</span>
+    <span class="n">dihedral</span> <span class="o">=</span> <span class="s2">"dihedral"</span></div>
 
 
 
 <div class="viewcode-block" id="StepTypeEnum">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.StepTypeEnum">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">StepTypeEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The types of steps to take in a scan dimension: either in absolute or relative terms. ``relative`` indicates that</span>
 <span class="sd">    the values are relative to the starting value (e.g., a bond starts as 2.1 Bohr, relative steps of [-0.1, 0, 1.0]</span>
-<span class="sd">    indicate grid points of [2.0, 2.1, 3.1] Bohr. An ``absolute`` ``step_type`` will be exactly those values instead.&quot;</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    indicate grid points of [2.0, 2.1, 3.1] Bohr. An ``absolute`` ``step_type`` will be exactly those values instead."</span>
+<span class="sd">    """</span>
 
-    <span class="n">absolute</span> <span class="o">=</span> <span class="s2">&quot;absolute&quot;</span>
-    <span class="n">relative</span> <span class="o">=</span> <span class="s2">&quot;relative&quot;</span></div>
+    <span class="n">absolute</span> <span class="o">=</span> <span class="s2">"absolute"</span>
+    <span class="n">relative</span> <span class="o">=</span> <span class="s2">"relative"</span></div>
 
 
 
 <div class="viewcode-block" id="ScanDimension">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.ScanDimension">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ScanDimension</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    A full description of a dimension to scan over.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="nb">type</span><span class="p">:</span> <span class="n">ScanTypeEnum</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The type of scan to perform&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The type of scan to perform"""</span>
 
     <span class="n">indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The indices of atoms to select for the scan. The size of this is a function of the type. e.g., distances,</span>
+<span class="w">    </span><span class="sd">"""The indices of atoms to select for the scan. The size of this is a function of the type. e.g., distances,</span>
 <span class="sd">    angles and dihedrals require 2, 3, and 4 atoms, respectively.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">steps</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">json_schema_extra</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Bohr&quot;</span><span class="p">,</span> <span class="s2">&quot;degrees&quot;</span><span class="p">]})</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Step sizes to scan in relative to your current location in the scan. This must be a strictly monotonic series.&quot;&quot;&quot;</span>
+    <span class="n">steps</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">json_schema_extra</span><span class="o">=</span><span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"Bohr"</span><span class="p">,</span> <span class="s2">"degrees"</span><span class="p">]})</span>
+<span class="w">    </span><span class="sd">"""Step sizes to scan in relative to your current location in the scan. This must be a strictly monotonic series."""</span>
 
     <span class="n">step_type</span><span class="p">:</span> <span class="n">StepTypeEnum</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether the step values are absolute, or relative to the starting value&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Whether the step values are absolute, or relative to the starting value"""</span>
 
 <div class="viewcode-block" id="ScanDimension.check_lower_type_step_type">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.ScanDimension.check_lower_type_step_type">[docs]</a>
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;step_type&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"type"</span><span class="p">,</span> <span class="s2">"step_type"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">check_lower_type_step_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">v</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span></div>
@@ -584,12 +584,12 @@
 
 <div class="viewcode-block" id="ScanDimension.check_indices">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.ScanDimension.check_indices">[docs]</a>
-    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">check_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">sizes</span> <span class="o">=</span> <span class="p">{</span><span class="n">ScanTypeEnum</span><span class="o">.</span><span class="n">distance</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="n">ScanTypeEnum</span><span class="o">.</span><span class="n">angle</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="n">ScanTypeEnum</span><span class="o">.</span><span class="n">dihedral</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">sizes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;ScanDimension of type </span><span class="si">{}</span><span class="s2"> must have </span><span class="si">{}</span><span class="s2"> values, found </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="s2">"ScanDimension of type </span><span class="si">{}</span><span class="s2"> must have </span><span class="si">{}</span><span class="s2"> values, found </span><span class="si">{}</span><span class="s2">."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">sizes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="p">)</span>
@@ -598,7 +598,7 @@
             <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
             <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
         <span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Steps are not strictly monotonically increasing or decreasing.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Steps are not strictly monotonically increasing or decreasing."</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="n">recursive_normalizer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">)</span>
 
@@ -610,28 +610,28 @@
 <div class="viewcode-block" id="GridoptimizationKeywords">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationKeywords">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GridoptimizationKeywords</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Keywords for grid optimizations</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">scans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ScanDimension</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The dimensions to scan along (along with their options) for the Gridoptimization&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The dimensions to scan along (along with their options) for the Gridoptimization"""</span>
 
     <span class="n">preoptimization</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;If ``True``, first runs an unrestricted optimization before starting the grid computations. This is especially</span>
+<span class="w">    </span><span class="sd">"""If ``True``, first runs an unrestricted optimization before starting the grid computations. This is especially</span>
 <span class="sd">    useful when combined with ``relative`` ``step_types``.</span>
-<span class="sd">    &quot;&quot;&quot;</span></div>
+<span class="sd">    """</span></div>
 
 
 
 <div class="viewcode-block" id="GridoptimizationSpecification">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationSpecification">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GridoptimizationSpecification</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
 
-    <span class="n">program</span><span class="p">:</span> <span class="n">LowerStr</span> <span class="o">=</span> <span class="s2">&quot;gridoptimization&quot;</span>
+    <span class="n">program</span><span class="p">:</span> <span class="n">LowerStr</span> <span class="o">=</span> <span class="s2">"gridoptimization"</span>
     <span class="n">optimization_specification</span><span class="p">:</span> <span class="n">OptimizationSpecification</span>
     <span class="n">keywords</span><span class="p">:</span> <span class="n">GridoptimizationKeywords</span></div>
 
@@ -640,7 +640,7 @@
 <div class="viewcode-block" id="GridoptimizationInput">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationInput">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GridoptimizationInput</span><span class="p">(</span><span class="n">RestModelBase</span><span class="p">):</span>
-    <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;gridoptimization&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;gridoptimization&quot;</span>
+    <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"gridoptimization"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"gridoptimization"</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">GridoptimizationSpecification</span>
     <span class="n">initial_molecule</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">Molecule</span></div>
 
@@ -671,13 +671,13 @@
     <span class="n">qc_basis</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LowerStr</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">initial_molecule_id</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;qc_basis&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"qc_basis"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_basis</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="c1"># Convert empty string to None</span>
         <span class="c1"># Lowercasing is handled by constr</span>
         <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]</span>
+            <span class="k">return</span> <span class="p">[</span><span class="s2">""</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span></div>
 
@@ -686,7 +686,7 @@
 <div class="viewcode-block" id="GridoptimizationOptimization">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationOptimization">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GridoptimizationOptimization</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
 
     <span class="n">optimization_id</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
@@ -697,7 +697,7 @@
 <div class="viewcode-block" id="GridoptimizationRecord">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GridoptimizationRecord</span><span class="p">(</span><span class="n">BaseRecord</span><span class="p">):</span>
-    <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;gridoptimization&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;gridoptimization&quot;</span>
+    <span class="n">record_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"gridoptimization"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"gridoptimization"</span>
     <span class="n">specification</span><span class="p">:</span> <span class="n">GridoptimizationSpecification</span>
     <span class="n">starting_grid</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
     <span class="n">initial_molecule_id</span><span class="p">:</span> <span class="nb">int</span>
@@ -706,15 +706,15 @@
     <span class="c1">######################################################</span>
     <span class="c1"># Fields not always included when fetching the record</span>
     <span class="c1">######################################################</span>
-    <span class="n">initial_molecule_</span><span class="p">:</span> <span class="n">Molecule</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;initial_molecule&quot;</span><span class="p">)</span>
-    <span class="n">starting_molecule_</span><span class="p">:</span> <span class="n">Molecule</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;starting_molecule&quot;</span><span class="p">)</span>
-    <span class="n">optimizations_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">GridoptimizationOptimization</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;optimizations&quot;</span><span class="p">)</span>
+    <span class="n">initial_molecule_</span><span class="p">:</span> <span class="n">Molecule</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">"initial_molecule"</span><span class="p">)</span>
+    <span class="n">starting_molecule_</span><span class="p">:</span> <span class="n">Molecule</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">"starting_molecule"</span><span class="p">)</span>
+    <span class="n">optimizations_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">GridoptimizationOptimization</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">"optimizations"</span><span class="p">)</span>
 
     <span class="c1">##############################################</span>
     <span class="c1"># Fields with child records</span>
     <span class="c1"># (generally not received from the server)</span>
     <span class="c1">##############################################</span>
-    <span class="n">optimization_records_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">OptimizationRecord</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;optimizations_records&quot;</span><span class="p">)</span>
+    <span class="n">optimization_records_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">OptimizationRecord</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">"optimizations_records"</span><span class="p">)</span>
 
     <span class="c1"># Actual mapping, with tuples as keys. These will point to the same lists &amp; records as above</span>
     <span class="n">_optimization_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">OptimizationRecord</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
@@ -746,7 +746,7 @@
         <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">_base_url_prefix</span> <span class="o">==</span> <span class="n">base_url_prefix</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">)</span>
 
         <span class="c1"># Collect optimization id for all grid optimizations</span>
-        <span class="k">if</span> <span class="n">is_included</span><span class="p">(</span><span class="s2">&quot;optimizations&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">is_included</span><span class="p">(</span><span class="s2">"optimizations"</span><span class="p">,</span> <span class="n">include</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
             <span class="n">opt_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">optimizations_</span><span class="p">:</span>
@@ -787,17 +787,17 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_assert_online</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">optimizations_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
-                <span class="s2">&quot;get&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;api/v1/records/gridoptimization/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/optimizations&quot;</span><span class="p">,</span>
+                <span class="s2">"get"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"api/v1/records/gridoptimization/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/optimizations"</span><span class="p">,</span>
                 <span class="nb">list</span><span class="p">[</span><span class="n">GridoptimizationOptimization</span><span class="p">],</span>
             <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_children</span><span class="p">([</span><span class="s2">&quot;optimizations&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_children</span><span class="p">([</span><span class="s2">"optimizations"</span><span class="p">])</span>
 
 <div class="viewcode-block" id="GridoptimizationRecord.get_cache_dict">
 <a class="viewcode-back" href="../../../user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationRecord.get_cache_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_cache_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;optimization_records_&quot;</span><span class="p">},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">{</span><span class="s2">"optimization_records_"</span><span class="p">},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
     <span class="nd">@property</span>
@@ -826,7 +826,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">preoptimization</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizationRecord</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_records_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_optimizations</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_records_</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;preoptimization&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_records_</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"preoptimization"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">final_energies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">float</span><span class="p">]:</span>
