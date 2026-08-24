@@ -377,7 +377,7 @@ export default function Dataset() {
             <Paper elevation={3}>
               <Box p={1}>
                 <Typography variant="body1" fontWeight="bold">
-                  {entryNamesData ? entryNamesData.length : 0} Entries
+                  {entryNamesData ? entryNamesData.length : "?"} Entries
                 </Typography>
               </Box>
             </Paper>
@@ -388,7 +388,7 @@ export default function Dataset() {
                 <Typography variant="body1" fontWeight="bold">
                   {specificationsData
                     ? Object.keys(specificationsData).length
-                    : 0}{" "}
+                    : "?"}{" "}
                   Specifications
                 </Typography>
               </Box>
@@ -398,7 +398,7 @@ export default function Dataset() {
             <Paper elevation={3}>
               <Box p={1}>
                 <Typography variant="body1" fontWeight="bold">
-                  {recordCountData ? recordCountData : 0} Records
+                  {recordCountData !== undefined ? recordCountData : "?"} Records
                 </Typography>
               </Box>
             </Paper>
