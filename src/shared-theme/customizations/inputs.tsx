@@ -327,6 +327,25 @@ export const inputsCustomizations: Components<Theme> = {
             borderColor: gray[700],
           },
         }),
+        // Icon buttons embedded in text fields (input adornments, autocomplete
+        // indicators) render as plain icons — the boxed look is only for
+        // standalone buttons.
+        ".MuiInputAdornment-root &, .MuiAutocomplete-endAdornment &":
+          {
+            border: "none",
+            backgroundColor: "transparent",
+            width: "auto",
+            height: "auto",
+            "&:hover": {
+              backgroundColor: alpha(gray[500], 0.2),
+            },
+            "&:active": {
+              backgroundColor: alpha(gray[500], 0.3),
+            },
+            "&.Mui-disabled": {
+              backgroundColor: "transparent",
+            },
+          },
         variants: [
           {
             props: {
