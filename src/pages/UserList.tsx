@@ -32,6 +32,8 @@ import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
 import { RoleChip } from "../components/RoleChip";
 import { GroupsPanel } from "../components/GroupsPanel";
+import { AddUserDialog } from "../components/AddUserDialog";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { usePageTitle } from "../UsePageTitle.ts";
 
 const UserRow: React.FC<{
@@ -105,6 +107,7 @@ const UserList: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [assignGroup, setAssignGroup] = useState("");
+  const [addUserOpen, setAddUserOpen] = useState(false);
   const [toast, setToast] = useState<
     { severity: "success" | "error"; message: string } | undefined
   >();
@@ -112,6 +115,7 @@ const UserList: React.FC = () => {
   usePageTitle("User Management");
 
   const canModifyUsers = has_permission("users", "modify");
+  const canAddUsers = has_permission("users", "add");
 
   const { status, data: users, error } = useQuery({
     queryKey: ["listUsers"],
@@ -124,8 +128,13 @@ const UserList: React.FC = () => {
   const { data: groups } = useQuery({
     queryKey: ["listGroups"],
     queryFn: () => makeRequest<qcpTypes.GroupInfo[]>("GET", "api/v1/groups"),
-    enabled: canModifyUsers && has_permission("groups", "read"),
+    enabled: (canModifyUsers || canAddUsers) && has_permission("groups", "read"),
   });
+
+  const existingUsernames = useMemo(
+    () => new Set((users ?? []).map((u) => u.username.toLowerCase())),
+    [users],
+  );
 
   const filtered = useMemo(() => {
     if (!users) return [];
@@ -235,7 +244,27 @@ const UserList: React.FC = () => {
   return (
     <Grid container spacing={2} width="100%">
       <Grid size={12}>
-        <Typography variant="h4" marginBottom={3}>User Management</Typography>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 2,
+            mb: 3,
+          }}
+        >
+          <Typography variant="h4">User Management</Typography>
+          {canAddUsers && (
+            <Button
+              variant="contained"
+              startIcon={<PersonAddIcon />}
+              onClick={() => setAddUserOpen(true)}
+            >
+              Add User
+            </Button>
+          )}
+        </Box>
         <GroupsPanel users={users} />
         <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
           <TextField
@@ -374,6 +403,20 @@ const UserList: React.FC = () => {
           </Typography>
         )}
       </Grid>
+      {canAddUsers && (
+        <AddUserDialog
+          open={addUserOpen}
+          onClose={() => setAddUserOpen(false)}
+          existingUsernames={existingUsernames}
+          groups={groups ?? []}
+          onCreated={(username) =>
+            setToast({
+              severity: "success",
+              message: `User "${username}" created.`,
+            })
+          }
+        />
+      )}
       <Snackbar
         open={!!toast}
         autoHideDuration={5000}
