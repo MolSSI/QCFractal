@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
-  Checkbox,
-  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -16,7 +15,6 @@ import {
   IconButton,
   InputAdornment,
   InputLabel,
-  ListItemText,
   MenuItem,
   Select,
   Switch,
@@ -108,7 +106,17 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({
   };
 
   const addMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
+      // A group must exist before it can be assigned. Create any group the
+      // admin typed that isn't already a known group.
+      const existing = new Set(groups.map((g) => g.groupname));
+      const newGroups = memberGroups.filter((g) => !existing.has(g));
+      for (const groupname of newGroups) {
+        await makeRequest("POST", "api/v1/groups", { groupname });
+      }
+      if (newGroups.length > 0) {
+        queryClient.invalidateQueries({ queryKey: ["listGroups"] });
+      }
       const userInfo: qcpTypes.UserInfo = {
         username: trimmedUsername,
         role,
@@ -274,39 +282,33 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({
                 value={organization}
                 onChange={(e) => setOrganization(e.target.value)}
               />
-              <FormControl fullWidth>
-                <InputLabel id="add-user-groups-label">Groups (optional)</InputLabel>
-                <Select
-                  labelId="add-user-groups-label"
-                  label="Groups (optional)"
-                  multiple
-                  value={memberGroups}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setMemberGroups(typeof v === "string" ? v.split(",") : v);
-                  }}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                      {selected.map((g) => (
-                        <Chip key={g} label={g} size="small" />
-                      ))}
-                    </Box>
-                  )}
-                >
-                  {groups.map((g) => (
-                    <MenuItem key={g.groupname} value={g.groupname}>
-                      <Checkbox
-                        size="small"
-                        checked={memberGroups.includes(g.groupname)}
-                      />
-                      <ListItemText primary={g.groupname} />
-                    </MenuItem>
-                  ))}
-                  {groups.length === 0 && (
-                    <MenuItem disabled>(no groups defined)</MenuItem>
-                  )}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                multiple
+                freeSolo
+                autoSelect
+                selectOnFocus
+                clearOnBlur
+                handleHomeEndKeys
+                options={groups
+                  .map((g) => g.groupname)
+                  .filter((g) => !memberGroups.includes(g))}
+                value={memberGroups}
+                onChange={(_e, value) =>
+                  setMemberGroups(
+                    // Trim, drop blanks, and de-duplicate typed/selected names.
+                    Array.from(
+                      new Set(value.map((v) => v.trim()).filter(Boolean)),
+                    ),
+                  )
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Groups (optional)"
+                    helperText="Select existing groups, or type a new name and press Enter — the group will be created and the user assigned to it"
+                  />
+                )}
+              />
               {passwordField}
               {addMutation.isError && (
                 <Alert severity="error">
