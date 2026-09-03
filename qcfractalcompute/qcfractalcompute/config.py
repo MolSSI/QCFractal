@@ -165,8 +165,8 @@ class FractalServerSettings(QCFComputeConfigBase):
     password: str | None = None
     """Password to authenticate to the Fractal Server with (alongside the `username`)"""
 
-    verify: bool | None = None
-    """Use Server-side generated SSL certification or not"""
+    verify: bool = True
+    """If True, verify SSL certificate of the server"""
 
 
 class FractalComputeConfig(BaseSettings):
