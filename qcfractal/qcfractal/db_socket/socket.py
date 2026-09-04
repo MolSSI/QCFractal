@@ -185,6 +185,7 @@ class SQLAlchemySocket:
         # create the tables via sqlalchemy
         logger.info(f"Creating tables for database: {db_config.safe_uri}")
         engine = create_engine(db_config.sqlalchemy_url, echo=False, poolclass=NullPool, future=True)
+        SQLAlchemySocket._check_postgresql_minimum_version(engine)
 
         from qcfractal.db_socket.base_orm import BaseORM
 
@@ -219,8 +220,37 @@ class SQLAlchemySocket:
 
         from alembic import command
 
+        engine = create_engine(db_config.sqlalchemy_url, echo=False, poolclass=NullPool, future=True)
+        SQLAlchemySocket._check_postgresql_minimum_version(engine)
+
         alembic_cfg = SQLAlchemySocket.get_alembic_config(db_config)
         command.upgrade(alembic_cfg, revision)
+
+    @staticmethod
+    def _check_postgresql_minimum_version(engine: Engine) -> None:
+        """
+        Ensure the connected PostgreSQL server supports all schema features.
+
+        QCFractal uses unique constraints with ``NULLS NOT DISTINCT``, which
+        requires PostgreSQL 15+.
+        """
+
+        if engine.dialect.name != "postgresql":
+            return
+
+        with engine.connect() as conn:
+            server_version_info = conn.dialect.server_version_info
+
+        if server_version_info is None:
+            return
+
+        if server_version_info < (15,):
+            version_str = ".".join(str(x) for x in server_version_info)
+            raise RuntimeError(
+                "QCFractal requires PostgreSQL >= 15.0. "
+                f"Connected server version is {version_str}. "
+                "Please upgrade PostgreSQL (or use a QCFractal release compatible with older PostgreSQL versions)."
+            )
 
     @staticmethod
     def _check_db_revision(engine: Engine):
