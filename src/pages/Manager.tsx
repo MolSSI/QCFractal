@@ -1,7 +1,9 @@
 import {
   Box,
   Chip,
+  CircularProgress,
   Grid,
+  IconButton,
   Link as MuiLink,
   Paper,
   Stack,
@@ -12,14 +14,16 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  Tooltip,
   Typography,
 } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { usePortalClient } from "../PortalClient.tsx";
 import React from "react";
 import { usePageTitle } from "../UsePageTitle.ts";
 import * as qcpTypes from "../PortalTypes.ts";
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import LoadingIndicator from "../components/LoadingIndicator.tsx";
 import ErrorIndicator from "../components/ErrorIndicator.tsx";
 import { RecordTypeChip } from "../components/RecordTypeChip.tsx";
@@ -28,12 +32,17 @@ import { ManagerPieChart } from "../components/ManagerPieChart.tsx";
 import { ManagerTaskHistory } from "../components/ManagerTaskHistory.tsx";
 import { dateStringToLocalTime } from "../Utils.ts";
 
+// Minimum time the loading spinner replaces the refresh icon. A refresh slower
+// than this keeps spinning until it finishes.
+const REFRESH_SPINNER_MIN_MS = 300;
+
 export default function Manager() {
   const { managerName } = useParams();
 
   usePageTitle(`Manager: ${managerName}`);
 
   const { makeRequest } = usePortalClient();
+  const queryClient = useQueryClient();
 
   const {
     status,
@@ -74,6 +83,35 @@ export default function Manager() {
     },
     enabled: !!managerName && managerData?.status === "active",
   });
+
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
+  // Refreshes the manager itself (status, last seen, task tallies) and the
+  // claimed-records table. The "All Tasks on This Manager" history is left
+  // alone on purpose: it is an expensive on-demand query with its own load
+  // button, so it should not be re-run by a page-level refresh.
+  const handleRefresh = async () => {
+    // Ignore clicks while a refresh is still spinning rather than disabling
+    // the button, so the icon keeps its normal color during the animation.
+    if (!managerName || isRefreshing) {
+      return;
+    }
+
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        ...[
+          ["managerInfo", managerName],
+          ["managerActiveRecords", managerName],
+        ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+        // The refetches usually finish too quickly to notice, so hold the
+        // spinner for a moment to confirm the click actually registered.
+        new Promise((resolve) => setTimeout(resolve, REFRESH_SPINNER_MIN_MS)),
+      ]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -138,16 +176,31 @@ export default function Manager() {
       {status === "success" && managerData && (
         <Grid container spacing={3} width="100%">
           <Grid size={12}>
-            <Stack>
-              <Typography variant="h4" fontWeight="bold">
-                {managerData.name}
-              </Typography>
-              <Chip
-                label={managerData.status}
-                color={managerData.status == "active" ? "success" : "default"}
-                sx={{ width: "fit-content", fontWeight: "bold" }}
-              />
-            </Stack>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Stack>
+                <Typography variant="h4" fontWeight="bold">
+                  {managerData.name}
+                </Typography>
+                <Chip
+                  label={managerData.status}
+                  color={managerData.status == "active" ? "success" : "default"}
+                  sx={{ width: "fit-content", fontWeight: "bold" }}
+                />
+              </Stack>
+              <Box sx={{ ml: "auto" }}>
+                <Tooltip title="Refresh manager information">
+                  <IconButton onClick={handleRefresh} color="primary">
+                    {isRefreshing ? (
+                      // Same 24px footprint as RefreshIcon, so swapping the
+                      // two does not shift the button or the header row.
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      <RefreshIcon />
+                    )}
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
           </Grid>
           <Grid size={4}>
             <Typography variant="body1">
