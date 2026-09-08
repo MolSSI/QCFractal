@@ -211,7 +211,6 @@ export const ManagerTaskHistory: React.FC<ManagerTaskHistoryProps> = ({
       <Stack
         direction="row"
         alignItems="center"
-        justifyContent="space-between"
         flexWrap="wrap"
         gap={2}
         sx={{ mb: 2 }}
