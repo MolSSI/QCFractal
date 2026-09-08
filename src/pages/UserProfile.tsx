@@ -701,7 +701,11 @@ const BaseUserInfo: React.FC<{ userName?: string }> = ({ userName }) => {
                     })
                   }
                   renderInput={(params) => (
-                    <TextField {...params} placeholder="Select or type to add a group" />
+                    <TextField
+                      {...params}
+                      placeholder="Select or type to add a group"
+                      helperText="Typing a new name and pressing Enter will create the group and assign this user to it"
+                    />
                   )}
                   sx={{ maxWidth: 360 }}
                 />
