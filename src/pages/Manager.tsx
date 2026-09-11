@@ -1,4 +1,5 @@
 import {
+  Alert,
   Box,
   Chip,
   CircularProgress,
@@ -19,6 +20,7 @@ import {
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { usePortalClient } from "../PortalClient.tsx";
+import { useAuth } from "../Auth.tsx";
 import React from "react";
 import { usePageTitle } from "../UsePageTitle.ts";
 import * as qcpTypes from "../PortalTypes.ts";
@@ -42,7 +44,15 @@ export default function Manager() {
   usePageTitle(`Manager: ${managerName}`);
 
   const { makeRequest } = usePortalClient();
+  const { serverInfo } = useAuth();
   const queryClient = useQueryClient();
+
+  // records/query is not bounded by the server's api limits, but bulkGet is:
+  // asking for more than get_records at once fails with
+  // "Cannot get N records - limit is M". A busy manager can easily claim more
+  // than that, so only the first maxClaimedRecords ids are fetched and the
+  // table says so.
+  const maxClaimedRecords = Math.max(1, serverInfo.api_limits.get_records || 1);
 
   const {
     status,
@@ -57,10 +67,10 @@ export default function Manager() {
 
   const {
     status: recordsStatus,
-    data: activeRecords,
+    data: activeRecordsResult,
     error: recordsError,
   } = useQuery({
-    queryKey: ["managerActiveRecords", managerName],
+    queryKey: ["managerActiveRecords", managerName, maxClaimedRecords],
     queryFn: async () => {
       const recordIds = await makeRequest<number[]>(
         "POST",
@@ -70,19 +80,28 @@ export default function Manager() {
           status: ["running"],
         },
       );
-      if (recordIds.length === 0) {
-        return [];
+      // Keep the full tally so the table can report how many were left out.
+      const totalCount = recordIds.length;
+      const cappedIds = recordIds.slice(0, maxClaimedRecords);
+      if (cappedIds.length === 0) {
+        return { records: [] as qcpTypes.BaseRecord[], totalCount };
       }
-      return makeRequest<qcpTypes.BaseRecord[]>(
+      const records = await makeRequest<qcpTypes.BaseRecord[]>(
         "POST",
         `api/v1/records/bulkGet`,
         {
-          ids: recordIds,
+          ids: cappedIds,
         },
       );
+      return { records, totalCount };
     },
     enabled: !!managerName && managerData?.status === "active",
   });
+
+  const activeRecords = activeRecordsResult?.records;
+  const totalClaimedRecords = activeRecordsResult?.totalCount ?? 0;
+  const isClaimedRecordsTruncated =
+    totalClaimedRecords > (activeRecords?.length ?? 0);
 
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
@@ -279,6 +298,14 @@ export default function Manager() {
             )}
             {recordsStatus === "success" && activeRecords && (
               <>
+                {isClaimedRecordsTruncated && (
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    This manager has claimed {totalClaimedRecords} records, but
+                    the server returns at most {maxClaimedRecords} per request.
+                    Showing only the top {activeRecords.length} of{" "}
+                    {totalClaimedRecords} records.
+                  </Alert>
+                )}
                 <TableContainer component={Paper} variant="outlined">
                   <Table size="small">
                     <TableHead>

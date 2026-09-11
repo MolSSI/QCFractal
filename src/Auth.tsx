@@ -70,21 +70,29 @@ export const AuthContext = createContext<AuthContextType | undefined>(
   undefined,
 );
 
+// Stand-in used before /api/v1/information has been fetched and when that
+// fetch fails. Every api_limit is present and zero so callers can rely on
+// `serverInfo.api_limits.<limit>` existing and falling back via `|| default`
+// instead of throwing on an absent api_limits object. Deliberately not cast
+// with `as`, so a new limit added to ServerInfo fails the typecheck here.
+const UNKNOWN_SERVER_INFO: qcpTypes.ServerInfo = {
+  name: "(unknown)",
+  version: "(unknown)",
+  api_limits: {
+    get_records: 0,
+    add_records: 0,
+    get_dataset_entries: 0,
+    get_molecules: 0,
+    get_managers: 0,
+    get_error_logs: 0,
+  },
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [serverStatus, setServerStatus] = useState<ServerStatus>("loading");
 
-  const [serverInfo, setServerInfo] = useState<qcpTypes.ServerInfo>({
-    name: "(unknown)",
-    version: "(unknown)",
-    api_limits: {
-      get_records: 0,
-      add_records: 0,
-      get_dataset_entries: 0,
-      get_molecules: 0,
-      get_managers: 0,
-      get_error_logs: 0,
-      }
-  });
+  const [serverInfo, setServerInfo] =
+    useState<qcpTypes.ServerInfo>(UNKNOWN_SERVER_INFO);
 
   const [authorized, setAuthorized] = useState<boolean>(false);
   const [userInfo, setUserInfo] = useState<qcpTypes.UserInfo | undefined>(
@@ -121,10 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setServerInfo(sInfo);
         return sInfo;
       } catch (e) {
-        setServerInfo({
-          name: "(unknown)",
-          version: "(unknown)",
-        } as qcpTypes.ServerInfo);
+        setServerInfo(UNKNOWN_SERVER_INFO);
         console.warn("Failed to fetch server info:", e);
         return undefined;
       }
