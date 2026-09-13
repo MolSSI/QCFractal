@@ -123,6 +123,10 @@ class QueryIteratorBase(Generic[T]):
         self._current_batch = []
         self._fetched = 0
 
+        # Clear the pagination cursor. Otherwise, the next request would pick up where the
+        # previous pass left off, and iteration would start from the end (that is, from nothing)
+        self._query_filters.cursor = None
+
         self._fetch_batch()
 
     def _request(self) -> list[T]:
