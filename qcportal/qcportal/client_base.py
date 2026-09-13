@@ -108,10 +108,6 @@ class PortalClientBase:
         if not address.startswith("http://") and not address.startswith("https://"):
             address = "https://" + address
 
-        # If we are `http`, ignore all SSL directives
-        if not address.startswith("https"):
-            self._verify = True
-
         if not address.endswith("/"):
             address += "/"
 
