@@ -1818,12 +1818,17 @@ class BaseDataset(BaseModel):
         self.assert_is_not_view()
         self.assert_online()
 
-        entry_names = make_list(entry_names)
         specification_names = make_list(specification_names)
 
+        # Always batch over entry names - typical setup is lots of entries and few specifications
         if entry_names is None:
+            entry_names = self.entry_names
+        else:
+            entry_names = make_list(entry_names)
+
+        for entry_names_batch in chunk_iterable(entry_names, 200):
             body = DatasetRecordModifyBody(
-                entry_names=None,
+                entry_names=entry_names_batch,
                 specification_names=specification_names,
                 compute_tag=new_compute_tag,
                 compute_priority=new_compute_priority,
@@ -1832,19 +1837,6 @@ class BaseDataset(BaseModel):
             )
 
             self._client.make_request("patch", f"{self._base_url}/records", UpdateMetadata, body=body)
-
-        else:
-            for entry_names_batch in chunk_iterable(entry_names, 200):
-                body = DatasetRecordModifyBody(
-                    entry_names=entry_names_batch,
-                    specification_names=specification_names,
-                    compute_tag=new_compute_tag,
-                    compute_priority=new_compute_priority,
-                    comment=new_comment,
-                    status=new_status,
-                )
-
-                self._client.make_request("patch", f"{self._base_url}/records", UpdateMetadata, body=body)
 
         if refetch_records:
             self.fetch_records(entry_names, specification_names, force_refetch=True)
