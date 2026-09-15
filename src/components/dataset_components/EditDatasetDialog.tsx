@@ -3,6 +3,7 @@ import * as qcpTypes from "../../PortalTypes";
 import { PriorityEnum } from "../../PortalTypes";
 import { usePortalClient } from "../../PortalClient.tsx";
 import { useAuth } from "../../Auth.tsx";
+import { describeRequestError } from "../../Utils.ts";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Button,
@@ -54,10 +55,6 @@ function useModifyDatasetMetadata(dataset: qcpTypes.Dataset) {
   });
 }
 
-function errorMessage(error: unknown, fallback: string) {
-  return error instanceof Error ? error.message : fallback;
-}
-
 interface EditDatasetProps {
   dataset: qcpTypes.Dataset;
 }
@@ -68,12 +65,12 @@ interface EditDatasetProps {
 export const EditDatasetNameButton: React.FC<EditDatasetProps> = ({
   dataset,
 }) => {
-  const { has_permission } = useAuth();
+  const { has_permission, loggedIn } = useAuth();
   const [open, setOpen] = React.useState(false);
   const [name, setName] = React.useState(dataset.name);
   const mutation = useModifyDatasetMetadata(dataset);
 
-  if (!has_permission("datasets", "modify")) return null;
+  if (!loggedIn || !has_permission("datasets", "modify")) return null;
 
   const handleOpen = () => {
     setName(dataset.name);
@@ -107,7 +104,10 @@ export const EditDatasetNameButton: React.FC<EditDatasetProps> = ({
           <Stack spacing={2} sx={{ mt: 1 }}>
             {mutation.isError && (
               <Typography color="error" variant="body2">
-                {errorMessage(mutation.error, "Failed to rename dataset")}
+                {describeRequestError(
+                  mutation.error,
+                  "Failed to rename dataset",
+                )}
               </Typography>
             )}
             <TextField
@@ -150,7 +150,7 @@ export const EditDatasetNameButton: React.FC<EditDatasetProps> = ({
 export const EditDatasetMetadataButton: React.FC<EditDatasetProps> = ({
   dataset,
 }) => {
-  const { has_permission } = useAuth();
+  const { has_permission, loggedIn } = useAuth();
   const [open, setOpen] = React.useState(false);
   const [description, setDescription] = React.useState(
     dataset.description ?? "",
@@ -166,7 +166,7 @@ export const EditDatasetMetadataButton: React.FC<EditDatasetProps> = ({
   >((dataset.default_compute_priority ?? "") as PriorityEnum | "");
   const mutation = useModifyDatasetMetadata(dataset);
 
-  if (!has_permission("datasets", "modify")) return null;
+  if (!loggedIn || !has_permission("datasets", "modify")) return null;
 
   const handleOpen = () => {
     setDescription(dataset.description ?? "");
@@ -215,7 +215,10 @@ export const EditDatasetMetadataButton: React.FC<EditDatasetProps> = ({
           <Stack spacing={2} sx={{ mt: 1 }}>
             {mutation.isError && (
               <Typography color="error" variant="body2">
-                {errorMessage(mutation.error, "Failed to update dataset")}
+                {describeRequestError(
+                  mutation.error,
+                  "Failed to update dataset",
+                )}
               </Typography>
             )}
             <TextField

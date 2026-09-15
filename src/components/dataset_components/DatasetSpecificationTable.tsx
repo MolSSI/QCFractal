@@ -12,22 +12,61 @@ import {
   TablePagination,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import * as qcpTypes from "../../PortalTypes";
+import { useAuth } from "../../Auth.tsx";
+import { describeRequestError } from "../../Utils.ts";
 import { getSpecificationComponent } from "../record_components/lookup.tsx";
+import {
+  DeleteSpecificationDialog,
+  useRenameSpecification,
+} from "./DatasetSpecificationActions.tsx";
+
+// Every record in a dataset carries a status, so summing the per-status counts
+// for one specification gives the number of records attached to it.
+function countRecordsForSpec(
+  datasetStatus: qcpTypes.DatasetStatus | undefined,
+  specName: string,
+): number | undefined {
+  if (!datasetStatus) {
+    return undefined;
+  }
+
+  return Object.values(datasetStatus[specName] ?? {}).reduce(
+    (total, count) => total + count,
+    0,
+  );
+}
 
 interface DatasetSpecificationTableProps {
-  specificationsData: Record<string, { specification: qcpTypes.DatasetSpecificationData }>;
+  specificationsData: Record<
+    string,
+    { specification: qcpTypes.DatasetSpecificationData }
+  >;
   datasetType: qcpTypes.RecordType;
+  datasetId: number;
+  datasetStatus: qcpTypes.DatasetStatus | undefined;
 }
 
 export default function DatasetSpecificationTable({
   specificationsData,
   datasetType,
+  datasetId,
+  datasetStatus,
 }: DatasetSpecificationTableProps) {
+  const { has_permission, loggedIn } = useAuth();
+  // The server checks datasets:modify for renaming AND for deleting a
+  // specification, so both buttons hang off the same permission
+  const canModify = loggedIn && has_permission("datasets", "modify");
+  const canDelete = canModify && has_permission("datasets", "delete");
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [filter, setFilter] = React.useState("");
@@ -61,6 +100,59 @@ export default function DatasetSpecificationTable({
     setExpandedSpecName((prev) => (prev === name ? null : name));
   };
 
+  const [editingSpecName, setEditingSpecName] = React.useState<string | null>(
+    null,
+  );
+  const [editingValue, setEditingValue] = React.useState("");
+  const [specToDelete, setSpecToDelete] = React.useState<string | null>(null);
+
+  const renameMutation = useRenameSpecification(datasetType, datasetId);
+
+  const startEditing = (specName: string) => {
+    renameMutation.reset();
+    setEditingSpecName(specName);
+    setEditingValue(specName);
+  };
+
+  const cancelEditing = () => {
+    renameMutation.reset();
+    setEditingSpecName(null);
+    setEditingValue("");
+  };
+
+  const trimmedEditingValue = editingValue.trim();
+  const isDuplicateName =
+    trimmedEditingValue !== editingSpecName &&
+    Object.prototype.hasOwnProperty.call(
+      specificationsData,
+      trimmedEditingValue,
+    );
+  const canSaveRename =
+    trimmedEditingValue !== "" &&
+    trimmedEditingValue !== editingSpecName &&
+    !isDuplicateName &&
+    !renameMutation.isPending;
+
+  const saveRename = () => {
+    if (!editingSpecName || !canSaveRename) {
+      return;
+    }
+
+    renameMutation.mutate(
+      { oldName: editingSpecName, newName: trimmedEditingValue },
+      {
+        onSuccess: () => {
+          // Keep the row expanded under its new name if it was open
+          setExpandedSpecName((prev) =>
+            prev === editingSpecName ? trimmedEditingValue : prev,
+          );
+          setEditingSpecName(null);
+          setEditingValue("");
+        },
+      },
+    );
+  };
+
   const SpecificationComponent = React.useMemo(
     () => getSpecificationComponent(datasetType),
     [datasetType],
@@ -83,9 +175,7 @@ export default function DatasetSpecificationTable({
           <TableHead>
             <TableRow>
               <TableCell width="50px" />
-              <TableCell>
-                Name
-              </TableCell>
+              <TableCell>Name</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -108,9 +198,105 @@ export default function DatasetSpecificationTable({
                       </IconButton>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" fontWeight="medium">
-                        {specName}
-                      </Typography>
+                      {editingSpecName === specName ? (
+                        // Clicks inside the editor must not toggle the row
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                          }}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <TextField
+                            size="small"
+                            autoFocus
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.preventDefault();
+                                saveRename();
+                              } else if (event.key === "Escape") {
+                                event.preventDefault();
+                                cancelEditing();
+                              }
+                            }}
+                            error={isDuplicateName || renameMutation.isError}
+                            helperText={
+                              isDuplicateName
+                                ? "A specification with that name already exists"
+                                : renameMutation.isError
+                                  ? describeRequestError(
+                                      renameMutation.error,
+                                      "Failed to rename specification",
+                                    )
+                                  : " "
+                            }
+                          />
+                          <Tooltip title="Save">
+                            <span>
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                disabled={!canSaveRename}
+                                onClick={saveRename}
+                              >
+                                <CheckIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                          <Tooltip title="Cancel">
+                            <span>
+                              <IconButton
+                                size="small"
+                                disabled={renameMutation.isPending}
+                                onClick={cancelEditing}
+                              >
+                                <CloseIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        </Box>
+                      ) : (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                          }}
+                        >
+                          <Typography variant="body2" fontWeight="medium">
+                            {specName}
+                          </Typography>
+                          {canModify && (
+                            <Tooltip title="Rename specification">
+                              <IconButton
+                                size="small"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  startEditing(specName);
+                                }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                          {canDelete && (
+                            <Tooltip title="Delete specification">
+                              <IconButton
+                                size="small"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setSpecToDelete(specName);
+                                }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </Box>
+                      )}
                     </TableCell>
                   </TableRow>
                   <TableRow>
@@ -147,6 +333,16 @@ export default function DatasetSpecificationTable({
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
+      {specToDelete !== null && (
+        <DeleteSpecificationDialog
+          datasetType={datasetType}
+          datasetId={datasetId}
+          specName={specToDelete}
+          recordCount={countRecordsForSpec(datasetStatus, specToDelete)}
+          open
+          onClose={() => setSpecToDelete(null)}
+        />
+      )}
     </>
   );
 }

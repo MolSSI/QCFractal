@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useCallback, useContext } from "react";
 import * as requestHelpers from "./RequestHelpers.ts";
-import { AuthenticationError } from "./Exceptions.ts";
+import { AuthenticationError, AuthorizationError } from "./Exceptions.ts";
 import { useAuth } from "./Auth.tsx";
 
 type ClientContextType = {
@@ -34,11 +34,24 @@ export function PortalClientProvider({ children }: { children: ReactNode }) {
           url_params,
         );
       } catch (err) {
-        if (err instanceof AuthenticationError) {
-          // Ping the server to see if the user is still logged in and that it is still up
-          await ping();
-        }
         const errmsg = `Failed to request data: ${err instanceof Error ? err.message : String(err)}`;
+
+        // A 403 can mean the session lapsed just as much as a 401 does: the
+        // server sees no role while the client still holds the old user info.
+        // Re-ping either way so the UI stops offering actions that will fail.
+        if (
+          err instanceof AuthenticationError ||
+          err instanceof AuthorizationError
+        ) {
+          await ping();
+
+          // Rethrow the same kind of error so callers can tell an auth
+          // failure from an ordinary one and explain it in plain language
+          throw err instanceof AuthenticationError
+            ? new AuthenticationError(errmsg)
+            : new AuthorizationError(errmsg);
+        }
+
         throw new Error(errmsg);
       }
     },

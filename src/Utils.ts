@@ -1,4 +1,22 @@
 import * as qcpTypes from "./PortalTypes";
+import { AuthenticationError, AuthorizationError } from "./Exceptions.ts";
+
+/**
+ * Turns a failed request into something worth showing a user. Auth failures
+ * get an explanation and a way forward instead of the raw server message,
+ * which names roles and actions that mean nothing outside the API.
+ */
+export function describeRequestError(error: unknown, fallback: string): string {
+  if (error instanceof AuthenticationError) {
+    return "Your session has expired. Please log in again and retry.";
+  }
+
+  if (error instanceof AuthorizationError) {
+    return "You are not authorized to do this. Your session may have expired — try logging in again, or ask an administrator for access.";
+  }
+
+  return error instanceof Error && error.message ? error.message : fallback;
+}
 
 export const parseToDate = (isoString?: string): Date | undefined => {
   if (!isoString) {
@@ -10,7 +28,9 @@ export const parseToDate = (isoString?: string): Date | undefined => {
   return new Date(trimmed);
 };
 
-export const dateStringToLocalTime = (isoString: string | null | undefined): string | undefined => {
+export const dateStringToLocalTime = (
+  isoString: string | null | undefined,
+): string | undefined => {
   if (!isoString) {
     return undefined;
   }
@@ -19,12 +39,13 @@ export const dateStringToLocalTime = (isoString: string | null | undefined): str
   return date.toLocaleString(undefined, {
     timeZoneName: "short",
   });
-}
+};
 
 export const truncateFront = (s: string, maxLength: number): string => {
-  return s.length > maxLength ? "..."+s.slice(s.length-maxLength, s.length) : s;
-
-}
+  return s.length > maxLength
+    ? "..." + s.slice(s.length - maxLength, s.length)
+    : s;
+};
 
 export const updateFavoritesList = (
   existing_favorites: number[] | undefined,
@@ -67,7 +88,6 @@ export function asRecord(value: unknown): Record<string, unknown> | null {
 export function stripAnsi(text: string): string {
   // eslint-disable-next-line no-control-regex
   return text.replace(/\x1b\[[0-9;]*m/g, "");
-
 }
 
 /**
@@ -105,11 +125,17 @@ export function formatSize(bytes: number): string {
  * Checks if all tokens in the query string are present in the target string in the given order.
  * Case-insensitive.
  */
-export function matchesTokens(query: string, target: string | null | undefined): boolean {
+export function matchesTokens(
+  query: string,
+  target: string | null | undefined,
+): boolean {
   if (!target) return false;
   if (!query) return true;
 
-  const queryTokens = query.toLowerCase().split(/\s+/).filter((t) => t.length > 0);
+  const queryTokens = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((t) => t.length > 0);
   const targetLower = target.toLowerCase();
 
   let lastIndex = -1;

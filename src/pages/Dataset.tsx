@@ -549,6 +549,8 @@ export default function Dataset() {
                   <DatasetSpecificationTable
                     specificationsData={specificationsData}
                     datasetType={datasetData.dataset_type}
+                    datasetId={datasetIdNumber}
+                    datasetStatus={statusData}
                   />
                 )}
               </TabPanel>
