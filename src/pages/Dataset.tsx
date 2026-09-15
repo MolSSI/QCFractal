@@ -39,6 +39,10 @@ import {
   getSavedDatasetViewState,
 } from "../components/dataset_components/DatasetViewState.tsx";
 import { FavoriteButton } from "../components/FavoriteButton.tsx";
+import {
+  EditDatasetMetadataButton,
+  EditDatasetNameButton,
+} from "../components/dataset_components/EditDatasetDialog.tsx";
 
 function TabPanel(props: {
   children?: React.ReactNode;
@@ -292,7 +296,11 @@ export default function Dataset() {
   });
 
   const { data: recordCountData } = useQuery({
-    queryKey: ["datasetRecordCount", datasetData?.dataset_type, datasetIdNumber],
+    queryKey: [
+      "datasetRecordCount",
+      datasetData?.dataset_type,
+      datasetIdNumber,
+    ],
     queryFn: () =>
       makeRequest<number>(
         "GET",
@@ -304,10 +312,7 @@ export default function Dataset() {
       !!datasetData?.dataset_type,
   });
 
-  const {
-    status: attachmentsStatus,
-    data: attachmentsData,
-  } = useQuery({
+  const { status: attachmentsStatus, data: attachmentsData } = useQuery({
     queryKey: ["datasetAttachments", datasetIdNumber],
     queryFn: () =>
       makeRequest<qcpTypes.DatasetAttachment[]>(
@@ -354,6 +359,7 @@ export default function Dataset() {
                     sx={{ mr: 2, verticalAlign: "middle" }}
                   />
                   {datasetData.name}
+                  <EditDatasetNameButton dataset={datasetData} />
                 </Typography>
                 <Typography
                   variant="subtitle1"
@@ -398,7 +404,8 @@ export default function Dataset() {
             <Paper elevation={3}>
               <Box p={1}>
                 <Typography variant="body1" fontWeight="bold">
-                  {recordCountData !== undefined ? recordCountData : "?"} Records
+                  {recordCountData !== undefined ? recordCountData : "?"}{" "}
+                  Records
                 </Typography>
               </Box>
             </Paper>
@@ -408,11 +415,22 @@ export default function Dataset() {
           <Grid size={12}>
             <Paper elevation={2}>
               <Box p={2}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  Description
-                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography variant="h6" fontWeight="bold" gutterBottom>
+                    Description
+                  </Typography>
+                  <EditDatasetMetadataButton dataset={datasetData} />
+                </Box>
                 <Typography variant="body1" component={"div"}>
-                  <MarkdownContent>{datasetData.description.trim()}</MarkdownContent>
+                  <MarkdownContent>
+                    {datasetData.description.trim()}
+                  </MarkdownContent>
                 </Typography>
 
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
@@ -422,15 +440,6 @@ export default function Dataset() {
                   {datasetData.tags?.map((tag, idx) => (
                     <Chip key={idx} label={tag} variant="outlined" />
                   ))}
-                </Box>
-
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="h6" fontWeight="bold" gutterBottom>
-                    Group
-                  </Typography>
-                  <Typography variant="body1">
-                    {datasetData.group || "N/A"}
-                  </Typography>
                 </Box>
 
                 <Box sx={{ mb: 2 }}>
@@ -502,7 +511,11 @@ export default function Dataset() {
                 />
                 <Tab label="Entries" id="tab-1" aria-controls="tabpanel-1" />
                 <Tab label="Records" id="tab-2" aria-controls="tabpanel-2" />
-                <Tab label="Attachments" id="tab-3" aria-controls="tabpanel-3" />
+                <Tab
+                  label="Attachments"
+                  id="tab-3"
+                  aria-controls="tabpanel-3"
+                />
               </Tabs>
 
               {/* Tab 0: Specifications */}

@@ -314,7 +314,6 @@ export type Dataset = {
   description: string;
   tagline: string;
   tags: string[];
-  group: string;
   visibility: boolean;
   default_compute_tag: string;
   default_compute_priority: number;
@@ -324,6 +323,19 @@ export type Dataset = {
   // These might be present depending on the include/exclude
   specifications?: Record<string, any>;
   entries?: Record<string, any>;
+};
+
+// Body for PATCH api/v1/datasets/{dataset_type}/{dataset_id}.
+// The backend requires the full metadata object (no partial updates).
+export type DatasetModifyMetadata = {
+  name: string;
+  description: string;
+  tagline: string;
+  tags: string[];
+  provenance: Record<string, unknown>;
+  extras: Record<string, unknown>;
+  default_compute_tag: string;
+  default_compute_priority: PriorityEnum;
 };
 
 export type ExternalFileStatus = "available" | "processing";
