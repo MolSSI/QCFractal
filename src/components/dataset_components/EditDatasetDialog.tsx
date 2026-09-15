@@ -256,7 +256,7 @@ export const EditDatasetMetadataButton: React.FC<EditDatasetProps> = ({
                     }
                   >
                     <MenuItem value="">
-                      <em>Unchanged</em>
+                      <em>Leave Blank</em>
                     </MenuItem>
                     <MenuItem value={2}>High</MenuItem>
                     <MenuItem value={1}>Normal</MenuItem>

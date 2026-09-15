@@ -35,6 +35,7 @@ import {
   createSavedDatasetPageState,
   DatasetLocationState,
   DatasetRecordViewState,
+  DatasetStatusViewState,
   DatasetViewState,
   getSavedDatasetViewState,
 } from "../components/dataset_components/DatasetViewState.tsx";
@@ -146,6 +147,23 @@ export default function Dataset() {
     }));
   };
 
+  const updateStatusView = (updates: Partial<DatasetStatusViewState>) => {
+    setViewState((currentViewState) => ({
+      ...currentViewState,
+      statusView: {
+        ...currentViewState.statusView,
+        ...updates,
+      },
+    }));
+  };
+
+  const handleStatusSpecFilterChange = (specFilter: string) => {
+    updateStatusView({
+      specFilter,
+      page: 0,
+    });
+  };
+
   const updateRecordView = (updates: Partial<DatasetRecordViewState>) => {
     setViewState((currentViewState) => ({
       ...currentViewState,
@@ -191,6 +209,7 @@ export default function Dataset() {
     status: qcpTypes.RecordStatus,
   ) => {
     setViewState((currentViewState) => ({
+      ...currentViewState,
       tabValue: DATASET_RECORDS_TAB_INDEX,
       recordView: {
         ...currentViewState.recordView,
@@ -477,6 +496,10 @@ export default function Dataset() {
                 ) : (
                   <DatasetStatusTable
                     statusData={statusData}
+                    page={viewState.statusView.page}
+                    specFilter={viewState.statusView.specFilter}
+                    onPageChange={(page) => updateStatusView({ page })}
+                    onSpecFilterChange={handleStatusSpecFilterChange}
                     onSelectStatus={handleStatusTableSelect}
                   />
                 )}
