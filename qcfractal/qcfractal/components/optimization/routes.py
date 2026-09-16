@@ -84,4 +84,4 @@ def add_optimization_dataset_entries_v1(
 def background_add_optimization_dataset_entries_v1(
     dataset_id: int, body_data: list[OptimizationDatasetNewEntry]
 ) -> int:
-    return storage_socket.datasets.optimization.background_add_entries(dataset_id, new_entries=body_data)
+    return storage_socket.datasets.optimization.background_add_entries(dataset_id, body_data, g.user_id)
