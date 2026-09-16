@@ -231,8 +231,21 @@ export default function DatasetSpecificationTable({
                                       renameMutation.error,
                                       "Failed to rename specification",
                                     )
-                                  : " "
+                                  : undefined
                             }
+                            // Float the helper text so it doesn't offset the
+                            // input from the adjacent buttons
+                            sx={{
+                              position: "relative",
+                              "& .MuiFormHelperText-root": {
+                                position: "absolute",
+                                top: "100%",
+                                left: 0,
+                                mt: 0.25,
+                                mx: 0,
+                                whiteSpace: "nowrap",
+                              },
+                            }}
                           />
                           <Tooltip title="Save">
                             <span>

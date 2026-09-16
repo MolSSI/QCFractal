@@ -6,6 +6,7 @@ import { useLocation, useParams } from "react-router-dom";
 import {
   Box,
   Chip,
+  CircularProgress,
   Grid,
   IconButton,
   Paper,
@@ -44,6 +45,9 @@ import {
   EditDatasetMetadataButton,
   EditDatasetNameButton,
 } from "../components/dataset_components/EditDatasetDialog.tsx";
+
+
+const REFRESH_SPINNER_MIN_MS = 300;
 
 function TabPanel(props: {
   children?: React.ReactNode;
@@ -221,36 +225,54 @@ export default function Dataset() {
     }));
   };
 
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
   const handleRefresh = async () => {
-    if (datasetIdNumber === null || Number.isNaN(datasetIdNumber)) {
+    // Ignore clicks while a refresh is still spinning rather than disabling
+    // the button, so the icon keeps its normal color during the animation.
+    if (
+      datasetIdNumber === null ||
+      Number.isNaN(datasetIdNumber) ||
+      isRefreshing
+    ) {
       return;
     }
 
-    const queryKeys = [["dataset", datasetIdNumber]] as const;
+    const queryKeys: readonly unknown[][] = [
+      ["dataset", datasetIdNumber],
+      ...(datasetData?.dataset_type
+        ? [
+            ["datasetStatus", datasetData.dataset_type, datasetIdNumber],
+            [
+              "datasetSpecifications",
+              datasetData.dataset_type,
+              datasetIdNumber,
+            ],
+            ["datasetEntryNames", datasetData.dataset_type, datasetIdNumber],
+            ["datasetRecordCount", datasetData.dataset_type, datasetIdNumber],
+            [
+              "datasetRecordDiscovery",
+              datasetData.dataset_type,
+              datasetIdNumber,
+            ],
+            ["datasetAttachments", datasetIdNumber],
+          ]
+        : []),
+    ];
 
-    if (!datasetData?.dataset_type) {
-      await Promise.all(
-        queryKeys.map((queryKey) =>
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        ...queryKeys.map((queryKey) =>
           queryClient.invalidateQueries({ queryKey }),
         ),
-      );
-      return;
+        // The refetches usually finish too quickly to notice, so hold the
+        // spinner for a moment to confirm the click actually registered.
+        new Promise((resolve) => setTimeout(resolve, REFRESH_SPINNER_MIN_MS)),
+      ]);
+    } finally {
+      setIsRefreshing(false);
     }
-
-    const datasetScopedKeys = [
-      ["datasetStatus", datasetData.dataset_type, datasetIdNumber],
-      ["datasetSpecifications", datasetData.dataset_type, datasetIdNumber],
-      ["datasetEntryNames", datasetData.dataset_type, datasetIdNumber],
-      ["datasetRecordCount", datasetData.dataset_type, datasetIdNumber],
-      ["datasetRecordDiscovery", datasetData.dataset_type, datasetIdNumber],
-      ["datasetAttachments", datasetIdNumber],
-    ] as const;
-
-    await Promise.all(
-      [...queryKeys, ...datasetScopedKeys].map((queryKey) =>
-        queryClient.invalidateQueries({ queryKey }),
-      ),
-    );
   };
 
   const {
@@ -390,7 +412,13 @@ export default function Dataset() {
               <Stack spacing={1} alignItems="flex-end" sx={{ ml: "auto" }}>
                 <Tooltip title="Refresh dataset information">
                   <IconButton onClick={handleRefresh} color="primary">
-                    <RefreshIcon />
+                    {isRefreshing ? (
+                      // Same 24px footprint as RefreshIcon, so swapping the
+                      // two does not shift the button or the header row.
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      <RefreshIcon />
+                    )}
                   </IconButton>
                 </Tooltip>
                 <DatasetRelationshipButton datasetId={datasetIdNumber!} />
