@@ -94,4 +94,4 @@ def add_neb_dataset_entries_v1(dataset_id: int, body_data: list[NEBDatasetNewEnt
 @check_permissions("datasets", "modify")
 @serialization()
 def background_add_neb_dataset_entries_v1(dataset_id: int, body_data: list[NEBDatasetNewEntry]) -> int:
-    return storage_socket.datasets.neb.background_add_entries(dataset_id, new_entries=body_data)
+    return storage_socket.datasets.neb.background_add_entries(dataset_id, body_data, g.user_id)

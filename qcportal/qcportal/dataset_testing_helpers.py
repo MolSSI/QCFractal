@@ -28,6 +28,7 @@ def run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_ex
 
     if background:
         ij = ds.background_add_entries(test_entries)
+        assert ij.user == ds._client.username
         ij.watch(interval=0.1, timeout=10)
         meta = InsertMetadata(**ij.result)
         ds.fetch_entries()
@@ -445,6 +446,7 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
 
     if background:
         ij = ds.background_submit()
+        assert ij.user == ds._client.username
         ij.watch(interval=0.1, timeout=10)
         meta = InsertCountsMetadata(**ij.result)
     else:
@@ -476,6 +478,7 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
 
     if background:
         ij = ds.background_submit()
+        assert ij.user == ds._client.username
         ij.watch(interval=0.1, timeout=10)
         meta = InsertCountsMetadata(**ij.result)
     else:
@@ -493,6 +496,7 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
 
     if background:
         ij = ds.background_submit(compute_tag="new_tag", compute_priority=PriorityEnum.high)
+        assert ij.user == ds._client.username
         ij.watch(interval=0.1, timeout=10)
         meta = InsertCountsMetadata(**ij.result)
     else:
@@ -527,6 +531,7 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
 
     if background:
         ij = ds.background_submit()
+        assert ij.user == ds._client.username
         ij.watch(interval=0.1, timeout=10)
         meta = InsertCountsMetadata(**ij.result)
     else:
@@ -549,6 +554,7 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare, backgr
 
     if background:
         ij = ds.background_submit(find_existing=False)
+        assert ij.user == ds._client.username
         ij.watch(interval=0.1, timeout=10)
         meta = InsertCountsMetadata(**ij.result)
     else:
@@ -790,6 +796,7 @@ def run_dataset_model_modify_records(ds, test_entries, test_spec, background):
             return
 
         ij = ds.background_modify_records(*args, **kwargs)
+        assert ij.user == ds._client.username
         ij.watch(interval=0.1, timeout=10)
         meta = UpdateMetadata(**ij.result)
         assert meta.success

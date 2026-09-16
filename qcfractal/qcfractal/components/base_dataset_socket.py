@@ -824,7 +824,12 @@ class BaseDatasetSocket:
         return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx)
 
     def background_add_entries(
-        self, dataset_id: int, new_entries: Sequence[Any], *, session: Optional[Session] = None
+        self,
+        dataset_id: int,
+        new_entries: Sequence[Any],
+        user_id: Optional[int] = None,
+        *,
+        session: Optional[Session] = None,
     ) -> int:
         """
         Adds entries to a dataset in the database as an internal job
@@ -848,7 +853,7 @@ class BaseDatasetSocket:
                     "dataset_id": dataset_id,
                     "entry_dicts": pydantic_core.to_jsonable_python(new_entries),
                 },
-                user_id=None,
+                user_id=user_id,
                 unique_name=False,
                 serial_group=f"ds_add_entries_{dataset_id}",  # only run one addition for this dataset at a time
                 session=session,
@@ -1468,6 +1473,7 @@ class BaseDatasetSocket:
         """
 
         with self.root_socket.optional_session(session) as session:
+            job_user_id = self.root_socket.users.get_optional_user_id(creator_user, session=session)
             job_id = self.root_socket.internal_jobs.add(
                 f"dataset_submit_{dataset_id}",
                 now_at_utc(),
@@ -1481,7 +1487,7 @@ class BaseDatasetSocket:
                     "creator_user": creator_user,
                     "find_existing": find_existing,
                 },
-                user_id=None,
+                user_id=job_user_id,
                 unique_name=False,
                 serial_group=f"ds_submit_{dataset_id}",  # only run one submission for this dataset at a time
                 session=session,
@@ -1660,7 +1666,7 @@ class BaseDatasetSocket:
                     "comment": comment,
                     "status_filter": status_filter,
                 },
-                user_id=None,
+                user_id=user_id,
                 unique_name=False,
                 serial_group=f"ds_modify_records_{dataset_id}",
                 session=session,
