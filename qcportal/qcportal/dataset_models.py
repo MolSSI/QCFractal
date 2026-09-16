@@ -1811,6 +1811,7 @@ class BaseDataset(BaseModel):
         new_compute_priority: PriorityEnum | None = None,
         new_comment: str | None = None,
         new_status: RecordStatusEnum | None = None,
+        status_filter: RecordStatusEnum | Iterable[RecordStatusEnum] | None = None,
         *,
         refetch_records: bool = False,
     ):
@@ -1819,6 +1820,7 @@ class BaseDataset(BaseModel):
         self.assert_online()
 
         specification_names = make_list(specification_names)
+        status_filter = make_list(status_filter)
 
         # Always batch over entry names - typical setup is lots of entries and few specifications
         if entry_names is None:
@@ -1834,6 +1836,7 @@ class BaseDataset(BaseModel):
                 compute_priority=new_compute_priority,
                 comment=new_comment,
                 status=new_status,
+                status_filter=status_filter,
             )
 
             self._client.make_request("patch", f"{self._base_url}/records", UpdateMetadata, body=body)
@@ -1883,6 +1886,7 @@ class BaseDataset(BaseModel):
         new_compute_tag: str | None = None,
         new_compute_priority: PriorityEnum | None = None,
         new_comment: str | None = None,
+        status_filter: RecordStatusEnum | Iterable[RecordStatusEnum] | None = None,
         *,
         refetch_records: bool = False,
         **kwargs,  # For deprecated parameters
@@ -1904,6 +1908,8 @@ class BaseDataset(BaseModel):
             The new compute priority to assign to the records.
         new_comment
             A new comment to add to the records.
+        status_filter
+            Only modify records with these statuses. If None, modify records regardless of status.
         refetch_records
             If True, refetch the modified records from the server.
         """
@@ -1923,6 +1929,7 @@ class BaseDataset(BaseModel):
             new_compute_tag=new_compute_tag,
             new_compute_priority=new_compute_priority,
             new_comment=new_comment,
+            status_filter=status_filter,
             refetch_records=refetch_records,
         )
 
@@ -1930,11 +1937,12 @@ class BaseDataset(BaseModel):
         self,
         entry_names: str | Iterable[str] | None = None,
         specification_names: str | Iterable[str] | None = None,
+        status_filter: RecordStatusEnum | Iterable[RecordStatusEnum] | None = RecordStatusEnum.error,
         *,
         refetch_records: bool = False,
     ):
         """
-        Resets running or errored records to be waiting again.
+        Resets errored records to be waiting again.
 
         Parameters
         ----------
@@ -1942,6 +1950,8 @@ class BaseDataset(BaseModel):
             Names of the entries whose records to reset. If None, reset records for all entries.
         specification_names
             Names of the specifications whose records to reset. If None, reset records for all specifications.
+        status_filter
+            Only reset records with these statuses. Defaults to errored records.
         refetch_records
             If True, refetch the reset records from the server.
         """
@@ -1950,6 +1960,7 @@ class BaseDataset(BaseModel):
             entry_names=entry_names,
             specification_names=specification_names,
             new_status=RecordStatusEnum.waiting,
+            status_filter=status_filter,
             refetch_records=refetch_records,
         )
 
@@ -1957,6 +1968,7 @@ class BaseDataset(BaseModel):
         self,
         entry_names: str | Iterable[str] | None = None,
         specification_names: str | Iterable[str] | None = None,
+        status_filter: RecordStatusEnum | Iterable[RecordStatusEnum] | None = None,
         *,
         refetch_records: bool = False,
     ):
@@ -1971,6 +1983,8 @@ class BaseDataset(BaseModel):
             Names of the entries whose records to cancel. If None, cancel records for all entries.
         specification_names
             Names of the specifications whose records to cancel. If None, cancel records for all specifications.
+        status_filter
+            Only cancel records with these statuses. If None, cancel records regardless of status.
         refetch_records
             If True, refetch the cancelled records from the server.
         """
@@ -1979,6 +1993,7 @@ class BaseDataset(BaseModel):
             entry_names=entry_names,
             specification_names=specification_names,
             new_status=RecordStatusEnum.cancelled,
+            status_filter=status_filter,
             refetch_records=refetch_records,
         )
 
@@ -2012,6 +2027,7 @@ class BaseDataset(BaseModel):
         self,
         entry_names: str | Iterable[str] | None = None,
         specification_names: str | Iterable[str] | None = None,
+        status_filter: RecordStatusEnum | Iterable[RecordStatusEnum] | None = None,
         *,
         refetch_records: bool = False,
     ):
@@ -2027,6 +2043,8 @@ class BaseDataset(BaseModel):
             Names of the entries whose records to invalidate. If None, invalidate records for all entries.
         specification_names
             Names of the specifications whose records to invalidate. If None, invalidate records for all specifications.
+        status_filter
+            Only invalidate records with these statuses. If None, invalidate records regardless of status.
         refetch_records
             If True, refetch the invalidated records from the server.
         """
@@ -2035,6 +2053,7 @@ class BaseDataset(BaseModel):
             entry_names=entry_names,
             specification_names=specification_names,
             new_status=RecordStatusEnum.invalid,
+            status_filter=status_filter,
             refetch_records=refetch_records,
         )
 
@@ -2643,6 +2662,7 @@ class DatasetRecordModifyBody(RestModelBase):
     entry_names: list[str] | None = None
     specification_names: list[str] | None = None
     status: RecordStatusEnum | None = None
+    status_filter: list[RecordStatusEnum] | None = None
     compute_priority: PriorityEnum | None = None
     compute_tag: LowerStr | None = None
     comment: str | None = None

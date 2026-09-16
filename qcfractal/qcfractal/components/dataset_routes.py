@@ -415,14 +415,15 @@ def remove_dataset_records_v1(
 def modify_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRecordModifyBody) -> None:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.modify_records(
-        dataset_id,
-        g.username,
-        body_data.entry_names,
-        body_data.specification_names,
-        body_data.status,
-        body_data.compute_priority,
-        body_data.compute_tag,
-        body_data.comment,
+        dataset_id=dataset_id,
+        username=g.username,
+        entry_names=body_data.entry_names,
+        specification_names=body_data.specification_names,
+        status=body_data.status,
+        compute_priority=body_data.compute_priority,
+        compute_tag=body_data.compute_tag,
+        comment=body_data.comment,
+        status_filter=body_data.status_filter,
     )
 
 

@@ -7,7 +7,7 @@ import pytest
 from qcfractal.components.singlepoint.testing_helpers import load_procedure_data, run_procedure_data
 from qcportal import PortalRequestError
 from qcportal.molecules import Molecule
-from qcportal.record_models import PriorityEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import SinglepointDataset
 
 if TYPE_CHECKING:
@@ -122,6 +122,36 @@ def test_dataset_client_status_by_tag(snowflake: QCATestingSnowflake):
     assert {s[0] for s in status} == {"tag1", "tag2"}
     assert all(s[1] == "waiting" for s in status)
     assert all(s[2] == 1 for s in status)
+
+
+def test_dataset_client_reset_records_default_skips_running(snowflake: QCATestingSnowflake):
+    snowflake_client = snowflake.client()
+    storage_socket = snowflake.get_storage_socket()
+    manager_name, _ = snowflake.activate_manager()
+
+    ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
+
+    input_spec, molecule, _ = load_procedure_data("sp_psi4_peroxide_energy_wfn")
+
+    ds.add_specification("spec_1", input_spec)
+    ds.add_entry(name="test_molecule", molecule=molecule)
+    ds.submit()
+
+    rec = ds.get_record("test_molecule", "spec_1")
+    assert rec.status == RecordStatusEnum.waiting
+
+    tasks = storage_socket.tasks.claim_tasks(
+        manager_name.fullname, snowflake.activated_manager_programs(), ["*"], limit=1
+    )
+    assert len(tasks) == 1
+
+    rec = ds.get_record("test_molecule", "spec_1", force_refetch=True)
+    assert rec.status == RecordStatusEnum.running
+
+    ds.reset_records(refetch_records=True)
+
+    rec = ds.get_record("test_molecule", "spec_1", force_refetch=True)
+    assert rec.status == RecordStatusEnum.running
 
 
 def test_dataset_client_add_same_name(snowflake_client: PortalClient):

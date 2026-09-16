@@ -1560,6 +1560,7 @@ class BaseDatasetSocket:
         compute_priority: Optional[PriorityEnum] = None,
         compute_tag: Optional[str] = None,
         comment: Optional[str] = None,
+        status_filter: Optional[Iterable[RecordStatusEnum]] = None,
         *,
         session: Optional[Session] = None,
     ) -> UpdateMetadata:
@@ -1586,6 +1587,8 @@ class BaseDatasetSocket:
             New tag for these records
         comment
             Adds a new comment to these records
+        status_filter
+            Only modify records whose current status is in this iterable. If None, modify records regardless of status.
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
@@ -1602,6 +1605,7 @@ class BaseDatasetSocket:
                 dataset_id,
                 entry_names,
                 specification_names,
+                status=status_filter,
                 for_update=True,
             )
 

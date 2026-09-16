@@ -822,6 +822,36 @@ def run_dataset_model_modify_records(ds, test_entries, test_spec):
     assert rec.status == RecordStatusEnum.waiting
     assert rec2.status == RecordStatusEnum.waiting
 
+    # Status filter - only the cancelled record gets the comment
+    ds.cancel_records(entry_name_2, spec_name)
+    ds.modify_records(
+        new_comment="filtered comment",
+        status_filter=RecordStatusEnum.cancelled,
+    )
+    rec = ds.get_record(entry_name, spec_name)
+    rec2 = ds.get_record(entry_name_2, spec_name)
+    assert rec.status == RecordStatusEnum.waiting
+    assert rec2.status == RecordStatusEnum.cancelled
+    assert rec.comments == []
+    assert rec2.comments[0].comment == "filtered comment"
+
+    # Reset defaults to errored records only, so it should not uncancel records
+    ds.reset_records()
+    rec2 = ds.get_record(entry_name_2, spec_name)
+    assert rec2.status == RecordStatusEnum.cancelled
+
+    ds.uncancel_records(entry_name_2, spec_name)
+    rec = ds.get_record(entry_name, spec_name)
+    rec2 = ds.get_record(entry_name_2, spec_name)
+    assert rec.status == RecordStatusEnum.waiting
+    assert rec2.status == RecordStatusEnum.waiting
+
+    ds.cancel_records(status_filter=RecordStatusEnum.complete)
+    rec = ds.get_record(entry_name, spec_name)
+    rec2 = ds.get_record(entry_name_2, spec_name)
+    assert rec.status == RecordStatusEnum.waiting
+    assert rec2.status == RecordStatusEnum.waiting
+
     ds.modify_records(
         entry_name,
         spec_name,
