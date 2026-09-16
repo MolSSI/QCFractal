@@ -315,8 +315,10 @@ export type Dataset = {
   tagline: string;
   tags: string[];
   visibility: boolean;
-  default_compute_tag: string;
-  default_compute_priority: number;
+  // Note the asymmetry: GET returns these as default_tag/default_priority,
+  // while the PATCH body below takes default_compute_tag/_priority
+  default_tag: string;
+  default_priority: PriorityEnum;
   provenance: Record<string, any>;
   extras: Record<string, any>;
 

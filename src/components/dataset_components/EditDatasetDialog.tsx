@@ -42,8 +42,9 @@ function useModifyDatasetMetadata(dataset: qcpTypes.Dataset) {
           tags: dataset.tags ?? [],
           provenance: dataset.provenance ?? {},
           extras: dataset.extras ?? {},
-          default_compute_tag: dataset.default_compute_tag ?? "*",
-          default_compute_priority: (dataset.default_compute_priority ??
+          // Read side is default_tag/default_priority; write side renames them
+          default_compute_tag: dataset.default_tag ?? "*",
+          default_compute_priority: (dataset.default_priority ??
             1) as PriorityEnum,
           ...changes,
         } satisfies qcpTypes.DatasetModifyMetadata,
@@ -156,14 +157,10 @@ export const EditDatasetMetadataButton: React.FC<EditDatasetProps> = ({
     dataset.description ?? "",
   );
   const [tagsText, setTagsText] = React.useState("");
-  const [computeTag, setComputeTag] = React.useState(
-    dataset.default_compute_tag ?? "",
+  const [computeTag, setComputeTag] = React.useState(dataset.default_tag ?? "");
+  const [computePriority, setComputePriority] = React.useState<PriorityEnum>(
+    (dataset.default_priority ?? 1) as PriorityEnum,
   );
-  // "" means "leave the priority alone" — the API requires a concrete value,
-  // so a blank selection just sends the dataset's current one back.
-  const [computePriority, setComputePriority] = React.useState<
-    PriorityEnum | ""
-  >((dataset.default_compute_priority ?? "") as PriorityEnum | "");
   const mutation = useModifyDatasetMetadata(dataset);
 
   if (!loggedIn || !has_permission("datasets", "modify")) return null;
@@ -171,10 +168,8 @@ export const EditDatasetMetadataButton: React.FC<EditDatasetProps> = ({
   const handleOpen = () => {
     setDescription(dataset.description ?? "");
     setTagsText((dataset.tags ?? []).join(", "));
-    setComputeTag(dataset.default_compute_tag ?? "");
-    setComputePriority(
-      (dataset.default_compute_priority ?? "") as PriorityEnum | "",
-    );
+    setComputeTag(dataset.default_tag ?? "");
+    setComputePriority((dataset.default_priority ?? 1) as PriorityEnum);
     mutation.reset();
     setOpen(true);
   };
@@ -195,10 +190,7 @@ export const EditDatasetMetadataButton: React.FC<EditDatasetProps> = ({
           .map((tag) => tag.trim())
           .filter((tag) => tag.length > 0),
         default_compute_tag: computeTag.trim(),
-        // Omitted when blank, so the mutation falls back to the current value
-        ...(computePriority === ""
-          ? {}
-          : { default_compute_priority: computePriority }),
+        default_compute_priority: computePriority,
       },
       { onSuccess: () => setOpen(false) },
     );
@@ -240,30 +232,25 @@ export const EditDatasetMetadataButton: React.FC<EditDatasetProps> = ({
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label="Default Compute Tag"
-                  required
                   fullWidth
                   value={computeTag}
                   onChange={(e) => setComputeTag(e.target.value)}
+                  helperText="Blank means no tag; * matches any manager"
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <FormControl fullWidth>
-                  <InputLabel shrink>Default Compute Priority</InputLabel>
+                <FormControl fullWidth required>
+                  <InputLabel>Default Compute Priority</InputLabel>
                   <Select
-                    displayEmpty
-                    notched
                     value={computePriority}
                     label="Default Compute Priority"
                     onChange={(e) =>
-                      setComputePriority(e.target.value as PriorityEnum | "")
+                      setComputePriority(e.target.value as PriorityEnum)
                     }
                   >
-                    <MenuItem value="">
-                      <em>Leave Blank</em>
-                    </MenuItem>
-                    <MenuItem value={2}>High</MenuItem>
-                    <MenuItem value={1}>Normal</MenuItem>
-                    <MenuItem value={0}>Low</MenuItem>
+                    <MenuItem value={0}>0</MenuItem>
+                    <MenuItem value={1}>1</MenuItem>
+                    <MenuItem value={2}>2</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -281,7 +268,7 @@ export const EditDatasetMetadataButton: React.FC<EditDatasetProps> = ({
           <Button
             variant="outlined"
             onClick={handleSave}
-            disabled={mutation.isPending || !computeTag.trim()}
+            disabled={mutation.isPending}
           >
             {mutation.isPending ? "Saving..." : "Save"}
           </Button>

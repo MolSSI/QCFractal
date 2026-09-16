@@ -466,7 +466,7 @@ export default function Dataset() {
                     Default Compute Tag
                   </Typography>
                   <Typography variant="body1">
-                    {datasetData.default_compute_tag || "N/A"}
+                    {datasetData.default_tag || "N/A"}
                   </Typography>
                 </Box>
 
@@ -475,7 +475,7 @@ export default function Dataset() {
                     Default Compute Priority
                   </Typography>
                   <Typography variant="body1">
-                    {datasetData.default_compute_priority}
+                    {datasetData.default_priority}
                   </Typography>
                 </Box>
               </Box>
