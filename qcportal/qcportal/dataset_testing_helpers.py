@@ -4,7 +4,7 @@ import pytest
 
 from qcportal import PortalRequestError, load_dataset_view
 from qcportal.internal_jobs import InternalJobStatusEnum
-from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
+from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata, UpdateMetadata
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.utils import now_at_utc
 
@@ -783,7 +783,17 @@ def run_dataset_model_iterate_updated(snowflake_client, ds, test_entries, test_s
     assert len(cancelled) == 2  # fetched them all
 
 
-def run_dataset_model_modify_records(ds, test_entries, test_spec):
+def run_dataset_model_modify_records(ds, test_entries, test_spec, background):
+    def modify_records(*args, **kwargs):
+        if not background:
+            ds.modify_records(*args, **kwargs)
+            return
+
+        ij = ds.background_modify_records(*args, **kwargs)
+        ij.watch(interval=0.1, timeout=10)
+        meta = UpdateMetadata(**ij.result)
+        assert meta.success
+
     ds.add_specification("spec_1", test_spec)
     ds.add_entries(test_entries[0])
     ds.add_entries(test_entries[1])
@@ -824,7 +834,7 @@ def run_dataset_model_modify_records(ds, test_entries, test_spec):
 
     # Status filter - only the cancelled record gets the comment
     ds.cancel_records(entry_name_2, spec_name)
-    ds.modify_records(
+    modify_records(
         new_comment="filtered comment",
         status_filter=RecordStatusEnum.cancelled,
     )
@@ -852,7 +862,7 @@ def run_dataset_model_modify_records(ds, test_entries, test_spec):
     assert rec.status == RecordStatusEnum.waiting
     assert rec2.status == RecordStatusEnum.waiting
 
-    ds.modify_records(
+    modify_records(
         entry_name,
         spec_name,
         new_compute_tag="new_Tag",

@@ -1553,7 +1553,7 @@ class BaseDatasetSocket:
     def modify_records(
         self,
         dataset_id: int,
-        username: Optional[str],
+        user_id: Optional[int],
         entry_names: Optional[Iterable[str]] = None,
         specification_names: Optional[List[str]] = None,
         status: Optional[RecordStatusEnum] = None,
@@ -1571,14 +1571,12 @@ class BaseDatasetSocket:
         ----------
         dataset_id
             ID of a dataset
-        username
-            Username of the user modifying these records
+        user_id
+            ID of the user modifying these records
         entry_names
             Modify records belonging to these entries. If None, modify records belonging to any entry.
         specification_names
             Modify records belonging to these specifications. If None, modify records belonging to any specification.
-        username
-            Username of the user modifying the records
         status
             New status for the records. Only certain status transitions will be allowed.
         compute_priority
@@ -1611,13 +1609,70 @@ class BaseDatasetSocket:
 
             return self.root_socket.records.modify_generic(
                 record_ids,
-                username,
+                user_id,
                 status=status,
                 compute_priority=compute_priority,
                 compute_tag=compute_tag,
                 comment=comment,
                 session=session,
             )
+
+    def background_modify_records(
+        self,
+        dataset_id: int,
+        user_id: Optional[int],
+        entry_names: Optional[Iterable[str]] = None,
+        specification_names: Optional[List[str]] = None,
+        status: Optional[RecordStatusEnum] = None,
+        compute_priority: Optional[PriorityEnum] = None,
+        compute_tag: Optional[str] = None,
+        comment: Optional[str] = None,
+        status_filter: Optional[Iterable[RecordStatusEnum]] = None,
+        *,
+        session: Optional[Session] = None,
+    ) -> int:
+        """
+        Modify records belonging to a dataset as an internal job
+
+        This creates an internal job for the modification and returns the ID.
+
+        See :meth:`modify_records` for details for the rest of the functionality and parameters.
+
+        Returns
+        -------
+        :
+            ID of the created internal job
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            job_id = self.root_socket.internal_jobs.add(
+                f"dataset_modify_records_{dataset_id}",
+                now_at_utc(),
+                "datasets.modify_records",
+                {
+                    "dataset_id": dataset_id,
+                    "user_id": user_id,
+                    "entry_names": entry_names,
+                    "specification_names": specification_names,
+                    "status": status,
+                    "compute_priority": compute_priority,
+                    "compute_tag": compute_tag,
+                    "comment": comment,
+                    "status_filter": status_filter,
+                },
+                user_id=None,
+                unique_name=False,
+                serial_group=f"ds_modify_records_{dataset_id}",
+                session=session,
+            )
+
+            stmt = (
+                insert(DatasetInternalJobORM)
+                .values(dataset_id=dataset_id, internal_job_id=job_id)
+                .on_conflict_do_nothing()
+            )
+            session.execute(stmt)
+            return job_id
 
     def revert_records(
         self,

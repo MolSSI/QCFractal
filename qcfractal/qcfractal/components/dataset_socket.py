@@ -27,7 +27,7 @@ from qcfractal.db_socket.helpers import (
 from qcportal.dataset_models import BaseDataset, DatasetAttachmentType
 from qcportal.exceptions import MissingDataError, UserReportableError
 from qcportal.internal_jobs import InternalJobStatusEnum
-from qcportal.metadata_models import InsertMetadata
+from qcportal.metadata_models import InsertMetadata, UpdateMetadata
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.utils import now_at_utc
 
@@ -639,6 +639,43 @@ class DatasetSocket:
                 compute_priority=compute_priority,
                 creator_user=creator_user,
                 find_existing=find_existing,
+                session=session,
+            )
+
+    def modify_records(
+        self,
+        dataset_id: int,
+        user_id: Optional[int],
+        entry_names: Optional[Iterable[str]] = None,
+        specification_names: Optional[List[str]] = None,
+        status: Optional[RecordStatusEnum] = None,
+        compute_priority: Optional[PriorityEnum] = None,
+        compute_tag: Optional[str] = None,
+        comment: Optional[str] = None,
+        status_filter: Optional[Iterable[RecordStatusEnum]] = None,
+        *,
+        session: Optional[Session] = None,
+    ) -> UpdateMetadata:
+        """
+        Modify records for a dataset
+
+        This function looks up the dataset socket and then calls modify_records on that socket.
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            ds_type = self.lookup_type(dataset_id, session=session)
+            ds_socket = self.get_socket(ds_type)
+
+            return ds_socket.modify_records(
+                dataset_id=dataset_id,
+                user_id=user_id,
+                entry_names=entry_names,
+                specification_names=specification_names,
+                status=status,
+                compute_priority=compute_priority,
+                compute_tag=compute_tag,
+                comment=comment,
+                status_filter=status_filter,
                 session=session,
             )
 

@@ -1933,6 +1933,74 @@ class BaseDataset(BaseModel):
             refetch_records=refetch_records,
         )
 
+    def _background_modify_records(
+        self,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
+        new_compute_tag: str | None = None,
+        new_compute_priority: PriorityEnum | None = None,
+        new_comment: str | None = None,
+        new_status: RecordStatusEnum | None = None,
+        status_filter: RecordStatusEnum | Iterable[RecordStatusEnum] | None = None,
+    ) -> InternalJob:
+        self.assert_is_not_view()
+        self.assert_online()
+
+        body = DatasetRecordModifyBody(
+            entry_names=make_list(entry_names),
+            specification_names=make_list(specification_names),
+            compute_tag=new_compute_tag,
+            compute_priority=new_compute_priority,
+            comment=new_comment,
+            status=new_status,
+            status_filter=make_list(status_filter),
+        )
+
+        job_id = self._client.make_request("post", f"{self._base_url}/records/background_modify", int, body=body)
+        return self.get_internal_job(job_id)
+
+    def background_modify_records(
+        self,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
+        new_compute_tag: str | None = None,
+        new_compute_priority: PriorityEnum | None = None,
+        new_comment: str | None = None,
+        status_filter: RecordStatusEnum | Iterable[RecordStatusEnum] | None = None,
+        **kwargs,  # For deprecated parameters
+    ) -> InternalJob:
+        """
+        Adds a dataset record modification internal job to the server.
+
+        This internal job modifies the compute tag, compute priority, or comment of records in this dataset.
+
+        Note: compute tags are not case sensitive and will be converted to lowercase.
+
+        See :meth:`modify_records` for info on the function parameters.
+
+        Returns
+        -------
+        :
+            An internal job object that can be watched or used to determine the progress of the job.
+        """
+
+        logger = logging.getLogger(self.__class__.__name__)
+        if "new_tag" in kwargs:
+            logger.warning("'new_tag' is deprecated; use 'new_compute_tag' instead")
+            new_compute_tag = kwargs["new_tag"]
+        if "new_priority" in kwargs:
+            logger.warning("'new_priority' is deprecated; use 'new_compute_priority' instead")
+            new_compute_priority = kwargs["new_priority"]
+
+        return self._background_modify_records(
+            entry_names=entry_names,
+            specification_names=specification_names,
+            new_compute_tag=new_compute_tag,
+            new_compute_priority=new_compute_priority,
+            new_comment=new_comment,
+            status_filter=status_filter,
+        )
+
     def reset_records(
         self,
         entry_names: str | Iterable[str] | None = None,
@@ -1962,6 +2030,32 @@ class BaseDataset(BaseModel):
             new_status=RecordStatusEnum.waiting,
             status_filter=status_filter,
             refetch_records=refetch_records,
+        )
+
+    def background_reset_records(
+        self,
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
+        status_filter: RecordStatusEnum | Iterable[RecordStatusEnum] | None = RecordStatusEnum.error,
+    ) -> InternalJob:
+        """
+        Adds a dataset record reset internal job to the server.
+
+        By default, only errored records are reset to waiting.
+
+        See :meth:`reset_records` for info on the function parameters.
+
+        Returns
+        -------
+        :
+            An internal job object that can be watched or used to determine the progress of the job.
+        """
+
+        return self._background_modify_records(
+            entry_names=entry_names,
+            specification_names=specification_names,
+            new_status=RecordStatusEnum.waiting,
+            status_filter=status_filter,
         )
 
     def cancel_records(
