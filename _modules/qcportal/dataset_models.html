@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=6b342fc8"></script>
+    <script src="../../_static/documentation_options.js?v=8f315b4b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post4+g8ad1255ef" />
+  <meta name="docsearch:version" content="0.70.post11+g5ebbbe087" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -2436,6 +2436,7 @@
         <span class="n">new_compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">new_comment</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">new_status</span><span class="p">:</span> <span class="n">RecordStatusEnum</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">status_filter</span><span class="p">:</span> <span class="n">RecordStatusEnum</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">refetch_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
@@ -2444,6 +2445,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
 
         <span class="n">specification_names</span> <span class="o">=</span> <span class="n">make_list</span><span class="p">(</span><span class="n">specification_names</span><span class="p">)</span>
+        <span class="n">status_filter</span> <span class="o">=</span> <span class="n">make_list</span><span class="p">(</span><span class="n">status_filter</span><span class="p">)</span>
 
         <span class="c1"># Always batch over entry names - typical setup is lots of entries and few specifications</span>
         <span class="k">if</span> <span class="n">entry_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -2459,6 +2461,7 @@
                 <span class="n">compute_priority</span><span class="o">=</span><span class="n">new_compute_priority</span><span class="p">,</span>
                 <span class="n">comment</span><span class="o">=</span><span class="n">new_comment</span><span class="p">,</span>
                 <span class="n">status</span><span class="o">=</span><span class="n">new_status</span><span class="p">,</span>
+                <span class="n">status_filter</span><span class="o">=</span><span class="n">status_filter</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">"patch"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span><span class="si">}</span><span class="s2">/records"</span><span class="p">,</span> <span class="n">UpdateMetadata</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
@@ -2510,6 +2513,7 @@
         <span class="n">new_compute_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">new_compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">new_comment</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">status_filter</span><span class="p">:</span> <span class="n">RecordStatusEnum</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">refetch_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>  <span class="c1"># For deprecated parameters</span>
@@ -2531,6 +2535,8 @@
 <span class="sd">            The new compute priority to assign to the records.</span>
 <span class="sd">        new_comment</span>
 <span class="sd">            A new comment to add to the records.</span>
+<span class="sd">        status_filter</span>
+<span class="sd">            Only modify records with these statuses. If None, modify records regardless of status.</span>
 <span class="sd">        refetch_records</span>
 <span class="sd">            If True, refetch the modified records from the server.</span>
 <span class="sd">        """</span>
@@ -2550,7 +2556,79 @@
             <span class="n">new_compute_tag</span><span class="o">=</span><span class="n">new_compute_tag</span><span class="p">,</span>
             <span class="n">new_compute_priority</span><span class="o">=</span><span class="n">new_compute_priority</span><span class="p">,</span>
             <span class="n">new_comment</span><span class="o">=</span><span class="n">new_comment</span><span class="p">,</span>
+            <span class="n">status_filter</span><span class="o">=</span><span class="n">status_filter</span><span class="p">,</span>
             <span class="n">refetch_records</span><span class="o">=</span><span class="n">refetch_records</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_background_modify_records</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entry_names</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">specification_names</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">new_compute_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">new_compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">new_comment</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">new_status</span><span class="p">:</span> <span class="n">RecordStatusEnum</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">status_filter</span><span class="p">:</span> <span class="n">RecordStatusEnum</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InternalJob</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_is_not_view</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="n">DatasetRecordModifyBody</span><span class="p">(</span>
+            <span class="n">entry_names</span><span class="o">=</span><span class="n">make_list</span><span class="p">(</span><span class="n">entry_names</span><span class="p">),</span>
+            <span class="n">specification_names</span><span class="o">=</span><span class="n">make_list</span><span class="p">(</span><span class="n">specification_names</span><span class="p">),</span>
+            <span class="n">compute_tag</span><span class="o">=</span><span class="n">new_compute_tag</span><span class="p">,</span>
+            <span class="n">compute_priority</span><span class="o">=</span><span class="n">new_compute_priority</span><span class="p">,</span>
+            <span class="n">comment</span><span class="o">=</span><span class="n">new_comment</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">new_status</span><span class="p">,</span>
+            <span class="n">status_filter</span><span class="o">=</span><span class="n">make_list</span><span class="p">(</span><span class="n">status_filter</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">job_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">"post"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span><span class="si">}</span><span class="s2">/records/background_modify"</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_internal_job</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BaseDataset.background_modify_records">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.background_modify_records">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">background_modify_records</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entry_names</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">specification_names</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">new_compute_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">new_compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">new_comment</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">status_filter</span><span class="p">:</span> <span class="n">RecordStatusEnum</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>  <span class="c1"># For deprecated parameters</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InternalJob</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Adds a dataset record modification internal job to the server.</span>
+
+<span class="sd">        This internal job modifies the compute tag, compute priority, or comment of records in this dataset.</span>
+
+<span class="sd">        Note: compute tags are not case sensitive and will be converted to lowercase.</span>
+
+<span class="sd">        See :meth:`modify_records` for info on the function parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            An internal job object that can be watched or used to determine the progress of the job.</span>
+<span class="sd">        """</span>
+
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"new_tag"</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"'new_tag' is deprecated; use 'new_compute_tag' instead"</span><span class="p">)</span>
+            <span class="n">new_compute_tag</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"new_tag"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">"new_priority"</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"'new_priority' is deprecated; use 'new_compute_priority' instead"</span><span class="p">)</span>
+            <span class="n">new_compute_priority</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"new_priority"</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_background_modify_records</span><span class="p">(</span>
+            <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
+            <span class="n">specification_names</span><span class="o">=</span><span class="n">specification_names</span><span class="p">,</span>
+            <span class="n">new_compute_tag</span><span class="o">=</span><span class="n">new_compute_tag</span><span class="p">,</span>
+            <span class="n">new_compute_priority</span><span class="o">=</span><span class="n">new_compute_priority</span><span class="p">,</span>
+            <span class="n">new_comment</span><span class="o">=</span><span class="n">new_comment</span><span class="p">,</span>
+            <span class="n">status_filter</span><span class="o">=</span><span class="n">status_filter</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -2560,11 +2638,12 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">status_filter</span><span class="p">:</span> <span class="n">RecordStatusEnum</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">error</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">refetch_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Resets running or errored records to be waiting again.</span>
+<span class="sd">        Resets errored records to be waiting again.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2572,6 +2651,8 @@
 <span class="sd">            Names of the entries whose records to reset. If None, reset records for all entries.</span>
 <span class="sd">        specification_names</span>
 <span class="sd">            Names of the specifications whose records to reset. If None, reset records for all specifications.</span>
+<span class="sd">        status_filter</span>
+<span class="sd">            Only reset records with these statuses. Defaults to errored records.</span>
 <span class="sd">        refetch_records</span>
 <span class="sd">            If True, refetch the reset records from the server.</span>
 <span class="sd">        """</span>
@@ -2580,7 +2661,37 @@
             <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
             <span class="n">specification_names</span><span class="o">=</span><span class="n">specification_names</span><span class="p">,</span>
             <span class="n">new_status</span><span class="o">=</span><span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">waiting</span><span class="p">,</span>
+            <span class="n">status_filter</span><span class="o">=</span><span class="n">status_filter</span><span class="p">,</span>
             <span class="n">refetch_records</span><span class="o">=</span><span class="n">refetch_records</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseDataset.background_reset_records">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.background_reset_records">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">background_reset_records</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entry_names</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">specification_names</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">status_filter</span><span class="p">:</span> <span class="n">RecordStatusEnum</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">error</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InternalJob</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Adds a dataset record reset internal job to the server.</span>
+
+<span class="sd">        By default, only errored records are reset to waiting.</span>
+
+<span class="sd">        See :meth:`reset_records` for info on the function parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            An internal job object that can be watched or used to determine the progress of the job.</span>
+<span class="sd">        """</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_background_modify_records</span><span class="p">(</span>
+            <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
+            <span class="n">specification_names</span><span class="o">=</span><span class="n">specification_names</span><span class="p">,</span>
+            <span class="n">new_status</span><span class="o">=</span><span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">waiting</span><span class="p">,</span>
+            <span class="n">status_filter</span><span class="o">=</span><span class="n">status_filter</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -2590,6 +2701,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">status_filter</span><span class="p">:</span> <span class="n">RecordStatusEnum</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">refetch_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
@@ -2604,6 +2716,8 @@
 <span class="sd">            Names of the entries whose records to cancel. If None, cancel records for all entries.</span>
 <span class="sd">        specification_names</span>
 <span class="sd">            Names of the specifications whose records to cancel. If None, cancel records for all specifications.</span>
+<span class="sd">        status_filter</span>
+<span class="sd">            Only cancel records with these statuses. If None, cancel records regardless of status.</span>
 <span class="sd">        refetch_records</span>
 <span class="sd">            If True, refetch the cancelled records from the server.</span>
 <span class="sd">        """</span>
@@ -2612,6 +2726,7 @@
             <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
             <span class="n">specification_names</span><span class="o">=</span><span class="n">specification_names</span><span class="p">,</span>
             <span class="n">new_status</span><span class="o">=</span><span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">cancelled</span><span class="p">,</span>
+            <span class="n">status_filter</span><span class="o">=</span><span class="n">status_filter</span><span class="p">,</span>
             <span class="n">refetch_records</span><span class="o">=</span><span class="n">refetch_records</span><span class="p">,</span>
         <span class="p">)</span></div>
 
@@ -2651,6 +2766,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">entry_names</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">specification_names</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">status_filter</span><span class="p">:</span> <span class="n">RecordStatusEnum</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">refetch_records</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
@@ -2666,6 +2782,8 @@
 <span class="sd">            Names of the entries whose records to invalidate. If None, invalidate records for all entries.</span>
 <span class="sd">        specification_names</span>
 <span class="sd">            Names of the specifications whose records to invalidate. If None, invalidate records for all specifications.</span>
+<span class="sd">        status_filter</span>
+<span class="sd">            Only invalidate records with these statuses. If None, invalidate records regardless of status.</span>
 <span class="sd">        refetch_records</span>
 <span class="sd">            If True, refetch the invalidated records from the server.</span>
 <span class="sd">        """</span>
@@ -2674,6 +2792,7 @@
             <span class="n">entry_names</span><span class="o">=</span><span class="n">entry_names</span><span class="p">,</span>
             <span class="n">specification_names</span><span class="o">=</span><span class="n">specification_names</span><span class="p">,</span>
             <span class="n">new_status</span><span class="o">=</span><span class="n">RecordStatusEnum</span><span class="o">.</span><span class="n">invalid</span><span class="p">,</span>
+            <span class="n">status_filter</span><span class="o">=</span><span class="n">status_filter</span><span class="p">,</span>
             <span class="n">refetch_records</span><span class="o">=</span><span class="n">refetch_records</span><span class="p">,</span>
         <span class="p">)</span></div>
 
@@ -3352,6 +3471,7 @@
     <span class="n">entry_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">specification_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">status</span><span class="p">:</span> <span class="n">RecordStatusEnum</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">status_filter</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">RecordStatusEnum</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">compute_priority</span><span class="p">:</span> <span class="n">PriorityEnum</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">compute_tag</span><span class="p">:</span> <span class="n">LowerStr</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">comment</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
