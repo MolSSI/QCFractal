@@ -70,10 +70,10 @@ All QCFractal API types are in `src/PortalTypes.ts`. Key types: `RecordData`, `P
 
 ### Changelog
 
-The home page (`src/pages/Home.tsx`) has a "What's New / Changelog" section that lists user-facing changes by date. Keep it up to date: when you add or change a user-facing feature, add a corresponding entry.
+The home page shows a "What's New / Changelog" section, rendered by `src/components/Changelog.tsx` from the `CHANGELOG` data array. Keep it up to date: when you add or change a user-facing feature, add a corresponding entry.
 
-- Group entries by date (`YYYY-MM-DD`), newest first, and prefix each item with **Added:**, **Improved:**, or **Fixed:**.
-- Keep only the few most recent dates visible by default; move older dates into the "Previous Updates" accordion.
+- Add an item to the matching `date` entry, or add a new dated entry at the top of `CHANGELOG` (entries are newest first, `date` formatted `YYYY-MM-DD`). Each item is `{ kind: "Added" | "Improved" | "Fixed", text }`.
+- The most recent `VISIBLE_DATE_COUNT` dates render by default; older dates collapse into the "Previous Updates" accordion. No markup changes are needed — the component derives the split.
 - Only include user-facing changes. Skip purely internal refactors, and if you are unsure whether a change warrants an entry, ask.
 
 ### Deployment
