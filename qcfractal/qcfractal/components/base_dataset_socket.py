@@ -824,7 +824,12 @@ class BaseDatasetSocket:
         return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx)
 
     def background_add_entries(
-        self, dataset_id: int, new_entries: Sequence[Any], *, session: Optional[Session] = None
+        self,
+        dataset_id: int,
+        new_entries: Sequence[Any],
+        user_id: Optional[int] = None,
+        *,
+        session: Optional[Session] = None,
     ) -> int:
         """
         Adds entries to a dataset in the database as an internal job
@@ -848,7 +853,7 @@ class BaseDatasetSocket:
                     "dataset_id": dataset_id,
                     "entry_dicts": pydantic_core.to_jsonable_python(new_entries),
                 },
-                user_id=None,
+                user_id=user_id,
                 unique_name=False,
                 serial_group=f"ds_add_entries_{dataset_id}",  # only run one addition for this dataset at a time
                 session=session,
@@ -1468,6 +1473,7 @@ class BaseDatasetSocket:
         """
 
         with self.root_socket.optional_session(session) as session:
+            job_user_id = self.root_socket.users.get_optional_user_id(creator_user, session=session)
             job_id = self.root_socket.internal_jobs.add(
                 f"dataset_submit_{dataset_id}",
                 now_at_utc(),
@@ -1481,7 +1487,7 @@ class BaseDatasetSocket:
                     "creator_user": creator_user,
                     "find_existing": find_existing,
                 },
-                user_id=None,
+                user_id=job_user_id,
                 unique_name=False,
                 serial_group=f"ds_submit_{dataset_id}",  # only run one submission for this dataset at a time
                 session=session,
@@ -1553,13 +1559,14 @@ class BaseDatasetSocket:
     def modify_records(
         self,
         dataset_id: int,
-        username: Optional[str],
+        user_id: Optional[int],
         entry_names: Optional[Iterable[str]] = None,
         specification_names: Optional[List[str]] = None,
         status: Optional[RecordStatusEnum] = None,
         compute_priority: Optional[PriorityEnum] = None,
         compute_tag: Optional[str] = None,
         comment: Optional[str] = None,
+        status_filter: Optional[Iterable[RecordStatusEnum]] = None,
         *,
         session: Optional[Session] = None,
     ) -> UpdateMetadata:
@@ -1570,14 +1577,12 @@ class BaseDatasetSocket:
         ----------
         dataset_id
             ID of a dataset
-        username
-            Username of the user modifying these records
+        user_id
+            ID of the user modifying these records
         entry_names
             Modify records belonging to these entries. If None, modify records belonging to any entry.
         specification_names
             Modify records belonging to these specifications. If None, modify records belonging to any specification.
-        username
-            Username of the user modifying the records
         status
             New status for the records. Only certain status transitions will be allowed.
         compute_priority
@@ -1586,6 +1591,8 @@ class BaseDatasetSocket:
             New tag for these records
         comment
             Adds a new comment to these records
+        status_filter
+            Only modify records whose current status is in this iterable. If None, modify records regardless of status.
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
@@ -1602,18 +1609,76 @@ class BaseDatasetSocket:
                 dataset_id,
                 entry_names,
                 specification_names,
+                status=status_filter,
                 for_update=True,
             )
 
             return self.root_socket.records.modify_generic(
                 record_ids,
-                username,
+                user_id,
                 status=status,
                 compute_priority=compute_priority,
                 compute_tag=compute_tag,
                 comment=comment,
                 session=session,
             )
+
+    def background_modify_records(
+        self,
+        dataset_id: int,
+        user_id: Optional[int],
+        entry_names: Optional[Iterable[str]] = None,
+        specification_names: Optional[List[str]] = None,
+        status: Optional[RecordStatusEnum] = None,
+        compute_priority: Optional[PriorityEnum] = None,
+        compute_tag: Optional[str] = None,
+        comment: Optional[str] = None,
+        status_filter: Optional[Iterable[RecordStatusEnum]] = None,
+        *,
+        session: Optional[Session] = None,
+    ) -> int:
+        """
+        Modify records belonging to a dataset as an internal job
+
+        This creates an internal job for the modification and returns the ID.
+
+        See :meth:`modify_records` for details for the rest of the functionality and parameters.
+
+        Returns
+        -------
+        :
+            ID of the created internal job
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            job_id = self.root_socket.internal_jobs.add(
+                f"dataset_modify_records_{dataset_id}",
+                now_at_utc(),
+                "datasets.modify_records",
+                {
+                    "dataset_id": dataset_id,
+                    "user_id": user_id,
+                    "entry_names": entry_names,
+                    "specification_names": specification_names,
+                    "status": status,
+                    "compute_priority": compute_priority,
+                    "compute_tag": compute_tag,
+                    "comment": comment,
+                    "status_filter": status_filter,
+                },
+                user_id=user_id,
+                unique_name=False,
+                serial_group=f"ds_modify_records_{dataset_id}",
+                session=session,
+            )
+
+            stmt = (
+                insert(DatasetInternalJobORM)
+                .values(dataset_id=dataset_id, internal_job_id=job_id)
+                .on_conflict_do_nothing()
+            )
+            session.execute(stmt)
+            return job_id
 
     def revert_records(
         self,

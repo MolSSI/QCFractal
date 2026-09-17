@@ -203,9 +203,10 @@ def test_neb_dataset_model_iterate_updated(snowflake_client: PortalClient):
     ds_helpers.run_dataset_model_iterate_updated(snowflake_client, ds, test_entries, test_specs[0])
 
 
-def test_neb_dataset_model_modify_records(snowflake_client: PortalClient):
-    ds = snowflake_client.add_dataset("neb", "Test dataset")
-    ds_helpers.run_dataset_model_modify_records(ds, test_entries, test_specs[0])
+@pytest.mark.parametrize("background", [True, False])
+def test_neb_dataset_model_modify_records(dataset_submit_test_client: PortalClient, background):
+    ds = dataset_submit_test_client.add_dataset("neb", "Test dataset")
+    ds_helpers.run_dataset_model_modify_records(ds, test_entries, test_specs[0], background)
 
 
 @pytest.mark.skipif(not s3_tests_enabled, reason="S3 tests not enabled")
