@@ -123,37 +123,48 @@ const HomePage: React.FC = () => {
             <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
               <li>
                 <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                  2026-06-07
+                  2026-09-15
                 </Typography>
                 <ul>
                   <li>
-                    <strong>Added:</strong> API Access Page
-                    dialog
+                    <strong>Added:</strong> Edit dataset name and metadata
+                  </li>
+                  <li>
+                    <strong>Added:</strong> Edit specification names and delete
+                    specifications (along with their attached records)
+                  </li>
+                  <li>
+                    <strong>Improved:</strong> Paginated dataset status view and
+                    preserved dataset view state
+                  </li>
+                  <li>
+                    <strong>Improved:</strong> Spinning animation on the dataset
+                    page refresh button
+                  </li>
+                  <li>
+                    <strong>Fixed:</strong> Default tag and priority no longer
+                    display as empty
                   </li>
                 </ul>
               </li>
               <li>
                 <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                  2026-06-03
+                  2026-09-11
                 </Typography>
                 <ul>
                   <li>
-                    <strong>Added:</strong> Dataset relationship button and
-                    dialog
-                  </li>
-                  <li>
-                    <strong>Improved:</strong> Parent projects are now displayed
-                    in the record relationship dialog
+                    <strong>Improved:</strong> Server-side limit on the number of
+                    claimed records shown on the manager page
                   </li>
                 </ul>
               </li>
               <li>
                 <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                  2026-06-02
+                  2026-09-08
                 </Typography>
                 <ul>
                   <li>
-                    <strong>Added:</strong> Server statistics page
+                    <strong>Added:</strong> Refresh button on the manager page
                   </li>
                 </ul>
               </li>
@@ -174,8 +185,126 @@ const HomePage: React.FC = () => {
                         variant="subtitle1"
                         sx={{ fontWeight: "bold" }}
                       >
-                        2026-05-20
+                        2026-09-01
                       </Typography>
+                      <ul>
+                        <li>
+                          <strong>Added:</strong> Create new users from the user
+                          management page
+                        </li>
+                        <li>
+                          <strong>Added:</strong> Admins can create groups and
+                          assign new users to them
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-07-28</strong>
+                      <ul>
+                        <li>
+                          <strong>Added:</strong> "Go to manager page" button in
+                          the manager dialog
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-07-16</strong>
+                      <ul>
+                        <li>
+                          <strong>Fixed:</strong> Estimated CPU hours in server
+                          statistics (plus a fun-units display)
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-07-06</strong>
+                      <ul>
+                        <li>
+                          <strong>Added:</strong> Filter users by active or
+                          disabled status
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-07-01</strong>
+                      <ul>
+                        <li>
+                          <strong>Added:</strong> Group management — group column
+                          and management panel in the user list, plus batch group
+                          assignment
+                        </li>
+                        <li>
+                          <strong>Added:</strong> Admins can reset user
+                          passwords; admin tools moved to a dedicated sidebar
+                          section
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-06-17</strong>
+                      <ul>
+                        <li>
+                          <strong>Fixed:</strong> Output dialog scrolling issues
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-06-15</strong>
+                      <ul>
+                        <li>
+                          <strong>Added:</strong> Task list table on the manager
+                          page, filterable by status
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-06-12</strong>
+                      <ul>
+                        <li>
+                          <strong>Added:</strong> Direct link from record
+                          relationships to a record in a dataset
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-06-11</strong>
+                      <ul>
+                        <li>
+                          <strong>Fixed:</strong> Invisible pie chart on Safari
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-06-07</strong>
+                      <ul>
+                        <li>
+                          <strong>Added:</strong> API Access Page dialog
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-06-03</strong>
+                      <ul>
+                        <li>
+                          <strong>Added:</strong> Dataset relationship button and
+                          dialog
+                        </li>
+                        <li>
+                          <strong>Improved:</strong> Parent projects are now
+                          displayed in the record relationship dialog
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-06-02</strong>
+                      <ul>
+                        <li>
+                          <strong>Added:</strong> Server statistics page
+                        </li>
+                      </ul>
+                    </li>
+                    <li style={{ marginTop: "16px" }}>
+                      <strong>2026-05-20</strong>
                       <ul>
                         <li>
                           <strong>Improved:</strong> Enhanced performance for
