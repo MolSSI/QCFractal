@@ -3,8 +3,8 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Box,
   Divider,
-  Paper,
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -245,41 +245,60 @@ const ChangelogEntryBlock: React.FC<{ entry: ChangelogEntry }> = ({ entry }) => 
 const Changelog: React.FC = () => {
   const visibleEntries = CHANGELOG.slice(0, VISIBLE_DATE_COUNT);
   const previousEntries = CHANGELOG.slice(VISIBLE_DATE_COUNT);
+  const lastUpdated = CHANGELOG[0]?.date;
 
+  // Collapsed by default so the changelog stays out of the way on the home
+  // page; the header still surfaces the last-updated date.
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        What's New / Changelog
-      </Typography>
-      <Divider sx={{ mb: 2 }} />
-      <Typography variant="body1" component="div">
-        <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
-          {visibleEntries.map((entry) => (
-            <ChangelogEntryBlock key={entry.date} entry={entry} />
-          ))}
-
-          {previousEntries.length > 0 && (
-            <Accordion
-              variant="outlined"
-              sx={{ mt: 2, "&:before": { display: "none" } }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography sx={{ fontWeight: "bold" }}>
-                  Previous Updates
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails sx={{ pt: 0 }}>
-                <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
-                  {previousEntries.map((entry) => (
-                    <ChangelogEntryBlock key={entry.date} entry={entry} />
-                  ))}
-                </ul>
-              </AccordionDetails>
-            </Accordion>
+    <Accordion sx={{ "&:before": { display: "none" } }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 3 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "baseline",
+            flexWrap: "wrap",
+            columnGap: 1.5,
+          }}
+        >
+          <Typography variant="h5">What's New / Changelog</Typography>
+          {lastUpdated && (
+            <Typography variant="body2" color="text.secondary">
+              Last updated: {lastUpdated}
+            </Typography>
           )}
-        </ul>
-      </Typography>
-    </Paper>
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails sx={{ px: 3 }}>
+        <Divider sx={{ mb: 2 }} />
+        <Typography variant="body1" component="div">
+          <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
+            {visibleEntries.map((entry) => (
+              <ChangelogEntryBlock key={entry.date} entry={entry} />
+            ))}
+
+            {previousEntries.length > 0 && (
+              <Accordion
+                variant="outlined"
+                sx={{ mt: 2, "&:before": { display: "none" } }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography sx={{ fontWeight: "bold" }}>
+                    Previous Updates
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ pt: 0 }}>
+                  <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
+                    {previousEntries.map((entry) => (
+                      <ChangelogEntryBlock key={entry.date} entry={entry} />
+                    ))}
+                  </ul>
+                </AccordionDetails>
+              </Accordion>
+            )}
+          </ul>
+        </Typography>
+      </AccordionDetails>
+    </Accordion>
   );
 };
 
