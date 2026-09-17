@@ -22,10 +22,6 @@ interface ChangelogEntry {
   items: ChangelogItem[];
 }
 
-// Number of most-recent dates shown by default. Older dates are collapsed
-// into the "Previous Updates" accordion.
-const VISIBLE_DATE_COUNT = 3;
-
 // User-facing changes, newest first. To record a change, add an item to the
 // matching date (or a new dated entry at the top). Keep entries user-facing;
 // skip purely internal refactors.
@@ -243,8 +239,6 @@ const ChangelogEntryBlock: React.FC<{ entry: ChangelogEntry }> = ({ entry }) => 
 );
 
 const Changelog: React.FC = () => {
-  const visibleEntries = CHANGELOG.slice(0, VISIBLE_DATE_COUNT);
-  const previousEntries = CHANGELOG.slice(VISIBLE_DATE_COUNT);
   const lastUpdated = CHANGELOG[0]?.date;
 
   // Collapsed by default so the changelog stays out of the way on the home
@@ -272,29 +266,9 @@ const Changelog: React.FC = () => {
         <Divider sx={{ mb: 2 }} />
         <Typography variant="body1" component="div">
           <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
-            {visibleEntries.map((entry) => (
+            {CHANGELOG.map((entry) => (
               <ChangelogEntryBlock key={entry.date} entry={entry} />
             ))}
-
-            {previousEntries.length > 0 && (
-              <Accordion
-                variant="outlined"
-                sx={{ mt: 2, "&:before": { display: "none" } }}
-              >
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography sx={{ fontWeight: "bold" }}>
-                    Previous Updates
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails sx={{ pt: 0 }}>
-                  <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
-                    {previousEntries.map((entry) => (
-                      <ChangelogEntryBlock key={entry.date} entry={entry} />
-                    ))}
-                  </ul>
-                </AccordionDetails>
-              </Accordion>
-            )}
           </ul>
         </Typography>
       </AccordionDetails>
