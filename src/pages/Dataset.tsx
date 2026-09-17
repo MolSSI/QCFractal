@@ -6,6 +6,7 @@ import { useLocation, useParams } from "react-router-dom";
 import {
   Box,
   Chip,
+  CircularProgress,
   Grid,
   IconButton,
   Paper,
@@ -35,10 +36,18 @@ import {
   createSavedDatasetPageState,
   DatasetLocationState,
   DatasetRecordViewState,
+  DatasetStatusViewState,
   DatasetViewState,
   getSavedDatasetViewState,
 } from "../components/dataset_components/DatasetViewState.tsx";
 import { FavoriteButton } from "../components/FavoriteButton.tsx";
+import {
+  EditDatasetMetadataButton,
+  EditDatasetNameButton,
+} from "../components/dataset_components/EditDatasetDialog.tsx";
+
+
+const REFRESH_SPINNER_MIN_MS = 300;
 
 function TabPanel(props: {
   children?: React.ReactNode;
@@ -142,6 +151,23 @@ export default function Dataset() {
     }));
   };
 
+  const updateStatusView = (updates: Partial<DatasetStatusViewState>) => {
+    setViewState((currentViewState) => ({
+      ...currentViewState,
+      statusView: {
+        ...currentViewState.statusView,
+        ...updates,
+      },
+    }));
+  };
+
+  const handleStatusSpecFilterChange = (specFilter: string) => {
+    updateStatusView({
+      specFilter,
+      page: 0,
+    });
+  };
+
   const updateRecordView = (updates: Partial<DatasetRecordViewState>) => {
     setViewState((currentViewState) => ({
       ...currentViewState,
@@ -187,6 +213,7 @@ export default function Dataset() {
     status: qcpTypes.RecordStatus,
   ) => {
     setViewState((currentViewState) => ({
+      ...currentViewState,
       tabValue: DATASET_RECORDS_TAB_INDEX,
       recordView: {
         ...currentViewState.recordView,
@@ -198,36 +225,54 @@ export default function Dataset() {
     }));
   };
 
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
   const handleRefresh = async () => {
-    if (datasetIdNumber === null || Number.isNaN(datasetIdNumber)) {
+    // Ignore clicks while a refresh is still spinning rather than disabling
+    // the button, so the icon keeps its normal color during the animation.
+    if (
+      datasetIdNumber === null ||
+      Number.isNaN(datasetIdNumber) ||
+      isRefreshing
+    ) {
       return;
     }
 
-    const queryKeys = [["dataset", datasetIdNumber]] as const;
+    const queryKeys: readonly unknown[][] = [
+      ["dataset", datasetIdNumber],
+      ...(datasetData?.dataset_type
+        ? [
+            ["datasetStatus", datasetData.dataset_type, datasetIdNumber],
+            [
+              "datasetSpecifications",
+              datasetData.dataset_type,
+              datasetIdNumber,
+            ],
+            ["datasetEntryNames", datasetData.dataset_type, datasetIdNumber],
+            ["datasetRecordCount", datasetData.dataset_type, datasetIdNumber],
+            [
+              "datasetRecordDiscovery",
+              datasetData.dataset_type,
+              datasetIdNumber,
+            ],
+            ["datasetAttachments", datasetIdNumber],
+          ]
+        : []),
+    ];
 
-    if (!datasetData?.dataset_type) {
-      await Promise.all(
-        queryKeys.map((queryKey) =>
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        ...queryKeys.map((queryKey) =>
           queryClient.invalidateQueries({ queryKey }),
         ),
-      );
-      return;
+        // The refetches usually finish too quickly to notice, so hold the
+        // spinner for a moment to confirm the click actually registered.
+        new Promise((resolve) => setTimeout(resolve, REFRESH_SPINNER_MIN_MS)),
+      ]);
+    } finally {
+      setIsRefreshing(false);
     }
-
-    const datasetScopedKeys = [
-      ["datasetStatus", datasetData.dataset_type, datasetIdNumber],
-      ["datasetSpecifications", datasetData.dataset_type, datasetIdNumber],
-      ["datasetEntryNames", datasetData.dataset_type, datasetIdNumber],
-      ["datasetRecordCount", datasetData.dataset_type, datasetIdNumber],
-      ["datasetRecordDiscovery", datasetData.dataset_type, datasetIdNumber],
-      ["datasetAttachments", datasetIdNumber],
-    ] as const;
-
-    await Promise.all(
-      [...queryKeys, ...datasetScopedKeys].map((queryKey) =>
-        queryClient.invalidateQueries({ queryKey }),
-      ),
-    );
   };
 
   const {
@@ -292,7 +337,11 @@ export default function Dataset() {
   });
 
   const { data: recordCountData } = useQuery({
-    queryKey: ["datasetRecordCount", datasetData?.dataset_type, datasetIdNumber],
+    queryKey: [
+      "datasetRecordCount",
+      datasetData?.dataset_type,
+      datasetIdNumber,
+    ],
     queryFn: () =>
       makeRequest<number>(
         "GET",
@@ -304,10 +353,7 @@ export default function Dataset() {
       !!datasetData?.dataset_type,
   });
 
-  const {
-    status: attachmentsStatus,
-    data: attachmentsData,
-  } = useQuery({
+  const { status: attachmentsStatus, data: attachmentsData } = useQuery({
     queryKey: ["datasetAttachments", datasetIdNumber],
     queryFn: () =>
       makeRequest<qcpTypes.DatasetAttachment[]>(
@@ -354,6 +400,7 @@ export default function Dataset() {
                     sx={{ mr: 2, verticalAlign: "middle" }}
                   />
                   {datasetData.name}
+                  <EditDatasetNameButton dataset={datasetData} />
                 </Typography>
                 <Typography
                   variant="subtitle1"
@@ -365,7 +412,13 @@ export default function Dataset() {
               <Stack spacing={1} alignItems="flex-end" sx={{ ml: "auto" }}>
                 <Tooltip title="Refresh dataset information">
                   <IconButton onClick={handleRefresh} color="primary">
-                    <RefreshIcon />
+                    {isRefreshing ? (
+                      // Same 24px footprint as RefreshIcon, so swapping the
+                      // two does not shift the button or the header row.
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      <RefreshIcon />
+                    )}
                   </IconButton>
                 </Tooltip>
                 <DatasetRelationshipButton datasetId={datasetIdNumber!} />
@@ -398,7 +451,8 @@ export default function Dataset() {
             <Paper elevation={3}>
               <Box p={1}>
                 <Typography variant="body1" fontWeight="bold">
-                  {recordCountData !== undefined ? recordCountData : "?"} Records
+                  {recordCountData !== undefined ? recordCountData : "?"}{" "}
+                  Records
                 </Typography>
               </Box>
             </Paper>
@@ -408,11 +462,22 @@ export default function Dataset() {
           <Grid size={12}>
             <Paper elevation={2}>
               <Box p={2}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  Description
-                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography variant="h6" fontWeight="bold" gutterBottom>
+                    Description
+                  </Typography>
+                  <EditDatasetMetadataButton dataset={datasetData} />
+                </Box>
                 <Typography variant="body1" component={"div"}>
-                  <MarkdownContent>{datasetData.description.trim()}</MarkdownContent>
+                  <MarkdownContent>
+                    {datasetData.description.trim()}
+                  </MarkdownContent>
                 </Typography>
 
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
@@ -426,19 +491,10 @@ export default function Dataset() {
 
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="h6" fontWeight="bold" gutterBottom>
-                    Group
-                  </Typography>
-                  <Typography variant="body1">
-                    {datasetData.group || "N/A"}
-                  </Typography>
-                </Box>
-
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="h6" fontWeight="bold" gutterBottom>
                     Default Compute Tag
                   </Typography>
                   <Typography variant="body1">
-                    {datasetData.default_compute_tag || "N/A"}
+                    {datasetData.default_tag || "N/A"}
                   </Typography>
                 </Box>
 
@@ -447,7 +503,7 @@ export default function Dataset() {
                     Default Compute Priority
                   </Typography>
                   <Typography variant="body1">
-                    {datasetData.default_compute_priority}
+                    {datasetData.default_priority}
                   </Typography>
                 </Box>
               </Box>
@@ -468,6 +524,10 @@ export default function Dataset() {
                 ) : (
                   <DatasetStatusTable
                     statusData={statusData}
+                    page={viewState.statusView.page}
+                    specFilter={viewState.statusView.specFilter}
+                    onPageChange={(page) => updateStatusView({ page })}
+                    onSpecFilterChange={handleStatusSpecFilterChange}
                     onSelectStatus={handleStatusTableSelect}
                   />
                 )}
@@ -502,7 +562,11 @@ export default function Dataset() {
                 />
                 <Tab label="Entries" id="tab-1" aria-controls="tabpanel-1" />
                 <Tab label="Records" id="tab-2" aria-controls="tabpanel-2" />
-                <Tab label="Attachments" id="tab-3" aria-controls="tabpanel-3" />
+                <Tab
+                  label="Attachments"
+                  id="tab-3"
+                  aria-controls="tabpanel-3"
+                />
               </Tabs>
 
               {/* Tab 0: Specifications */}
@@ -513,6 +577,8 @@ export default function Dataset() {
                   <DatasetSpecificationTable
                     specificationsData={specificationsData}
                     datasetType={datasetData.dataset_type}
+                    datasetId={datasetIdNumber}
+                    datasetStatus={statusData}
                   />
                 )}
               </TabPanel>

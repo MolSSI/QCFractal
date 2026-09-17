@@ -9,8 +9,14 @@ export type DatasetRecordViewState = {
   statusFilter: "all" | qcpTypes.RecordStatus;
 };
 
+export type DatasetStatusViewState = {
+  page: number;
+  specFilter: string;
+};
+
 export type DatasetViewState = {
   tabValue: number;
+  statusView: DatasetStatusViewState;
   recordView: DatasetRecordViewState;
 };
 
@@ -34,9 +40,17 @@ function createDefaultRecordViewState(): DatasetRecordViewState {
   };
 }
 
+function createDefaultStatusViewState(): DatasetStatusViewState {
+  return {
+    page: 0,
+    specFilter: "",
+  };
+}
+
 export function createDefaultDatasetViewState(): DatasetViewState {
   return {
     tabValue: 0,
+    statusView: createDefaultStatusViewState(),
     recordView: createDefaultRecordViewState(),
   };
 }
@@ -52,6 +66,8 @@ export function getSavedDatasetViewState(
   const stateRecord = asRecord(locationState);
   const datasetPageState = asRecord(stateRecord?.datasetPageState);
   const recordView = asRecord(datasetPageState?.recordView);
+  // Saved before the status view existed, so fall back to its defaults
+  const statusView = asRecord(datasetPageState?.statusView);
 
   if (
     !datasetPageState ||
@@ -63,6 +79,10 @@ export function getSavedDatasetViewState(
 
   return {
     tabValue: datasetPageState.tabValue as number,
+    statusView: {
+      page: (statusView?.page as number) ?? 0,
+      specFilter: (statusView?.specFilter as string) ?? "",
+    },
     recordView: {
       page: recordView.page as number,
       rowsPerPage: recordView.rowsPerPage as number,
@@ -80,6 +100,7 @@ export function createSavedDatasetPageState(
   return {
     datasetId,
     tabValue: viewState.tabValue,
+    statusView: { ...viewState.statusView },
     recordView: { ...viewState.recordView },
   };
 }
@@ -92,6 +113,7 @@ export function createDatasetRecordsLocationState(
   return {
     datasetPageState: createSavedDatasetPageState(datasetId, {
       tabValue: DATASET_RECORDS_TAB_INDEX,
+      statusView: createDefaultStatusViewState(),
       recordView: {
         ...createDefaultRecordViewState(),
         entryFilter,
@@ -107,6 +129,8 @@ export function areDatasetViewStatesEqual(
 ): boolean {
   return (
     left.tabValue === right.tabValue &&
+    left.statusView.page === right.statusView.page &&
+    left.statusView.specFilter === right.statusView.specFilter &&
     left.recordView.page === right.recordView.page &&
     left.recordView.rowsPerPage === right.recordView.rowsPerPage &&
     left.recordView.entryFilter === right.recordView.entryFilter &&
