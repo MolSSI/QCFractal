@@ -1,11 +1,7 @@
 import React from "react";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Alert,
   Box,
-  Divider,
   Link as MuiLink,
   Paper,
   Stack,
@@ -17,13 +13,13 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAuth } from "../Auth.tsx";
 import { usePreferences } from "../PreferencesProvider.tsx";
 import { usePortalClient } from "../PortalClient.tsx";
 import { useQuery } from "@tanstack/react-query";
 import * as qcpTypes from "../PortalTypes";
 import LoadingIndicator from "../components/LoadingIndicator";
+import Changelog from "../components/Changelog.tsx";
 import { usePageTitle } from "../UsePageTitle.ts";
 import { RecordTypeChip } from "../components/RecordTypeChip.tsx";
 import StatusChip from "../components/StatusChip.tsx";
@@ -113,177 +109,7 @@ const HomePage: React.FC = () => {
       </Typography>
 
       <Stack spacing={4}>
-        {/* What's New Section */}
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h5" gutterBottom>
-            What's New / Changelog
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-          <Typography variant="body1" component="div">
-            <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
-              <li>
-                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                  2026-06-07
-                </Typography>
-                <ul>
-                  <li>
-                    <strong>Added:</strong> API Access Page
-                    dialog
-                  </li>
-                </ul>
-              </li>
-              <li>
-                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                  2026-06-03
-                </Typography>
-                <ul>
-                  <li>
-                    <strong>Added:</strong> Dataset relationship button and
-                    dialog
-                  </li>
-                  <li>
-                    <strong>Improved:</strong> Parent projects are now displayed
-                    in the record relationship dialog
-                  </li>
-                </ul>
-              </li>
-              <li>
-                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                  2026-06-02
-                </Typography>
-                <ul>
-                  <li>
-                    <strong>Added:</strong> Server statistics page
-                  </li>
-                </ul>
-              </li>
-
-              <Accordion
-                variant="outlined"
-                sx={{ mt: 2, "&:before": { display: "none" } }}
-              >
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography sx={{ fontWeight: "bold" }}>
-                    Previous Updates
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails sx={{ pt: 0 }}>
-                  <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
-                    <li>
-                      <Typography
-                        variant="subtitle1"
-                        sx={{ fontWeight: "bold" }}
-                      >
-                        2026-05-20
-                      </Typography>
-                      <ul>
-                        <li>
-                          <strong>Improved:</strong> Enhanced performance for
-                          large output files with virtual scrolling and
-                          debouncing
-                        </li>
-                      </ul>
-                    </li>
-                    <li>
-                      <strong>2026-04-29</strong>
-                      <ul>
-                        <li>
-                          <strong>Added:</strong> User management list for
-                          administrators
-                        </li>
-                        <li>
-                          <strong>Improved:</strong> Administrator profile now
-                          includes extra management options
-                        </li>
-                      </ul>
-                    </li>
-                    <li style={{ marginTop: "16px" }}>
-                      <strong>2026-04-28</strong>
-                      <ul>
-                        <li>
-                          <strong>Added:</strong> Lookup by project or dataset
-                          id/name
-                        </li>
-                        <li>
-                          <strong>Added:</strong> Record relationship dialog
-                        </li>
-                      </ul>
-                    </li>
-                    <li style={{ marginTop: "16px" }}>
-                      <strong>2026-04-27</strong>
-                      <ul>
-                        <li>
-                          <strong>Added:</strong> User info page (and user
-                          modification)
-                        </li>
-                      </ul>
-                    </li>
-                    <li style={{ marginTop: "16px" }}>
-                      <strong>2026-04-13</strong>
-                      <ul>
-                        <li>
-                          <strong>Added:</strong> Favoriting records
-                        </li>
-                        <li>
-                          <strong>Added:</strong> Dataset and project
-                          attachments
-                        </li>
-                        <li>
-                          <strong>Added:</strong> Project creation
-                        </li>
-                        <li>
-                          <strong>Added:</strong> Linking/Unlinking existing
-                          datasets to a project
-                        </li>
-                        <li>
-                          <strong>Improved:</strong> Enhanced
-                          record/dataset/project description display with
-                          Markdown support
-                        </li>
-                        <li>
-                          <strong>Added:</strong> Torsiondrive plots
-                        </li>
-                        <li>
-                          <strong>Improved:</strong> Manager page & fragment
-                          (including claimed records)
-                        </li>
-                        <li>
-                          <strong>Improved:</strong> Remove ANSI escape codes
-                          from raw output
-                        </li>
-                      </ul>
-                    </li>
-                    <li style={{ marginTop: "16px" }}>
-                      <strong>2026-04-10</strong>
-                      <ul>
-                        <li>
-                          <strong>Improved:</strong> Molecular formula
-                          formatting & molecule viewer layouts
-                        </li>
-                        <li>
-                          <strong>Improved:</strong> Remove ANSI escape codes
-                          from raw output
-                        </li>
-                      </ul>
-                    </li>
-                    <li style={{ marginTop: "16px" }}>
-                      <strong>2026-04-09</strong>
-                      <ul>
-                        <li>
-                          <strong>Added:</strong> This homepage{" "}
-                        </li>
-                        <li>
-                          <strong>Added:</strong> Dataset records and various
-                          record pages
-                        </li>
-                      </ul>
-                    </li>
-                  </ul>
-                </AccordionDetails>
-              </Accordion>
-            </ul>
-          </Typography>
-        </Paper>
+        <Changelog />
 
         {loggedIn && (
           <>

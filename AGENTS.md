@@ -68,6 +68,14 @@ All QCFractal API types are in `src/PortalTypes.ts`. Key types: `RecordData`, `P
 
 `src/components/Molecule.tsx` uses the NGL library. Components must be wrapped in `<MoleculeStageProvider width height>` before using `<MoleculeViewer moleculeData={...}>`.
 
+### Changelog
+
+The home page shows a "What's New / Changelog" section, rendered by `src/components/Changelog.tsx` from the `CHANGELOG` data array. Keep it up to date: when you add or change a user-facing feature, add a corresponding entry.
+
+- Add an item to the matching `date` entry, or add a new dated entry at the top of `CHANGELOG` (entries are newest first, `date` formatted `YYYY-MM-DD`). Each item is `{ kind: "Added" | "Improved" | "Fixed", text }`.
+- The section is collapsed by default and its header shows the newest entry's date as "Last updated" — no markup changes are needed when adding an entry.
+- Only include user-facing changes. Skip purely internal refactors, and if you are unsure whether a change warrants an entry, ask.
+
 ### Deployment
 
 CI/CD deploys to Azure Static Web Apps on push to `main`. The `VITE_QCFRACTAL_URI` is injected at build time via GitHub Actions secrets. `staticwebapp.config.json` rewrites all non-asset routes to `/` for SPA support.
