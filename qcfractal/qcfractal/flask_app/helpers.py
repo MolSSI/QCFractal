@@ -100,17 +100,29 @@ def login_user() -> UserInfo:
 
 
 def login_user_session() -> UserInfo:
-    # Raises exception on invalid username, password, etc
-    # Submitted user/password are stored in the flask request object
-    session.clear()
+    """
+    Handle a browser (cookie-based session) login
+
+    Raises exception on invalid username, password, etc. Submitted user/password are stored in the
+    flask request object.
+    """
+
+    # Authenticate first. A failed login must not disturb any existing session
     user_info = login_user()
+
+    # Discard any existing session and start a new one under a fresh key. A key that existed
+    # before authentication must never become associated with the authenticated user
+    # (session fixation)
+    session.rotate()
     session["user_id"] = str(user_info.id)
 
     return user_info
 
 
 def logout_user_session():
-    session.clear()
+    # Clears the session data and revokes the key in the database. Since the session
+    # stays empty, no replacement session is created
+    session.rotate()
 
 
 def access_token_from_user(user_info: UserInfo):

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Tuple, List, Any, Optional
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, update
 from sqlalchemy.dialects.postgresql import insert
 
 from qcportal.auth import UserInfo
@@ -91,7 +91,7 @@ class AuthSocket:
     def allowed_actions(self, subject: Any, resources: Any, actions: Any, policies: Any) -> List[Tuple[str, str]]:
         raise NotImplementedError("TODO")
 
-    def save_user_session(
+    def create_user_session(
         self,
         user_id: int,
         user_session_key: str,
@@ -100,36 +100,90 @@ class AuthSocket:
         session: Optional[Session] = None,
     ) -> None:
         """
-        Saves user/flask session data to the database
+        Creates a new user/flask session in the database
+
+        The session key must not already exist.
         """
 
         with self.root_socket.optional_session(session, False) as session:
-            stmt = insert(UserSessionORM)
-            stmt = stmt.values(user_id=user_id, session_key=user_session_key, session_data=user_session_data)
-            stmt = stmt.on_conflict_do_update(
-                index_elements=[UserSessionORM.session_key],
-                set_={"session_data": user_session_data, "last_accessed": now_at_utc()},
-            )
-            session.execute(stmt)
+            session_orm = UserSessionORM(user_id=user_id, session_key=user_session_key, session_data=user_session_data)
+            session.add(session_orm)
+
+    def update_user_session(
+        self,
+        user_id: int,
+        user_session_key: str,
+        user_session_data: Any,
+        *,
+        session: Optional[Session] = None,
+    ) -> bool:
+        """
+        Updates the data (and last accessed time) of an existing user/flask session
+
+        This never creates a session. If no session with the given key exists that belongs to the
+        given user, then False is returned. This happens if the session was revoked (logout,
+        administrative action, expiry cleanup) while a request using it was in flight, and such a
+        session must not be resurrected.
+
+        Returns
+        -------
+        :
+            True if the session existed and was updated, False otherwise
+        """
+
+        with self.root_socket.optional_session(session, False) as session:
+            stmt = update(UserSessionORM)
+            stmt = stmt.where(UserSessionORM.session_key == user_session_key, UserSessionORM.user_id == user_id)
+            stmt = stmt.values(session_data=user_session_data, last_accessed=now_at_utc())
+            r = session.execute(stmt)
+            return r.rowcount > 0
+
+    def rotate_user_session(
+        self,
+        old_session_key: Optional[str],
+        user_id: int,
+        new_session_key: str,
+        user_session_data: Any,
+        *,
+        session: Optional[Session] = None,
+    ) -> None:
+        """
+        Replaces a user/flask session with a new one under a different key
+
+        The old session (if given) is deleted and the new one created in a single transaction.
+        This is used on login so that a session key that existed before authentication is never
+        associated with the newly authenticated user (session fixation).
+        """
+
+        with self.root_socket.optional_session(session, False) as session:
+            if old_session_key is not None:
+                stmt = delete(UserSessionORM).where(UserSessionORM.session_key == old_session_key)
+                session.execute(stmt)
+
+            session_orm = UserSessionORM(user_id=user_id, session_key=new_session_key, session_data=user_session_data)
+            session.add(session_orm)
 
     def load_user_session(
         self, user_session_key: str, *, session: Optional[Session] = None
-    ) -> Tuple[Any, datetime.datetime]:
+    ) -> Optional[Tuple[int, Any, datetime.datetime]]:
         """
         Loads user/flask session data from the database
 
-        Will return None if the session_key does not exist in the database
-
-        Returns a tuple of the session data and the last accessed time
+        Returns
+        -------
+        :
+            A tuple of the owning user id (from the relational column, which is authoritative),
+            the session data, and the last accessed time. If the session_key does not exist,
+            None is returned.
         """
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(UserSessionORM).where(UserSessionORM.session_key == user_session_key)
             flask_session_orm = session.execute(stmt).scalar_one_or_none()
 
             if not flask_session_orm:
-                return None, now_at_utc()
+                return None
 
-            return flask_session_orm.session_data, flask_session_orm.last_accessed
+            return flask_session_orm.user_id, flask_session_orm.session_data, flask_session_orm.last_accessed
 
     def delete_user_session(
         self,
