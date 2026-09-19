@@ -23,6 +23,39 @@ from .home_v1 import home_v1
 # from a specific blueprint
 #####################################################################
 
+# Request headers whose values must never be persisted (credentials, session keys)
+_REDACTED_HEADERS = {"authorization", "proxy-authorization", "cookie", "x-api-key"}
+
+# Maximum number of bytes of a request body to store in the internal error log
+_MAX_LOGGED_BODY = 8192
+
+
+def redacted_request_headers() -> Dict[str, str]:
+    """
+    Returns the headers of the current request, with credential-bearing values replaced
+    """
+    return {k: ("<redacted>" if k.lower() in _REDACTED_HEADERS else v) for k, v in request.headers.items()}
+
+
+def redacted_request_body() -> str:
+    """
+    Returns a representation of the current request body that is safe to persist
+
+    Bodies of authentication requests, password changes, and anything that appears to carry
+    a password are replaced with a short description so that plaintext credentials never
+    reach the internal error log.
+    """
+    data = request.data
+    if not data:
+        return ""
+
+    path = request.path.lower()
+    if path.startswith("/auth/") or "password" in path or b"password" in data.lower():
+        content_type = request.headers.get("Content-Type", "")
+        return f"<redacted: {len(data)} bytes, content-type {content_type!r}>"
+
+    return str(data)[:_MAX_LOGGED_BODY]
+
 
 @home_v1.before_app_request
 def before_request_func():
@@ -94,18 +127,15 @@ def handle_internal_error(error):
     # Do not report the details to the user. Instead, log it,
     # and send the user the error id
 
-    # Copy the headers to a dict, and remove the JWT stuff
-    headers = dict(request.headers.items())
-    headers.pop("Authorization", None)
-
+    # Headers and body are stored for debugging, but never any credentials or session keys
     tb = traceback.format_exc()
 
     error_log = {
         "error_text": tb,
         "user_id": g.get("user_id", None),
         "request_path": request.full_path,
-        "request_headers": str(headers),
-        "request_body": str(request.data)[:8192],
+        "request_headers": str(redacted_request_headers()),
+        "request_body": redacted_request_body(),
     }
 
     # Log it to the internal error table

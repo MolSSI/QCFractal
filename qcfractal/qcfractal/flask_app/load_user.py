@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from flask import session, g
+from flask import session, g, current_app
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
-from jwt.exceptions import ExpiredSignatureError
+from flask_jwt_extended.exceptions import JWTExtendedException
+from jwt.exceptions import ExpiredSignatureError, PyJWTError
 from werkzeug.exceptions import InternalServerError
 
 from qcfractal.flask_app import storage_socket
@@ -53,10 +54,18 @@ def load_logged_in_user():
                 groups = user_info.groups
     except (AuthorizationFailure, AuthenticationFailure):
         raise
-    except ExpiredSignatureError as e:
-        raise AuthenticationFailure(f"Authentication failure - JWT Token has expired: {str(e)}")
-    except Exception as e:
-        raise InternalServerError(f"Failed to verify user info: {str(e)}")
+    except ExpiredSignatureError:
+        # Note: the qcportal client matches on "Token has expired" to trigger a refresh
+        raise AuthenticationFailure("Authentication failure - JWT Token has expired")
+    except (PyJWTError, JWTExtendedException) as e:
+        # Malformed, tampered, or otherwise invalid tokens are a client error, not a server error.
+        # Report only the exception type - the details are not useful to a legitimate client
+        raise AuthenticationFailure(f"Authentication failure - invalid token ({type(e).__name__})")
+    except Exception:
+        # Do not send exception details to the client. The full traceback (including this
+        # exception as the context) is captured by the internal error handler
+        current_app.logger.exception("Failed to verify user info")
+        raise InternalServerError("Failed to verify user info")
 
     # Store the user in the global app/request context
     g.user_id = user_id
