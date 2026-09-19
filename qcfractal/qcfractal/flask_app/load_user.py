@@ -37,25 +37,30 @@ def load_logged_in_user():
 
     try:
         if request.headers.get("Authorization"):
-            # Bearer token. Any problem with the token (including a non-bearer Authorization header)
-            # is an authentication failure, not a fall back to the session cookie
+            # An Authorization header takes precedence and is never a fall back to the session
+            # cookie. verify_jwt_in_request(optional=True) returns None (rather than raising) when
+            # the header is not a usable bearer JWT - a wrong scheme ("Basic ..."), a wrong case
+            # ("bearer ..."), or a comma-separated list. Those must be a 401, not a silent
+            # downgrade to anonymous access
             if verify_jwt_in_request(optional=True) is not None:
                 user_id = get_jwt_identity()
 
-            if user_id is not None:
-                # user_id is stored in the JWT as a string
-                user_id = int(user_id)
+            if user_id is None:
+                raise AuthenticationFailure("Authentication failure - unsupported or invalid Authorization header")
 
-                # Re-verify the user against the database rather than trusting the
-                # authorization attributes copied into the JWT. This ensures that
-                # disabling an account or changing its role/groups takes effect within
-                # the cache lifetime, rather than persisting until the token expires.
-                # The (short) cache keeps this from hitting the database on every request.
-                user_info = _cached_verify(user_id=user_id)
-                username = user_info.username
-                role = user_info.role
-                groups = user_info.groups
-                auth_source = "jwt"
+            # user_id is stored in the JWT as a string
+            user_id = int(user_id)
+
+            # Re-verify the user against the database rather than trusting the
+            # authorization attributes copied into the JWT. This ensures that
+            # disabling an account or changing its role/groups takes effect within
+            # the cache lifetime, rather than persisting until the token expires.
+            # The (short) cache keeps this from hitting the database on every request.
+            user_info = _cached_verify(user_id=user_id)
+            username = user_info.username
+            role = user_info.role
+            groups = user_info.groups
+            auth_source = "jwt"
 
         elif session and "user_id" in session:
             # Browser session (the session data was validated against the database when loaded)

@@ -4,6 +4,7 @@ Tests for the database-side handling of browser (flask) sessions
 
 from __future__ import annotations
 
+import pytest
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
@@ -92,3 +93,22 @@ def test_user_session_socket_cleanup_job_registered(storage_socket: SQLAlchemySo
         assert jobs[0].function == "auth.delete_expired_user_sessions"
         assert jobs[0].repeat_delay == storage_socket.auth._delete_expired_sessions_frequency
         assert 60 <= jobs[0].repeat_delay <= 3600
+
+
+def test_user_session_socket_list_by_username(storage_socket: SQLAlchemySocket):
+    uid = _add_user(storage_socket, "read_user")
+    storage_socket.auth.create_user_session(uid, "k1", {"user_id": str(uid)})
+
+    # Both the username and the id resolve to the same sessions (a non-numeric username must not
+    # reach the query as a raw string)
+    by_id = storage_socket.auth.list_user_sessions(uid)
+    by_name = storage_socket.auth.list_user_sessions("read_user")
+    assert len(by_id) == 1
+    assert len(by_name) == 1
+    assert by_id[0]["user_id"] == uid
+
+    # An unknown username raises rather than causing a database error
+    from qcportal.exceptions import UserManagementError
+
+    with pytest.raises(UserManagementError):
+        storage_socket.auth.list_user_sessions("no_such_user")

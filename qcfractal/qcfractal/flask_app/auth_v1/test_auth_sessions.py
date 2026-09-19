@@ -507,3 +507,26 @@ def test_auth_session_throttled_refresh(secure_snowflake):
     assert "Set-Cookie" in r.headers
     _, _, accessed_4 = storage_socket.auth.load_user_session(key)
     assert accessed_4 > accessed_3
+
+
+def test_auth_unsupported_authorization_header(secure_snowflake):
+    # A present-but-unusable Authorization header is a 401, never a silent downgrade to anonymous
+    uri = secure_snowflake.get_uri()
+
+    for header in ("Basic dXNlcjpwYXNz", "bearer sometoken", "Bearer a.b.c, Bearer d.e.f", "Token xyz"):
+        r = requests.get(f"{uri}/api/v1/information", headers={"Authorization": header})
+        assert r.status_code == 401, header
+
+
+def test_auth_unsupported_authorization_header_allow_read(secure_snowflake_allow_read):
+    # Even on a server that allows anonymous reads, a bad Authorization header does not fall through
+    # to anonymous access - the caller clearly intended to authenticate
+    uri = secure_snowflake_allow_read.get_uri()
+
+    # No header at all: anonymous read is allowed
+    r = requests.get(f"{uri}/api/v1/information")
+    assert r.status_code == 200
+
+    # A malformed Authorization header: rejected
+    r = requests.get(f"{uri}/api/v1/information", headers={"Authorization": "Basic dXNlcjpwYXNz"})
+    assert r.status_code == 401
