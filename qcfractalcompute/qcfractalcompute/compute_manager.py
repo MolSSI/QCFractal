@@ -93,6 +93,7 @@ class ComputeManager:
             address=config.server.fractal_uri,
             username=config.server.username,
             password=config.server.password,
+            api_token=config.server.api_token,
             verify=config.server.verify,
         )
 
