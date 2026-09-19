@@ -49,11 +49,12 @@ def load_logged_in_user():
 
     try:
         authorization = request.headers.get("Authorization")
-        if authorization:
+        if authorization is not None:
             # An Authorization header takes precedence and is never a fall back to the session
-            # cookie. It is either one of our opaque API tokens (dispatched on shape, before the
-            # JWT machinery, since verify_jwt_in_request would otherwise raise on a non-JWT bearer
-            # value) or a JWT. Anything else is a 401, never a silent downgrade to anonymous access.
+            # cookie - even an empty or malformed one, which is a 401 rather than a silent downgrade
+            # to cookie or anonymous access. It is either one of our opaque API tokens (dispatched on
+            # shape, before the JWT machinery, since verify_jwt_in_request would otherwise raise on a
+            # non-JWT bearer value) or a JWT. Anything else is a 401.
             api_token = _bearer_api_token(authorization)
 
             if api_token is not None:

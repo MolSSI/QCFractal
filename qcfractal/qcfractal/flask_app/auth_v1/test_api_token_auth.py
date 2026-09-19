@@ -198,3 +198,62 @@ def test_api_token_client_security_disabled_bootstrap(snowflake):
     # Construction must succeed even though /me is unavailable
     client = PortalClient(snowflake.get_uri(), api_token=raw)
     assert client.user_id is None  # identity could not be determined, but no error
+
+
+def test_api_token_auth_empty_header_is_401(secure_snowflake):
+    # A present-but-empty Authorization header must be a 401, not a fall back to anonymous
+    uri = secure_snowflake.get_uri()
+    before = _n_internal_errors(secure_snowflake)
+
+    r = requests.get(f"{uri}/api/v1/information", headers={"Authorization": ""})
+    assert r.status_code == 401
+    assert _n_internal_errors(secure_snowflake) == before
+
+
+def test_api_token_auth_empty_header_ignores_cookie(secure_snowflake):
+    # An empty Authorization header must not be ignored in favor of a valid session cookie
+    from qcfractal.flask_app.csrf import CSRF_HEADER
+
+    uri = secure_snowflake.get_uri()
+    sess = requests.Session()
+    sess.headers.update({CSRF_HEADER: "XMLHttpRequest"})
+    r = sess.post(
+        f"{uri}/auth/v1/session_login",
+        json={"username": "admin_user", "password": test_users["admin_user"]["pw"]},
+    )
+    assert r.status_code == 200
+
+    # Cookie is valid, but the explicit (empty) Authorization header takes precedence -> 401
+    r = sess.get(f"{uri}/api/v1/information", headers={"Authorization": ""})
+    assert r.status_code == 401
+
+
+def test_api_token_auth_recorded_in_access_log(secure_snowflake):
+    # A token-authenticated request records which token made it, for attribution
+    from qcportal.serverinfo.models import AccessLogQueryFilters
+
+    uri = secure_snowflake.get_uri()
+    raw, info = _mint_token(secure_snowflake, "admin_user")
+
+    r = requests.get(f"{uri}/api/v1/information", headers=_auth(raw))
+    assert r.status_code == 200
+
+    socket = secure_snowflake.get_storage_socket()
+    accesses = socket.serverinfo.query_access_log(AccessLogQueryFilters())
+    # Find the information request made with the token
+    token_accesses = [a for a in accesses if a["api_token_id"] == info["id"]]
+    assert len(token_accesses) >= 1
+
+    # A password/JWT request has no api_token_id
+    r = requests.post(
+        f"{uri}/auth/v1/login",
+        json={"username": "admin_user", "password": test_users["admin_user"]["pw"]},
+    )
+    jwt = r.json()["access_token"]
+    requests.get(f"{uri}/api/v1/information", headers=_auth(jwt))
+
+    accesses = socket.serverinfo.query_access_log(AccessLogQueryFilters())
+    info_via_jwt = [
+        a for a in accesses if a["full_uri"].endswith("/information") and a["api_token_id"] is None
+    ]
+    assert len(info_via_jwt) >= 1
