@@ -100,6 +100,7 @@ class UserSessionORM(BaseORM):
     __table_args__ = (
         UniqueConstraint("session_key", name="ux_user_session_session_key"),
         Index("ix_user_session_user_id", "user_id"),
+        Index("ix_user_session_last_accessed", "last_accessed"),
     )
 
     def public_dict(self) -> Dict[str, Any]:
