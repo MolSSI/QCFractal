@@ -125,7 +125,7 @@ def test_user_client_use_nonexist(secure_snowflake: QCATestingSnowflake):
     with pytest.raises(PortalRequestError, match=r"User.*not found"):
         client.modify_user(uinfo)
     with pytest.raises(PortalRequestError, match=r"User.*not found"):
-        client.change_user_password("no_user", "abcde1234")
+        client.change_user_password("no_user", "abcde1234_pw")
     with pytest.raises(PortalRequestError, match=r"User.*not found"):
         client.delete_user("no_user")
 
@@ -145,7 +145,7 @@ def test_user_client_use_invalid_username(secure_snowflake: QCATestingSnowflake)
         with pytest.raises(PortalRequestError, match=r"Username"):
             client.modify_user(uinfo)
         with pytest.raises(InvalidUsernameError):
-            client.change_user_password(username, "abcde1234")
+            client.change_user_password(username, "abcde1234_pw")
         with pytest.raises(InvalidUsernameError):
             client.delete_user(username)
 

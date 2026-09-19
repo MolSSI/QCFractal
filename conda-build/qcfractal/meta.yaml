@@ -24,7 +24,7 @@ requirements:
     - flask
     - flask-jwt-extended
     - waitress
-    - bcrypt
+    - bcrypt >=5.0
     - sqlalchemy >=2.0
     - alembic
     - psycopg2
