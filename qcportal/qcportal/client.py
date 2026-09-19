@@ -63,6 +63,9 @@ from qcportal.torsiondrive import (
 from .auth import (
     UserInfo,
     GroupInfo,
+    APIToken,
+    NewAPIToken,
+    APITokenCreateBody,
     is_valid_username,
     is_valid_password,
     is_valid_groupname,
@@ -142,6 +145,7 @@ class PortalClient(PortalClientBase):
         verify: bool = True,
         show_motd: bool = True,
         *,
+        api_token: str | None = None,
         cache_dir: str | None = None,
         cache_max_size: int = 0,
     ) -> None:
@@ -161,13 +165,15 @@ class PortalClient(PortalClientBase):
             SSL keys.
         show_motd
             If a Message-of-the-Day is available, display it
+        api_token
+            A long-lived API token to authenticate with, instead of a username and password
         cache_dir
             Directory to store an internal cache of records and other data
         cache_max_size
             Maximum size of the cache directory
         """
 
-        PortalClientBase.__init__(self, address, username, password, verify, show_motd)
+        PortalClientBase.__init__(self, address, username, password, verify, show_motd, api_token=api_token)
         self._logger = logging.getLogger("PortalClient")
         self.cache = PortalCache(address, cache_dir, cache_max_size)
 
@@ -4112,3 +4118,78 @@ class PortalClient(PortalClientBase):
             is_valid_username(username_or_id)
 
         return self.make_request("delete", f"api/v1/users/{username_or_id}", None)
+
+    ##############################################################
+    # API tokens
+    ##############################################################
+    def list_api_tokens(self, username_or_id: int | str | None = None) -> list[APIToken]:
+        """
+        List a user's API tokens (never including the tokens themselves)
+
+        Parameters
+        ----------
+        username_or_id
+            The user whose tokens to list. If None, lists the current user's own tokens.
+        """
+
+        if username_or_id is None:
+            return self.make_request("get", "api/v1/me/tokens", list[APIToken])
+
+        if not isinstance(username_or_id, int):
+            is_valid_username(username_or_id)
+        return self.make_request("get", f"api/v1/users/{username_or_id}/tokens", list[APIToken])
+
+    def create_api_token(
+        self,
+        description: str = "",
+        expires_at: datetime | None = None,
+        username_or_id: int | str | None = None,
+    ) -> NewAPIToken:
+        """
+        Create a new API token
+
+        The returned object contains the plaintext token, which is shown only once and cannot be
+        retrieved later.
+
+        Parameters
+        ----------
+        description
+            A free-text label to help identify the token later
+        expires_at
+            When the token should expire (timezone-aware). If None, the server's default policy
+            applies (which may be no expiration).
+        username_or_id
+            The user to create the token for. If None, creates a token for the current user.
+        """
+
+        body = APITokenCreateBody(description=description, expires_at=expires_at)
+
+        if username_or_id is None:
+            return self.make_request(
+                "post", "api/v1/me/tokens", NewAPIToken, body_model=APITokenCreateBody, body=body
+            )
+
+        if not isinstance(username_or_id, int):
+            is_valid_username(username_or_id)
+        return self.make_request(
+            "post", f"api/v1/users/{username_or_id}/tokens", NewAPIToken, body_model=APITokenCreateBody, body=body
+        )
+
+    def delete_api_token(self, token_id: int, username_or_id: int | str | None = None) -> None:
+        """
+        Delete (revoke) an API token
+
+        Parameters
+        ----------
+        token_id
+            The id of the token to delete
+        username_or_id
+            The owner of the token. If None, deletes one of the current user's own tokens.
+        """
+
+        if username_or_id is None:
+            return self.make_request("delete", f"api/v1/me/tokens/{token_id}", None)
+
+        if not isinstance(username_or_id, int):
+            is_valid_username(username_or_id)
+        return self.make_request("delete", f"api/v1/users/{username_or_id}/tokens/{token_id}", None)

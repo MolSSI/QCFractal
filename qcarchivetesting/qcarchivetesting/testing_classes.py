@@ -294,7 +294,7 @@ class QCATestingSnowflake(FractalSnowflake):
         """
         self._stop_job_runner()
 
-    def client(self, username=None, password=None, cache_dir=None) -> PortalClient:
+    def client(self, username=None, password=None, cache_dir=None, api_token=None) -> PortalClient:
         """
         Obtain a client connected to this snowflake
 
@@ -306,6 +306,8 @@ class QCATestingSnowflake(FractalSnowflake):
             The password to use
         cache_dir
             Directory to store cache files in
+        api_token
+            An API token to connect with, instead of a username and password
 
         Returns
         -------
@@ -313,7 +315,9 @@ class QCATestingSnowflake(FractalSnowflake):
             A PortalClient that is connected to this snowflake
         """
 
-        client = PortalClient(self.get_uri(), username=username, password=password, cache_dir=cache_dir)
+        client = PortalClient(
+            self.get_uri(), username=username, password=password, cache_dir=cache_dir, api_token=api_token
+        )
         client.encoding = self.encoding
         return client
 
