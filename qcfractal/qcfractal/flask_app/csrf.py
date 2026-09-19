@@ -65,12 +65,17 @@ def check_csrf() -> None:
        form posts, which browsers otherwise send without a preflight.
     2. If the browser sent an ``Origin`` header, it must be a trusted origin (see is_trusted_origin).
 
-    Requests using safe methods (GET, HEAD, OPTIONS) are not checked.
+    Requests using safe methods (GET, HEAD, OPTIONS) are not checked. Neither are requests carrying
+    an Authorization header - a hostile site cannot add one without a CORS preflight, so such a
+    request cannot be a cross-site forgery (and it is authenticated by the token, not the cookie).
 
     Raises AuthorizationFailure (403) if the checks fail.
     """
 
     if request.method in _SAFE_METHODS:
+        return
+
+    if request.headers.get("Authorization"):
         return
 
     if not request.headers.get(CSRF_HEADER):

@@ -6,6 +6,7 @@ import pytest
 from qcarchivetesting import test_users
 from qcarchivetesting.testing_classes import QCATestingSnowflake
 from qcfractal.components.auth import GLOBAL_ROLE_PERMISSIONS, AuthorizedEnum
+from qcfractal.flask_app.csrf import CSRF_HEADER
 from qcportal import PortalRequestError
 from qcportal.auth import UserInfo, GroupInfo
 from qcportal.exceptions import AuthorizationFailure
@@ -29,6 +30,10 @@ def test_global_permissions(secure_snowflake_allow_read: QCATestingSnowflake):
     for role in all_roles:
         if role == "anonymous":
             role_clients[role] = secure_snowflake_allow_read.client()
+
+            # The anonymous client has no bearer token, so state-changing requests (such as
+            # session_login) are subject to CSRF checks and must carry the header like a browser would
+            role_clients[role]._req_session.headers[CSRF_HEADER] = "XMLHttpRequest"
         else:
             role_user = secure_snowflake_allow_read.get_test_user_by_role(role)
             role_clients[role] = secure_snowflake_allow_read.user_client(role_user.username)
