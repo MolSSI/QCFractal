@@ -51,6 +51,11 @@ class AccessLogORM(BaseORM):
 
     user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
 
+    # The API token (if any) that authenticated the request, for attribution. Deliberately a plain
+    # integer, not a foreign key: revoking a token must never be blocked by, or erase, its access
+    # history, so the id remains in the log even after the token is deleted.
+    api_token_id = Column(Integer, nullable=True)
+
     user = relationship(
         UserIDMapSubquery,
         foreign_keys=[user_id],
