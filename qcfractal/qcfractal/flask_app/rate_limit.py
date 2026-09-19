@@ -30,11 +30,29 @@ if TYPE_CHECKING:
 # Key for the per-(address, username) counter, or just the address for the per-address counter
 _Key = Union[str, Tuple[str, str]]
 
+# Longest username stored in a key. A caller chooses the username freely and it is recorded
+# before the account is known to exist, so the key must never be a way to spend memory. Two
+# usernames that agree in their first characters then share a counter, which only makes the
+# limit stricter for them, never looser
+MAX_KEY_USERNAME_LENGTH = 64
+
+# Hard ceiling on how many keys are tracked at once, applied after expired entries are swept.
+# This bounds memory even under a sustained spray of unique usernames from many addresses
+MAX_TRACKED_KEYS = 100_000
+
 
 class LoginRateLimiter:
+    # Exposed as attributes so tests can shrink them
+    max_key_username_length = MAX_KEY_USERNAME_LENGTH
+    max_tracked_keys = MAX_TRACKED_KEYS
+
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._failures: Dict[_Key, List[float]] = {}
+        self._last_sweep = 0.0
+
+    def _user_key(self, address: str, username: str) -> _Key:
+        return address, username.lower()[: self.max_key_username_length]
 
     def _recent(self, key: _Key, window: float, now: float) -> List[float]:
         # Caller must hold the lock. Prunes and returns the timestamps still inside the window
@@ -44,6 +62,37 @@ class LoginRateLimiter:
         else:
             self._failures.pop(key, None)
         return times
+
+    def _sweep(self, window: float, now: float) -> None:
+        """
+        Drops every entry that has aged out, then enforces the ceiling on tracked keys
+
+        Caller must hold the lock. Pruning otherwise only happens for a key that is looked up
+        again, so counters for usernames that are never retried - exactly what a spray produces -
+        would stay in memory for the lifetime of the process.
+        """
+
+        cutoff = now - window
+
+        pruned: Dict[_Key, List[float]] = {}
+        for key, times in self._failures.items():
+            kept = [t for t in times if t > cutoff]
+            if kept:
+                pruned[key] = kept
+
+        if len(pruned) > self.max_tracked_keys:
+            # Keep the most recently active keys. Reaching this at all means a very large burst
+            # inside a single window, so dropping the stalest counters is the safer failure mode
+            newest = sorted(pruned.items(), key=lambda item: item[1][-1], reverse=True)
+            pruned = dict(newest[: self.max_tracked_keys])
+
+        self._failures = pruned
+        self._last_sweep = now
+
+    def _maybe_sweep(self, window: float, now: float) -> None:
+        # Caller must hold the lock. At most one full pass per window, so the cost is negligible
+        if now - self._last_sweep >= window:
+            self._sweep(window, now)
 
     def check(self, address: str, username: str, config: WebAPIConfig) -> None:
         """
@@ -57,8 +106,10 @@ class LoginRateLimiter:
         now = time.time()
 
         with self._lock:
+            self._maybe_sweep(window, now)
+
             checks = (
-                (self._recent((address, username.lower()), window, now), config.login_rate_limit_max_attempts),
+                (self._recent(self._user_key(address, username), window, now), config.login_rate_limit_max_attempts),
                 (self._recent(address, window, now), config.login_rate_limit_ip_max_attempts),
             )
 
@@ -75,18 +126,21 @@ class LoginRateLimiter:
 
         now = time.time()
         with self._lock:
-            self._failures.setdefault((address, username.lower()), []).append(now)
+            self._maybe_sweep(config.login_rate_limit_window, now)
+
+            self._failures.setdefault(self._user_key(address, username), []).append(now)
             self._failures.setdefault(address, []).append(now)
 
     def record_success(self, address: str, username: str) -> None:
         # Clear the per-user counter. The per-address counter is left in place so a single valid
         # login does not wipe out evidence of spraying from that address
         with self._lock:
-            self._failures.pop((address, username.lower()), None)
+            self._failures.pop(self._user_key(address, username), None)
 
     def reset(self) -> None:
         with self._lock:
             self._failures.clear()
+            self._last_sweep = 0.0
 
 
 class FlaskLoginRateLimiter:
