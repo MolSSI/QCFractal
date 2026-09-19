@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import logging
+import re
 import secrets
 from typing import TYPE_CHECKING
 
 import bcrypt
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.sql import select
+from sqlalchemy.sql import select, update
 
 from qcportal.auth import UserInfo, is_valid_password, is_valid_username, AuthTypeEnum
 from qcportal.auth.models import MAX_PASSWORD_BYTES
@@ -27,6 +28,14 @@ if TYPE_CHECKING:
 
 valid_roles: Set[str] = set(GLOBAL_ROLE_PERMISSIONS.keys())
 
+# Work factor used when hashing new passwords. Hashes stored with a lower cost than this are
+# transparently upgraded the next time the user successfully logs in
+BCRYPT_COST = 12
+
+# A bcrypt hash looks like "$2b$12$<22 chars of salt><31 chars of hash>". The two digits
+# following the version identifier are the cost
+_BCRYPT_PREFIX_RE = re.compile(rb"^\$2[aby]\$(\d{2})\$")
+
 
 def is_valid_role(role: str):
     if role not in valid_roles:
@@ -45,12 +54,39 @@ def _generate_password() -> str:
     return secrets.token_urlsafe(16)
 
 
-def _hash_password(password: str) -> bytes:
+def _hash_password_bytes(password: bytes, cost: int = BCRYPT_COST) -> bytes:
+    """
+    Hashes an already-encoded password in a consistent way
+
+    The given bytes must be at most 72 bytes long (bcrypt >= 5 raises otherwise).
+    """
+
+    return bcrypt.hashpw(password, bcrypt.gensalt(cost))
+
+
+def _hash_password(password: str, cost: int = BCRYPT_COST) -> bytes:
     """
     Hashes a password in a consistent way
     """
 
-    return bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
+    return _hash_password_bytes(password.encode("UTF-8"), cost)
+
+
+def _bcrypt_cost(hashed: bytes) -> Optional[int]:
+    """
+    Obtains the bcrypt work factor (cost) stored in a bcrypt hash
+
+    Returns None if the hash is not a recognizable bcrypt hash.
+    """
+
+    if not isinstance(hashed, (bytes, bytearray)):
+        return None
+
+    match = _BCRYPT_PREFIX_RE.match(bytes(hashed))
+    if match is None:
+        return None
+
+    return int(match.group(1))
 
 
 def _check_password_input(password: str) -> bytes:
@@ -217,11 +253,21 @@ class UserSocket:
         self._logger.info(f"User {user_info.username} added")
         return password
 
-    def _verify_local_password(self, user: UserORM, password: str):
+    def _verify_local_password(self, user: UserORM, password: str) -> Optional[bytes]:
         """
         Verifies a given username and password against the local db
 
         Raises exception if the password does not match or there is another problem
+
+        This function deliberately does not modify the given ORM object. If the stored hash uses a
+        weaker work factor than the one we use now, a replacement hash is returned; it is up to the
+        caller to store it (see `_replace_password_hash`).
+
+        Returns
+        -------
+        :
+            A replacement hash for the user's password, if the stored one should be upgraded.
+            None otherwise.
         """
 
         pw_bytes = _check_password_input(password)
@@ -237,6 +283,65 @@ class UserSocket:
 
         if pwcheck is False:
             raise AuthenticationFailure("Incorrect username or password")
+
+        # Password is correct. If it was stored with an outdated (weaker) work factor, hand back a
+        # replacement. Never rehash a hash that is already at or above the target cost - in particular,
+        # never downgrade one that an administrator deliberately made stronger
+        # Note that the replacement is computed from the same (possibly truncated) bytes that were
+        # just verified, so a legacy user with an overlong password keeps working exactly as before
+        stored_cost = _bcrypt_cost(user.password)
+        if stored_cost is not None and stored_cost < BCRYPT_COST:
+            return _hash_password_bytes(pw_bytes)
+
+        return None
+
+    def _replace_password_hash(
+        self,
+        user_id: int,
+        old_hash: bytes,
+        new_hash: bytes,
+        password: str,
+        *,
+        session: Optional[Session] = None,
+    ) -> None:
+        """
+        Replaces a user's stored password hash, but only if it is still the hash we verified against
+
+        This is a compare-and-set: if someone changed the password between verification and now,
+        the update matches no rows and the stored (newer) hash is left alone. In that case the
+        submitted password is re-verified against the new hash, since the user may have just been
+        authenticated against a password that is no longer valid.
+
+        Raises AuthenticationFailure if the password was changed concurrently and no longer matches.
+        """
+
+        stmt = (
+            update(UserORM)
+            .where(UserORM.id == user_id, UserORM.password == old_hash)
+            .values(password=new_hash)
+            .execution_options(synchronize_session=False)
+        )
+
+        with self.root_socket.optional_session(session, False) as s:
+            updated = s.execute(stmt).rowcount
+
+            if updated > 0:
+                self._logger.info(f"Upgraded stored password hash for user id {user_id} to bcrypt cost {BCRYPT_COST}")
+                return
+
+            # No rows matched - the password was changed (or the user removed) between verification
+            # and this update. Re-verify the submitted password against whatever is stored now
+            self._logger.info(
+                f"Stored password hash for user id {user_id} changed during login; skipping upgrade and re-verifying"
+            )
+
+            try:
+                user = self._get_internal(s, user_id)
+            except UserManagementError:
+                raise AuthenticationFailure("Incorrect username or password")
+
+            # Only re-verify once - ignore any further upgrade suggested by this verification
+            self._verify_local_password(user=user, password=password)
 
     def authenticate(self, username: str, password: str, *, session: Optional[Session] = None) -> UserInfo:
         """
@@ -262,9 +367,10 @@ class UserSocket:
 
         is_valid_username(username)
 
-        with self.root_socket.optional_session(session, True) as session:
+        # The verification itself is a read-only operation
+        with self.root_socket.optional_session(session, True) as s:
             try:
-                user = self._get_internal(session, username)
+                user = self._get_internal(s, username)
             except UserManagementError as e:
                 # Turn missing user into an Authentication error
                 raise AuthenticationFailure("Incorrect username or password")
@@ -274,12 +380,21 @@ class UserSocket:
 
             # what's next depends on how the user is authenticated
             if user.auth_type == AuthTypeEnum.password:
-                self._verify_local_password(user=user, password=password)
+                verified_hash = user.password
+                new_hash = self._verify_local_password(user=user, password=password)
             else:
                 self._logger.error(f"Unknown auth type: {user.auth_type}. This is a developer error")
                 raise UserManagementError(f"Unknown authentication type stored in the database: {user.auth_type}")
 
-            return user.to_model(UserInfo)
+            user_id = user.id
+            user_info = user.to_model(UserInfo)
+
+        # The stored hash uses an outdated work factor - upgrade it now that we know the password.
+        # This is done outside the read-only session above
+        if new_hash is not None:
+            self._replace_password_hash(user_id, verified_hash, new_hash, password, session=session)
+
+        return user_info
 
     def modify(self, user_info: UserInfo, as_admin: bool, *, session: Optional[Session] = None) -> Dict[str, Any]:
         """

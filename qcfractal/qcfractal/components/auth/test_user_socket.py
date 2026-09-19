@@ -4,7 +4,9 @@ from typing import TYPE_CHECKING
 
 import bcrypt
 import pytest
+from sqlalchemy import select
 from qcfractal.components.auth.db_models import UserORM
+from qcfractal.components.auth.user_socket import BCRYPT_COST, _bcrypt_cost, _hash_password
 from qcportal.auth.models import UserInfo, GroupInfo, AuthTypeEnum, is_valid_password
 from qcportal.exceptions import (
     UserManagementError,
@@ -55,6 +57,16 @@ def _seed_user_with_hash(storage_socket: SQLAlchemySocket, username: str, hashed
         session.add(user)
         session.flush()
         return user.id
+
+
+def _get_stored_hash(storage_socket: SQLAlchemySocket, username: str) -> bytes:
+    """
+    Reads a user's stored password hash directly from the database, using a brand-new session
+    """
+
+    with storage_socket.session_scope(True) as session:
+        user = session.execute(select(UserORM).where(UserORM.username == username)).scalar_one()
+        return user.password
 
 
 def test_user_socket_add_get(storage_socket: SQLAlchemySocket):
@@ -482,3 +494,118 @@ def test_user_socket_verify_legacy_long_password(storage_socket: SQLAlchemySocke
 
     with pytest.raises(AuthenticationFailure):
         storage_socket.users.authenticate("legacy_long_user", "y" * 100)
+
+
+def test_bcrypt_cost_parsing():
+    assert _bcrypt_cost(bcrypt.hashpw(b"abcdefghijkl", bcrypt.gensalt(6))) == 6
+    assert _bcrypt_cost(bcrypt.hashpw(b"abcdefghijkl", bcrypt.gensalt(10))) == 10
+
+    # All the bcrypt version prefixes we might find in an existing database
+    assert _bcrypt_cost(b"$2a$04$" + b"x" * 53) == 4
+    assert _bcrypt_cost(b"$2b$12$" + b"x" * 53) == 12
+    assert _bcrypt_cost(b"$2y$08$" + b"x" * 53) == 8
+
+    # Anything unparsable
+    assert _bcrypt_cost(b"") is None
+    assert _bcrypt_cost(b"not a hash at all") is None
+    assert _bcrypt_cost(b"$1$abcdefg$") is None
+    assert _bcrypt_cost(b"$2b$x1$" + b"x" * 53) is None
+    assert _bcrypt_cost("$2b$12$" + "x" * 53) is None  # a str, not bytes
+
+
+def test_user_socket_new_hashes_use_target_cost(storage_socket: SQLAlchemySocket):
+    uinfo = UserInfo(username="george", role="read", enabled=True)
+    storage_socket.users.add(uinfo, "good_password")
+
+    assert _bcrypt_cost(_get_stored_hash(storage_socket, "george")) == BCRYPT_COST
+
+    storage_socket.users.change_password("george", "another_good_password")
+    assert _bcrypt_cost(_get_stored_hash(storage_socket, "george")) == BCRYPT_COST
+
+    # Generated passwords too
+    storage_socket.users.change_password("george", None)
+    assert _bcrypt_cost(_get_stored_hash(storage_socket, "george")) == BCRYPT_COST
+
+
+def test_user_socket_rehash_on_login(storage_socket: SQLAlchemySocket):
+    password = "an_old_password"
+    _seed_user_with_hash(storage_socket, "george", bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6)))
+
+    old_hash = _get_stored_hash(storage_socket, "george")
+    assert _bcrypt_cost(old_hash) == 6
+
+    storage_socket.users.authenticate("george", password)
+
+    # Read back through a completely new session
+    new_hash = _get_stored_hash(storage_socket, "george")
+    assert new_hash != old_hash
+    assert _bcrypt_cost(new_hash) == BCRYPT_COST
+
+    # ... and the password still works
+    storage_socket.users.authenticate("george", password)
+
+    # Already upgraded - nothing changes on subsequent logins
+    assert _get_stored_hash(storage_socket, "george") == new_hash
+
+
+def test_user_socket_no_rehash_on_failed_login(storage_socket: SQLAlchemySocket):
+    password = "an_old_password"
+    _seed_user_with_hash(storage_socket, "george", bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6)))
+
+    old_hash = _get_stored_hash(storage_socket, "george")
+
+    with pytest.raises(AuthenticationFailure):
+        storage_socket.users.authenticate("george", "the_wrong_password")
+
+    assert _get_stored_hash(storage_socket, "george") == old_hash
+
+
+def test_user_socket_no_rehash_at_or_above_target_cost(storage_socket: SQLAlchemySocket):
+    uinfo = UserInfo(username="george", role="read", enabled=True)
+    storage_socket.users.add(uinfo, "good_password")
+
+    # Hash is already at the target cost
+    old_hash = _get_stored_hash(storage_socket, "george")
+    assert _bcrypt_cost(old_hash) == BCRYPT_COST
+
+    storage_socket.users.authenticate("george", "good_password")
+    assert _get_stored_hash(storage_socket, "george") == old_hash
+
+    # A stronger hash must never be downgraded
+    password = "a_stronger_password"
+    stronger_hash = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(BCRYPT_COST + 1))
+    _seed_user_with_hash(storage_socket, "bill", stronger_hash)
+
+    storage_socket.users.authenticate("bill", password)
+    assert _get_stored_hash(storage_socket, "bill") == stronger_hash
+
+
+def test_user_socket_replace_password_hash_stale(storage_socket: SQLAlchemySocket):
+    # Directly exercise the compare-and-set used to store an upgraded hash. This stands in for the
+    # (hard to trigger deterministically) race where the password changes during a login
+    uinfo = UserInfo(username="george", role="read", enabled=True)
+    storage_socket.users.add(uinfo, "first_password")
+    uid = storage_socket.users.get("george")["id"]
+
+    stale_hash = _get_stored_hash(storage_socket, "george")
+
+    storage_socket.users.change_password("george", "second_password")
+    current_hash = _get_stored_hash(storage_socket, "george")
+    assert current_hash != stale_hash
+
+    # Compare-and-set against the old hash matches no rows. The password we verified against is
+    # no longer valid, so authentication must fail...
+    with pytest.raises(AuthenticationFailure, match="Incorrect username or password"):
+        storage_socket.users._replace_password_hash(uid, stale_hash, _hash_password("first_password"), "first_password")
+
+    # ... and the newer hash is left untouched
+    assert _get_stored_hash(storage_socket, "george") == current_hash
+
+    # If the concurrent change happened to set the same password, the login stands, but the
+    # (stale) upgraded hash is still not written
+    storage_socket.users.change_password("george", "second_password")
+    newest_hash = _get_stored_hash(storage_socket, "george")
+    assert newest_hash != current_hash
+
+    storage_socket.users._replace_password_hash(uid, current_hash, _hash_password("second_password"), "second_password")
+    assert _get_stored_hash(storage_socket, "george") == newest_hash
