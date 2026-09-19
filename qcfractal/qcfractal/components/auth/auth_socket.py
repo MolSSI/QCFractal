@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import logging
 from datetime import timedelta
 from typing import TYPE_CHECKING, Tuple, List, Any, Optional, Union
@@ -18,6 +19,22 @@ if TYPE_CHECKING:
     import datetime
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
+
+
+def hash_session_key(user_session_key: str) -> str:
+    """
+    Hashes a browser session key for storage
+
+    The session key is a bearer credential - presenting it is enough to act as the user - so only
+    its hash is ever stored. A read of the user_session table (a database dump, a replica, a
+    support query, an injection) then yields nothing that can be replayed.
+
+    Unlike a password, the key is 256 bits of output from secrets.token_urlsafe, so guessing it is
+    infeasible and no salt or deliberately-slow KDF is needed. A plain SHA-256 keeps the lookup a
+    single indexed comparison.
+    """
+
+    return hashlib.sha256(user_session_key.encode("UTF-8")).hexdigest()
 
 
 class AuthSocket:
@@ -127,7 +144,11 @@ class AuthSocket:
         """
 
         with self.root_socket.optional_session(session, False) as session:
-            session_orm = UserSessionORM(user_id=user_id, session_key=user_session_key, session_data=user_session_data)
+            session_orm = UserSessionORM(
+                user_id=user_id,
+                session_key_hash=hash_session_key(user_session_key),
+                session_data=user_session_data,
+            )
             session.add(session_orm)
 
     def update_user_session(
@@ -154,7 +175,10 @@ class AuthSocket:
 
         with self.root_socket.optional_session(session, False) as session:
             stmt = update(UserSessionORM)
-            stmt = stmt.where(UserSessionORM.session_key == user_session_key, UserSessionORM.user_id == user_id)
+            stmt = stmt.where(
+                UserSessionORM.session_key_hash == hash_session_key(user_session_key),
+                UserSessionORM.user_id == user_id,
+            )
             stmt = stmt.values(session_data=user_session_data, last_accessed=now_at_utc())
             r = session.execute(stmt)
             return r.rowcount > 0
@@ -178,10 +202,16 @@ class AuthSocket:
 
         with self.root_socket.optional_session(session, False) as session:
             if old_session_key is not None:
-                stmt = delete(UserSessionORM).where(UserSessionORM.session_key == old_session_key)
+                stmt = delete(UserSessionORM).where(
+                    UserSessionORM.session_key_hash == hash_session_key(old_session_key)
+                )
                 session.execute(stmt)
 
-            session_orm = UserSessionORM(user_id=user_id, session_key=new_session_key, session_data=user_session_data)
+            session_orm = UserSessionORM(
+                user_id=user_id,
+                session_key_hash=hash_session_key(new_session_key),
+                session_data=user_session_data,
+            )
             session.add(session_orm)
 
     def load_user_session(
@@ -198,7 +228,7 @@ class AuthSocket:
             None is returned.
         """
         with self.root_socket.optional_session(session, True) as session:
-            stmt = select(UserSessionORM).where(UserSessionORM.session_key == user_session_key)
+            stmt = select(UserSessionORM).where(UserSessionORM.session_key_hash == hash_session_key(user_session_key))
             flask_session_orm = session.execute(stmt).scalar_one_or_none()
 
             if not flask_session_orm:
@@ -226,7 +256,7 @@ class AuthSocket:
             stmt = delete(UserSessionORM)
 
             if user_session_key is not None:
-                stmt = stmt.where(UserSessionORM.session_key == user_session_key)
+                stmt = stmt.where(UserSessionORM.session_key_hash == hash_session_key(user_session_key))
             if user_session_public_id is not None:
                 stmt = stmt.where(UserSessionORM.public_id == user_session_public_id)
 

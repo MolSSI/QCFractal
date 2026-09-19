@@ -92,13 +92,16 @@ class UserSessionORM(BaseORM):
     __tablename__ = "user_session"
 
     public_id = Column(Integer, primary_key=True)
-    session_key = Column(String, nullable=False)
+
+    # SHA-256 (hex) of the session key, never the key itself. The key is a bearer credential:
+    # anyone able to read this table would otherwise be able to impersonate every logged-in user
+    session_key_hash = Column(String, nullable=False)
     user_id = Column(Integer, ForeignKey("user.id", ondelete="cascade"), nullable=False)
     session_data = Column(JSONB, nullable=False)
     last_accessed = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
 
     __table_args__ = (
-        UniqueConstraint("session_key", name="ux_user_session_session_key"),
+        UniqueConstraint("session_key_hash", name="ux_user_session_session_key_hash"),
         Index("ix_user_session_user_id", "user_id"),
         Index("ix_user_session_last_accessed", "last_accessed"),
     )

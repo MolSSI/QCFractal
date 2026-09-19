@@ -5,11 +5,13 @@ Tests for the database-side handling of browser (flask) sessions
 from __future__ import annotations
 
 import pytest
+import hashlib
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, update
 
+from qcfractal.components.auth.auth_socket import hash_session_key
 from qcfractal.components.auth.db_models import UserSessionORM
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcportal.auth import UserInfo
@@ -66,11 +68,11 @@ def test_user_session_socket_delete_expired(storage_socket: SQLAlchemySocket):
     storage_socket.auth.create_user_session(uid, "borderline", {"user_id": str(uid)})
 
     with storage_socket.session_scope() as session:
-        stmt = update(UserSessionORM).where(UserSessionORM.session_key == "stale")
+        stmt = update(UserSessionORM).where(UserSessionORM.session_key_hash == hash_session_key("stale"))
         session.execute(stmt.values(last_accessed=now_at_utc() - timedelta(seconds=max_age + 10)))
 
         # Not yet expired
-        stmt = update(UserSessionORM).where(UserSessionORM.session_key == "borderline")
+        stmt = update(UserSessionORM).where(UserSessionORM.session_key_hash == hash_session_key("borderline"))
         session.execute(stmt.values(last_accessed=now_at_utc() - timedelta(seconds=max_age - 30)))
 
     with storage_socket.session_scope() as session:
@@ -112,3 +114,26 @@ def test_user_session_socket_list_by_username(storage_socket: SQLAlchemySocket):
 
     with pytest.raises(UserManagementError):
         storage_socket.auth.list_user_sessions("no_such_user")
+
+
+def test_user_session_socket_stores_only_a_hash(storage_socket: SQLAlchemySocket):
+    # The session key is a bearer credential. Anyone able to read this table must not be able to
+    # replay it, so only its SHA-256 is ever stored
+    uid = _add_user(storage_socket, "read_user")
+    key = "a-very-secret-session-key"
+
+    storage_socket.auth.create_user_session(uid, key, {"user_id": str(uid)})
+
+    with storage_socket.session_scope() as session:
+        stored = session.execute(select(UserSessionORM.session_key_hash)).scalars().all()
+
+    assert len(stored) == 1
+    assert key not in stored
+    assert stored[0] == hash_session_key(key)
+    assert stored[0] == hashlib.sha256(key.encode("UTF-8")).hexdigest()
+
+    # The raw key still resolves the session, since hashing happens inside the socket
+    assert storage_socket.auth.load_user_session(key)[0] == uid
+
+    # ... and the stored hash is not itself usable as a key
+    assert storage_socket.auth.load_user_session(stored[0]) is None

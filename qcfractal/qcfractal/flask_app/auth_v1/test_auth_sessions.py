@@ -320,6 +320,7 @@ def test_auth_session_revoked_not_resurrected(secure_snowflake):
 def test_auth_session_owner_mismatch(secure_snowflake):
     # If the session data somehow disagrees with the relational owner of the session, it is invalid
     from sqlalchemy import select
+    from qcfractal.components.auth.auth_socket import hash_session_key
     from qcfractal.components.auth.db_models import UserSessionORM
 
     uri = secure_snowflake.get_uri()
@@ -330,7 +331,9 @@ def test_auth_session_owner_mismatch(secure_snowflake):
     key = _session_login(sess, uri, "admin_user")
 
     with storage_socket.session_scope() as s:
-        row = s.execute(select(UserSessionORM).where(UserSessionORM.session_key == key)).scalar_one()
+        row = s.execute(
+            select(UserSessionORM).where(UserSessionORM.session_key_hash == hash_session_key(key))
+        ).scalar_one()
         row.session_data = {**row.session_data, "user_id": str(read_id)}
 
     r = sess.get(f"{uri}/api/v1/me")
