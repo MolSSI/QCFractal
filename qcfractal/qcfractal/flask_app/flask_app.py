@@ -12,6 +12,7 @@ from werkzeug.routing import IntegerConverter
 
 from .csrf import CSRF_HEADER
 from .rate_limit import FlaskLoginRateLimiter
+from .user_verify import FlaskUserVerifier
 from .flask_session import QCFFlaskSessionInterface
 from .flask_socket import FlaskStorageSocket
 from ..db_socket import SQLAlchemySocket
@@ -35,6 +36,7 @@ jwt = JWTManager()
 # singletons, but the state they act on belongs to whichever app is handling the current request,
 # so two apps in one process never share login counters
 login_rate_limiter = FlaskLoginRateLimiter()
+user_verifier = FlaskUserVerifier()
 
 
 # Some routes allow for negative integers (ie, list index)
@@ -106,6 +108,7 @@ def create_flask_app(qcfractal_config: FractalConfig, finished_queue: Optional[q
 
     # Login rate limiting state belongs to this app, not to the process
     login_rate_limiter.init_app(app)
+    user_verifier.init_app(app)
 
     # Initialize the session interface after the storage socket
     app.session_interface = QCFFlaskSessionInterface(app)

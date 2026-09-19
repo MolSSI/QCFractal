@@ -6,15 +6,9 @@ from flask_jwt_extended.exceptions import JWTExtendedException
 from jwt.exceptions import ExpiredSignatureError, PyJWTError
 from werkzeug.exceptions import InternalServerError
 
-from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.csrf import check_csrf
+from qcfractal.flask_app import user_verifier
 from qcportal.exceptions import AuthorizationFailure, AuthenticationFailure
-from qcportal.utils import time_based_cache
-
-
-@time_based_cache(seconds=5, maxsize=256)
-def _cached_verify(user_id: int):
-    return storage_socket.auth.verify(user_id=user_id)
 
 
 def load_logged_in_user():
@@ -56,7 +50,7 @@ def load_logged_in_user():
             # disabling an account or changing its role/groups takes effect within
             # the cache lifetime, rather than persisting until the token expires.
             # The (short) cache keeps this from hitting the database on every request.
-            user_info = _cached_verify(user_id=user_id)
+            user_info = user_verifier.verify(user_id)
             username = user_info.username
             role = user_info.role
             groups = user_info.groups
@@ -66,7 +60,7 @@ def load_logged_in_user():
             # Browser session (the session data was validated against the database when loaded)
             user_id = int(session["user_id"])  # may be a string? Just to make sure
 
-            user_info = _cached_verify(user_id=user_id)
+            user_info = user_verifier.verify(user_id)
             username = user_info.username
             role = user_info.role
             groups = user_info.groups
