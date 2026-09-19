@@ -18,7 +18,7 @@ from qcportal.exceptions import (
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
-invalid_usernames = ["\x00", "ab\x00cd", "a user", ""]
+invalid_usernames = ["\x00", "ab\x00cd", "a user", "", "u" * 65, "u" * 100000]
 
 # Passwords that are not acceptable as *new* passwords (that is, violate the password policy
 # enforced when adding a user or changing a password)
