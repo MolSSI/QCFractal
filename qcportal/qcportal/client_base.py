@@ -36,9 +36,12 @@ def _response_msg(response: requests.Response) -> str:
     except Exception:
         return response.reason or ""
 
-    if isinstance(body, dict):
-        return body.get("msg", response.reason or "")
-    return response.reason or ""
+    msg = body.get("msg") if isinstance(body, dict) else None
+    if not isinstance(msg, str):
+        # A non-string "msg" (null, a number, a list) is not a usable message. Fall back so that
+        # callers doing substring checks always get a string.
+        return response.reason or ""
+    return msg
 
 AllowedConnectionExceptions = (
     ConnectionError,
@@ -454,9 +457,16 @@ class PortalClientBase:
             except Exception as e:
                 self._logger.debug(f"Could not parse /me response for API token client: {e}")
         elif ret.status_code == 401:
-            raise AuthenticationFailure(f"API token is not valid: {_response_msg(ret)}")
+            msg = _response_msg(ret)
+            # A server with security disabled returns 401 from /me (it requires security), but the
+            # token is not necessarily bad - that is not a reason to fail construction. Only a
+            # genuine token rejection is fatal.
+            if "security disabled" in msg:
+                self._logger.debug("Server has security disabled; cannot determine identity from API token")
+            else:
+                raise AuthenticationFailure(f"API token is not valid: {msg}")
         else:
-            # e.g. security disabled, or a proxy that does not expose /me. Not fatal.
+            # e.g. a proxy that does not expose /me. Not fatal.
             self._logger.debug(f"Could not determine identity from API token (HTTP {ret.status_code})")
 
     def _get_JWT_token(self) -> None:

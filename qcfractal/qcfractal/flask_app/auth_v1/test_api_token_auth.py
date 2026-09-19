@@ -179,3 +179,22 @@ def test_api_token_auth_jwt_still_works(secure_snowflake):
 
     r = requests.get(f"{uri}/api/v1/information", headers=_auth(access_token))
     assert r.status_code == 200
+
+
+def test_api_token_client_security_disabled_bootstrap(snowflake):
+    # A token client against a security-disabled server: /me returns 401, but that must not fail
+    # client construction. The client just cannot learn its own identity.
+    from qcportal import PortalClient
+
+    # Mint a token directly (security is off, but the table and socket still work)
+    socket = snowflake.get_storage_socket()
+    # With security disabled there are no real users; create one to own the token
+    from qcportal.auth import UserInfo
+
+    socket.users.add(UserInfo(username="tok_owner", role="admin", enabled=True), password="a_password_123")
+    user_id = socket.users.get("tok_owner")["id"]
+    raw, _ = socket.auth.create_api_token(user_id)
+
+    # Construction must succeed even though /me is unavailable
+    client = PortalClient(snowflake.get_uri(), api_token=raw)
+    assert client.user_id is None  # identity could not be determined, but no error
