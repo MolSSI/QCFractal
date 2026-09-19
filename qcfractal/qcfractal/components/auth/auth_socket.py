@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
-from typing import TYPE_CHECKING, Tuple, List, Any, Optional
+from typing import TYPE_CHECKING, Tuple, List, Any, Optional, Union
 
 from sqlalchemy import select, delete, update
 from sqlalchemy.dialects.postgresql import insert
@@ -266,13 +266,18 @@ class AuthSocket:
             return [s.public_dict() for s in session_orm]
 
     def list_user_sessions(
-        self, user_id: int, *, session: Optional[Session] = None
+        self, username_or_id: Union[int, str], *, session: Optional[Session] = None
     ) -> List[Tuple[int, datetime.datetime]]:
         """
         List all sessions currently in the database for a single user
+
+        The user may be given by username or id. A username that does not exist raises, rather than
+        the raw value reaching the query (where a non-numeric username would be a database error).
         """
 
         with self.root_socket.optional_session(session, True) as session:
+            user_id = self.root_socket.users.get_optional_user_id(username_or_id, session=session)
+
             stmt = select(UserSessionORM)
             stmt = stmt.where(UserSessionORM.user_id == user_id)
             session_orm = session.execute(stmt).scalars().all()
