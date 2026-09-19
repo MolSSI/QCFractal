@@ -1,5 +1,5 @@
 import * as qcpExceptions from "./Exceptions";
-import { server_address, server_headers } from "./request_config";
+import { csrf_headers, server_address, server_headers } from "./request_config";
 
 function objectToQueryParams(obj: Record<string, unknown>): string {
   const params = new URLSearchParams();
@@ -87,8 +87,11 @@ export async function rawMakeRequest<T>(
   const req_options: RequestInit = {
     method,
     // For FormData, omit Content-Type so the browser sets it with the
-    // multipart boundary. Keep Accept so we still expect a JSON response.
-    headers: isFormData ? { Accept: "application/json" } : server_headers,
+    // multipart boundary. Keep Accept so we still expect a JSON response,
+    // and the CSRF header so the server accepts the request.
+    headers: isFormData
+      ? { Accept: "application/json", ...csrf_headers }
+      : server_headers,
     credentials: "include",
     body: isFormData ? body : body ? JSON.stringify(body) : undefined,
   };
