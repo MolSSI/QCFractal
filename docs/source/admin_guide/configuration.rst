@@ -317,9 +317,32 @@ you.
    user_session_cookie_secure
    user_session_cookie_httponly
 
+Browser sessions and cross-site requests
+""""""""""""""""""""""""""""""""""""""""
+
+Browser-based clients (such as the web portal) authenticate with a session cookie
+rather than a bearer token. Because browsers attach cookies to requests automatically,
+the server protects cookie-authenticated requests against cross-site request forgery
+(CSRF):
+
+* Every request that may change state (anything other than ``GET``, ``HEAD`` and
+  ``OPTIONS``), including ``/auth/v1/session_login`` and ``/auth/v1/session_logout``,
+  must carry an ``X-Requested-With`` header. Browsers only attach a custom header to a
+  cross-origin request after a successful CORS preflight, so a site that is not listed
+  in ``cors.origins`` cannot make such requests. The value of the header is not checked.
+* If the browser sends an ``Origin`` header, it must be the server itself or one of the
+  origins listed in ``cors.origins``. A ``null`` origin is rejected.
+
+Requests authenticated with a bearer token (``Authorization`` header) are not subject to
+these checks. If a request carries both a session cookie and an ``Authorization``
+header, the header is used and the cookie is ignored.
+
 For cross-site cookie behaviour set ``user_session_cookie_samesite`` to ``Lax`` or
-``None`` as needed. ``user_session_cookie_partitioned`` sets the Partitioned flag, for
-CHIPS-style storage partitioning in modern browsers.
+``None`` as needed. A web portal served from a different site than the server
+(not just a different port or sibling subdomain) needs ``None`` together with
+``user_session_cookie_secure``, and the portal's origin listed in ``cors.origins`` with
+``cors.supports_credentials`` enabled. ``user_session_cookie_partitioned`` sets the
+Partitioned flag, for CHIPS-style storage partitioning in modern browsers.
 
 Advanced
 ~~~~~~~~
@@ -361,6 +384,10 @@ CORS (cors)
 -----------
 
 Cross-Origin Resource Sharing settings for the API. Configure in YAML.
+
+``Content-Type`` and ``X-Requested-With`` are always added to the allowed headers, since
+browser clients need them for JSON bodies and for cookie-authenticated requests (see
+above). ``origins`` may not contain ``*`` when ``supports_credentials`` is enabled.
 
 .. config-table:: qcfractal.config.CORSconfig
 

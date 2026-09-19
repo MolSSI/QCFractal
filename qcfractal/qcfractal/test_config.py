@@ -144,3 +144,20 @@ def test_config_env_var_api_limits(clean_qcf_env, tmp_path):
     cfg = read_configuration([str(config_path)])
 
     assert cfg.api_limits.get_records == 4321
+
+
+def test_config_cors_credentials_wildcard(tmp_path):
+    base_folder = str(tmp_path)
+
+    base_config = copy.deepcopy(_base_config)
+    base_config["cors"] = {"enabled": True, "supports_credentials": True, "origins": ["https://example.org"]}
+    FractalConfig(base_folder=base_folder, **base_config)
+
+    # Wildcard origins are fine without credentials
+    base_config["cors"] = {"enabled": True, "supports_credentials": False, "origins": ["*"]}
+    FractalConfig(base_folder=base_folder, **base_config)
+
+    # But not with them
+    base_config["cors"] = {"enabled": True, "supports_credentials": True, "origins": ["https://example.org", "*"]}
+    with pytest.raises(ValueError, match="may not contain"):
+        FractalConfig(base_folder=base_folder, **base_config)

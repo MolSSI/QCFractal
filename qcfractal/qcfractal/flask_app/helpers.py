@@ -11,6 +11,7 @@ from flask_jwt_extended import (
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.flask_app import storage_socket
+from qcfractal.flask_app.csrf import check_csrf
 from qcportal.auth import UserInfo
 from qcportal.exceptions import AuthenticationFailure
 
@@ -107,6 +108,9 @@ def login_user_session() -> UserInfo:
     flask request object.
     """
 
+    # A hostile site must not be able to log the browser into an account of its choosing (login CSRF)
+    check_csrf()
+
     # Authenticate first. A failed login must not disturb any existing session
     user_info = login_user()
 
@@ -120,6 +124,9 @@ def login_user_session() -> UserInfo:
 
 
 def logout_user_session():
+    # A hostile site must not be able to log the browser out (logout CSRF)
+    check_csrf()
+
     # Clears the session data and revokes the key in the database. Since the session
     # stays empty, no replacement session is created
     session.rotate()

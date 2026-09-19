@@ -10,6 +10,7 @@ from flask_jwt_extended import JWTManager
 from werkzeug.local import LocalProxy
 from werkzeug.routing import IntegerConverter
 
+from .csrf import CSRF_HEADER
 from .flask_session import QCFFlaskSessionInterface
 from .flask_socket import FlaskStorageSocket
 from ..db_socket import SQLAlchemySocket
@@ -61,7 +62,7 @@ def create_flask_app(qcfractal_config: FractalConfig, finished_queue: Optional[q
     app.config["JWT_SECRET_KEY"] = qcfractal_config.api.jwt_secret_key
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = qcfractal_config.api.jwt_access_token_expires
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = qcfractal_config.api.jwt_refresh_token_expires
-    app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
+    app.config["JWT_TOKEN_LOCATION"] = ["headers"]
     app.config["SESSION_COOKIE_NAME"] = qcfractal_config.api.user_session_cookie_name
     app.config["PERMANENT_SESSION_LIFETIME"] = qcfractal_config.api.user_session_max_age
 
@@ -77,7 +78,18 @@ def create_flask_app(qcfractal_config: FractalConfig, finished_queue: Optional[q
     if qcfractal_config.cors.enabled:
         app.config["CORS_ORIGINS"] = qcfractal_config.cors.origins
         app.config["CORS_SUPPORTS_CREDENTIALS"] = qcfractal_config.cors.supports_credentials
-        app.config["CORS_HEADERS"] = qcfractal_config.cors.headers
+
+        # Content-Type is needed for JSON bodies, and the CSRF header for all cookie-authenticated
+        # requests that change state. Always allow those, in addition to whatever is configured
+        allow_headers = list(qcfractal_config.cors.headers)
+        for h in ("Content-Type", CSRF_HEADER):
+            if h.lower() not in {x.lower() for x in allow_headers}:
+                allow_headers.append(h)
+        app.config["CORS_ALLOW_HEADERS"] = allow_headers
+
+        if qcfractal_config.cors.methods:
+            app.config["CORS_METHODS"] = qcfractal_config.cors.methods
+
         CORS(app)
 
     # Initialize the database socket, API logger, and view handler
