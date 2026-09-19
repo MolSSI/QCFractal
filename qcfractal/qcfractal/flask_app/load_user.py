@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from flask import session, g, current_app
+from flask import session, g, current_app, request
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 from flask_jwt_extended.exceptions import JWTExtendedException
 from jwt.exceptions import ExpiredSignatureError, PyJWTError
 from werkzeug.exceptions import InternalServerError
 
 from qcfractal.flask_app import storage_socket
+from qcfractal.flask_app.csrf import check_csrf
 from qcportal.exceptions import AuthorizationFailure, AuthenticationFailure
 from qcportal.utils import time_based_cache
 
@@ -17,27 +18,29 @@ def _cached_verify(user_id: int):
 
 
 def load_logged_in_user():
-    ##############################################
-    # Load any user information from a JWT or
-    # session info in the database (retrieved
-    # via the typical flask session mechanism)
-    ##############################################
+    """
+    Loads information about the current user into the flask request context (flask.g)
+
+    The user may be authenticated by a bearer token (JWT) in the Authorization header, or by the
+    browser session cookie. An explicit Authorization header always takes precedence - a request
+    that carries one is never authenticated by the cookie, so the two can never disagree.
+
+    Requests authenticated by the session cookie are subject to CSRF checks (see check_csrf).
+    """
     user_id = None
     username = None
     role = None
     groups = []
 
-    try:
-        # Is the info stored in the session?
-        if session and "user_id" in session:
-            user_id = int(session["user_id"])  # may be a string? Just to make sure
+    # How the user was authenticated ("jwt", "session", or None)
+    auth_source = None
 
-            user_info = _cached_verify(user_id=user_id)
-            username = user_info.username
-            role = user_info.role
-            groups = user_info.groups
-        elif verify_jwt_in_request(optional=True) is not None:
-            user_id = get_jwt_identity()
+    try:
+        if request.headers.get("Authorization"):
+            # Bearer token. Any problem with the token (including a non-bearer Authorization header)
+            # is an authentication failure, not a fall back to the session cookie
+            if verify_jwt_in_request(optional=True) is not None:
+                user_id = get_jwt_identity()
 
             if user_id is not None:
                 # user_id is stored in the JWT as a string
@@ -52,6 +55,18 @@ def load_logged_in_user():
                 username = user_info.username
                 role = user_info.role
                 groups = user_info.groups
+                auth_source = "jwt"
+
+        elif session and "user_id" in session:
+            # Browser session (the session data was validated against the database when loaded)
+            user_id = int(session["user_id"])  # may be a string? Just to make sure
+
+            user_info = _cached_verify(user_id=user_id)
+            username = user_info.username
+            role = user_info.role
+            groups = user_info.groups
+            auth_source = "session"
+
     except (AuthorizationFailure, AuthenticationFailure):
         raise
     except ExpiredSignatureError:
@@ -67,8 +82,13 @@ def load_logged_in_user():
         current_app.logger.exception("Failed to verify user info")
         raise InternalServerError("Failed to verify user info")
 
+    # Cookie-authenticated requests that may change state must pass CSRF checks
+    if auth_source == "session":
+        check_csrf()
+
     # Store the user in the global app/request context
     g.user_id = user_id
     g.username = username
     g.role = role
     g.groups = groups
+    g.auth_source = auth_source

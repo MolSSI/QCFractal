@@ -402,6 +402,17 @@ class CORSconfig(QCFConfigBase):
     methods: list[str] = []
     """HTTP methods permitted for cross-origin requests. Empty means the CORS default."""
 
+    @model_validator(mode="after")
+    def _check_credentials_origins(self):
+        # Allowing credentials from any origin lets any website make cookie-authenticated requests
+        if self.enabled and self.supports_credentials:
+            if any(o.strip() == "*" for o in self.origins):
+                raise ValueError(
+                    "cors.origins may not contain '*' when cors.supports_credentials is enabled. "
+                    "List the exact origins that may make credentialed requests."
+                )
+        return self
+
 
 class FractalConfig(BaseSettings):
     """

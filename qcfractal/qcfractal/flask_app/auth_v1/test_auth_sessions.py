@@ -4,7 +4,20 @@ import pytest
 import requests
 
 from qcarchivetesting import test_users
+from qcfractal.flask_app.csrf import CSRF_HEADER
 from qcportal.auth import UserInfo
+
+# Header that every state-changing request authenticated by a session cookie must carry (CSRF protection)
+CSRF_HEADERS = {CSRF_HEADER: "XMLHttpRequest"}
+
+
+def _browser_session() -> requests.Session:
+    """
+    A requests session that behaves like the web portal: stores cookies and sends the CSRF header
+    """
+    sess = requests.Session()
+    sess.headers.update(CSRF_HEADERS)
+    return sess
 
 
 def get_qcf_cookie(cookies):
@@ -24,7 +37,7 @@ def test_auth_session_login_logout(secure_snowflake, use_forms):
     password = test_users["admin_user"]["pw"]
     uri = secure_snowflake.get_uri()
 
-    sess = requests.Session()  # will store cookies automatically
+    sess = _browser_session()
 
     # First, not logged in = unauthorized
     r = sess.get(f"{uri}/api/v1/information")
@@ -58,7 +71,7 @@ def test_auth_session_user_disabled(secure_snowflake):
     password = test_users["submit_user"]["pw"]
     uri = secure_snowflake.get_uri()
 
-    sess = requests.Session()  # will store cookies automatically
+    sess = _browser_session()
 
     # Now go through the browser login. This should set a cookie
     r = sess.post(f"{uri}/auth/v1/session_login", json={"username": username, "password": password})
@@ -86,7 +99,7 @@ def test_auth_session_expires(secure_snowflake):
     password = test_users["admin_user"]["pw"]
     uri = secure_snowflake.get_uri()
 
-    sess = requests.Session()  # will store cookies automatically
+    sess = _browser_session()
 
     # First, not logged in = unauthorized
     r = sess.get(f"{uri}/api/v1/information")
@@ -117,7 +130,7 @@ def test_auth_session_forged_expires(secure_snowflake):
     password = test_users["admin_user"]["pw"]
     uri = secure_snowflake.get_uri()
 
-    sess = requests.Session()  # will store cookies automatically
+    sess = _browser_session()
 
     # First, not logged in = unauthorized
     r = sess.get(f"{uri}/api/v1/information")
@@ -149,7 +162,7 @@ def test_auth_session_extension(secure_snowflake):
     password = test_users["admin_user"]["pw"]
     uri = secure_snowflake.get_uri()
 
-    sess = requests.Session()  # will store cookies automatically
+    sess = _browser_session()
 
     # First, not logged in = unauthorized
     r = sess.get(f"{uri}/api/v1/information")
@@ -193,7 +206,7 @@ def test_auth_session_rotates_on_login(secure_snowflake):
     storage_socket = secure_snowflake.get_storage_socket()
     admin_id = storage_socket.users.get("admin_user")["id"]
 
-    sess = requests.Session()
+    sess = _browser_session()
     key1 = _session_login(sess, uri, "admin_user")
     assert storage_socket.auth.load_user_session(key1) is not None
 
@@ -221,11 +234,11 @@ def test_auth_session_fixation(secure_snowflake):
     admin_id = storage_socket.users.get("admin_user")["id"]
     read_id = storage_socket.users.get("read_user")["id"]
 
-    attacker = requests.Session()
+    attacker = _browser_session()
     planted_key = _session_login(attacker, uri, "read_user")
     assert storage_socket.auth.load_user_session(planted_key)[0] == read_id
 
-    victim = requests.Session()
+    victim = _browser_session()
     victim.cookies.set("qcf_session", planted_key)
     victim_key = _session_login(victim, uri, "admin_user")
 
@@ -252,7 +265,7 @@ def test_auth_session_logout_revokes(secure_snowflake):
     uri = secure_snowflake.get_uri()
     storage_socket = secure_snowflake.get_storage_socket()
 
-    sess = requests.Session()
+    sess = _browser_session()
     key = _session_login(sess, uri, "admin_user")
 
     r = sess.post(f"{uri}/auth/v1/session_logout")
@@ -270,7 +283,7 @@ def test_auth_session_failed_login_keeps_session(secure_snowflake):
     uri = secure_snowflake.get_uri()
     storage_socket = secure_snowflake.get_storage_socket()
 
-    sess = requests.Session()
+    sess = _browser_session()
     key = _session_login(sess, uri, "admin_user")
 
     # A failed login attempt must not disturb the existing session
@@ -288,7 +301,7 @@ def test_auth_session_revoked_not_resurrected(secure_snowflake):
     storage_socket = secure_snowflake.get_storage_socket()
     admin_id = storage_socket.users.get("admin_user")["id"]
 
-    sess = requests.Session()
+    sess = _browser_session()
     key = _session_login(sess, uri, "admin_user")
 
     # Revoke the session out-of-band (administrative action, expiry cleanup, concurrent logout)
@@ -313,7 +326,7 @@ def test_auth_session_owner_mismatch(secure_snowflake):
     storage_socket = secure_snowflake.get_storage_socket()
     read_id = storage_socket.users.get("read_user")["id"]
 
-    sess = requests.Session()
+    sess = _browser_session()
     key = _session_login(sess, uri, "admin_user")
 
     with storage_socket.session_scope() as s:
@@ -323,3 +336,112 @@ def test_auth_session_owner_mismatch(secure_snowflake):
     r = sess.get(f"{uri}/api/v1/me")
     assert r.status_code == 401
     assert storage_socket.auth.load_user_session(key) is None
+
+
+def test_auth_session_csrf_login_logout(secure_snowflake):
+    uri = secure_snowflake.get_uri()
+    storage_socket = secure_snowflake.get_storage_socket()
+    creds = {"username": "admin_user", "password": test_users["admin_user"]["pw"]}
+
+    # Login without the header is rejected (login CSRF), whether json or a plain form post
+    sess = requests.Session()
+    r = sess.post(f"{uri}/auth/v1/session_login", json=creds)
+    assert r.status_code == 403
+    assert not cookies_has_qcf_cookie(sess.cookies)
+
+    r = sess.post(f"{uri}/auth/v1/session_login", data=creds)
+    assert r.status_code == 403
+    assert not cookies_has_qcf_cookie(sess.cookies)
+
+    # Logout without the header is rejected and leaves the session intact
+    sess = _browser_session()
+    key = _session_login(sess, uri, "admin_user")
+
+    r = sess.post(f"{uri}/auth/v1/session_logout", headers={CSRF_HEADER: None})
+    assert r.status_code == 403
+    assert storage_socket.auth.load_user_session(key) is not None
+    r = sess.get(f"{uri}/api/v1/information")
+    assert r.status_code == 200
+
+    # And from an untrusted origin
+    r = sess.post(f"{uri}/auth/v1/session_logout", headers={"Origin": "https://evil.example"})
+    assert r.status_code == 403
+    assert storage_socket.auth.load_user_session(key) is not None
+
+
+def test_auth_session_csrf_unsafe_methods(secure_snowflake):
+    uri = secure_snowflake.get_uri()
+    sess = _browser_session()
+    _session_login(sess, uri, "admin_user")
+
+    body = {"ids": []}
+
+    # With the header: fine
+    r = sess.post(f"{uri}/api/v1/molecules/bulkGet", json=body)
+    assert r.status_code == 200
+
+    # Without the header: rejected. Safe methods are unaffected
+    r = sess.post(f"{uri}/api/v1/molecules/bulkGet", json=body, headers={CSRF_HEADER: None})
+    assert r.status_code == 403
+    r = sess.get(f"{uri}/api/v1/information", headers={CSRF_HEADER: None})
+    assert r.status_code == 200
+
+    # Multipart posts carrying a json part are how a hostile site would bypass a
+    # content-type based check without a CORS preflight. The header is still required
+    files = {"body_data": ("body.json", b'{"ids": []}', "application/json")}
+    r = sess.post(f"{uri}/api/v1/molecules/bulkGet", files=files, headers={CSRF_HEADER: None})
+    assert r.status_code == 403
+    r = sess.post(f"{uri}/api/v1/molecules/bulkGet", files=files)
+    assert r.status_code == 200
+
+    # Origin checks: the server itself is trusted, anything else (including "null") is not
+    host = uri.split("://", 1)[1]
+    r = sess.post(f"{uri}/api/v1/molecules/bulkGet", json=body, headers={"Origin": f"http://{host}"})
+    assert r.status_code == 200
+    r = sess.post(f"{uri}/api/v1/molecules/bulkGet", json=body, headers={"Origin": f"https://{host}"})
+    assert r.status_code == 200
+    r = sess.post(f"{uri}/api/v1/molecules/bulkGet", json=body, headers={"Origin": "https://evil.example"})
+    assert r.status_code == 403
+    r = sess.post(f"{uri}/api/v1/molecules/bulkGet", json=body, headers={"Origin": "null"})
+    assert r.status_code == 403
+
+
+def test_auth_session_csrf_jwt_unaffected(secure_snowflake):
+    # Bearer-token requests are not subject to CSRF checks (a hostile site cannot add the header)
+    uri = secure_snowflake.get_uri()
+    creds = {"username": "admin_user", "password": test_users["admin_user"]["pw"]}
+
+    r = requests.post(f"{uri}/auth/v1/login", json=creds)
+    assert r.status_code == 200
+    auth = {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+    r = requests.post(f"{uri}/api/v1/molecules/bulkGet", json={"ids": []}, headers=auth)
+    assert r.status_code == 200
+    r = requests.post(
+        f"{uri}/api/v1/molecules/bulkGet", json={"ids": []}, headers={**auth, "Origin": "https://evil.example"}
+    )
+    assert r.status_code == 200
+
+
+def test_auth_session_bearer_precedence(secure_snowflake):
+    # A request with both a session cookie and an Authorization header is authenticated by the header
+    uri = secure_snowflake.get_uri()
+
+    sess = _browser_session()
+    _session_login(sess, uri, "read_user")
+    r = sess.get(f"{uri}/api/v1/me")
+    assert r.json()["username"] == "read_user"
+
+    creds = {"username": "admin_user", "password": test_users["admin_user"]["pw"]}
+    r = requests.post(f"{uri}/auth/v1/login", json=creds)
+    auth = {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+    r = sess.get(f"{uri}/api/v1/me", headers=auth)
+    assert r.status_code == 200
+    assert r.json()["username"] == "admin_user"
+
+    # A bad token is an error, not a fall back to the cookie
+    r = sess.get(f"{uri}/api/v1/me", headers={"Authorization": "Bearer not.a.token"})
+    assert r.status_code == 401
+    r = sess.get(f"{uri}/api/v1/me", headers={"Authorization": "Basic abc"})
+    assert r.status_code == 401
