@@ -30,10 +30,11 @@ if TYPE_CHECKING:
 # Key for the per-(address, username) counter, or just the address for the per-address counter
 _Key = Union[str, Tuple[str, str]]
 
-# Longest username stored in a key. A caller chooses the username freely and it is recorded
-# before the account is known to exist, so the key must never be a way to spend memory. Two
-# usernames that agree in their first characters then share a counter, which only makes the
-# limit stricter for them, never looser
+# Longest username stored in a key. The limiter sees the username before it has been validated,
+# so the key must never be a way to spend memory. This matches MAX_USERNAME_LENGTH in
+# qcportal.auth, so a username that could belong to a real account is never truncated. Two
+# usernames that agree in their first characters share a counter, which only makes the limit
+# stricter for them, never looser
 MAX_KEY_USERNAME_LENGTH = 64
 
 # Hard ceiling on how many keys are tracked at once, applied after expired entries are swept.

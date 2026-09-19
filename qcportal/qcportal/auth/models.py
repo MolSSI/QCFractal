@@ -52,9 +52,22 @@ def is_valid_password(password: str) -> None:
         )
 
 
+# Longest permitted username. Usernames are echoed into logs, error messages and JWT claims, and
+# are accepted from unauthenticated callers at login, so an unbounded one is a way to make the
+# server do unbounded work. This is generous compared to any real username
+MAX_USERNAME_LENGTH = 64
+
+
 def is_valid_username(username: str) -> None:
+    if not isinstance(username, str):
+        raise InvalidUsernameError("Username must be a string")
+
     if len(username) == 0:
         raise InvalidUsernameError("Username is empty")
+
+    # Deliberately does not echo the username back - it is attacker-controlled at login
+    if len(username) > MAX_USERNAME_LENGTH:
+        raise InvalidUsernameError(f"Username must be at most {MAX_USERNAME_LENGTH} characters")
 
     # Null character not allowed
     if "\x00" in username:
