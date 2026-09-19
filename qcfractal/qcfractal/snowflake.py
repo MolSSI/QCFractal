@@ -109,6 +109,8 @@ class FractalSnowflake:
             "port": api_port,
             "secret_key": secrets.token_urlsafe(32),
             "jwt_secret_key": secrets.token_urlsafe(32),
+            # The snowflake is served over plain http, so browsers (and requests) would not send a Secure cookie
+            "user_session_cookie_secure": False,
         }
 
         # Add in any options passed to this Snowflake

@@ -161,3 +161,11 @@ def test_config_cors_credentials_wildcard(tmp_path):
     base_config["cors"] = {"enabled": True, "supports_credentials": True, "origins": ["https://example.org", "*"]}
     with pytest.raises(ValueError, match="may not contain"):
         FractalConfig(base_folder=base_folder, **base_config)
+
+
+def test_config_session_cookie_defaults(tmp_path):
+    # Secure defaults - these are deliberately conservative and must be relaxed explicitly
+    cfg = FractalConfig(base_folder=str(tmp_path), **copy.deepcopy(_base_config))
+    assert cfg.api.user_session_cookie_httponly is True
+    assert cfg.api.user_session_cookie_secure is True
+    assert cfg.api.user_session_cookie_samesite == "Lax"

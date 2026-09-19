@@ -445,3 +445,29 @@ def test_auth_session_bearer_precedence(secure_snowflake):
     assert r.status_code == 401
     r = sess.get(f"{uri}/api/v1/me", headers={"Authorization": "Basic abc"})
     assert r.status_code == 401
+
+
+def test_auth_session_cookie_attributes(secure_snowflake):
+    uri = secure_snowflake.get_uri()
+    creds = {"username": "admin_user", "password": test_users["admin_user"]["pw"]}
+
+    sess = _browser_session()
+    r = sess.post(f"{uri}/auth/v1/session_login", json=creds)
+    assert r.status_code == 200
+
+    set_cookie = r.headers["Set-Cookie"]
+    attrs = {a.strip().split("=")[0].lower() for a in set_cookie.split(";")[1:]}
+    assert "httponly" in attrs
+    assert "samesite=lax" in set_cookie.lower()
+
+    # The snowflake is served over plain http and explicitly disables the Secure flag
+    assert secure_snowflake._qcf_config.api.user_session_cookie_secure is False
+    assert "secure" not in attrs
+
+    # Logout deletes the cookie with the same attributes
+    r = sess.post(f"{uri}/auth/v1/session_logout")
+    assert r.status_code == 200
+    set_cookie = r.headers["Set-Cookie"]
+    assert set_cookie.startswith("qcf_session=;")
+    assert "httponly" in set_cookie.lower()
+    assert "samesite=lax" in set_cookie.lower()
