@@ -116,6 +116,58 @@ class UserSessionORM(BaseORM):
         }
 
 
+class UserAPITokenORM(BaseORM):
+    """
+    Table for storing long-lived API tokens
+
+    An API token is a bearer credential: presenting it is enough to act as the owning user. Only
+    the SHA-256 hash of the token is ever stored (see UserSessionORM.session_key_hash for the same
+    reasoning) - never "optimize" verification into a lookup by token_prefix followed by comparing
+    token_hash in python. If that is ever done, the comparison must use hmac.compare_digest.
+    """
+
+    __tablename__ = "user_api_token"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="cascade"), nullable=False)
+
+    # SHA-256 (hex) of the full token as presented in the Authorization header (prefix included)
+    token_hash = Column(String, nullable=False)
+
+    # The first few characters of the token ("qcf_" plus a bit of the secret). Not secret itself -
+    # it exists so a listing can be correlated with the token pasted into some config file
+    token_prefix = Column(String, nullable=False)
+
+    # Free-text label supplied by the creator ("laptop", "CI at ...")
+    description = Column(String, nullable=False, server_default="")
+
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
+
+    # Null means the token never expires
+    expires_at = Column(TIMESTAMP(timezone=True), nullable=True)
+
+    # Approximate (throttled) time of last successful use; null if never used
+    last_used_at = Column(TIMESTAMP(timezone=True), nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("token_hash", name="ux_user_api_token_token_hash"),
+        Index("ix_user_api_token_user_id", "user_id"),
+    )
+
+    _qcportal_model_excludes = ["token_hash"]
+
+    def public_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "token_prefix": self.token_prefix,
+            "description": self.description,
+            "created_at": self.created_at,
+            "expires_at": self.expires_at,
+            "last_used_at": self.last_used_at,
+        }
+
+
 class UserPreferencesORM(BaseORM):
     """
     Table for storing user preference information
