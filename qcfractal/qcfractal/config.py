@@ -295,17 +295,20 @@ class WebAPIConfig(QCFConfigBase):
     user_session_cookie_domain: str | None = None
     """Domain to use for the user-session cookie (for browser-based sessions)"""
 
-    user_session_cookie_samesite: str | None = None
-    """Set the SameSite flag for the user-session cookie (for browser-based sessions)"""
+    user_session_cookie_samesite: str | None = "Lax"
+    """Set the SameSite flag for the user-session cookie (for browser-based sessions). Use "None" (the string)
+    only for a browser client served from a different site, together with user_session_cookie_secure"""
 
     user_session_cookie_partitioned: bool = False
     """Use the Partitioned flag for the user-session cookie (for browser-based sessions)"""
 
-    user_session_cookie_secure: bool = False
-    """Use Secure flag for the user-session cookie (for browser-based sessions)"""
+    user_session_cookie_secure: bool = True
+    """Use the Secure flag for the user-session cookie (for browser-based sessions). Browsers only send
+    the cookie over HTTPS - set to false only if the server is deliberately served over plain HTTP"""
 
-    user_session_cookie_httponly: bool = False
-    """Use Secure flag for the user-session cookie (for browser-based sessions)"""
+    user_session_cookie_httponly: bool = True
+    """Use the HttpOnly flag for the user-session cookie (for browser-based sessions), which hides the
+    session key from javascript"""
 
     extra_flask_options: dict[str, Any] | None = None
     """Any additional options to pass directly to flask"""

@@ -64,7 +64,6 @@ def create_flask_app(qcfractal_config: FractalConfig, finished_queue: Optional[q
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = qcfractal_config.api.jwt_refresh_token_expires
     app.config["JWT_TOKEN_LOCATION"] = ["headers"]
     app.config["SESSION_COOKIE_NAME"] = qcfractal_config.api.user_session_cookie_name
-    app.config["PERMANENT_SESSION_LIFETIME"] = qcfractal_config.api.user_session_max_age
 
     # Where we store user-uploaded files for processing
     app.config["UPLOAD_FOLDER"] = qcfractal_config.upload_directory
@@ -72,6 +71,10 @@ def create_flask_app(qcfractal_config: FractalConfig, finished_queue: Optional[q
     # Any additional configuration
     if qcfractal_config.api.extra_flask_options:
         app.config.update(**qcfractal_config.api.extra_flask_options)
+
+    # The session lifetime must agree with the periodic cleanup of expired sessions, which uses
+    # the configuration value, so it is not overridable through extra_flask_options
+    app.config["PERMANENT_SESSION_LIFETIME"] = qcfractal_config.api.user_session_max_age
 
     jwt.init_app(app)
 

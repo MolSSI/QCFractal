@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import secrets
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Optional, Any, Dict
 
+from flask import request as flask_request
 from flask.sessions import SessionInterface, SecureCookieSession
 
 from qcportal.utils import now_at_utc
@@ -33,6 +35,9 @@ class QCFFlaskSession(SecureCookieSession):
         # A key that must be deleted from the database when this session is saved
         self.revoke_key: Optional[str] = None
 
+        # When the database row was last accessed (as of loading it)
+        self.last_accessed: Optional[datetime] = None
+
     def rotate(self) -> None:
         """
         Discards the current session
@@ -50,6 +55,7 @@ class QCFFlaskSession(SecureCookieSession):
 
         self.session_key = None
         self.user_id = None
+        self.last_accessed = None
         self.clear()
 
 
@@ -61,7 +67,15 @@ class QCFFlaskSessionInterface(SessionInterface):
 
     save_session persists the session. New sessions (after login) get a random session_key. Existing sessions
     are only ever updated, never re-created - if the row is gone, the session was revoked and stays revoked.
+
+    Sessions expire after being idle for the configured lifetime. To avoid a database write (and a new
+    Set-Cookie) on every request, an unmodified session is only "touched" once its last access is older
+    than a refresh threshold (a tenth of the lifetime, at most five minutes). The effective idle timeout
+    is therefore up to one threshold shorter than configured.
     """
+
+    # Upper bound on how long an unmodified session goes without its last-access time being refreshed
+    _max_refresh_threshold = timedelta(minutes=5)
 
     def __init__(self, app: Flask):
         if not hasattr(app, "extensions") or "storage_socket" not in app.extensions:
@@ -83,6 +97,24 @@ class QCFFlaskSessionInterface(SessionInterface):
             "secure": api_config.user_session_cookie_secure,
             "partitioned": api_config.user_session_cookie_partitioned,
         }
+
+    def _refresh_threshold(self, app: Flask) -> timedelta:
+        return min(app.permanent_session_lifetime / 10, self._max_refresh_threshold)
+
+    @staticmethod
+    def _update_client_metadata(session_data: QCFFlaskSession, request: Request) -> None:
+        """
+        Stores basic information about the client in the session (only if changed, to avoid
+        marking the session as modified unnecessarily)
+        """
+
+        user_agent = request.headers.get("User-Agent")
+        if session_data.get("user_agent") != user_agent:
+            session_data["user_agent"] = user_agent
+
+        ip_address = request.remote_addr
+        if session_data.get("ip_address") != ip_address:
+            session_data["ip_address"] = ip_address
 
     def open_session(self, app: Flask, request: Request) -> QCFFlaskSession:
         """
@@ -129,16 +161,9 @@ class QCFFlaskSessionInterface(SessionInterface):
         ret = QCFFlaskSession(initial=session_data)
         ret.session_key = session_key
         ret.user_id = user_id
+        ret.last_accessed = last_accessed
 
-        # Set/update basic data (only if changed, to avoid marking the session as modified)
-        user_agent = request.headers.get("User-Agent")
-        if ret.get("user_agent") != user_agent:
-            ret["user_agent"] = user_agent
-
-        ip_address = request.remote_addr
-        if ret.get("ip_address") != ip_address:
-            ret["ip_address"] = ip_address
-
+        self._update_client_metadata(ret, request)
         return ret
 
     def save_session(self, app: Flask, session_data: QCFFlaskSession, response: Response) -> None:
@@ -158,6 +183,10 @@ class QCFFlaskSessionInterface(SessionInterface):
         cookie_name = self.get_cookie_name(app)
         cookie_options = self._cookie_options(app)
         auth_socket = self._storage_socket.auth
+
+        # Responses that depend on the session must not be cached across users
+        if session_data.accessed:
+            response.vary.add("Cookie")
 
         if not session_data:
             # Empty session (never logged in, logged out, or rotated without new data).
@@ -183,6 +212,9 @@ class QCFFlaskSessionInterface(SessionInterface):
             session_key = secrets.token_urlsafe(32)
             assert len(session_key) > 36  # Paranoid
 
+            # Store the client information right away, so the next request does not need to
+            self._update_client_metadata(session_data, flask_request)
+
             auth_socket.rotate_user_session(session_data.revoke_key, user_id, session_key, dict(session_data))
 
             # Store for later, so we know to reuse this session
@@ -190,6 +222,12 @@ class QCFFlaskSessionInterface(SessionInterface):
             session_data.user_id = user_id
             session_data.revoke_key = None
         else:
+            # Existing, unmodified session: only refresh the last-access time (and the cookie) once
+            # it is older than the threshold. See the class docstring
+            if not session_data.modified and session_data.last_accessed is not None:
+                if now_at_utc() - session_data.last_accessed < self._refresh_threshold(app):
+                    return
+
             # Existing session. Only update an existing row - never re-create one. If the row is gone,
             # the session was revoked (logout, administrative action, expiry cleanup) while this
             # request was in flight, and it must stay revoked. The cookie is deliberately left

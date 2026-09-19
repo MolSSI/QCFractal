@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import timedelta
 from typing import TYPE_CHECKING, Tuple, List, Any, Optional
 
 from sqlalchemy import select, delete, update
@@ -30,6 +31,26 @@ class AuthSocket:
 
         self.security_enabled = self.root_socket.qcf_config.enable_security
         self.allow_unauthenticated_read = self.root_socket.qcf_config.allow_unauthenticated_read
+
+        # Browser sessions that have been idle longer than this are expired. Requests already check
+        # this when loading a session, but rows for sessions that are never presented again
+        # (closed browsers, deleted cookies) would otherwise accumulate forever
+        self._user_session_max_age = self.root_socket.qcf_config.api.user_session_max_age
+
+        # Run the cleanup at least hourly, but never more often than once a minute
+        self._delete_expired_sessions_frequency = max(60, min(60 * 60, self._user_session_max_age))
+
+        with self.root_socket.session_scope() as session:
+            self.root_socket.internal_jobs.add(
+                "delete_expired_user_sessions",
+                now_at_utc() + timedelta(seconds=5.0),
+                "auth.delete_expired_user_sessions",
+                {},
+                user_id=None,
+                unique_name=True,
+                repeat_delay=self._delete_expired_sessions_frequency,
+                session=session,
+            )
 
     def verify(self, user_id: int, *, session: Optional[Session] = None) -> UserInfo:
         """
@@ -210,6 +231,29 @@ class AuthSocket:
                 stmt = stmt.where(UserSessionORM.public_id == user_session_public_id)
 
             session.execute(stmt)
+
+    def delete_expired_user_sessions(self, session: Session) -> int:
+        """
+        Deletes user/flask sessions that have been idle for longer than the configured maximum age
+
+        The predicate is the same one used when a session is loaded for a request
+        (last_accessed + max_age < now), and is evaluated in the DELETE itself so that a session
+        refreshed by a concurrent request is not removed.
+
+        Returns
+        -------
+        :
+            The number of sessions deleted
+        """
+
+        before = now_at_utc() - timedelta(seconds=self._user_session_max_age)
+        stmt = delete(UserSessionORM).where(UserSessionORM.last_accessed < before)
+        num_deleted = session.execute(stmt).rowcount
+
+        if num_deleted:
+            self._logger.info(f"Deleted {num_deleted} expired user sessions (last accessed before {before})")
+
+        return num_deleted
 
     def list_all_user_sessions(self, *, session: Optional[Session] = None) -> List[Tuple[int, datetime.datetime]]:
         """

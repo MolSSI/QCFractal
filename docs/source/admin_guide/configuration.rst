@@ -321,7 +321,13 @@ Browser sessions and cross-site requests
 """"""""""""""""""""""""""""""""""""""""
 
 Browser-based clients (such as the web portal) authenticate with a session cookie
-rather than a bearer token. Because browsers attach cookies to requests automatically,
+rather than a bearer token. Sessions are stored in the database and expire after being
+idle for ``user_session_max_age``. To avoid a database write on every request, the
+last-access time of a session is only refreshed once it is older than a tenth of the
+maximum age (at most five minutes), so the effective idle timeout may be shorter than
+configured by up to that much. Expired sessions are removed periodically.
+
+Because browsers attach cookies to requests automatically,
 the server protects cookie-authenticated requests against cross-site request forgery
 (CSRF):
 
@@ -337,8 +343,11 @@ Requests authenticated with a bearer token (``Authorization`` header) are not su
 these checks. If a request carries both a session cookie and an ``Authorization``
 header, the header is used and the cookie is ignored.
 
-For cross-site cookie behaviour set ``user_session_cookie_samesite`` to ``Lax`` or
-``None`` as needed. A web portal served from a different site than the server
+The session cookie is ``HttpOnly``, ``Secure`` and ``SameSite=Lax`` by default. A server
+that is deliberately served over plain HTTP (for example, only reachable on a private
+network) must set ``user_session_cookie_secure`` to ``false``, or browsers will not send
+the cookie and browser logins will silently fail. A web portal served from a different
+site than the server
 (not just a different port or sibling subdomain) needs ``None`` together with
 ``user_session_cookie_secure``, and the portal's origin listed in ``cors.origins`` with
 ``cors.supports_credentials`` enabled. ``user_session_cookie_partitioned`` sets the
@@ -519,10 +528,10 @@ Full skeleton (all options with defaults; adjust as needed):
     user_session_max_age: 86400
     user_session_cookie_name: qcf_session
     user_session_cookie_domain: null
-    user_session_cookie_samesite: null
+    user_session_cookie_samesite: Lax
     user_session_cookie_partitioned: false
-    user_session_cookie_secure: false
-    user_session_cookie_httponly: false
+    user_session_cookie_secure: true
+    user_session_cookie_httponly: true
     extra_flask_options: null
     extra_waitress_options: null
 
