@@ -10,7 +10,7 @@ from flask_jwt_extended import (
 )
 
 from qcfractal import __version__ as qcfractal_version
-from qcfractal.flask_app import storage_socket
+from qcfractal.flask_app import storage_socket, login_rate_limiter
 from qcfractal.flask_app.csrf import check_csrf
 from qcportal.auth import UserInfo
 from qcportal.exceptions import AuthenticationFailure
@@ -87,17 +87,23 @@ def login_user() -> UserInfo:
         current_app.logger.info(f"No password provided for login of user {username}")
         raise AuthenticationFailure("No password provided for login")
 
+    # Reject the attempt outright if this client/username has failed too many times recently
+    login_rate_limiter.check(username)
+
     try:
         user_info = storage_socket.users.authenticate(username, password)
-
-        # Used for logging (in the after_request_func)
-        g.user_id = user_info.id
-
-        return user_info
-
     except AuthenticationFailure as e:
+        login_rate_limiter.record_failure(username)
         current_app.logger.info(f"Authentication failed for user {username}: {str(e)}")
         raise
+
+    # Successful login clears the failure counter for this client/username
+    login_rate_limiter.record_success(username)
+
+    # Used for logging (in the after_request_func)
+    g.user_id = user_info.id
+
+    return user_info
 
 
 def login_user_session() -> UserInfo:

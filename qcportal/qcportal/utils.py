@@ -524,6 +524,10 @@ def time_based_cache(seconds: int = 10, maxsize: Optional[int] = None):
 
             return result
 
+        def cache_clear():
+            cache.clear()
+
+        wrapper.cache_clear = cache_clear
         return wrapper
 
     return decorator

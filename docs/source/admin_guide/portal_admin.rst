@@ -96,7 +96,7 @@ If you omit the password, the server will generate one and return it.
       print("Generated password:", generated_pw)
 
       # Or specify an initial password yourself
-      client.add_user(new_user, password="ChangeMe123")
+      client.add_user(new_user, password="ChangeMe12345!")
 
 Enable/disable a user or update fields
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -133,7 +133,7 @@ password by omitting the username.
     .. code-block:: py3
 
       # Admin changes a user's password (returns the new password)
-      new_pw = client.change_user_password("alice", new_password="BetterPW!1")
+      new_pw = client.change_user_password("alice", new_password="BetterPassw0rd!1")
 
       # Ask the server to generate a random password
       random_pw = client.change_user_password("alice")

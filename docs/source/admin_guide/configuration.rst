@@ -316,6 +316,10 @@ you.
    user_session_cookie_partitioned
    user_session_cookie_secure
    user_session_cookie_httponly
+   login_rate_limit_enabled
+   login_rate_limit_max_attempts
+   login_rate_limit_ip_max_attempts
+   login_rate_limit_window
 
 Browser sessions and cross-site requests
 """"""""""""""""""""""""""""""""""""""""
@@ -342,6 +346,13 @@ the server protects cookie-authenticated requests against cross-site request for
 Requests authenticated with a bearer token (``Authorization`` header) are not subject to
 these checks. If a request carries both a session cookie and an ``Authorization``
 header, the header is used and the cookie is ignored.
+
+Failed logins (both token and browser logins) are rate limited. After
+``login_rate_limit_max_attempts`` failures for one username from one client address, or
+``login_rate_limit_ip_max_attempts`` failures from one address across all usernames,
+within ``login_rate_limit_window`` seconds, further attempts are rejected with HTTP 429
+and a ``Retry-After`` header until the window passes. A successful login clears the
+per-username counter. The counters are per server process.
 
 The session cookie is ``HttpOnly``, ``Secure`` and ``SameSite=Lax`` by default. A server
 that is deliberately served over plain HTTP (for example, only reachable on a private
@@ -532,6 +543,10 @@ Full skeleton (all options with defaults; adjust as needed):
     user_session_cookie_partitioned: false
     user_session_cookie_secure: true
     user_session_cookie_httponly: true
+    login_rate_limit_enabled: true
+    login_rate_limit_max_attempts: 10
+    login_rate_limit_ip_max_attempts: 50
+    login_rate_limit_window: 60
     extra_flask_options: null
     extra_waitress_options: null
 

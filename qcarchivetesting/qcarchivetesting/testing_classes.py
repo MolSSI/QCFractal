@@ -230,6 +230,17 @@ class QCATestingSnowflake(FractalSnowflake):
 
         self._pg_harness.recreate_database()
 
+        # The per-request user verification cache is module-global, so entries from a previous
+        # test (for the same user ids) would otherwise survive the database being recreated
+        from qcfractal.flask_app.load_user import _cached_verify
+        from qcfractal.flask_app.flask_app import login_rate_limiter
+
+        _cached_verify.cache_clear()
+
+        # Login rate limiters are per-app, but a session-scoped snowflake keeps the same app
+        # across tests, so clear every known app's counters to avoid carrying a lockout forward
+        login_rate_limiter.reset_all()
+
     def get_storage_socket(self) -> SQLAlchemySocket:
         """
         Obtain a new SQLAlchemy socket
