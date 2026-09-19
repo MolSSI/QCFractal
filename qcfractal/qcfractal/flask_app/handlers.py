@@ -4,7 +4,7 @@ from typing import Dict, Any
 
 from flask import g, request, current_app, jsonify, Response
 from jwt.exceptions import InvalidSubjectError
-from werkzeug.exceptions import InternalServerError, HTTPException
+from werkzeug.exceptions import InternalServerError, HTTPException, TooManyRequests
 
 from qcfractal.flask_app import storage_socket
 from qcportal.exceptions import (
@@ -149,6 +149,15 @@ def handle_internal_error(error):
         return jsonify(msg=msg), error.code
     else:
         return jsonify(msg=tb), error.code
+
+
+@home_v1.app_errorhandler(TooManyRequests)
+def handle_too_many_requests(error: TooManyRequests):
+    # Rate-limited (e.g. too many failed logins). Include Retry-After if we know it
+    response = jsonify(msg=error.description)
+    if getattr(error, "retry_after", None) is not None:
+        response.headers["Retry-After"] = str(error.retry_after)
+    return response, error.code
 
 
 @home_v1.app_errorhandler(HTTPException)

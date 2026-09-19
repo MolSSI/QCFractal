@@ -310,6 +310,20 @@ class WebAPIConfig(QCFConfigBase):
     """Use the HttpOnly flag for the user-session cookie (for browser-based sessions), which hides the
     session key from javascript"""
 
+    login_rate_limit_enabled: bool = True
+    """Whether to limit the rate of failed login attempts (recommended)"""
+
+    login_rate_limit_max_attempts: int = 10
+    """Maximum number of failed login attempts for a single username from a single client address
+    within the rate limit window before further attempts are rejected"""
+
+    login_rate_limit_ip_max_attempts: int = 50
+    """Maximum number of failed login attempts from a single client address (across all usernames)
+    within the rate limit window before further attempts are rejected"""
+
+    login_rate_limit_window: int = 60
+    """The sliding time window (in seconds) over which failed login attempts are counted"""
+
     extra_flask_options: dict[str, Any] | None = None
     """Any additional options to pass directly to flask"""
 
@@ -320,6 +334,7 @@ class WebAPIConfig(QCFConfigBase):
         "jwt_access_token_expires",
         "jwt_refresh_token_expires",
         "user_session_max_age",
+        "login_rate_limit_window",
         mode="before",
     )
     @classmethod
