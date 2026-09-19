@@ -9,7 +9,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import select
 
 from qcportal.auth import UserInfo, is_valid_password, is_valid_username, AuthTypeEnum
-from qcportal.exceptions import AuthenticationFailure, UserManagementError, InvalidRolenameError
+from qcportal.auth.models import MAX_PASSWORD_BYTES
+from qcportal.exceptions import (
+    AuthenticationFailure,
+    UserManagementError,
+    InvalidRolenameError,
+    InvalidPasswordError,
+)
 from .db_models import UserORM, UserGroupORM, UserPreferencesORM
 from .role_permissions import GLOBAL_ROLE_PERMISSIONS
 
@@ -45,6 +51,40 @@ def _hash_password(password: str) -> bytes:
     """
 
     return bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
+
+
+def _check_password_input(password: str) -> bytes:
+    """
+    Validates a password submitted for verification, returning the bytes to hand to bcrypt
+
+    This is deliberately much weaker than `is_valid_password` (which is the policy for *new*
+    passwords). Only structural problems are rejected here - a submitted password that does not
+    meet the current policy must still be able to log in, since the policy may have been
+    tightened after that password was set.
+
+    Raises an InvalidPasswordError if the password is not something that can be checked at all.
+    """
+
+    if not isinstance(password, str):
+        raise InvalidPasswordError("Password must be a string")
+
+    if "\x00" in password:
+        raise InvalidPasswordError("Password contains a NUL character")
+
+    if len(password) == 0:
+        raise InvalidPasswordError("Password is empty")
+
+    pw_bytes = password.encode("UTF-8")
+
+    # bcrypt only ever looks at the first 72 bytes. Versions of bcrypt before 5.0 silently
+    # truncated longer input at hash time, so any stored hash for a longer password was in fact
+    # computed from only the first 72 bytes. bcrypt >= 5.0 raises instead of truncating, so we
+    # truncate here to reproduce the old behavior exactly for those existing users. New passwords
+    # can no longer exceed 72 bytes (see is_valid_password), so this only affects legacy hashes.
+    if len(pw_bytes) > MAX_PASSWORD_BYTES:
+        pw_bytes = pw_bytes[:MAX_PASSWORD_BYTES]
+
+    return pw_bytes
 
 
 class UserSocket:
@@ -184,10 +224,10 @@ class UserSocket:
         Raises exception if the password does not match or there is another problem
         """
 
-        is_valid_password(password)
+        pw_bytes = _check_password_input(password)
 
         try:
-            pwcheck = bcrypt.checkpw(password.encode("UTF-8"), user.password)
+            pwcheck = bcrypt.checkpw(pw_bytes, user.password)
         except Exception as e:
             self._logger.error(f"Password check failure for user {user.username}, error: {str(e)}")
             self._logger.error(

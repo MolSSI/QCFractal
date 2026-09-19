@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import bcrypt
 import pytest
-from qcportal.auth.models import UserInfo, GroupInfo, is_valid_password
+from qcfractal.components.auth.db_models import UserORM
+from qcportal.auth.models import UserInfo, GroupInfo, AuthTypeEnum, is_valid_password
 from qcportal.exceptions import (
     UserManagementError,
     AuthenticationFailure,
@@ -15,7 +17,44 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
 invalid_usernames = ["\x00", "ab\x00cd", "a user", ""]
-invalid_passwords = ["\x00", "abcd\x00efgh", "abcd", "1", ""]
+
+# Passwords that are not acceptable as *new* passwords (that is, violate the password policy
+# enforced when adding a user or changing a password)
+invalid_passwords = [
+    "\x00",
+    "abcd\x00efgh",
+    "abcd",
+    "1",
+    "",
+    "abcdefghijk",  # 11 characters - one short of the minimum
+    "a" * 73,  # too long for bcrypt
+    "é" * 37,  # 37 characters, but 74 bytes when encoded as UTF-8
+]
+
+# Passwords that can't even be checked against a stored hash. Note that this is a much shorter
+# list than the above - an existing user with a short password must still be able to log in
+invalid_verify_passwords = ["\x00", "abcd\x00efgh", ""]
+
+
+def _seed_user_with_hash(storage_socket: SQLAlchemySocket, username: str, hashed_password: bytes) -> int:
+    """
+    Adds a user directly through the ORM, with a pre-computed password hash
+
+    This bypasses the password policy & hashing done in the user socket, and is used to
+    emulate users that were created by older versions of QCFractal.
+    """
+
+    with storage_socket.session_scope() as session:
+        user = UserORM(
+            username=username,
+            role="read",
+            auth_type=AuthTypeEnum.password,
+            enabled=True,
+            password=hashed_password,
+        )
+        session.add(user)
+        session.flush()
+        return user.id
 
 
 def test_user_socket_add_get(storage_socket: SQLAlchemySocket):
@@ -31,8 +70,8 @@ def test_user_socket_add_get(storage_socket: SQLAlchemySocket):
         email="george@example.com",
         organization="My Org",
     )
-    pw = storage_socket.users.add(uinfo, password="oldpw123")
-    assert pw == "oldpw123"
+    pw = storage_socket.users.add(uinfo, password="old_password_123")
+    assert pw == "old_password_123"
 
     # Do we get the same data back?
     # The initial userinfo doesn't contain the id
@@ -53,12 +92,12 @@ def test_user_socket_add_duplicate(storage_socket: SQLAlchemySocket):
         role="read",
         enabled=True,
     )
-    storage_socket.users.add(uinfo, password="oldpw123")
+    storage_socket.users.add(uinfo, password="old_password_123")
 
     # Duplicate should result in an exception
     uinfo2 = UserInfo(username="george", role="read", enabled=True)
     with pytest.raises(UserManagementError, match=r"User.*already exists"):
-        storage_socket.users.add(uinfo2, "newpw123")
+        storage_socket.users.add(uinfo2, "new_password_123")
 
 
 def test_user_socket_add_with_id(storage_socket: SQLAlchemySocket):
@@ -71,7 +110,7 @@ def test_user_socket_add_with_id(storage_socket: SQLAlchemySocket):
     )
 
     with pytest.raises(UserManagementError, match=r"id was given as part"):
-        storage_socket.users.add(uinfo, password="oldpw123")
+        storage_socket.users.add(uinfo, password="old_password_123")
 
 
 def test_user_socket_list(storage_socket: SQLAlchemySocket):
@@ -143,14 +182,14 @@ def test_user_socket_use_unknown_user(storage_socket: SQLAlchemySocket):
         storage_socket.users.get("geoff")
 
     with pytest.raises(AuthenticationFailure, match=r"Incorrect username or password"):
-        storage_socket.users.authenticate("geoff", "a password")
+        storage_socket.users.authenticate("geoff", "a password 1234")
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
         uinfo = UserInfo(id=1234, username="geoff", role="read", enabled=True)
         storage_socket.users.modify(uinfo, False)
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
-        storage_socket.users.change_password("geoff", "a password")
+        storage_socket.users.change_password("geoff", "a password 1234")
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
         storage_socket.users.change_password("geoff", None)
@@ -160,7 +199,7 @@ def test_user_socket_use_unknown_user(storage_socket: SQLAlchemySocket):
 
 
 def test_user_socket_verify_password(storage_socket: SQLAlchemySocket):
-    for idx, password in enumerate(["simple", "ABC 1234", "ÃØ©þꝎꟇ"]):
+    for idx, password in enumerate(["simple_password", "ABC 1234 abcd", "ÃØ©þꝎꟇÃØ©þꝎꟇ"]):
         username = f"george_{idx}"
         uinfo = UserInfo(
             username=username,
@@ -172,7 +211,7 @@ def test_user_socket_verify_password(storage_socket: SQLAlchemySocket):
         assert add_pw == password
         storage_socket.users.authenticate(username, add_pw)
 
-        for guess in ["Simple", "ABC%1234", "ÃØ©þꝎB"]:
+        for guess in ["Simple_password", "ABC%1234 abcd", "ÃØ©þꝎBÃØ©þꝎꟇ"]:
             with pytest.raises(AuthenticationFailure):
                 storage_socket.users.authenticate(username, guess)
 
@@ -202,19 +241,19 @@ def test_user_socket_change_password(storage_socket: SQLAlchemySocket):
         enabled=True,
     )
 
-    old_pw = storage_socket.users.add(uinfo, "oldpw123")
-    assert old_pw == "oldpw123"
+    old_pw = storage_socket.users.add(uinfo, "old_password_123")
+    assert old_pw == "old_password_123"
 
-    storage_socket.users.authenticate("george", "oldpw123")
+    storage_socket.users.authenticate("george", "old_password_123")
 
     # update password...
-    storage_socket.users.change_password("george", password="newpw123")
+    storage_socket.users.change_password("george", password="new_password_123")
 
     # Raises exception on failure
-    storage_socket.users.authenticate("george", "newpw123")
+    storage_socket.users.authenticate("george", "new_password_123")
 
     with pytest.raises(AuthenticationFailure):
-        storage_socket.users.authenticate("george", "oldpw123")
+        storage_socket.users.authenticate("george", "old_password_123")
 
 
 def test_user_socket_password_generation(storage_socket: SQLAlchemySocket):
@@ -308,16 +347,16 @@ def test_user_socket_use_invalid_username(storage_socket: SQLAlchemySocket):
         )
 
         with pytest.raises(InvalidUsernameError):
-            storage_socket.users.add(uinfo, "password123")
+            storage_socket.users.add(uinfo, "password_1234")
 
         with pytest.raises(InvalidUsernameError):
             storage_socket.users.get(username)
 
         with pytest.raises(InvalidUsernameError):
-            storage_socket.users.authenticate(username, "a_password")
+            storage_socket.users.authenticate(username, "a_password_1234")
 
         with pytest.raises(InvalidUsernameError):
-            storage_socket.users.change_password(username, "a_password")
+            storage_socket.users.change_password(username, "a_password_1234")
 
         with pytest.raises(InvalidUsernameError):
             storage_socket.users.change_password(username, None)
@@ -333,10 +372,10 @@ def test_user_socket_use_invalid_username(storage_socket: SQLAlchemySocket):
     )
 
     with pytest.raises(InvalidUsernameError):
-        storage_socket.users.add(uinfo2, "password123")
+        storage_socket.users.add(uinfo2, "password_1234")
 
     with pytest.raises(InvalidUsernameError):
-        storage_socket.users.authenticate("123456789", "a_password")
+        storage_socket.users.authenticate("123456789", "a_password_1234")
 
 
 def test_user_socket_use_invalid_password(storage_socket: SQLAlchemySocket):
@@ -361,5 +400,85 @@ def test_user_socket_use_invalid_password(storage_socket: SQLAlchemySocket):
         with pytest.raises(InvalidPasswordError):
             storage_socket.users.change_password(uid, password)
 
-        with pytest.raises(InvalidPasswordError):
+        # At verification time, only structurally-invalid passwords are rejected outright.
+        # Anything else is simply an incorrect password
+        if password in invalid_verify_passwords:
+            expected = InvalidPasswordError
+        else:
+            expected = AuthenticationFailure
+
+        with pytest.raises(expected):
             storage_socket.users.authenticate(username, password)
+
+
+def test_user_socket_new_password_length_policy(storage_socket: SQLAlchemySocket):
+    uinfo = UserInfo(username="george", role="read", enabled=True)
+    storage_socket.users.add(uinfo, "good_password")
+
+    # 11 characters is too short, 12 is fine
+    with pytest.raises(InvalidPasswordError, match="at least 12 characters"):
+        storage_socket.users.change_password("george", "abcdefghijk")
+
+    storage_socket.users.change_password("george", "abcdefghijkl")
+    storage_socket.users.authenticate("george", "abcdefghijkl")
+
+    # The maximum is in *bytes*, not characters. "é" is two bytes when encoded as UTF-8,
+    # so 37 of them is 74 bytes and 36 of them is exactly 72
+    with pytest.raises(InvalidPasswordError, match="at most 72 bytes"):
+        storage_socket.users.change_password("george", "é" * 37)
+
+    storage_socket.users.change_password("george", "é" * 36)
+    storage_socket.users.authenticate("george", "é" * 36)
+
+    # Same thing with plain ASCII (one byte per character)
+    with pytest.raises(InvalidPasswordError, match="at most 72 bytes"):
+        storage_socket.users.change_password("george", "a" * 73)
+
+    storage_socket.users.change_password("george", "a" * 72)
+    storage_socket.users.authenticate("george", "a" * 72)
+
+    # Same policy applies when adding a user
+    uinfo2 = UserInfo(username="bill", role="read", enabled=True)
+    with pytest.raises(InvalidPasswordError, match="at least 12 characters"):
+        storage_socket.users.add(uinfo2, "abcdefghijk")
+
+    with pytest.raises(InvalidPasswordError, match="at most 72 bytes"):
+        storage_socket.users.add(uinfo2, "é" * 37)
+
+    storage_socket.users.add(uinfo2, "é" * 36)
+    storage_socket.users.authenticate("bill", "é" * 36)
+
+
+def test_user_socket_verify_legacy_short_password(storage_socket: SQLAlchemySocket):
+    # A user created before the password policy was tightened must still be able to log in,
+    # even though their password would not be accepted as a new password today
+    legacy_pw = "simple"
+    with pytest.raises(InvalidPasswordError):
+        is_valid_password(legacy_pw)
+
+    _seed_user_with_hash(storage_socket, "legacy_user", bcrypt.hashpw(legacy_pw.encode("UTF-8"), bcrypt.gensalt(6)))
+
+    uinfo = storage_socket.users.authenticate("legacy_user", legacy_pw)
+    assert uinfo.username == "legacy_user"
+
+    with pytest.raises(AuthenticationFailure):
+        storage_socket.users.authenticate("legacy_user", "Simple")
+
+
+def test_user_socket_verify_legacy_long_password(storage_socket: SQLAlchemySocket):
+    # bcrypt < 5 silently truncated at 72 bytes when hashing, so a stored hash for a longer
+    # password was really computed from only the first 72 bytes. Logging in with the full
+    # (long) password must still work
+    legacy_pw = "x" * 100
+    with pytest.raises(InvalidPasswordError):
+        is_valid_password(legacy_pw)
+
+    hashed = bcrypt.hashpw(legacy_pw.encode("UTF-8")[:72], bcrypt.gensalt(6))
+    _seed_user_with_hash(storage_socket, "legacy_long_user", hashed)
+
+    # Both the full password and its 72-byte prefix work, exactly as before
+    storage_socket.users.authenticate("legacy_long_user", legacy_pw)
+    storage_socket.users.authenticate("legacy_long_user", "x" * 72)
+
+    with pytest.raises(AuthenticationFailure):
+        storage_socket.users.authenticate("legacy_long_user", "y" * 100)
