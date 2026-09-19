@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 # How long a verification result may be reused. This bounds how long a disabled account or a
 # changed role keeps working, so it is deliberately short
 VERIFY_CACHE_SECONDS = 5
-VERIFY_CACHE_MAXSIZE = 256
+VERIFY_CACHE_MAXSIZE = 1024
 
 
 class CachedUserVerifier:
