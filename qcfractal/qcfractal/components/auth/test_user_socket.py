@@ -242,8 +242,14 @@ def test_user_socket_verify_user_disabled(storage_socket: SQLAlchemySocket):
     uinfo2.enabled = False
     storage_socket.users.modify(uinfo2, as_admin=True)
 
-    with pytest.raises(AuthenticationFailure):
+    # A disabled account is revealed only to a caller who supplies the CORRECT password
+    with pytest.raises(AuthenticationFailure, match=r"is disabled"):
         storage_socket.users.authenticate("george", gen_pw)
+
+    # A wrong password against a disabled account stays generic, so the account cannot be
+    # enumerated by someone who does not know the password
+    with pytest.raises(AuthenticationFailure, match=r"^Incorrect username or password$"):
+        storage_socket.users.authenticate("george", "the_wrong_password_1234")
 
 
 def test_user_socket_change_password(storage_socket: SQLAlchemySocket):
@@ -609,3 +615,51 @@ def test_user_socket_replace_password_hash_stale(storage_socket: SQLAlchemySocke
 
     storage_socket.users._replace_password_hash(uid, current_hash, _hash_password("second_password"), "second_password")
     assert _get_stored_hash(storage_socket, "george") == newest_hash
+
+
+def test_user_socket_authenticate_indistinguishable_failures(storage_socket: SQLAlchemySocket):
+    # An unknown user, a disabled user given a WRONG password, and a wrong password for an
+    # enabled user must all look the same. A disabled user given the CORRECT password is told
+    # the account is disabled (checked separately below and in test_user_socket_verify_user_disabled).
+    password = "a_good_password"
+
+    uinfo = UserInfo(username="george", role="read", enabled=True)
+    storage_socket.users.add(uinfo, password)
+
+    uinfo2 = UserInfo(username="bill", role="read", enabled=False)
+    storage_socket.users.add(uinfo2, password)
+
+    messages = []
+    for username, guess in [("nobody", password), ("bill", "the_wrong_password"), ("george", "the_wrong_password")]:
+        with pytest.raises(AuthenticationFailure) as excinfo:
+            storage_socket.users.authenticate(username, guess)
+        messages.append(str(excinfo.value))
+
+    assert messages == ["Incorrect username or password"] * 3
+
+    # The disabled account, given the correct password, is told that it is disabled
+    with pytest.raises(AuthenticationFailure, match=r"is disabled"):
+        storage_socket.users.authenticate("bill", password)
+
+
+@pytest.mark.parametrize("password", [1234, None, ["a_password_1234"], b"a_password_1234", {}])
+def test_user_socket_authenticate_nonstring_password(storage_socket: SQLAlchemySocket, password):
+    uinfo = UserInfo(username="george", role="read", enabled=True)
+    storage_socket.users.add(uinfo, "a_good_password")
+
+    # Whatever arrived in the request body, this must be a clean error and not a TypeError
+    with pytest.raises((AuthenticationFailure, InvalidPasswordError)):
+        storage_socket.users.authenticate("george", password)
+
+    # Same for a user that doesn't exist
+    with pytest.raises((AuthenticationFailure, InvalidPasswordError)):
+        storage_socket.users.authenticate("nobody", password)
+
+
+def test_user_socket_authenticate_corrupt_stored_hash(storage_socket: SQLAlchemySocket):
+    # A hash that bcrypt cannot make sense of must be a normal authentication failure,
+    # not an internal error
+    _seed_user_with_hash(storage_socket, "george", b"this is not a bcrypt hash")
+
+    with pytest.raises(AuthenticationFailure, match=r"^Incorrect username or password$"):
+        storage_socket.users.authenticate("george", "a_good_password")

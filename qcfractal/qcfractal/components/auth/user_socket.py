@@ -72,6 +72,26 @@ def _hash_password(password: str, cost: int = BCRYPT_COST) -> bytes:
     return _hash_password_bytes(password.encode("UTF-8"), cost)
 
 
+# A hash of a random string, used to spend the same amount of time checking a password for a user
+# that cannot log in (unknown or disabled) as for one that can. This does not need to be secret -
+# it only needs to be a valid hash at the cost we currently use
+DUMMY_HASH = _hash_password(secrets.token_urlsafe(16))
+
+
+def _dummy_password_check(password: bytes) -> None:
+    """
+    Checks a password against a dummy hash, discarding the result
+
+    This exists purely so that failing logins take a similar amount of time whether or not the
+    given user exists (and is enabled), making usernames harder to enumerate by timing.
+    """
+
+    try:
+        bcrypt.checkpw(password, DUMMY_HASH)
+    except ValueError:
+        pass
+
+
 def _bcrypt_cost(hashed: bytes) -> Optional[int]:
     """
     Obtains the bcrypt work factor (cost) stored in a bcrypt hash
@@ -274,12 +294,11 @@ class UserSocket:
 
         try:
             pwcheck = bcrypt.checkpw(pw_bytes, user.password)
-        except Exception as e:
-            self._logger.error(f"Password check failure for user {user.username}, error: {str(e)}")
-            self._logger.error(
-                f"Error likely caused by encryption salt mismatch, potentially fixed by creating a new password for user {user.username}."
-            )
-            raise UserManagementError("Password decryption failure, please contact your system administrator.")
+        except ValueError as e:
+            # Raised for a malformed/unusable stored hash (or unusable input). Never include the
+            # submitted password in the log
+            self._logger.error(f"Unable to check password for user {user.username}: {str(e)}")
+            raise AuthenticationFailure("Incorrect username or password")
 
         if pwcheck is False:
             raise AuthenticationFailure("Incorrect username or password")
@@ -347,7 +366,8 @@ class UserSocket:
         """
         Authenticates a given username and password, returning all info about the user
 
-        If the user is not found, or is disabled, or the password is incorrect, an exception is raised.
+        If the user is not found, or is disabled, or the password is incorrect, the same generic
+        AuthenticationFailure is raised. The actual reason is only logged server-side.
 
         Parameters
         ----------
@@ -367,24 +387,37 @@ class UserSocket:
 
         is_valid_username(username)
 
+        # The submitted password comes straight out of a request, so check that it is something
+        # we can work with at all before it is encoded or handed to bcrypt
+        pw_bytes = _check_password_input(password)
+
         # The verification itself is a read-only operation
         with self.root_socket.optional_session(session, True) as s:
             try:
                 user = self._get_internal(s, username)
             except UserManagementError as e:
-                # Turn missing user into an Authentication error
+                # Turn missing user into an Authentication error. Do a throwaway password check
+                # first, so that this takes about as long as a login for a user that does exist
+                _dummy_password_check(pw_bytes)
+                self._logger.info(f"Authentication failed for {username}: no such user")
                 raise AuthenticationFailure("Incorrect username or password")
 
-            if not user.enabled:
-                raise AuthenticationFailure(f"User {username} is disabled.")
-
-            # what's next depends on how the user is authenticated
+            # Verify the password *before* checking whether the account is enabled. A wrong
+            # password always returns the same generic error, so a disabled account is never
+            # revealed to a caller who does not know the password (username enumeration). Only a
+            # caller who supplies the correct password is told that the account is disabled.
             if user.auth_type == AuthTypeEnum.password:
                 verified_hash = user.password
                 new_hash = self._verify_local_password(user=user, password=password)
             else:
                 self._logger.error(f"Unknown auth type: {user.auth_type}. This is a developer error")
                 raise UserManagementError(f"Unknown authentication type stored in the database: {user.auth_type}")
+
+            # The password was correct. A disabled account is now told so explicitly. Any pending
+            # hash upgrade is intentionally dropped, since a disabled account cannot log in anyway
+            if not user.enabled:
+                self._logger.info(f"Authentication succeeded but account is disabled: {username}")
+                raise AuthenticationFailure(f"User {username} is disabled.")
 
             user_id = user.id
             user_info = user.to_model(UserInfo)
