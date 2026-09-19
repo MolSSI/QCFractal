@@ -471,3 +471,39 @@ def test_auth_session_cookie_attributes(secure_snowflake):
     assert set_cookie.startswith("qcf_session=;")
     assert "httponly" in set_cookie.lower()
     assert "samesite=lax" in set_cookie.lower()
+
+
+def test_auth_session_throttled_refresh(secure_snowflake):
+    # An unmodified session is only written back (and the cookie re-sent) once its last access
+    # is older than a tenth of the lifetime. Modifications are always written
+    uri = secure_snowflake.get_uri()
+    storage_socket = secure_snowflake.get_storage_socket()
+    threshold = secure_snowflake._qcf_config.api.user_session_max_age / 10
+
+    sess = _browser_session()
+    key = _session_login(sess, uri, "admin_user")
+    _, _, accessed_1 = storage_socket.auth.load_user_session(key)
+
+    # Immediately again: nothing written, no new cookie, but the response varies on the cookie
+    r = sess.get(f"{uri}/api/v1/information")
+    assert r.status_code == 200
+    assert "Set-Cookie" not in r.headers
+    assert "Cookie" in r.headers.get("Vary", "")
+    _, _, accessed_2 = storage_socket.auth.load_user_session(key)
+    assert accessed_2 == accessed_1
+
+    # A change to the session data (here, the client user agent) is written immediately
+    r = sess.get(f"{uri}/api/v1/information", headers={"User-Agent": "something else"})
+    assert r.status_code == 200
+    assert "Set-Cookie" in r.headers
+    _, data, accessed_3 = storage_socket.auth.load_user_session(key)
+    assert data["user_agent"] == "something else"
+    assert accessed_3 > accessed_2
+
+    # After the threshold, the session is touched again (sliding expiration)
+    time.sleep(threshold + 0.5)
+    r = sess.get(f"{uri}/api/v1/information", headers={"User-Agent": "something else"})
+    assert r.status_code == 200
+    assert "Set-Cookie" in r.headers
+    _, _, accessed_4 = storage_socket.auth.load_user_session(key)
+    assert accessed_4 > accessed_3
