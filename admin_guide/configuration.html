@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../_static/documentation_options.js?v=8f315b4b"></script>
+    <script src="../_static/documentation_options.js?v=01b81045"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCFractal Installation and Setup" href="setup.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post11+g5ebbbe087" />
+  <meta name="docsearch:version" content="0.70.post37+gb963bfe89" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1151,8 +1151,8 @@ you.</p>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">user_session_cookie_samesite</span></code>
 <em>(string | None)</em></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
-<td><p>Set the SameSite flag for the user-session cookie (for browser-based sessions)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;Lax&quot;</span></code></p></td>
+<td><p>Set the SameSite flag for the user-session cookie (for browser-based sessions). Use “None” (the string) only for a browser client served from a different site, together with user_session_cookie_secure</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">user_session_cookie_partitioned</span></code>
 <em>(bool)</em></p></td>
@@ -1161,20 +1161,76 @@ you.</p>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">user_session_cookie_secure</span></code>
 <em>(bool)</em></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
-<td><p>Use Secure flag for the user-session cookie (for browser-based sessions)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Use the Secure flag for the user-session cookie (for browser-based sessions). Browsers only send the cookie over HTTPS - set to false only if the server is deliberately served over plain HTTP</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">user_session_cookie_httponly</span></code>
 <em>(bool)</em></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
-<td><p>Use Secure flag for the user-session cookie (for browser-based sessions)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Use the HttpOnly flag for the user-session cookie (for browser-based sessions), which hides the session key from javascript</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">login_rate_limit_enabled</span></code>
+<em>(bool)</em></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Whether to limit the rate of failed login attempts (recommended)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">login_rate_limit_max_attempts</span></code>
+<em>(int)</em></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
+<td><p>Maximum number of failed login attempts for a single username from a single client address within the rate limit window before further attempts are rejected</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">login_rate_limit_ip_max_attempts</span></code>
+<em>(int)</em></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">50</span></code></p></td>
+<td><p>Maximum number of failed login attempts from a single client address (across all usernames) within the rate limit window before further attempts are rejected</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">login_rate_limit_window</span></code>
+<em>(int)</em></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">60</span></code></p></td>
+<td><p>The sliding time window (in seconds) over which failed login attempts are counted</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>For cross-site cookie behaviour set <code class="docutils literal notranslate"><span class="pre">user_session_cookie_samesite</span></code> to <code class="docutils literal notranslate"><span class="pre">Lax</span></code> or
-<code class="docutils literal notranslate"><span class="pre">None</span></code> as needed. <code class="docutils literal notranslate"><span class="pre">user_session_cookie_partitioned</span></code> sets the Partitioned flag, for
-CHIPS-style storage partitioning in modern browsers.</p>
+<section id="browser-sessions-and-cross-site-requests">
+<h4>Browser sessions and cross-site requests<a class="headerlink" href="#browser-sessions-and-cross-site-requests" title="Link to this heading">#</a></h4>
+<p>Browser-based clients (such as the web portal) authenticate with a session cookie
+rather than a bearer token. Sessions are stored in the database and expire after being
+idle for <code class="docutils literal notranslate"><span class="pre">user_session_max_age</span></code>. To avoid a database write on every request, the
+last-access time of a session is only refreshed once it is older than a tenth of the
+maximum age (at most five minutes), so the effective idle timeout may be shorter than
+configured by up to that much. Expired sessions are removed periodically.</p>
+<p>Because browsers attach cookies to requests automatically,
+the server protects cookie-authenticated requests against cross-site request forgery
+(CSRF):</p>
+<ul class="simple">
+<li><p>Every request that may change state (anything other than <code class="docutils literal notranslate"><span class="pre">GET</span></code>, <code class="docutils literal notranslate"><span class="pre">HEAD</span></code> and
+<code class="docutils literal notranslate"><span class="pre">OPTIONS</span></code>), including <code class="docutils literal notranslate"><span class="pre">/auth/v1/session_login</span></code> and <code class="docutils literal notranslate"><span class="pre">/auth/v1/session_logout</span></code>,
+must carry an <code class="docutils literal notranslate"><span class="pre">X-Requested-With</span></code> header. Browsers only attach a custom header to a
+cross-origin request after a successful CORS preflight, so a site that is not listed
+in <code class="docutils literal notranslate"><span class="pre">cors.origins</span></code> cannot make such requests. The value of the header is not checked.</p></li>
+<li><p>If the browser sends an <code class="docutils literal notranslate"><span class="pre">Origin</span></code> header, it must be the server itself or one of the
+origins listed in <code class="docutils literal notranslate"><span class="pre">cors.origins</span></code>. A <code class="docutils literal notranslate"><span class="pre">null</span></code> origin is rejected.</p></li>
+</ul>
+<p>Requests authenticated with a bearer token (<code class="docutils literal notranslate"><span class="pre">Authorization</span></code> header) are not subject to
+these checks. If a request carries both a session cookie and an <code class="docutils literal notranslate"><span class="pre">Authorization</span></code>
+header, the header is used and the cookie is ignored.</p>
+<p>Failed logins (both token and browser logins) are rate limited. After
+<code class="docutils literal notranslate"><span class="pre">login_rate_limit_max_attempts</span></code> failures for one username from one client address, or
+<code class="docutils literal notranslate"><span class="pre">login_rate_limit_ip_max_attempts</span></code> failures from one address across all usernames,
+within <code class="docutils literal notranslate"><span class="pre">login_rate_limit_window</span></code> seconds, further attempts are rejected with HTTP 429
+and a <code class="docutils literal notranslate"><span class="pre">Retry-After</span></code> header until the window passes. A successful login clears the
+per-username counter. The counters are per server process.</p>
+<p>The session cookie is <code class="docutils literal notranslate"><span class="pre">HttpOnly</span></code>, <code class="docutils literal notranslate"><span class="pre">Secure</span></code> and <code class="docutils literal notranslate"><span class="pre">SameSite=Lax</span></code> by default. A server
+that is deliberately served over plain HTTP (for example, only reachable on a private
+network) must set <code class="docutils literal notranslate"><span class="pre">user_session_cookie_secure</span></code> to <code class="docutils literal notranslate"><span class="pre">false</span></code>, or browsers will not send
+the cookie and browser logins will silently fail. A web portal served from a different
+site than the server
+(not just a different port or sibling subdomain) needs <code class="docutils literal notranslate"><span class="pre">None</span></code> together with
+<code class="docutils literal notranslate"><span class="pre">user_session_cookie_secure</span></code>, and the portal’s origin listed in <code class="docutils literal notranslate"><span class="pre">cors.origins</span></code> with
+<code class="docutils literal notranslate"><span class="pre">cors.supports_credentials</span></code> enabled. <code class="docutils literal notranslate"><span class="pre">user_session_cookie_partitioned</span></code> sets the
+Partitioned flag, for CHIPS-style storage partitioning in modern browsers.</p>
+</section>
 </section>
 <section id="advanced">
 <h3>Advanced<a class="headerlink" href="#advanced" title="Link to this heading">#</a></h3>
@@ -1333,6 +1389,9 @@ category of error, it is left in <code class="docutils literal notranslate"><spa
 <section id="cors-cors">
 <h2>CORS (cors)<a class="headerlink" href="#cors-cors" title="Link to this heading">#</a></h2>
 <p>Cross-Origin Resource Sharing settings for the API. Configure in YAML.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> and <code class="docutils literal notranslate"><span class="pre">X-Requested-With</span></code> are always added to the allowed headers, since
+browser clients need them for JSON bodies and for cookie-authenticated requests (see
+above). <code class="docutils literal notranslate"><span class="pre">origins</span></code> may not contain <code class="docutils literal notranslate"><span class="pre">*</span></code> when <code class="docutils literal notranslate"><span class="pre">supports_credentials</span></code> is enabled.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <colgroup>
 <col style="width: 30.0%" />
@@ -1568,10 +1627,14 @@ hyphens only, ending in a letter or digit. Underscores are <strong>not</strong> 
 <span class="w">  </span><span class="nt">user_session_max_age</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">86400</span>
 <span class="w">  </span><span class="nt">user_session_cookie_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">qcf_session</span>
 <span class="w">  </span><span class="nt">user_session_cookie_domain</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
-<span class="w">  </span><span class="nt">user_session_cookie_samesite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+<span class="w">  </span><span class="nt">user_session_cookie_samesite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Lax</span>
 <span class="w">  </span><span class="nt">user_session_cookie_partitioned</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-<span class="w">  </span><span class="nt">user_session_cookie_secure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-<span class="w">  </span><span class="nt">user_session_cookie_httponly</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">  </span><span class="nt">user_session_cookie_secure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">user_session_cookie_httponly</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">login_rate_limit_enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">login_rate_limit_max_attempts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<span class="w">  </span><span class="nt">login_rate_limit_ip_max_attempts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
+<span class="w">  </span><span class="nt">login_rate_limit_window</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60</span>
 <span class="w">  </span><span class="nt">extra_flask_options</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
 <span class="w">  </span><span class="nt">extra_waitress_options</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
 
@@ -2342,6 +2405,26 @@ own == True</p>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractal.config.WebAPIConfig.login_rate_limit_enabled" title="qcfractal.config.WebAPIConfig.login_rate_limit_enabled"><code class="xref py py-obj docutils literal notranslate"><span class="pre">login_rate_limit_enabled</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractal.config.WebAPIConfig.login_rate_limit_ip_max_attempts" title="qcfractal.config.WebAPIConfig.login_rate_limit_ip_max_attempts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">login_rate_limit_ip_max_attempts</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">50</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractal.config.WebAPIConfig.login_rate_limit_max_attempts" title="qcfractal.config.WebAPIConfig.login_rate_limit_max_attempts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">login_rate_limit_max_attempts</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractal.config.WebAPIConfig.login_rate_limit_window" title="qcfractal.config.WebAPIConfig.login_rate_limit_window"><code class="xref py py-obj docutils literal notranslate"><span class="pre">login_rate_limit_window</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">60</span></code></p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcfractal.config.WebAPIConfig.num_threads_per_worker" title="qcfractal.config.WebAPIConfig.num_threads_per_worker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">num_threads_per_worker</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>No</p></td>
@@ -2365,7 +2448,7 @@ own == True</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcfractal.config.WebAPIConfig.user_session_cookie_httponly" title="qcfractal.config.WebAPIConfig.user_session_cookie_httponly"><code class="xref py py-obj docutils literal notranslate"><span class="pre">user_session_cookie_httponly</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
 <td><p>No</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcfractal.config.WebAPIConfig.user_session_cookie_name" title="qcfractal.config.WebAPIConfig.user_session_cookie_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">user_session_cookie_name</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
@@ -2380,12 +2463,12 @@ own == True</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcfractal.config.WebAPIConfig.user_session_cookie_samesite" title="qcfractal.config.WebAPIConfig.user_session_cookie_samesite"><code class="xref py py-obj docutils literal notranslate"><span class="pre">user_session_cookie_samesite</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'Lax'</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcfractal.config.WebAPIConfig.user_session_cookie_secure" title="qcfractal.config.WebAPIConfig.user_session_cookie_secure"><code class="xref py py-obj docutils literal notranslate"><span class="pre">user_session_cookie_secure</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
 <td><p>No</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcfractal.config.WebAPIConfig.user_session_max_age" title="qcfractal.config.WebAPIConfig.user_session_max_age"><code class="xref py py-obj docutils literal notranslate"><span class="pre">user_session_max_age</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
@@ -2470,7 +2553,8 @@ effectively limits the time a worker has to respond to a request</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcfractal.config.WebAPIConfig.user_session_cookie_samesite">
 <span class="sig-name descname"><span class="pre">user_session_cookie_samesite</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcfractal.config.WebAPIConfig.user_session_cookie_samesite" title="Link to this definition">#</a></dt>
-<dd><p>Set the SameSite flag for the user-session cookie (for browser-based sessions)</p>
+<dd><p>Set the SameSite flag for the user-session cookie (for browser-based sessions). Use “None” (the string)
+only for a browser client served from a different site, together with user_session_cookie_secure</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2482,13 +2566,41 @@ effectively limits the time a worker has to respond to a request</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcfractal.config.WebAPIConfig.user_session_cookie_secure">
 <span class="sig-name descname"><span class="pre">user_session_cookie_secure</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#qcfractal.config.WebAPIConfig.user_session_cookie_secure" title="Link to this definition">#</a></dt>
-<dd><p>Use Secure flag for the user-session cookie (for browser-based sessions)</p>
+<dd><p>Use the Secure flag for the user-session cookie (for browser-based sessions). Browsers only send
+the cookie over HTTPS - set to false only if the server is deliberately served over plain HTTP</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcfractal.config.WebAPIConfig.user_session_cookie_httponly">
 <span class="sig-name descname"><span class="pre">user_session_cookie_httponly</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#qcfractal.config.WebAPIConfig.user_session_cookie_httponly" title="Link to this definition">#</a></dt>
-<dd><p>Use Secure flag for the user-session cookie (for browser-based sessions)</p>
+<dd><p>Use the HttpOnly flag for the user-session cookie (for browser-based sessions), which hides the
+session key from javascript</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcfractal.config.WebAPIConfig.login_rate_limit_enabled">
+<span class="sig-name descname"><span class="pre">login_rate_limit_enabled</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#qcfractal.config.WebAPIConfig.login_rate_limit_enabled" title="Link to this definition">#</a></dt>
+<dd><p>Whether to limit the rate of failed login attempts (recommended)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcfractal.config.WebAPIConfig.login_rate_limit_max_attempts">
+<span class="sig-name descname"><span class="pre">login_rate_limit_max_attempts</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcfractal.config.WebAPIConfig.login_rate_limit_max_attempts" title="Link to this definition">#</a></dt>
+<dd><p>Maximum number of failed login attempts for a single username from a single client address
+within the rate limit window before further attempts are rejected</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcfractal.config.WebAPIConfig.login_rate_limit_ip_max_attempts">
+<span class="sig-name descname"><span class="pre">login_rate_limit_ip_max_attempts</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcfractal.config.WebAPIConfig.login_rate_limit_ip_max_attempts" title="Link to this definition">#</a></dt>
+<dd><p>Maximum number of failed login attempts from a single client address (across all usernames)
+within the rate limit window before further attempts are rejected</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcfractal.config.WebAPIConfig.login_rate_limit_window">
+<span class="sig-name descname"><span class="pre">login_rate_limit_window</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcfractal.config.WebAPIConfig.login_rate_limit_window" title="Link to this definition">#</a></dt>
+<dd><p>The sliding time window (in seconds) over which failed login attempts are counted</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2921,13 +3033,13 @@ to reach S3 themselves.</p>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'dataset-attachments'</span></code></p></td>
-<td><p>max_length=63, pattern=``^[a-z0-9-]+[a-z0-9]$``, min_length=3</p></td>
+<td><p>min_length=3, max_length=63, pattern=``^[a-z0-9-]+[a-z0-9]$``</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcfractal.config.S3BucketMap.project_attachment" title="qcfractal.config.S3BucketMap.project_attachment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">project_attachment</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'project-attachments'</span></code></p></td>
-<td><p>max_length=63, pattern=``^[a-z0-9-]+[a-z0-9]$``, min_length=3</p></td>
+<td><p>min_length=3, max_length=63, pattern=``^[a-z0-9-]+[a-z0-9]$``</p></td>
 </tr>
 </tbody>
 </table>
@@ -2939,9 +3051,9 @@ to reach S3 themselves.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Constraints<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>min_length</strong> = <code class="docutils literal notranslate"><span class="pre">3</span></code></p></li>
 <li><p><strong>max_length</strong> = <code class="docutils literal notranslate"><span class="pre">63</span></code></p></li>
 <li><p><strong>pattern</strong> = <code class="docutils literal notranslate"><span class="pre">^[a-z0-9\-]+[a-z0-9]$</span></code></p></li>
-<li><p><strong>min_length</strong> = <code class="docutils literal notranslate"><span class="pre">3</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -2954,9 +3066,9 @@ to reach S3 themselves.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Constraints<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>min_length</strong> = <code class="docutils literal notranslate"><span class="pre">3</span></code></p></li>
 <li><p><strong>max_length</strong> = <code class="docutils literal notranslate"><span class="pre">63</span></code></p></li>
 <li><p><strong>pattern</strong> = <code class="docutils literal notranslate"><span class="pre">^[a-z0-9\-]+[a-z0-9]$</span></code></p></li>
-<li><p><strong>min_length</strong> = <code class="docutils literal notranslate"><span class="pre">3</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -3040,7 +3152,10 @@ to reach S3 themselves.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#web-api-api">Web API (api)</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#runtime">Runtime</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-and-sessions">Security and sessions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-and-sessions">Security and sessions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#browser-sessions-and-cross-site-requests">Browser sessions and cross-site requests</a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced">Advanced</a></li>
 </ul>
 </li>
@@ -3125,6 +3240,10 @@ to reach S3 themselves.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractal.config.WebAPIConfig.user_session_cookie_partitioned"><code class="docutils literal notranslate"><span class="pre">WebAPIConfig.user_session_cookie_partitioned</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractal.config.WebAPIConfig.user_session_cookie_secure"><code class="docutils literal notranslate"><span class="pre">WebAPIConfig.user_session_cookie_secure</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractal.config.WebAPIConfig.user_session_cookie_httponly"><code class="docutils literal notranslate"><span class="pre">WebAPIConfig.user_session_cookie_httponly</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractal.config.WebAPIConfig.login_rate_limit_enabled"><code class="docutils literal notranslate"><span class="pre">WebAPIConfig.login_rate_limit_enabled</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractal.config.WebAPIConfig.login_rate_limit_max_attempts"><code class="docutils literal notranslate"><span class="pre">WebAPIConfig.login_rate_limit_max_attempts</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractal.config.WebAPIConfig.login_rate_limit_ip_max_attempts"><code class="docutils literal notranslate"><span class="pre">WebAPIConfig.login_rate_limit_ip_max_attempts</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractal.config.WebAPIConfig.login_rate_limit_window"><code class="docutils literal notranslate"><span class="pre">WebAPIConfig.login_rate_limit_window</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractal.config.WebAPIConfig.extra_flask_options"><code class="docutils literal notranslate"><span class="pre">WebAPIConfig.extra_flask_options</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractal.config.WebAPIConfig.extra_waitress_options"><code class="docutils literal notranslate"><span class="pre">WebAPIConfig.extra_waitress_options</span></code></a></li>
 </ul>

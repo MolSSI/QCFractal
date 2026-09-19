@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../_static/documentation_options.js?v=8f315b4b"></script>
+    <script src="../_static/documentation_options.js?v=01b81045"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Server administration via the CLI" href="cli_admin.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post11+g5ebbbe087" />
+  <meta name="docsearch:version" content="0.70.post37+gb963bfe89" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -574,7 +574,7 @@ PYTHON</label><div class="sd-tab-content docutils">
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Generated password:"</span><span class="p">,</span> <span class="n">generated_pw</span><span class="p">)</span>
 
 <span class="c1"># Or specify an initial password yourself</span>
-<span class="n">client</span><span class="o">.</span><span class="n">add_user</span><span class="p">(</span><span class="n">new_user</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">"ChangeMe123"</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">add_user</span><span class="p">(</span><span class="n">new_user</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">"ChangeMe12345!"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -611,7 +611,7 @@ password by omitting the username.</p>
 <label class="sd-tab-label" for="sd-tab-item-4">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Admin changes a user's password (returns the new password)</span>
-<span class="n">new_pw</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">change_user_password</span><span class="p">(</span><span class="s2">"alice"</span><span class="p">,</span> <span class="n">new_password</span><span class="o">=</span><span class="s2">"BetterPW!1"</span><span class="p">)</span>
+<span class="n">new_pw</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">change_user_password</span><span class="p">(</span><span class="s2">"alice"</span><span class="p">,</span> <span class="n">new_password</span><span class="o">=</span><span class="s2">"BetterPassw0rd!1"</span><span class="p">)</span>
 
 <span class="c1"># Ask the server to generate a random password</span>
 <span class="n">random_pw</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">change_user_password</span><span class="p">(</span><span class="s2">"alice"</span><span class="p">)</span>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=8f315b4b"></script>
+    <script src="../../_static/documentation_options.js?v=01b81045"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCPortal Clients" href="clients.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post11+g5ebbbe087" />
+  <meta name="docsearch:version" content="0.70.post37+gb963bfe89" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -559,7 +559,13 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="qcportal.auth.models.is_valid_password">
 <span class="sig-name descname"><span class="pre">is_valid_password</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">password</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#is_valid_password"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.is_valid_password" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Checks that a password is acceptable as a <em>new</em> password</p>
+<p>This is the password policy applied when a password is being set (adding a user or
+changing a password). It is deliberately <em>not</em> applied when verifying a password at
+login time – see the verification-time checks in the user socket – since tightening
+this policy would otherwise lock out existing users with older, weaker passwords.</p>
+<p>Raises an InvalidPasswordError if the password is not acceptable.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>password</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
 </dd>
