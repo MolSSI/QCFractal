@@ -78,3 +78,20 @@ def test_manager_config_durations(tmp_path):
     manager_config = FractalComputeConfig(base_folder=base_folder, **base_config)
     assert manager_config.update_frequency == 278409
     assert manager_config.max_idle_time == 121217
+
+
+def test_manager_config_api_token():
+    # An api_token is accepted for server authentication
+    base = copy.deepcopy(_base_config)
+    base["server"]["api_token"] = "qcf_sometoken"
+    config = FractalComputeConfig(base_folder="/tmp", **base)
+    assert config.server.api_token == "qcf_sometoken"
+    assert config.server.username is None
+
+
+def test_manager_config_api_token_mutually_exclusive():
+    base = copy.deepcopy(_base_config)
+    base["server"]["api_token"] = "qcf_sometoken"
+    base["server"]["username"] = "bill"
+    with pytest.raises(ValueError, match="not both"):
+        FractalComputeConfig(base_folder="/tmp", **base)

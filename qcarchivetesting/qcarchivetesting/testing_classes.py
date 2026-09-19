@@ -321,7 +321,7 @@ class QCATestingSnowflake(FractalSnowflake):
         client.encoding = self.encoding
         return client
 
-    def manager_client(self, name_data: ManagerName, username=None, password=None) -> ManagerClient:
+    def manager_client(self, name_data: ManagerName, username=None, password=None, api_token=None) -> ManagerClient:
         """
         Obtain a manager client connected to this snowflake
 
@@ -339,5 +339,5 @@ class QCATestingSnowflake(FractalSnowflake):
         """
 
         # Now that we know it's up, create a manager client
-        client = ManagerClient(name_data, self.get_uri(), username=username, password=password)
+        client = ManagerClient(name_data, self.get_uri(), username=username, password=password, api_token=api_token)
         return client

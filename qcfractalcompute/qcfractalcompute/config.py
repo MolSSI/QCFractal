@@ -150,8 +150,8 @@ class FractalServerSettings(QCFComputeConfigBase):
     can be changed, but only once the Manager is shutdown and the settings changed. Multiple Managers however can be
     started in parallel with each other, but must be done as separate calls to the CLI.
 
-    Caution: The password here is written in plain text, so it is up to the owner/writer of the configuration file
-    to ensure its security.
+    Caution: The password or API token here is written in plain text, so it is up to the owner/writer of the
+    configuration file to ensure its security.
     """
 
     fractal_uri: str
@@ -165,8 +165,19 @@ class FractalServerSettings(QCFComputeConfigBase):
     password: str | None = None
     """Password to authenticate to the Fractal Server with (alongside the `username`)"""
 
+    api_token: str | None = None
+    """A long-lived API token to authenticate with, instead of a username and password. Mutually exclusive with
+    them. A revocable, individually-attributable token is preferable to a shared account password for a manager.
+    """
+
     verify: bool = True
     """If True, verify SSL certificate of the server"""
+
+    @model_validator(mode="after")
+    def _check_credentials(self):
+        if self.api_token is not None and (self.username is not None or self.password is not None):
+            raise ValueError("Provide either an api_token or a username/password, not both")
+        return self
 
 
 class FractalComputeConfig(BaseSettings):
