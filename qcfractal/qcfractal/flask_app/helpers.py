@@ -10,7 +10,8 @@ from flask_jwt_extended import (
 )
 
 from qcfractal import __version__ as qcfractal_version
-from qcfractal.flask_app import storage_socket
+from qcfractal.flask_app import storage_socket, login_rate_limiter
+from qcfractal.flask_app.csrf import check_csrf
 from qcportal.auth import UserInfo
 from qcportal.exceptions import AuthenticationFailure
 
@@ -86,31 +87,55 @@ def login_user() -> UserInfo:
         current_app.logger.info(f"No password provided for login of user {username}")
         raise AuthenticationFailure("No password provided for login")
 
+    # Reject the attempt outright if this client/username has failed too many times recently
+    login_rate_limiter.check(username)
+
     try:
         user_info = storage_socket.users.authenticate(username, password)
-
-        # Used for logging (in the after_request_func)
-        g.user_id = user_info.id
-
-        return user_info
-
     except AuthenticationFailure as e:
+        login_rate_limiter.record_failure(username)
         current_app.logger.info(f"Authentication failed for user {username}: {str(e)}")
         raise
 
+    # Successful login clears the failure counter for this client/username
+    login_rate_limiter.record_success(username)
+
+    # Used for logging (in the after_request_func)
+    g.user_id = user_info.id
+
+    return user_info
+
 
 def login_user_session() -> UserInfo:
-    # Raises exception on invalid username, password, etc
-    # Submitted user/password are stored in the flask request object
-    session.clear()
+    """
+    Handle a browser (cookie-based session) login
+
+    Raises exception on invalid username, password, etc. Submitted user/password are stored in the
+    flask request object.
+    """
+
+    # A hostile site must not be able to log the browser into an account of its choosing (login CSRF)
+    check_csrf()
+
+    # Authenticate first. A failed login must not disturb any existing session
     user_info = login_user()
+
+    # Discard any existing session and start a new one under a fresh key. A key that existed
+    # before authentication must never become associated with the authenticated user
+    # (session fixation)
+    session.rotate()
     session["user_id"] = str(user_info.id)
 
     return user_info
 
 
 def logout_user_session():
-    session.clear()
+    # A hostile site must not be able to log the browser out (logout CSRF)
+    check_csrf()
+
+    # Clears the session data and revokes the key in the database. Since the session
+    # stays empty, no replacement session is created
+    session.rotate()
 
 
 def access_token_from_user(user_info: UserInfo):

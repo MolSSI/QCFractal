@@ -10,6 +10,9 @@ from flask_jwt_extended import JWTManager
 from werkzeug.local import LocalProxy
 from werkzeug.routing import IntegerConverter
 
+from .csrf import CSRF_HEADER
+from .rate_limit import FlaskLoginRateLimiter
+from .user_verify import FlaskUserVerifier
 from .flask_session import QCFFlaskSessionInterface
 from .flask_socket import FlaskStorageSocket
 from ..db_socket import SQLAlchemySocket
@@ -28,6 +31,12 @@ def _get_storage_socket() -> SQLAlchemySocket:
 storage_socket = LocalProxy(_get_storage_socket)
 
 jwt = JWTManager()
+
+# Flask extensions holding per-application state. The objects themselves are module-level
+# singletons, but the state they act on belongs to whichever app is handling the current request,
+# so two apps in one process never share login counters
+login_rate_limiter = FlaskLoginRateLimiter()
+user_verifier = FlaskUserVerifier()
 
 
 # Some routes allow for negative integers (ie, list index)
@@ -61,9 +70,8 @@ def create_flask_app(qcfractal_config: FractalConfig, finished_queue: Optional[q
     app.config["JWT_SECRET_KEY"] = qcfractal_config.api.jwt_secret_key
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = qcfractal_config.api.jwt_access_token_expires
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = qcfractal_config.api.jwt_refresh_token_expires
-    app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
+    app.config["JWT_TOKEN_LOCATION"] = ["headers"]
     app.config["SESSION_COOKIE_NAME"] = qcfractal_config.api.user_session_cookie_name
-    app.config["PERMANENT_SESSION_LIFETIME"] = qcfractal_config.api.user_session_max_age
 
     # Where we store user-uploaded files for processing
     app.config["UPLOAD_FOLDER"] = qcfractal_config.upload_directory
@@ -72,16 +80,35 @@ def create_flask_app(qcfractal_config: FractalConfig, finished_queue: Optional[q
     if qcfractal_config.api.extra_flask_options:
         app.config.update(**qcfractal_config.api.extra_flask_options)
 
+    # The session lifetime must agree with the periodic cleanup of expired sessions, which uses
+    # the configuration value, so it is not overridable through extra_flask_options
+    app.config["PERMANENT_SESSION_LIFETIME"] = qcfractal_config.api.user_session_max_age
+
     jwt.init_app(app)
 
     if qcfractal_config.cors.enabled:
         app.config["CORS_ORIGINS"] = qcfractal_config.cors.origins
         app.config["CORS_SUPPORTS_CREDENTIALS"] = qcfractal_config.cors.supports_credentials
-        app.config["CORS_HEADERS"] = qcfractal_config.cors.headers
+
+        # Content-Type is needed for JSON bodies, and the CSRF header for all cookie-authenticated
+        # requests that change state. Always allow those, in addition to whatever is configured
+        allow_headers = list(qcfractal_config.cors.headers)
+        for h in ("Content-Type", CSRF_HEADER):
+            if h.lower() not in {x.lower() for x in allow_headers}:
+                allow_headers.append(h)
+        app.config["CORS_ALLOW_HEADERS"] = allow_headers
+
+        if qcfractal_config.cors.methods:
+            app.config["CORS_METHODS"] = qcfractal_config.cors.methods
+
         CORS(app)
 
     # Initialize the database socket, API logger, and view handler
     app_storage_sockets.init_app(app, finished_queue=finished_queue)
+
+    # Login rate limiting state belongs to this app, not to the process
+    login_rate_limiter.init_app(app)
+    user_verifier.init_app(app)
 
     # Initialize the session interface after the storage socket
     app.session_interface = QCFFlaskSessionInterface(app)

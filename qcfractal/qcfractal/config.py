@@ -295,17 +295,34 @@ class WebAPIConfig(QCFConfigBase):
     user_session_cookie_domain: str | None = None
     """Domain to use for the user-session cookie (for browser-based sessions)"""
 
-    user_session_cookie_samesite: str | None = None
-    """Set the SameSite flag for the user-session cookie (for browser-based sessions)"""
+    user_session_cookie_samesite: str | None = "Lax"
+    """Set the SameSite flag for the user-session cookie (for browser-based sessions). Use "None" (the string)
+    only for a browser client served from a different site, together with user_session_cookie_secure"""
 
     user_session_cookie_partitioned: bool = False
     """Use the Partitioned flag for the user-session cookie (for browser-based sessions)"""
 
-    user_session_cookie_secure: bool = False
-    """Use Secure flag for the user-session cookie (for browser-based sessions)"""
+    user_session_cookie_secure: bool = True
+    """Use the Secure flag for the user-session cookie (for browser-based sessions). Browsers only send
+    the cookie over HTTPS - set to false only if the server is deliberately served over plain HTTP"""
 
-    user_session_cookie_httponly: bool = False
-    """Use Secure flag for the user-session cookie (for browser-based sessions)"""
+    user_session_cookie_httponly: bool = True
+    """Use the HttpOnly flag for the user-session cookie (for browser-based sessions), which hides the
+    session key from javascript"""
+
+    login_rate_limit_enabled: bool = True
+    """Whether to limit the rate of failed login attempts (recommended)"""
+
+    login_rate_limit_max_attempts: int = 10
+    """Maximum number of failed login attempts for a single username from a single client address
+    within the rate limit window before further attempts are rejected"""
+
+    login_rate_limit_ip_max_attempts: int = 50
+    """Maximum number of failed login attempts from a single client address (across all usernames)
+    within the rate limit window before further attempts are rejected"""
+
+    login_rate_limit_window: int = 60
+    """The sliding time window (in seconds) over which failed login attempts are counted"""
 
     extra_flask_options: dict[str, Any] | None = None
     """Any additional options to pass directly to flask"""
@@ -317,6 +334,7 @@ class WebAPIConfig(QCFConfigBase):
         "jwt_access_token_expires",
         "jwt_refresh_token_expires",
         "user_session_max_age",
+        "login_rate_limit_window",
         mode="before",
     )
     @classmethod
@@ -401,6 +419,17 @@ class CORSconfig(QCFConfigBase):
 
     methods: list[str] = []
     """HTTP methods permitted for cross-origin requests. Empty means the CORS default."""
+
+    @model_validator(mode="after")
+    def _check_credentials_origins(self):
+        # Allowing credentials from any origin lets any website make cookie-authenticated requests
+        if self.enabled and self.supports_credentials:
+            if any(o.strip() == "*" for o in self.origins):
+                raise ValueError(
+                    "cors.origins may not contain '*' when cors.supports_credentials is enabled. "
+                    "List the exact origins that may make credentialed requests."
+                )
+        return self
 
 
 class FractalConfig(BaseSettings):

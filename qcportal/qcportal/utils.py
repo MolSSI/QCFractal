@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import collections
+import threading
 import concurrent.futures
 import datetime
 import functools
@@ -499,31 +500,46 @@ def time_based_cache(seconds: int = 10, maxsize: Optional[int] = None):
     def decorator(func):
         cache = collections.OrderedDict()
 
+        # The cache may be shared across threads (e.g. multiple waitress worker threads), so all
+        # access to it must be serialized - otherwise the cleanup below can iterate the dict while
+        # another thread mutates it (RuntimeError: dictionary changed size during iteration)
+        lock = threading.Lock()
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             key = (args, frozenset(kwargs.items()))
             now = time.time()
 
-            # Clean up old items
-            expiration_time = now - seconds
-            keys_to_delete = [k for k, (timestamp, _) in cache.items() if timestamp < expiration_time]
-            for k in keys_to_delete:
-                del cache[k]
+            with lock:
+                # Clean up old items
+                expiration_time = now - seconds
+                keys_to_delete = [k for k, (timestamp, _) in cache.items() if timestamp < expiration_time]
+                for k in keys_to_delete:
+                    del cache[k]
 
-            # Return from cache if valid
-            if key in cache:
-                return cache[key][1]
+                # Return from cache if valid
+                if key in cache:
+                    return cache[key][1]
 
-            # Compute and store result
+            # Compute outside the lock - func may be slow (e.g. a database query), and holding the
+            # lock across it would serialize all callers. A concurrent duplicate computation is
+            # harmless (last writer wins)
             result = func(*args, **kwargs)
-            cache[key] = (now, result)
 
-            # Enforce max size
-            if len(cache) > maxsize:
-                cache.popitem(last=False)  # Remove oldest
+            with lock:
+                cache[key] = (now, result)
+
+                # Enforce max size
+                if len(cache) > maxsize:
+                    cache.popitem(last=False)  # Remove oldest
 
             return result
 
+        def cache_clear():
+            with lock:
+                cache.clear()
+
+        wrapper.cache_clear = cache_clear
         return wrapper
 
     return decorator

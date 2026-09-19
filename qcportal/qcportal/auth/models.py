@@ -10,22 +10,64 @@ class AuthTypeEnum(str, Enum):
     password = "password"
 
 
+# Minimum length (in characters) required of a newly-set password
+MIN_PASSWORD_LENGTH = 12
+
+# bcrypt only considers the first 72 bytes of a password, and bcrypt >= 5.0 raises
+# an error rather than silently truncating. So new passwords are capped here.
+MAX_PASSWORD_BYTES = 72
+
+
 def is_valid_password(password: str) -> None:
+    """
+    Checks that a password is acceptable as a *new* password
+
+    This is the password policy applied when a password is being set (adding a user or
+    changing a password). It is deliberately *not* applied when verifying a password at
+    login time -- see the verification-time checks in the user socket -- since tightening
+    this policy would otherwise lock out existing users with older, weaker passwords.
+
+    Raises an InvalidPasswordError if the password is not acceptable.
+    """
+
+    if not isinstance(password, str):
+        raise InvalidPasswordError("Password must be a string")
+
     # Null character not allowed
     if "\x00" in password:
         raise InvalidPasswordError("Password contains a NUL character")
 
-    # Password should be somewhat long
     if len(password) == 0:
         raise InvalidPasswordError("Password is empty")
 
-    if len(password) < 6:
-        raise InvalidPasswordError("Password must contain at least 6 characters")
+    # Password should be somewhat long
+    if len(password) < MIN_PASSWORD_LENGTH:
+        raise InvalidPasswordError(f"Password must contain at least {MIN_PASSWORD_LENGTH} characters")
+
+    # ... but not longer than what bcrypt is able to handle
+    if len(password.encode("UTF-8")) > MAX_PASSWORD_BYTES:
+        raise InvalidPasswordError(
+            f"Password must be at most {MAX_PASSWORD_BYTES} bytes when encoded as UTF-8 "
+            "(note that non-ASCII characters take up more than one byte)"
+        )
+
+
+# Longest permitted username. Usernames are echoed into logs, error messages and JWT claims, and
+# are accepted from unauthenticated callers at login, so an unbounded one is a way to make the
+# server do unbounded work. This is generous compared to any real username
+MAX_USERNAME_LENGTH = 64
 
 
 def is_valid_username(username: str) -> None:
+    if not isinstance(username, str):
+        raise InvalidUsernameError("Username must be a string")
+
     if len(username) == 0:
         raise InvalidUsernameError("Username is empty")
+
+    # Deliberately does not echo the username back - it is attacker-controlled at login
+    if len(username) > MAX_USERNAME_LENGTH:
+        raise InvalidUsernameError(f"Username must be at most {MAX_USERNAME_LENGTH} characters")
 
     # Null character not allowed
     if "\x00" in username:
