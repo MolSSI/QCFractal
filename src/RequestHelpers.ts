@@ -60,6 +60,9 @@ export async function rawRequest<T>(
         throw new qcpExceptions.AuthenticationError(
           `API request failed (401 ${response.statusText}) - ${message}`,
         );
+      } else if (response.status === 429) {
+        // Rate limited (e.g. too many failed logins). The server sends a human-readable message
+        throw new qcpExceptions.RateLimitError(message);
       } else if (response.status === 403) {
         throw new qcpExceptions.AuthorizationError(
           `API request failed (403 ${response.statusText}) - ${message}`,
