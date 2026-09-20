@@ -305,8 +305,8 @@ def test_api_token_cannot_change_password(secure_snowflake):
     assert r.status_code == 403
 
 
-def test_api_token_can_still_list_and_delete(secure_snowflake):
-    # Listing and deleting tokens is still allowed under token auth - only creation is blocked
+def test_api_token_can_list_but_not_delete(secure_snowflake):
+    # Under token auth, listing tokens is allowed but creating and deleting are not
     uri = secure_snowflake.get_uri()
     raw, info = _mint_token(secure_snowflake, "admin_user")
 
@@ -314,7 +314,14 @@ def test_api_token_can_still_list_and_delete(secure_snowflake):
     assert r.status_code == 200
 
     r = requests.delete(f"{uri}/api/v1/me/tokens/{info['id']}", headers=_auth(raw))
-    assert r.status_code == 200
+    assert r.status_code == 403
+
+    # An admin token also cannot delete another user's token
+    other_raw, other_info = _mint_token(secure_snowflake, "read_user")
+    r = requests.delete(
+        f"{uri}/api/v1/users/read_user/tokens/{other_info['id']}", headers=_auth(raw)
+    )
+    assert r.status_code == 403
 
 
 def test_password_auth_can_still_create_token(secure_snowflake):
@@ -331,4 +338,61 @@ def test_password_auth_can_still_create_token(secure_snowflake):
         headers={"Authorization": f"Bearer {jwt}", "Content-Type": "application/json"},
         data='{"name": "from_jwt"}',
     )
+    assert r.status_code == 200
+
+
+def test_api_token_cannot_administer_users(secure_snowflake):
+    # An admin token must not be able to create/modify/delete user accounts - that would be a
+    # persistence path around token revocation (mint a new admin with a known password)
+    import json
+
+    uri = secure_snowflake.get_uri()
+    raw, _ = _mint_token(secure_snowflake, "admin_user")
+    h = {**_auth(raw), "Content-Type": "application/json"}
+
+    # Create a user (body is a (UserInfo, password) tuple on the wire)
+    new_user = {
+        "username": "sneaky_admin",
+        "role": "admin",
+        "enabled": True,
+        "fullname": "",
+        "organization": "",
+        "email": "",
+    }
+    r = requests.post(f"{uri}/api/v1/users", headers=h, data=json.dumps([new_user, "a_password_123"]))
+    assert r.status_code == 403
+
+    # Modify a user
+    read_user = requests.get(f"{uri}/api/v1/users/read_user", headers=_auth(raw)).json()
+    r = requests.patch(f"{uri}/api/v1/users", headers=h, data=json.dumps(read_user))
+    assert r.status_code == 403
+
+    # Delete a user
+    r = requests.delete(f"{uri}/api/v1/users/read_user", headers=_auth(raw))
+    assert r.status_code == 403
+
+    # ... and the sneaky account was never created
+    assert requests.get(f"{uri}/api/v1/users/sneaky_admin", headers=_auth(raw)).status_code in (400, 404)
+
+
+def test_password_auth_can_still_administer_users(secure_snowflake):
+    # The block is specific to token auth: an admin JWT can still manage users
+    import json
+
+    uri = secure_snowflake.get_uri()
+    jwt = requests.post(
+        f"{uri}/auth/v1/login",
+        json={"username": "admin_user", "password": test_users["admin_user"]["pw"]},
+    ).json()["access_token"]
+    h = {"Authorization": f"Bearer {jwt}", "Content-Type": "application/json"}
+
+    new_user = {
+        "username": "legit_new_user",
+        "role": "read",
+        "enabled": True,
+        "fullname": "",
+        "organization": "",
+        "email": "",
+    }
+    r = requests.post(f"{uri}/api/v1/users", headers=h, data=json.dumps([new_user, "a_password_123"]))
     assert r.status_code == 200

@@ -248,7 +248,7 @@ class APIToken(BaseModel):
     """When the token expires, or null if it never expires"""
 
     last_used_at: datetime | None = None
-    """Approximate time the token was last used, or null if it has never been used"""
+    """Approximate time the token was last presented on a request, or null if never used"""
 
     model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
 

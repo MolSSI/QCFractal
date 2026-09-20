@@ -92,6 +92,7 @@ def list_users_v1() -> list[dict[str, Any]]:
 
 @api_v1.route("/users", methods=["POST"])
 @check_permissions("users", "add", True)
+@deny_api_token_auth()
 @serialization()
 def add_user_v1(body_data: tuple[UserInfo, str | None]) -> None:
     user_info, password = body_data
@@ -114,6 +115,7 @@ def get_my_user_v1() -> dict[str, Any]:
 
 @api_v1.route("/users", methods=["PATCH"])
 @check_permissions("users", "modify", True)
+@deny_api_token_auth()
 @serialization()
 def modify_user_v1(body_data: UserInfo) -> None:
     return storage_socket.users.modify(body_data, as_admin=True)
@@ -150,6 +152,7 @@ def change_my_password_v1(body_data: str | None) -> None:
 
 @api_v1.route("/users/<username_or_id>", methods=["DELETE"])
 @check_permissions("users", "delete", True)
+@deny_api_token_auth()
 @serialization()
 def delete_user_v1(username_or_id: int | str) -> None:
     if is_same_user(username_or_id):
@@ -249,6 +252,7 @@ def create_user_api_token_v1(username_or_id: int | str, body_data: APITokenCreat
 
 @api_v1.route("/users/<username_or_id>/tokens/<int:token_id>", methods=["DELETE"])
 @check_permissions("users", "modify", True)
+@deny_api_token_auth()
 @serialization()
 def delete_user_api_token_v1(username_or_id: int | str, token_id: int) -> None:
     user_id = storage_socket.users.get_optional_user_id(username_or_id)
@@ -275,6 +279,7 @@ def create_my_api_token_v1(body_data: APITokenCreateBody) -> NewAPIToken:
 
 @api_v1.route("/me/tokens/<int:token_id>", methods=["DELETE"])
 @check_permissions("me", "modify", True)
+@deny_api_token_auth()
 @serialization()
 def delete_my_api_token_v1(token_id: int) -> None:
     # Always constrained to the caller, so one user cannot revoke another's token via /me

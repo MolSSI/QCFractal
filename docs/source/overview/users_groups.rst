@@ -110,12 +110,13 @@ A few things are worth knowing:
 time each request is made - there is no per-token scoping. Changing the user's role, or
 disabling the account, changes what the token can do (within a few seconds; see below).
 
-**A token cannot create tokens or change the password.** Two actions are refused when a
-request is authenticated by a token, and require a username/password (or browser) login
-instead: creating another API token, and changing the account password. This keeps revocation
-meaningful - a leaked token cannot mint fresh tokens to outlive the one you revoke, nor lock
-the owner out. (A token can still list and delete tokens.) This matches platforms such as
-GitHub, where tokens are created only through an interactive login.
+**A token cannot manage credentials or accounts.** Several actions are refused when a request
+is authenticated by a token, and require a username/password (or browser) login instead:
+creating or deleting API tokens, changing the account password, and creating, modifying, or
+deleting users. This keeps revocation meaningful - a leaked token cannot mint fresh tokens,
+create a new account, or lock the owner out to outlive the token you revoke. (A token can
+still *list* tokens.) This matches platforms such as GitHub, where tokens and accounts are
+managed only through an interactive login.
 
 **A token has a name.** Each token is created with a name that must be unique among your
 tokens (``laptop``, ``ci``). It identifies the token in a listing and when revoking.

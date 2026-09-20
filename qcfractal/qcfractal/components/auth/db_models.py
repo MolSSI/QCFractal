@@ -146,7 +146,9 @@ class UserAPITokenORM(BaseORM):
     # Null means the token never expires
     expires_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
-    # Approximate (throttled) time of last successful use; null if never used
+    # Approximate (throttled) time the token was last presented and passed token verification;
+    # null if never used. Note this records presentation of a valid token, even if the request was
+    # ultimately rejected (e.g. the owner is disabled) - it answers "is this token still in use".
     last_used_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     __table_args__ = (
