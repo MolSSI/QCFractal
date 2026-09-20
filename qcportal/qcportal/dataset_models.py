@@ -2727,10 +2727,10 @@ class DatasetFetchRecordsBody(RestModelBase):
 class DatasetCreateViewBody(RestModelBase):
     description: str
     provenance: dict[str, Any]
-    status: list[RecordStatusEnum] | None = (None,)
-    include: list[str] | None = (None,)
-    exclude: list[str] | None = (None,)
-    include_children: bool = (True,)
+    status: list[RecordStatusEnum] | None = None
+    include: list[str] | None = None
+    exclude: list[str] | None = None
+    include_children: bool = True
 
 
 class DatasetSubmitBody(RestModelBase):
