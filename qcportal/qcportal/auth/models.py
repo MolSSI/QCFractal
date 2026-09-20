@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from enum import Enum
 
@@ -11,8 +12,33 @@ from ..exceptions import InvalidPasswordError, InvalidUsernameError, InvalidGrou
 # it as a JWT. Shared here so the client and server agree on it.
 API_TOKEN_PREFIX = "qcf_"
 
-# Longest description accepted for an API token
-MAX_API_TOKEN_DESCRIPTION_LENGTH = 256
+# Longest name accepted for an API token
+MAX_API_TOKEN_NAME_LENGTH = 128
+
+# Longest string we will treat as a possible API token. A token is a fixed, known size; anything
+# much larger is malformed, and (on the server) hashing an unbounded header on every request would
+# be a cheap amplification vector.
+MAX_API_TOKEN_LENGTH = 128
+
+# The random part of a token is secrets.token_urlsafe output
+_API_TOKEN_BODY_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+
+
+def looks_like_api_token(raw: str) -> bool:
+    """
+    Returns whether a string is shaped like an API token
+
+    This is a cheap syntactic check (prefix, length, character set), shared by the client (to fail
+    fast before a network round trip) and the server (to reject obviously-bad input before hashing).
+    It says nothing about whether the token actually exists or is valid.
+    """
+
+    if not isinstance(raw, str) or not raw.startswith(API_TOKEN_PREFIX):
+        return False
+    if len(raw) > MAX_API_TOKEN_LENGTH:
+        return False
+    body = raw[len(API_TOKEN_PREFIX) :]
+    return bool(body) and bool(_API_TOKEN_BODY_RE.match(body))
 
 
 class AuthTypeEnum(str, Enum):
@@ -212,8 +238,8 @@ class APIToken(BaseModel):
     token_prefix: str
     """The first few characters of the token, for identifying it in a listing"""
 
-    description: str = ""
-    """The free-text description supplied when the token was created"""
+    name: str
+    """The name given to the token when it was created (unique among the user's tokens)"""
 
     created_at: datetime
     """When the token was created"""
@@ -250,8 +276,8 @@ class APITokenCreateBody(BaseModel):
     Options for creating a new API token
     """
 
-    description: str = Field("", max_length=MAX_API_TOKEN_DESCRIPTION_LENGTH)
-    """A free-text label to help identify the token later"""
+    name: str = Field(..., min_length=1, max_length=MAX_API_TOKEN_NAME_LENGTH)
+    """A name to identify the token. Must be unique among the user's tokens."""
 
     expires_at: AwareDatetime | None = None
     """When the token should expire. Must be timezone-aware. Null requests a non-expiring token,

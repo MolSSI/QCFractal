@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import datetime
 import hashlib
-import re
 import secrets
 import logging
 from datetime import timedelta
@@ -11,7 +10,14 @@ from typing import TYPE_CHECKING, Tuple, List, Any, Dict, Optional, Union
 from sqlalchemy import select, delete, update, func, or_
 from sqlalchemy.dialects.postgresql import insert
 
-from qcportal.auth import UserInfo, API_TOKEN_PREFIX, MAX_API_TOKEN_DESCRIPTION_LENGTH
+from sqlalchemy.exc import IntegrityError
+
+from qcportal.auth import (
+    UserInfo,
+    API_TOKEN_PREFIX,
+    MAX_API_TOKEN_NAME_LENGTH,
+    looks_like_api_token,
+)
 from qcportal.exceptions import AuthenticationFailure, SecurityNotEnabledError, UserManagementError
 from qcportal.utils import now_at_utc
 from .db_models import UserORM, UserSessionORM, UserAPITokenORM
@@ -26,13 +32,6 @@ if TYPE_CHECKING:
 # Number of random bytes in an API token. 32 bytes = 256 bits, so guessing a token is infeasible
 _API_TOKEN_NBYTES = 32
 
-# Longest Authorization value we will hash. A token is a fixed, known size; anything much larger is
-# malformed, and hashing an unbounded header on every request would be a cheap amplification vector
-_MAX_API_TOKEN_LENGTH = 128
-
-# Characters allowed in the random part of a token (secrets.token_urlsafe output)
-_API_TOKEN_BODY_RE = re.compile(r"^[A-Za-z0-9_-]+$")
-
 # A single "qcf_" plus this many characters of the token are stored as a non-secret display prefix
 _API_TOKEN_PREFIX_LENGTH = 12
 
@@ -46,7 +45,7 @@ _API_TOKEN_LAST_USED_THROTTLE = datetime.timedelta(minutes=5)
 # A single message for every way a token can fail to authenticate. Deliberately uniform so that a
 # caller cannot tell "no such token" from "expired" from "malformed". Must not contain the substring
 # "Token has expired", which the qcportal client matches to trigger a JWT refresh
-_API_TOKEN_INVALID_MSG = "API token is not valid"
+_API_TOKEN_INVALID_MSG = "API token does not exist, is not valid, or is expired"
 
 
 def hash_api_token(raw_token: str) -> str:
@@ -409,7 +408,7 @@ class AuthSocket:
     def create_api_token(
         self,
         user_id: int,
-        description: str = "",
+        name: str,
         expires_at: Optional[datetime.datetime] = None,
         *,
         session: Optional[Session] = None,
@@ -417,18 +416,20 @@ class AuthSocket:
         """
         Creates a new API token for a user
 
-        Returns a tuple of (plaintext token, token metadata). The plaintext token is not stored and
-        cannot be recovered afterwards - only its hash is kept. The metadata is the public_dict of
-        the new token (never including the hash).
+        The name is required and must be unique among the user's tokens. Returns a tuple of
+        (plaintext token, token metadata). The plaintext token is not stored and cannot be recovered
+        afterwards - only its hash is kept. The metadata is the public_dict of the new token (never
+        including the hash).
 
-        Raises UserManagementError if the requested expiration violates the server policy, if the
-        description is too long, or if the user already has the maximum number of tokens.
+        Raises UserManagementError if the name is missing/too long or already in use, if the
+        requested expiration violates the server policy, or if the user already has the maximum
+        number of tokens.
         """
 
-        if len(description) > MAX_API_TOKEN_DESCRIPTION_LENGTH:
-            raise UserManagementError(
-                f"API token description must be at most {MAX_API_TOKEN_DESCRIPTION_LENGTH} characters"
-            )
+        if not name:
+            raise UserManagementError("An API token name is required")
+        if len(name) > MAX_API_TOKEN_NAME_LENGTH:
+            raise UserManagementError(f"API token name must be at most {MAX_API_TOKEN_NAME_LENGTH} characters")
 
         now = now_at_utc()
         stored_expires_at = self._resolve_api_token_expiration(expires_at, now)
@@ -459,13 +460,17 @@ class AuthSocket:
                 user_id=user_id,
                 token_hash=token_hash,
                 token_prefix=token_prefix,
-                description=description,
+                name=name,
                 created_at=now,
                 expires_at=stored_expires_at,
                 last_used_at=None,
             )
             session.add(token_orm)
-            session.flush()
+            try:
+                session.flush()
+            except IntegrityError:
+                # The (user_id, name) unique constraint - the user already has a token by this name
+                raise UserManagementError(f"An API token named '{name}' already exists for this user")
 
             return raw_token, token_orm.public_dict()
 
@@ -478,7 +483,9 @@ class AuthSocket:
         disabled account or a changed role takes effect regardless of the token). It deliberately
         does not check whether the user is enabled - that is auth.verify's job.
 
-        The token->user mapping is never cached, so revoking a token takes effect immediately.
+        This is the authoritative, uncached lookup. The request path calls it through a short-lived
+        cache (see CachedTokenVerifier), so in practice revoking a token takes effect within the
+        cache lifetime rather than instantly.
 
         Raises AuthenticationFailure (with a single uniform message) for any invalid token - unknown,
         malformed, or expired - so that a caller cannot distinguish these cases.
@@ -486,12 +493,7 @@ class AuthSocket:
 
         # Reject anything that is not shaped like one of our tokens before hashing. The length cap
         # in particular keeps an oversized Authorization header from being hashed on every request.
-        if not isinstance(raw_token, str) or not raw_token.startswith(API_TOKEN_PREFIX):
-            raise AuthenticationFailure(_API_TOKEN_INVALID_MSG)
-        if len(raw_token) > _MAX_API_TOKEN_LENGTH:
-            raise AuthenticationFailure(_API_TOKEN_INVALID_MSG)
-        body = raw_token[len(API_TOKEN_PREFIX) :]
-        if not body or not _API_TOKEN_BODY_RE.match(body):
+        if not looks_like_api_token(raw_token):
             raise AuthenticationFailure(_API_TOKEN_INVALID_MSG)
 
         token_hash = hash_api_token(raw_token)

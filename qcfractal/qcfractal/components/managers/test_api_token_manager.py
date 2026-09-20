@@ -9,7 +9,7 @@ def test_manager_client_api_token(secure_snowflake):
     # Mint a compute-role token
     socket = secure_snowflake.get_storage_socket()
     compute_user_id = socket.users.get("compute_user")["id"]
-    raw, _ = socket.auth.create_api_token(compute_user_id, description="a manager")
+    raw, _ = socket.auth.create_api_token(compute_user_id, "a manager")
 
     mname = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-9999")
     mclient = secure_snowflake.manager_client(mname, api_token=raw)

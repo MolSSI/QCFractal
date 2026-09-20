@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 from qcfractal.components.auth.auth_socket import hash_api_token, _MAX_API_TOKENS_PER_USER
 from qcfractal.components.auth.db_models import UserAPITokenORM
-from qcportal.auth import API_TOKEN_PREFIX, MAX_API_TOKEN_DESCRIPTION_LENGTH
+from qcportal.auth import API_TOKEN_PREFIX, MAX_API_TOKEN_NAME_LENGTH
 from qcportal.auth.models import UserInfo
 from qcportal.exceptions import AuthenticationFailure, UserManagementError
 from qcportal.utils import now_at_utc
@@ -26,10 +26,10 @@ def _add_user(storage_socket: SQLAlchemySocket, username: str = "test_user", rol
 def test_api_token_socket_create_verify(storage_socket: SQLAlchemySocket):
     user_id = _add_user(storage_socket)
 
-    raw, info = storage_socket.auth.create_api_token(user_id, description="laptop")
+    raw, info = storage_socket.auth.create_api_token(user_id, "laptop")
     assert raw.startswith(API_TOKEN_PREFIX)
     assert info["user_id"] == user_id
-    assert info["description"] == "laptop"
+    assert info["name"] == "laptop"
     assert info["expires_at"] is None
     assert info["last_used_at"] is None
     # The stored prefix really is a prefix of the plaintext token
@@ -42,7 +42,7 @@ def test_api_token_socket_create_verify(storage_socket: SQLAlchemySocket):
 
 def test_api_token_socket_no_secret_in_listing(storage_socket: SQLAlchemySocket):
     user_id = _add_user(storage_socket)
-    raw, info = storage_socket.auth.create_api_token(user_id)
+    raw, info = storage_socket.auth.create_api_token(user_id, "t")
 
     listed = storage_socket.auth.list_api_tokens(user_id)
     assert len(listed) == 1
@@ -59,7 +59,7 @@ def test_api_token_socket_no_secret_in_listing(storage_socket: SQLAlchemySocket)
 
 def test_api_token_socket_plaintext_not_stored(storage_socket: SQLAlchemySocket):
     user_id = _add_user(storage_socket)
-    raw, info = storage_socket.auth.create_api_token(user_id)
+    raw, info = storage_socket.auth.create_api_token(user_id, "t")
 
     with storage_socket.session_scope(True) as session:
         orm = session.execute(select(UserAPITokenORM).where(UserAPITokenORM.id == info["id"])).scalar_one()
@@ -70,7 +70,7 @@ def test_api_token_socket_plaintext_not_stored(storage_socket: SQLAlchemySocket)
 
 def test_api_token_socket_uniqueness(storage_socket: SQLAlchemySocket):
     user_id = _add_user(storage_socket)
-    tokens = {storage_socket.auth.create_api_token(user_id)[0] for _ in range(25)}
+    tokens = {storage_socket.auth.create_api_token(user_id, f"tok{i}")[0] for i in range(25)}
     assert len(tokens) == 25
 
 
@@ -91,16 +91,16 @@ def test_api_token_socket_verify_bad(storage_socket: SQLAlchemySocket, bad_token
     # Every invalid token raises with a single, uniform message
     with pytest.raises(AuthenticationFailure) as exc:
         storage_socket.auth.verify_api_token(bad_token)
-    assert str(exc.value) == "API token is not valid"
+    assert str(exc.value) == "API token does not exist, is not valid, or is expired"
 
 
 def test_api_token_socket_verify_flipped(storage_socket: SQLAlchemySocket):
     user_id = _add_user(storage_socket)
-    raw, _ = storage_socket.auth.create_api_token(user_id)
+    raw, _ = storage_socket.auth.create_api_token(user_id, "t")
 
     # A valid token with one character changed must not verify
     flipped = raw[:-1] + ("A" if raw[-1] != "A" else "B")
-    with pytest.raises(AuthenticationFailure, match="API token is not valid"):
+    with pytest.raises(AuthenticationFailure, match="API token does not exist"):
         storage_socket.auth.verify_api_token(flipped)
 
 
@@ -114,27 +114,27 @@ def test_api_token_socket_uniform_message_is_not_token_expired(storage_socket: S
 
 def test_api_token_socket_revoked(storage_socket: SQLAlchemySocket):
     user_id = _add_user(storage_socket)
-    raw, info = storage_socket.auth.create_api_token(user_id)
+    raw, info = storage_socket.auth.create_api_token(user_id, "t")
 
     # Works before deletion
     storage_socket.auth.verify_api_token(raw)
 
     storage_socket.auth.delete_api_token(info["id"], user_id)
 
-    with pytest.raises(AuthenticationFailure, match="API token is not valid"):
+    with pytest.raises(AuthenticationFailure, match="API token does not exist"):
         storage_socket.auth.verify_api_token(raw)
 
 
 def test_api_token_socket_expired(storage_socket: SQLAlchemySocket):
     user_id = _add_user(storage_socket)
-    raw, info = storage_socket.auth.create_api_token(user_id)
+    raw, info = storage_socket.auth.create_api_token(user_id, "t")
 
     # Backdate the expiration directly
     with storage_socket.session_scope() as session:
         orm = session.execute(select(UserAPITokenORM).where(UserAPITokenORM.id == info["id"])).scalar_one()
         orm.expires_at = now_at_utc() - datetime.timedelta(seconds=1)
 
-    with pytest.raises(AuthenticationFailure, match="API token is not valid"):
+    with pytest.raises(AuthenticationFailure, match="API token does not exist"):
         storage_socket.auth.verify_api_token(raw)
 
 
@@ -142,7 +142,7 @@ def test_api_token_socket_delete_wrong_user(storage_socket: SQLAlchemySocket):
     user_a = _add_user(storage_socket, "user_a")
     user_b = _add_user(storage_socket, "user_b")
 
-    raw, info = storage_socket.auth.create_api_token(user_a)
+    raw, info = storage_socket.auth.create_api_token(user_a, "t")
 
     # user_b cannot delete user_a's token
     with pytest.raises(UserManagementError, match="not found"):
@@ -161,7 +161,7 @@ def test_api_token_socket_delete_nonexistent(storage_socket: SQLAlchemySocket):
 
 def test_api_token_socket_user_delete_cascade(storage_socket: SQLAlchemySocket):
     user_id = _add_user(storage_socket)
-    storage_socket.auth.create_api_token(user_id)
+    storage_socket.auth.create_api_token(user_id, "t")
     assert len(storage_socket.auth.list_api_tokens(user_id)) == 1
 
     storage_socket.users.delete(user_id)
@@ -171,24 +171,43 @@ def test_api_token_socket_user_delete_cascade(storage_socket: SQLAlchemySocket):
         assert remaining == []
 
 
-def test_api_token_socket_description_too_long(storage_socket: SQLAlchemySocket):
+def test_api_token_socket_name_required(storage_socket: SQLAlchemySocket):
     user_id = _add_user(storage_socket)
-    with pytest.raises(UserManagementError, match="description"):
-        storage_socket.auth.create_api_token(user_id, description="x" * (MAX_API_TOKEN_DESCRIPTION_LENGTH + 1))
+    with pytest.raises(UserManagementError, match="name is required"):
+        storage_socket.auth.create_api_token(user_id, "")
+
+
+def test_api_token_socket_name_too_long(storage_socket: SQLAlchemySocket):
+    user_id = _add_user(storage_socket)
+    with pytest.raises(UserManagementError, match="name must be at most"):
+        storage_socket.auth.create_api_token(user_id, "x" * (MAX_API_TOKEN_NAME_LENGTH + 1))
+
+
+def test_api_token_socket_name_unique_per_user(storage_socket: SQLAlchemySocket):
+    user_a = _add_user(storage_socket, "user_a")
+    user_b = _add_user(storage_socket, "user_b")
+
+    storage_socket.auth.create_api_token(user_a, "laptop")
+    # Same user, same name -> rejected
+    with pytest.raises(UserManagementError, match="already exists"):
+        storage_socket.auth.create_api_token(user_a, "laptop")
+
+    # A different user may reuse the name
+    storage_socket.auth.create_api_token(user_b, "laptop")
 
 
 def test_api_token_socket_count_limit(storage_socket: SQLAlchemySocket):
     user_id = _add_user(storage_socket)
-    for _ in range(_MAX_API_TOKENS_PER_USER):
-        storage_socket.auth.create_api_token(user_id)
+    for i in range(_MAX_API_TOKENS_PER_USER):
+        storage_socket.auth.create_api_token(user_id, f"tok{i}")
 
     with pytest.raises(UserManagementError, match="maximum number"):
-        storage_socket.auth.create_api_token(user_id)
+        storage_socket.auth.create_api_token(user_id, "one_too_many")
 
 
 def test_api_token_socket_last_used_throttled(storage_socket: SQLAlchemySocket):
     user_id = _add_user(storage_socket)
-    raw, info = storage_socket.auth.create_api_token(user_id)
+    raw, info = storage_socket.auth.create_api_token(user_id, "t")
 
     storage_socket.auth.verify_api_token(raw)
     first = storage_socket.auth.list_api_tokens(user_id)[0]["last_used_at"]
@@ -211,7 +230,7 @@ def test_api_token_socket_last_used_throttled(storage_socket: SQLAlchemySocket):
 
 def test_api_token_socket_create_nonexistent_user(storage_socket: SQLAlchemySocket):
     with pytest.raises(UserManagementError, match="does not exist"):
-        storage_socket.auth.create_api_token(999999)
+        storage_socket.auth.create_api_token(999999, "t")
 
 
 def _with_lifetimes(storage_socket, default, maximum):
@@ -233,7 +252,7 @@ def test_api_token_socket_default_lifetime(storage_socket: SQLAlchemySocket):
     saved = _with_lifetimes(storage_socket, default=3600, maximum=None)
     try:
         before = now_at_utc()
-        _, info = storage_socket.auth.create_api_token(user_id)
+        _, info = storage_socket.auth.create_api_token(user_id, "t")
         assert info["expires_at"] is not None
         # Roughly now + 1 hour
         delta = info["expires_at"] - before
@@ -249,7 +268,7 @@ def test_api_token_socket_max_lifetime_blocks_unlimited(storage_socket: SQLAlche
     saved = _with_lifetimes(storage_socket, default=None, maximum=86400)
     try:
         with pytest.raises(UserManagementError, match="api_token_max_lifetime"):
-            storage_socket.auth.create_api_token(user_id)
+            storage_socket.auth.create_api_token(user_id, "t")
     finally:
         _restore_lifetimes(storage_socket, saved)
 
@@ -260,7 +279,7 @@ def test_api_token_socket_max_lifetime_blocks_too_far(storage_socket: SQLAlchemy
     try:
         too_far = now_at_utc() + datetime.timedelta(days=30)
         with pytest.raises(UserManagementError, match="api_token_max_lifetime"):
-            storage_socket.auth.create_api_token(user_id, expires_at=too_far)
+            storage_socket.auth.create_api_token(user_id, "t", expires_at=too_far)
     finally:
         _restore_lifetimes(storage_socket, saved)
 
@@ -270,7 +289,7 @@ def test_api_token_socket_within_max_lifetime_ok(storage_socket: SQLAlchemySocke
     saved = _with_lifetimes(storage_socket, default=None, maximum=86400)
     try:
         ok = now_at_utc() + datetime.timedelta(hours=1)
-        _, info = storage_socket.auth.create_api_token(user_id, expires_at=ok)
+        _, info = storage_socket.auth.create_api_token(user_id, "t", expires_at=ok)
         assert info["expires_at"] is not None
     finally:
         _restore_lifetimes(storage_socket, saved)
@@ -280,11 +299,11 @@ def test_api_token_socket_naive_expiry_rejected(storage_socket: SQLAlchemySocket
     user_id = _add_user(storage_socket)
     naive = datetime.datetime(2030, 1, 1, 0, 0, 0)  # no tzinfo
     with pytest.raises(UserManagementError, match="timezone-aware"):
-        storage_socket.auth.create_api_token(user_id, expires_at=naive)
+        storage_socket.auth.create_api_token(user_id, "t", expires_at=naive)
 
 
 def test_api_token_socket_past_expiry_rejected(storage_socket: SQLAlchemySocket):
     user_id = _add_user(storage_socket)
     past = now_at_utc() - datetime.timedelta(seconds=1)
     with pytest.raises(UserManagementError, match="in the future"):
-        storage_socket.auth.create_api_token(user_id, expires_at=past)
+        storage_socket.auth.create_api_token(user_id, "t", expires_at=past)

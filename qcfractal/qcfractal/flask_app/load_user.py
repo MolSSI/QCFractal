@@ -7,7 +7,7 @@ from jwt.exceptions import ExpiredSignatureError, PyJWTError
 from werkzeug.exceptions import InternalServerError
 
 from qcfractal.flask_app.csrf import check_csrf
-from qcfractal.flask_app import storage_socket, user_verifier
+from qcfractal.flask_app import user_verifier, token_verifier
 from qcportal.auth import API_TOKEN_PREFIX
 from qcportal.exceptions import AuthorizationFailure, AuthenticationFailure
 
@@ -58,8 +58,8 @@ def load_logged_in_user():
             api_token = _bearer_api_token(authorization)
 
             if api_token is not None:
-                # Look up the token (uncached, so revocation is immediate), then re-verify the user
-                user_id, api_token_id = storage_socket.auth.verify_api_token(api_token)
+                # Look up the token (briefly cached), then re-verify the user below
+                user_id, api_token_id = token_verifier.verify(api_token)
                 auth_source = "api_token"
             else:
                 # verify_jwt_in_request(optional=True) returns None (rather than raising) when the

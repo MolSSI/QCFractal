@@ -112,14 +112,17 @@ disabling the account, changes what the token can do (within a few seconds; see 
 Because a token has the owner's full authority, it can, for example, change the owner's
 password or create further tokens.
 
+**A token has a name.** Each token is created with a name that must be unique among your
+tokens (``laptop``, ``ci``). It identifies the token in a listing and when revoking.
+
 **The token is shown once.** Creating a token returns the plaintext exactly once; the server
 stores only a hash and can never show it again. If it is lost, revoke it and create another.
 
-**Revocation is immediate; other changes are near-immediate.** Deleting a token stops it
-working on the very next request. Disabling the account or changing its role takes effect
-within a few seconds (the server briefly caches user verification). Note that revoking a
-token does not undo actions already taken with it, nor revoke other tokens it may have
-created.
+**Revocation and other changes take effect within a few seconds.** Deleting a token, disabling
+the account, or changing its role all take effect within a few seconds (the server briefly
+caches token and user verification to avoid a database round trip on every request). Note that
+revoking a token does not undo actions already taken with it, nor revoke other tokens it may
+have created.
 
 **Tokens are for programmatic clients, not browsers.** A browser client should use the
 session cookie, which is protected against cross-site use; a token pasted into browser
@@ -141,7 +144,7 @@ pass another user's name to manage theirs.
 
     .. code-block:: py3
 
-      >>> new_token = client.create_api_token(description="my laptop")
+      >>> new_token = client.create_api_token("my laptop")
       >>> new_token.token          # the plaintext - store it now, it is not shown again
       'qcf_...'
 

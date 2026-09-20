@@ -17,7 +17,7 @@ from packaging.version import parse as parse_version
 from tqdm import tqdm
 
 from . import __version__
-from .auth import API_TOKEN_PREFIX, UserInfo
+from .auth import API_TOKEN_PREFIX, UserInfo, looks_like_api_token
 from .exceptions import AuthenticationFailure
 from .serialization import serialize, deserialize
 
@@ -133,8 +133,11 @@ class PortalClientBase:
         if api_token is not None and (username is not None or password is not None):
             raise ValueError("Cannot provide both an api_token and a username/password")
 
-        if api_token is not None and not api_token.startswith(API_TOKEN_PREFIX):
-            raise ValueError(f"An API token must start with '{API_TOKEN_PREFIX}'")
+        if api_token is not None and not looks_like_api_token(api_token):
+            # A cheap client-side check (prefix, length, character set) so an obviously malformed
+            # token - e.g. a password pasted into the wrong field - fails immediately with a clear
+            # message rather than a 401 after a round trip. The server remains authoritative.
+            raise ValueError(f"That does not look like a valid API token (it should start with '{API_TOKEN_PREFIX}')")
 
         self._logger = logging.getLogger("PortalClientBase")
 
@@ -290,14 +293,15 @@ class PortalClientBase:
         if "address" not in data:
             raise KeyError("Config file must at least contain an address field.")
 
-        # A config file holding an API token contains a durable credential. Warn (but do not refuse)
-        # if it is readable by other users, mirroring the caution ssh applies to private keys.
-        if data.get("api_token") is not None and os.name == "posix":
+        # A config file holding a credential (an API token or a password) should not be readable by
+        # other users. Warn (but do not refuse), mirroring the caution ssh applies to private keys.
+        has_credential = data.get("api_token") is not None or data.get("password") is not None
+        if has_credential and os.name == "posix":
             try:
                 mode = os.stat(config_path).st_mode
                 if mode & 0o077:
                     logging.getLogger("PortalClientBase").warning(
-                        f"Config file {config_path} contains an API token but is readable by other "
+                        f"Config file {config_path} contains a credential but is readable by other "
                         "users. Consider 'chmod 600' on it."
                     )
             except OSError:
@@ -441,8 +445,11 @@ class PortalClientBase:
         """
         Populates self.user_id / self.username for an API-token client by asking the server
 
-        Called only in token mode. A 401 means the token is invalid and is raised; any other
-        failure (endpoint not reachable, security disabled) leaves the identity unset.
+        Called only in token mode. On a normal secure server /me is reachable by any authenticated
+        user, so this should succeed - the one exception is a server with security disabled, where
+        /me returns 401 and there is no identity to learn (but the token may still be usable for
+        the open endpoints). Any other error means either the token is bad or something is wrong, so
+        it is raised rather than silently producing an identity-less client.
         """
 
         full_uri = self.address + "api/v1/me"
@@ -450,24 +457,22 @@ class PortalClientBase:
         ret = self._send_request(req)
 
         if ret.status_code == 200:
-            try:
-                user_info = deserialize(ret.content, ret.headers["Content-Type"], UserInfo)
-                self.user_id = user_info.id
-                self.username = user_info.username
-            except Exception as e:
-                self._logger.debug(f"Could not parse /me response for API token client: {e}")
-        elif ret.status_code == 401:
-            msg = _response_msg(ret)
-            # A server with security disabled returns 401 from /me (it requires security), but the
-            # token is not necessarily bad - that is not a reason to fail construction. Only a
-            # genuine token rejection is fatal.
-            if "security disabled" in msg:
-                self._logger.debug("Server has security disabled; cannot determine identity from API token")
-            else:
-                raise AuthenticationFailure(f"API token is not valid: {msg}")
-        else:
-            # e.g. a proxy that does not expose /me. Not fatal.
-            self._logger.debug(f"Could not determine identity from API token (HTTP {ret.status_code})")
+            user_info = deserialize(ret.content, ret.headers["Content-Type"], UserInfo)
+            self.user_id = user_info.id
+            self.username = user_info.username
+            return
+
+        msg = _response_msg(ret)
+
+        # A server with security disabled returns 401 from /me (it requires security). The token is
+        # not necessarily bad, and there is simply no identity to learn - tolerate it.
+        if ret.status_code == 401 and "security disabled" in msg:
+            self._logger.debug("Server has security disabled; cannot determine identity from API token")
+            return
+
+        # Anything else (a genuine 401, a 404, a 5xx) is a real problem - do not hide it behind an
+        # identity-less client
+        raise AuthenticationFailure(f"Could not authenticate API token: {msg}")
 
     def _get_JWT_token(self) -> None:
         assert self._api_token is None, "JWT login attempted on an API-token client"

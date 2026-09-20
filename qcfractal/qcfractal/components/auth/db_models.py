@@ -138,8 +138,8 @@ class UserAPITokenORM(BaseORM):
     # it exists so a listing can be correlated with the token pasted into some config file
     token_prefix = Column(String, nullable=False)
 
-    # Free-text label supplied by the creator ("laptop", "CI at ...")
-    description = Column(String, nullable=False, server_default="")
+    # Human-readable name supplied by the creator ("laptop", "CI"). Unique per user.
+    name = Column(String, nullable=False)
 
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
 
@@ -151,6 +151,7 @@ class UserAPITokenORM(BaseORM):
 
     __table_args__ = (
         UniqueConstraint("token_hash", name="ux_user_api_token_token_hash"),
+        UniqueConstraint("user_id", "name", name="ux_user_api_token_user_id_name"),
         Index("ix_user_api_token_user_id", "user_id"),
     )
 
@@ -161,7 +162,7 @@ class UserAPITokenORM(BaseORM):
             "id": self.id,
             "user_id": self.user_id,
             "token_prefix": self.token_prefix,
-            "description": self.description,
+            "name": self.name,
             "created_at": self.created_at,
             "expires_at": self.expires_at,
             "last_used_at": self.last_used_at,

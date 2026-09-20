@@ -233,10 +233,11 @@ class QCATestingSnowflake(FractalSnowflake):
         # Rate limiters and verification caches are per-app, but a session-scoped snowflake keeps
         # the same app across tests. Clear both so a lockout, or a verification result for a user
         # id that the recreated database has reused, cannot carry into the next test
-        from qcfractal.flask_app.flask_app import login_rate_limiter, user_verifier
+        from qcfractal.flask_app.flask_app import login_rate_limiter, user_verifier, token_verifier
 
         login_rate_limiter.reset_all()
         user_verifier.reset_all()
+        token_verifier.reset_all()
 
     def get_storage_socket(self) -> SQLAlchemySocket:
         """

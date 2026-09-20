@@ -16,9 +16,9 @@ from qcportal.utils import now_at_utc
 def test_api_token_client_crud_me(secure_snowflake):
     client = secure_snowflake.user_client("admin_user")
 
-    new_token = client.create_api_token(description="laptop")
+    new_token = client.create_api_token(name="laptop")
     assert new_token.token.startswith(API_TOKEN_PREFIX)
-    assert new_token.info.description == "laptop"
+    assert new_token.info.name == "laptop"
 
     listed = client.list_api_tokens()
     assert len(listed) == 1
@@ -32,7 +32,7 @@ def test_api_token_client_crud_me(secure_snowflake):
 
 def test_api_token_client_connect(secure_snowflake):
     admin = secure_snowflake.user_client("admin_user")
-    new_token = admin.create_api_token(description="for connecting")
+    new_token = admin.create_api_token(name="for connecting")
 
     # Build a brand-new client authenticated only by the token
     token_client = secure_snowflake.client(api_token=new_token.token)
@@ -46,7 +46,7 @@ def test_api_token_client_connect(secure_snowflake):
 def test_api_token_client_role_inherited(secure_snowflake):
     admin = secure_snowflake.user_client("admin_user")
     read_user_id = admin.get_user("read_user").id
-    new_token = admin.create_api_token(description="ro", username_or_id="read_user")
+    new_token = admin.create_api_token(name="ro", username_or_id="read_user")
 
     token_client = secure_snowflake.client(api_token=new_token.token)
     # read role cannot list users
@@ -57,7 +57,7 @@ def test_api_token_client_role_inherited(secure_snowflake):
 def test_api_token_client_admin_for_other_user(secure_snowflake):
     admin = secure_snowflake.user_client("admin_user")
 
-    new_token = admin.create_api_token(description="on behalf", username_or_id="read_user")
+    new_token = admin.create_api_token(name="on behalf", username_or_id="read_user")
     assert new_token.info.user_id == admin.get_user("read_user").id
 
     listed = admin.list_api_tokens("read_user")
@@ -70,7 +70,7 @@ def test_api_token_client_admin_for_other_user(secure_snowflake):
 def test_api_token_client_nonadmin_cannot_manage_others(secure_snowflake):
     read_client = secure_snowflake.user_client("read_user")
     with pytest.raises(PortalRequestError, match="not authorized|Forbidden"):
-        read_client.create_api_token(description="x", username_or_id="admin_user")
+        read_client.create_api_token(name="x", username_or_id="admin_user")
 
 
 def test_api_token_client_maintain_can_list_not_mint(secure_snowflake):
@@ -81,12 +81,12 @@ def test_api_token_client_maintain_can_list_not_mint(secure_snowflake):
 
     # ... but not create them (users:modify is admin-only)
     with pytest.raises(PortalRequestError, match="not authorized|Forbidden"):
-        maintain.create_api_token(description="x", username_or_id="read_user")
+        maintain.create_api_token(name="x", username_or_id="read_user")
 
 
 def test_api_token_client_cannot_delete_others_via_me(secure_snowflake):
     admin = secure_snowflake.user_client("admin_user")
-    other = admin.create_api_token(description="admins token")
+    other = admin.create_api_token(name="admins token")
 
     read_client = secure_snowflake.user_client("read_user")
     # read_user tries to delete admin's token id through their own /me endpoint
@@ -100,12 +100,17 @@ def test_api_token_client_cannot_delete_others_via_me(secure_snowflake):
 
 def test_api_token_client_revocation(secure_snowflake):
     admin = secure_snowflake.user_client("admin_user")
-    new_token = admin.create_api_token()
+    new_token = admin.create_api_token("revoke_test")
 
     token_client = secure_snowflake.client(api_token=new_token.token)
     assert token_client.list_api_tokens() is not None
 
     admin.delete_api_token(new_token.info.id)
+
+    # Token verification is briefly cached; clear it to stand in for the cache expiring
+    from qcfractal.flask_app.flask_app import token_verifier
+
+    token_verifier.reset_all()
 
     with pytest.raises(PortalRequestError):
         token_client.list_api_tokens()
@@ -117,7 +122,7 @@ def test_api_token_client_mutual_exclusion(secure_snowflake):
 
 
 def test_api_token_client_bad_prefix(secure_snowflake):
-    with pytest.raises(ValueError, match="must start with"):
+    with pytest.raises(ValueError, match="does not look like a valid API token"):
         secure_snowflake.client(api_token="not-a-token")
 
 
@@ -130,7 +135,7 @@ def test_api_token_client_invalid_token_fails_fast(secure_snowflake):
 def test_api_token_client_datetime_roundtrip(secure_snowflake):
     admin = secure_snowflake.user_client("admin_user")
     expires = now_at_utc() + datetime.timedelta(days=1)
-    new_token = admin.create_api_token(description="expiring", expires_at=expires)
+    new_token = admin.create_api_token(name="expiring", expires_at=expires)
 
     assert new_token.info.expires_at is not None
     # Survives with timezone info

@@ -23,13 +23,14 @@ def upgrade():
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("token_hash", sa.String(), nullable=False),
         sa.Column("token_prefix", sa.String(), nullable=False),
-        sa.Column("description", sa.String(), server_default="", nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
         sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("expires_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("last_used_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(["user_id"], ["user.id"], ondelete="cascade"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("token_hash", name="ux_user_api_token_token_hash"),
+        sa.UniqueConstraint("user_id", "name", name="ux_user_api_token_user_id_name"),
     )
     op.create_index("ix_user_api_token_user_id", "user_api_token", ["user_id"], unique=False)
 

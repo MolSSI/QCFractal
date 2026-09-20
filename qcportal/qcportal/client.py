@@ -4141,7 +4141,7 @@ class PortalClient(PortalClientBase):
 
     def create_api_token(
         self,
-        description: str = "",
+        name: str,
         expires_at: datetime | None = None,
         username_or_id: int | str | None = None,
     ) -> NewAPIToken:
@@ -4153,8 +4153,8 @@ class PortalClient(PortalClientBase):
 
         Parameters
         ----------
-        description
-            A free-text label to help identify the token later
+        name
+            A name to identify the token. Must be unique among the user's tokens.
         expires_at
             When the token should expire (timezone-aware). If None, the server's default policy
             applies (which may be no expiration).
@@ -4162,7 +4162,7 @@ class PortalClient(PortalClientBase):
             The user to create the token for. If None, creates a token for the current user.
         """
 
-        body = APITokenCreateBody(description=description, expires_at=expires_at)
+        body = APITokenCreateBody(name=name, expires_at=expires_at)
 
         if username_or_id is None:
             return self.make_request(

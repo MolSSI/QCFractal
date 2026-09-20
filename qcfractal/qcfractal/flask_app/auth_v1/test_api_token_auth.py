@@ -13,11 +13,17 @@ from qcfractal.components.auth.db_models import UserAPITokenORM
 from sqlalchemy import select
 
 
-def _mint_token(snowflake, username, **kwargs):
+_mint_counter = [0]
+
+
+def _mint_token(snowflake, username, name=None, **kwargs):
     """Create a token for a user directly through the storage socket, returning the plaintext"""
     socket = snowflake.get_storage_socket()
     user_id = socket.users.get(username)["id"]
-    raw, info = socket.auth.create_api_token(user_id, **kwargs)
+    if name is None:
+        _mint_counter[0] += 1
+        name = f"token_{_mint_counter[0]}"
+    raw, info = socket.auth.create_api_token(user_id, name, **kwargs)
     return raw, info
 
 
@@ -94,17 +100,22 @@ def test_api_token_auth_bad_token_not_silently_anonymous(secure_snowflake_allow_
     assert r.status_code == 401
 
 
-def test_api_token_auth_revocation_immediate(secure_snowflake):
+def test_api_token_auth_revocation(secure_snowflake):
+    # Token verification is briefly cached, so revocation takes effect within the cache lifetime.
+    # (The socket-level test covers that the underlying lookup is immediate.) Here we clear the
+    # cache to stand in for its expiry and confirm the revoked token is then rejected.
+    from qcfractal.flask_app.flask_app import token_verifier
+
     uri = secure_snowflake.get_uri()
     raw, info = _mint_token(secure_snowflake, "admin_user")
 
     r = requests.get(f"{uri}/api/v1/information", headers=_auth(raw))
     assert r.status_code == 200
 
-    # Revoke and immediately try again - no waiting for a cache
     socket = secure_snowflake.get_storage_socket()
     user_id = socket.users.get("admin_user")["id"]
     socket.auth.delete_api_token(info["id"], user_id)
+    token_verifier.reset_all()  # stand in for the cache expiring
 
     r = requests.get(f"{uri}/api/v1/information", headers=_auth(raw))
     assert r.status_code == 401
@@ -193,7 +204,7 @@ def test_api_token_client_security_disabled_bootstrap(snowflake):
 
     socket.users.add(UserInfo(username="tok_owner", role="admin", enabled=True), password="a_password_123")
     user_id = socket.users.get("tok_owner")["id"]
-    raw, _ = socket.auth.create_api_token(user_id)
+    raw, _ = socket.auth.create_api_token(user_id, "bootstrap_test")
 
     # Construction must succeed even though /me is unavailable
     client = PortalClient(snowflake.get_uri(), api_token=raw)
