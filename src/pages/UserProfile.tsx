@@ -1,3 +1,4 @@
+import { validateNewPassword } from "../passwordPolicy.ts";
 import React, { useState } from "react";
 import { usePageTitle } from "../UsePageTitle.ts";
 import { useParams, useNavigate } from "react-router-dom";
@@ -41,7 +42,8 @@ import { RoleChip } from "../components/RoleChip";
 function getInitials(fullname?: string, username?: string): string {
   if (fullname) {
     const parts = fullname.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    if (parts.length >= 2)
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     return parts[0][0]?.toUpperCase() ?? "?";
   }
   return (username ?? "?").slice(0, 2).toUpperCase();
@@ -108,8 +110,18 @@ const ChangePasswordForm: React.FC<{ username: string; onClose: () => void }> = 
   const [success, setSuccess] = useState(false);
 
   const mismatch = next.length > 0 && confirm.length > 0 && next !== confirm;
-  const sameAsCurrent = current.length > 0 && next.length > 0 && next === current;
-  const canSubmit = current.length > 0 && next.length > 0 && next === confirm && !sameAsCurrent;
+  const sameAsCurrent =
+    current.length > 0 && next.length > 0 && next === current;
+  const policyError = next.length > 0 ? validateNewPassword(next) : undefined;
+  const newPwError = sameAsCurrent
+    ? "New password must differ from current password"
+    : policyError;
+  const canSubmit =
+    current.length > 0 &&
+    next.length > 0 &&
+    next === confirm &&
+    !sameAsCurrent &&
+    !policyError;
 
   const mutation = useMutation<void, Error, string>({
     mutationFn: async (pw) => {
@@ -171,8 +183,8 @@ const ChangePasswordForm: React.FC<{ username: string; onClose: () => void }> = 
             size="small"
             fullWidth
             autoComplete="new-password"
-            error={sameAsCurrent}
-            helperText={sameAsCurrent ? "New password must differ from current password" : " "}
+            error={!!newPwError}
+            helperText={newPwError ?? " "}
           />
           <TextField
             label="Confirm new password"
@@ -273,8 +285,9 @@ const AdminResetPasswordRow: React.FC<{ username: string }> = ({ username }) => 
             <DialogTitle>Reset password?</DialogTitle>
             <DialogContent>
               <DialogContentText>
-                This generates a new random password for <strong>{username}</strong> and
-                invalidates their current one. The new password is shown only once.
+                This generates a new random password for{" "}
+                <strong>{username}</strong> and invalidates their current one.
+                The new password is shown only once.
               </DialogContentText>
               {mutation.isError && (
                 <Alert severity="error" sx={{ mt: 2 }}>
