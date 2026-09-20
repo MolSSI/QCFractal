@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../../_static/documentation_options.js?v=af1710ac"></script>
+    <script src="../../../_static/documentation_options.js?v=7358b843"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Utilities and Miscellaneous" href="../utils_misc.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post42+g19df8f131" />
+  <meta name="docsearch:version" content="0.70.post48+g4d76150ed" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -2193,8 +2193,8 @@ of a record query and works with all kinds of records.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>client</strong> – QCPortal client object used to contact/retrieve data from the server</p></li>
 <li><p><strong>query_filters</strong> (<a class="reference internal" href="#qcportal.record_models.RecordQueryFilters" title="qcportal.record_models.RecordQueryFilters"><em>RecordQueryFilters</em></a>) – The actual query information to send to the server</p></li>
-<li><p><strong>record_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><em>Type</em></a><em>[</em><em>_Record_T</em><em>]</em>) – What type of record we are querying for</p></li>
-<li><p><strong>include</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><em>Iterable</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>record_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.14)"><em>Type</em></a><em>[</em><em>_Record_T</em><em>] </em><em>| </em><em>None</em>) – What type of record we are querying for. If None, records of all types are returned</p></li>
+<li><p><strong>include</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.14)"><em>Iterable</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>] </em><em>| </em><em>None</em>) – Additional fields to include in the returned records</p></li>
 </ul>
 </dd>
 </dl>
@@ -2204,6 +2204,11 @@ of a record query and works with all kinds of records.</p>
 <dt class="sig sig-object py" id="qcportal.record_models.RecordQueryIterator.reset">
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.record_models.RecordQueryIterator.reset" title="Link to this definition">#</a></dt>
 <dd><p>Starts retrieval of results from the beginning again</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -4590,17 +4595,17 @@ by a submit without duplicate checking.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.dataset_models.DatasetCreateViewBody.exclude" title="qcportal.dataset_models.DatasetCreateViewBody.exclude"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exclude</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">(None,)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.dataset_models.DatasetCreateViewBody.include" title="qcportal.dataset_models.DatasetCreateViewBody.include"><code class="xref py py-obj docutils literal notranslate"><span class="pre">include</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">(None,)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.dataset_models.DatasetCreateViewBody.include_children" title="qcportal.dataset_models.DatasetCreateViewBody.include_children"><code class="xref py py-obj docutils literal notranslate"><span class="pre">include_children</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
 <td><p>No</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">(True,)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.dataset_models.DatasetCreateViewBody.provenance" title="qcportal.dataset_models.DatasetCreateViewBody.provenance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">provenance</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code></a>]</p></td>
@@ -4610,7 +4615,7 @@ by a submit without duplicate checking.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.dataset_models.DatasetCreateViewBody.status" title="qcportal.dataset_models.DatasetCreateViewBody.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordStatusEnum</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">(None,)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 </tbody>
 </table>
