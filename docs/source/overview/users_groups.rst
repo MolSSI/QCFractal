@@ -109,8 +109,13 @@ A few things are worth knowing:
 **A token inherits the user's role.** It carries exactly the permissions of its owner at the
 time each request is made - there is no per-token scoping. Changing the user's role, or
 disabling the account, changes what the token can do (within a few seconds; see below).
-Because a token has the owner's full authority, it can, for example, change the owner's
-password or create further tokens.
+
+**A token cannot create tokens or change the password.** Two actions are refused when a
+request is authenticated by a token, and require a username/password (or browser) login
+instead: creating another API token, and changing the account password. This keeps revocation
+meaningful - a leaked token cannot mint fresh tokens to outlive the one you revoke, nor lock
+the owner out. (A token can still list and delete tokens.) This matches platforms such as
+GitHub, where tokens are created only through an interactive login.
 
 **A token has a name.** Each token is created with a name that must be unique among your
 tokens (``laptop``, ``ci``). It identifies the token in a listing and when revoking.

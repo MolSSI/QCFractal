@@ -146,6 +146,35 @@ def check_permissions(
     return decorate
 
 
+def deny_api_token_auth() -> Callable:
+    """
+    Route decorator that forbids the action when the request is authenticated by an API token
+
+    Some actions let a credential extend or entrench itself - creating another API token, or
+    changing the account password. Allowing an API token to do these would defeat token revocation:
+    a stolen token could mint fresh tokens (or lock out the owner) so that revoking the original no
+    longer cuts off access. These actions therefore require a stronger credential (a password login
+    or browser session), matching how platforms like GitHub only allow token creation interactively.
+
+    Must be applied *inside* ``check_permissions`` (below it in the decorator stack) so the route
+    still registers as having a permission check.
+    """
+
+    def decorate(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            if g.get("auth_source") == "api_token":
+                raise AuthorizationFailure(
+                    "This action cannot be performed when authenticated with an API token. "
+                    "Use a username and password."
+                )
+            return fn(*args, **kwargs)
+
+        return wrapper
+
+    return decorate
+
+
 def no_permission_required() -> Callable:
     """
     Mark a route as intentionally not requiring permission checks.

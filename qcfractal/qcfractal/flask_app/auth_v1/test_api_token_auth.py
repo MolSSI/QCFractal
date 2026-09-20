@@ -268,3 +268,67 @@ def test_api_token_auth_recorded_in_access_log(secure_snowflake):
         a for a in accesses if a["full_uri"].endswith("/information") and a["api_token_id"] is None
     ]
     assert len(info_via_jwt) >= 1
+
+
+def test_api_token_cannot_create_token(secure_snowflake):
+    # A token-authenticated request may not mint another token (would defeat revocation)
+    uri = secure_snowflake.get_uri()
+    raw, _ = _mint_token(secure_snowflake, "admin_user")
+
+    r = requests.post(
+        f"{uri}/api/v1/me/tokens",
+        headers={**_auth(raw), "Content-Type": "application/json"},
+        data='{"name": "sneaky"}',
+    )
+    assert r.status_code == 403
+    assert "API token" in r.json()["msg"]
+
+    # An admin token also cannot create a token for another user
+    r = requests.post(
+        f"{uri}/api/v1/users/read_user/tokens",
+        headers={**_auth(raw), "Content-Type": "application/json"},
+        data='{"name": "sneaky"}',
+    )
+    assert r.status_code == 403
+
+
+def test_api_token_cannot_change_password(secure_snowflake):
+    # A token-authenticated request may not change a password (persistence / lockout vector)
+    uri = secure_snowflake.get_uri()
+    raw, _ = _mint_token(secure_snowflake, "admin_user")
+
+    r = requests.put(
+        f"{uri}/api/v1/me/password",
+        headers={**_auth(raw), "Content-Type": "application/json"},
+        data="null",
+    )
+    assert r.status_code == 403
+
+
+def test_api_token_can_still_list_and_delete(secure_snowflake):
+    # Listing and deleting tokens is still allowed under token auth - only creation is blocked
+    uri = secure_snowflake.get_uri()
+    raw, info = _mint_token(secure_snowflake, "admin_user")
+
+    r = requests.get(f"{uri}/api/v1/me/tokens", headers=_auth(raw))
+    assert r.status_code == 200
+
+    r = requests.delete(f"{uri}/api/v1/me/tokens/{info['id']}", headers=_auth(raw))
+    assert r.status_code == 200
+
+
+def test_password_auth_can_still_create_token(secure_snowflake):
+    # The block is specific to token auth: a JWT (password) client creates tokens normally
+    uri = secure_snowflake.get_uri()
+    r = requests.post(
+        f"{uri}/auth/v1/login",
+        json={"username": "admin_user", "password": test_users["admin_user"]["pw"]},
+    )
+    jwt = r.json()["access_token"]
+
+    r = requests.post(
+        f"{uri}/api/v1/me/tokens",
+        headers={"Authorization": f"Bearer {jwt}", "Content-Type": "application/json"},
+        data='{"name": "from_jwt"}',
+    )
+    assert r.status_code == 200

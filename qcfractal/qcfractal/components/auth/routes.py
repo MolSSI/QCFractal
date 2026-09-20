@@ -3,7 +3,7 @@ from typing import Any
 from flask import g
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
-from qcfractal.flask_app.decorators import check_permissions, serialization
+from qcfractal.flask_app.decorators import check_permissions, serialization, deny_api_token_auth
 from qcportal.auth import UserInfo, GroupInfo, APIToken, NewAPIToken, APITokenCreateBody
 from qcportal.exceptions import (
     UserManagementError,
@@ -134,6 +134,7 @@ def modify_my_user_v1(body_data: UserInfo) -> None:
 
 @api_v1.route("/users/<username_or_id>/password", methods=["PUT"])
 @check_permissions("users", "modify", True)
+@deny_api_token_auth()
 @serialization()
 def change_password_v1(username_or_id: int | str, body_data: str | None) -> None:
     return storage_socket.users.change_password(username_or_id, password=body_data)
@@ -141,6 +142,7 @@ def change_password_v1(username_or_id: int | str, body_data: str | None) -> None
 
 @api_v1.route("/me/password", methods=["PUT"])
 @check_permissions("me", "modify", True)
+@deny_api_token_auth()
 @serialization()
 def change_my_password_v1(body_data: str | None) -> None:
     return storage_socket.users.change_password(g.user_id, password=body_data)
@@ -235,6 +237,7 @@ def list_user_api_tokens_v1(username_or_id: int | str) -> list[dict[str, Any]]:
 
 @api_v1.route("/users/<username_or_id>/tokens", methods=["POST"])
 @check_permissions("users", "modify", True)
+@deny_api_token_auth()
 @serialization()
 def create_user_api_token_v1(username_or_id: int | str, body_data: APITokenCreateBody) -> NewAPIToken:
     user_id = storage_socket.users.get_optional_user_id(username_or_id)
@@ -261,6 +264,7 @@ def list_my_api_tokens_v1() -> list[dict[str, Any]]:
 
 @api_v1.route("/me/tokens", methods=["POST"])
 @check_permissions("me", "modify", True)
+@deny_api_token_auth()
 @serialization()
 def create_my_api_token_v1(body_data: APITokenCreateBody) -> NewAPIToken:
     raw_token, info = storage_socket.auth.create_api_token(
