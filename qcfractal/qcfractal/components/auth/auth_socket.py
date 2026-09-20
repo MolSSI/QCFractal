@@ -1,24 +1,63 @@
 from __future__ import annotations
 
+import datetime
 import hashlib
+import secrets
 import logging
 from datetime import timedelta
-from typing import TYPE_CHECKING, Tuple, List, Any, Optional, Union
+from typing import TYPE_CHECKING, Tuple, List, Any, Dict, Optional, Union
 
-from sqlalchemy import select, delete, update
+from sqlalchemy import select, delete, update, func, or_
 from sqlalchemy.dialects.postgresql import insert
 
-from qcportal.auth import UserInfo
-from qcportal.exceptions import AuthenticationFailure, SecurityNotEnabledError
+from sqlalchemy.exc import IntegrityError
+
+from qcportal.auth import (
+    UserInfo,
+    API_TOKEN_PREFIX,
+    MAX_API_TOKEN_NAME_LENGTH,
+    looks_like_api_token,
+)
+from qcportal.exceptions import AuthenticationFailure, SecurityNotEnabledError, UserManagementError
 from qcportal.utils import now_at_utc
-from .db_models import UserORM, UserSessionORM
+from .db_models import UserORM, UserSessionORM, UserAPITokenORM
 from .permission_evaluation import evaluate_global_permissions
 from .role_permissions import AuthorizedEnum
 
 if TYPE_CHECKING:
-    import datetime
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
+
+
+# Number of random bytes in an API token. 32 bytes = 256 bits, so guessing a token is infeasible
+_API_TOKEN_NBYTES = 32
+
+# A single "qcf_" plus this many characters of the token are stored as a non-secret display prefix
+_API_TOKEN_PREFIX_LENGTH = 12
+
+# The maximum number of tokens a single user may have at once. me:* lets any user create tokens for
+# themselves, so this bounds how much one account can write to the table
+_MAX_API_TOKENS_PER_USER = 100
+
+# last_used_at is only rewritten once it is this stale, to avoid a database write on every request
+_API_TOKEN_LAST_USED_THROTTLE = datetime.timedelta(minutes=5)
+
+# A single message for every way a token can fail to authenticate. Deliberately uniform so that a
+# caller cannot tell "no such token" from "expired" from "malformed". Must not contain the substring
+# "Token has expired", which the qcportal client matches to trigger a JWT refresh
+_API_TOKEN_INVALID_MSG = "API token does not exist, is not valid, or is expired"
+
+
+def hash_api_token(raw_token: str) -> str:
+    """
+    Hashes an API token for storage or lookup
+
+    Like a browser session key (see hash_session_key), an API token is a high-entropy bearer
+    credential, so only its SHA-256 hash is ever stored and a single indexed comparison suffices.
+    The entire token as presented (including the "qcf_" prefix) is hashed.
+    """
+
+    return hashlib.sha256(raw_token.encode("UTF-8")).hexdigest()
 
 
 def hash_session_key(user_session_key: str) -> str:
@@ -48,6 +87,11 @@ class AuthSocket:
 
         self.security_enabled = self.root_socket.qcf_config.enable_security
         self.allow_unauthenticated_read = self.root_socket.qcf_config.allow_unauthenticated_read
+
+        # API token expiration policy (see create_api_token). Both may be None (no default
+        # expiration / no maximum lifetime)
+        self._api_token_default_lifetime = self.root_socket.qcf_config.api.api_token_default_lifetime
+        self._api_token_max_lifetime = self.root_socket.qcf_config.api.api_token_max_lifetime
 
         # Browser sessions that have been idle longer than this are expired. Requests already check
         # this when loading a session, but rows for sessions that are never presented again
@@ -322,3 +366,210 @@ class AuthSocket:
             stmt = delete(UserSessionORM)
             stmt = stmt.where(UserSessionORM.user_id == user_id)
             session.execute(stmt)
+
+    ############################
+    # API token management
+    ############################
+    def _resolve_api_token_expiration(
+        self, expires_at: Optional[datetime.datetime], now: datetime.datetime
+    ) -> Optional[datetime.datetime]:
+        """
+        Applies the server's expiration policy to a requested token expiration
+
+        Returns the expiration to store (which may be None for a non-expiring token). Raises
+        UserManagementError if the request is not allowed by the configured default/maximum
+        lifetimes.
+        """
+
+        # A caller-supplied expiration must be timezone-aware and in the future
+        if expires_at is not None:
+            if expires_at.tzinfo is None:
+                raise UserManagementError("API token expiration must be timezone-aware")
+            if expires_at <= now:
+                raise UserManagementError("API token expiration must be in the future")
+        else:
+            # No expiration requested - apply the default lifetime if one is configured
+            if self._api_token_default_lifetime is not None:
+                expires_at = now + datetime.timedelta(seconds=self._api_token_default_lifetime)
+
+        # Enforce the maximum lifetime. A never-expiring token is only allowed when there is no
+        # maximum - otherwise it (and anything beyond the maximum) is rejected, never silently
+        # shortened, so the caller is not handed a credential that dies sooner than they asked
+        if self._api_token_max_lifetime is not None:
+            latest = now + datetime.timedelta(seconds=self._api_token_max_lifetime)
+            if expires_at is None or expires_at > latest:
+                raise UserManagementError(
+                    f"API token expiration may not be more than {self._api_token_max_lifetime} seconds "
+                    "in the future (set by the server's api_token_max_lifetime)"
+                )
+
+        return expires_at
+
+    def create_api_token(
+        self,
+        user_id: int,
+        name: str,
+        expires_at: Optional[datetime.datetime] = None,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[str, Dict[str, Any]]:
+        """
+        Creates a new API token for a user
+
+        The name is required and must be unique among the user's tokens. Returns a tuple of
+        (plaintext token, token metadata). The plaintext token is not stored and cannot be recovered
+        afterwards - only its hash is kept. The metadata is the public_dict of the new token (never
+        including the hash).
+
+        Raises UserManagementError if the name is missing/too long or already in use, if the
+        requested expiration violates the server policy, or if the user already has the maximum
+        number of tokens.
+        """
+
+        if not name:
+            raise UserManagementError("An API token name is required")
+        if len(name) > MAX_API_TOKEN_NAME_LENGTH:
+            raise UserManagementError(f"API token name must be at most {MAX_API_TOKEN_NAME_LENGTH} characters")
+
+        now = now_at_utc()
+        stored_expires_at = self._resolve_api_token_expiration(expires_at, now)
+
+        raw_token = API_TOKEN_PREFIX + secrets.token_urlsafe(_API_TOKEN_NBYTES)
+        token_hash = hash_api_token(raw_token)
+        token_prefix = raw_token[:_API_TOKEN_PREFIX_LENGTH]
+
+        with self.root_socket.optional_session(session) as session:
+            # Lock the owning user row so a concurrent create cannot also pass the count check and
+            # push the user over the limit. This also confirms the user exists.
+            user_exists = session.execute(
+                select(UserORM.id).where(UserORM.id == user_id).with_for_update()
+            ).scalar_one_or_none()
+            if user_exists is None:
+                raise UserManagementError(f"User with id {user_id} does not exist")
+
+            count = session.execute(
+                select(func.count()).select_from(UserAPITokenORM).where(UserAPITokenORM.user_id == user_id)
+            ).scalar_one()
+            if count >= _MAX_API_TOKENS_PER_USER:
+                raise UserManagementError(
+                    f"User already has the maximum number of API tokens ({_MAX_API_TOKENS_PER_USER}). "
+                    "Delete an existing token before creating a new one."
+                )
+
+            token_orm = UserAPITokenORM(
+                user_id=user_id,
+                token_hash=token_hash,
+                token_prefix=token_prefix,
+                name=name,
+                created_at=now,
+                expires_at=stored_expires_at,
+                last_used_at=None,
+            )
+            session.add(token_orm)
+            try:
+                session.flush()
+            except IntegrityError:
+                # The (user_id, name) unique constraint - the user already has a token by this name
+                raise UserManagementError(f"An API token named '{name}' already exists for this user")
+
+            return raw_token, token_orm.public_dict()
+
+    def verify_api_token(self, raw_token: str, *, session: Optional[Session] = None) -> Tuple[int, int]:
+        """
+        Verifies an API token and returns (user_id, token_id)
+
+        This performs *only* the token lookup: it confirms the token exists and has not expired, and
+        returns the owning user id (which the caller then verifies with auth.verify, so that a
+        disabled account or a changed role takes effect regardless of the token). It deliberately
+        does not check whether the user is enabled - that is auth.verify's job.
+
+        This is the authoritative, uncached lookup. The request path calls it through a short-lived
+        cache (see CachedTokenVerifier), so in practice revoking a token takes effect within the
+        cache lifetime rather than instantly.
+
+        Raises AuthenticationFailure (with a single uniform message) for any invalid token - unknown,
+        malformed, or expired - so that a caller cannot distinguish these cases.
+        """
+
+        # Reject anything that is not shaped like one of our tokens before hashing. The length cap
+        # in particular keeps an oversized Authorization header from being hashed on every request.
+        if not looks_like_api_token(raw_token):
+            raise AuthenticationFailure(_API_TOKEN_INVALID_MSG)
+
+        token_hash = hash_api_token(raw_token)
+        now = now_at_utc()
+
+        # A fresh, writable session owned by this method: the last_used_at update below must commit
+        # even if the request later fails, and the expiration check must use the current time rather
+        # than a caller transaction's (possibly old) start time.
+        with self.root_socket.optional_session(session, False) as session:
+            stmt = select(UserAPITokenORM).where(
+                UserAPITokenORM.token_hash == token_hash,
+                or_(UserAPITokenORM.expires_at.is_(None), UserAPITokenORM.expires_at > now),
+            )
+            token_orm = session.execute(stmt).scalar_one_or_none()
+
+            if token_orm is None:
+                raise AuthenticationFailure(_API_TOKEN_INVALID_MSG)
+
+            user_id = token_orm.user_id
+            token_id = token_orm.id
+
+            # Refresh last_used_at, but only if it is stale, to avoid a write on every request. The
+            # predicate is repeated in the WHERE clause so concurrent workers do not both write.
+            if token_orm.last_used_at is None or (now - token_orm.last_used_at) > _API_TOKEN_LAST_USED_THROTTLE:
+                cutoff = now - _API_TOKEN_LAST_USED_THROTTLE
+                session.execute(
+                    update(UserAPITokenORM)
+                    .where(
+                        UserAPITokenORM.id == token_id,
+                        or_(
+                            UserAPITokenORM.last_used_at.is_(None),
+                            UserAPITokenORM.last_used_at < cutoff,
+                        ),
+                    )
+                    .values(last_used_at=now)
+                )
+
+            return user_id, token_id
+
+    def list_api_tokens(self, user_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
+        """
+        Lists all API tokens belonging to a single user (never including the token hash)
+        """
+
+        with self.root_socket.optional_session(session, True) as session:
+            stmt = select(UserAPITokenORM).where(UserAPITokenORM.user_id == user_id)
+            stmt = stmt.order_by(UserAPITokenORM.id)
+            token_orms = session.execute(stmt).scalars().all()
+            return [t.public_dict() for t in token_orms]
+
+    def list_all_api_tokens(self, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
+        """
+        Lists all API tokens in the database (never including the token hash)
+        """
+
+        with self.root_socket.optional_session(session, True) as session:
+            stmt = select(UserAPITokenORM).order_by(UserAPITokenORM.id)
+            token_orms = session.execute(stmt).scalars().all()
+            return [t.public_dict() for t in token_orms]
+
+    def delete_api_token(self, token_id: int, user_id: int, *, session: Optional[Session] = None) -> None:
+        """
+        Deletes (revokes) a single API token
+
+        The user_id is required and always constrains the delete, so that a token can only ever be
+        revoked by (or on behalf of) its owner - a caller cannot revoke another user's token by
+        guessing its id. Raises UserManagementError if no such token exists for that user (the same
+        error whether the token does not exist or belongs to someone else).
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            stmt = delete(UserAPITokenORM).where(
+                UserAPITokenORM.id == token_id,
+                UserAPITokenORM.user_id == user_id,
+            )
+            result = session.execute(stmt)
+
+            if result.rowcount == 0:
+                raise UserManagementError("API token not found")

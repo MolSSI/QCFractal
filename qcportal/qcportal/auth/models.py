@@ -1,9 +1,44 @@
+import re
+from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import AwareDatetime, BaseModel, Field, field_validator, ConfigDict
 
 from ..common_types import Max128Str
 from ..exceptions import InvalidPasswordError, InvalidUsernameError, InvalidGroupnameError
+
+# Every API token begins with this fixed prefix. It makes a token recognizable to secret scanners
+# and lets the server dispatch on the shape of an Authorization header before attempting to parse
+# it as a JWT. Shared here so the client and server agree on it.
+API_TOKEN_PREFIX = "qcf_"
+
+# Longest name accepted for an API token
+MAX_API_TOKEN_NAME_LENGTH = 128
+
+# Longest string we will treat as a possible API token. A token is a fixed, known size; anything
+# much larger is malformed, and (on the server) hashing an unbounded header on every request would
+# be a cheap amplification vector.
+MAX_API_TOKEN_LENGTH = 128
+
+# The random part of a token is secrets.token_urlsafe output
+_API_TOKEN_BODY_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+
+
+def looks_like_api_token(raw: str) -> bool:
+    """
+    Returns whether a string is shaped like an API token
+
+    This is a cheap syntactic check (prefix, length, character set), shared by the client (to fail
+    fast before a network round trip) and the server (to reject obviously-bad input before hashing).
+    It says nothing about whether the token actually exists or is valid.
+    """
+
+    if not isinstance(raw, str) or not raw.startswith(API_TOKEN_PREFIX):
+        return False
+    if len(raw) > MAX_API_TOKEN_LENGTH:
+        return False
+    body = raw[len(API_TOKEN_PREFIX) :]
+    return bool(body) and bool(_API_TOKEN_BODY_RE.match(body))
 
 
 class AuthTypeEnum(str, Enum):
@@ -184,3 +219,68 @@ class UserInfo(BaseModel):
             return v
         except Exception as e:
             raise ValueError(str(e))
+
+
+class APIToken(BaseModel):
+    """
+    Metadata about a long-lived API token
+
+    This never contains the token itself. The plaintext token is shown exactly once, when the
+    token is created (see NewAPIToken); afterwards only this metadata is available.
+    """
+
+    id: int
+    """The id of the token (used to revoke it)"""
+
+    user_id: int
+    """The id of the user the token authenticates as"""
+
+    token_prefix: str
+    """The first few characters of the token, for identifying it in a listing"""
+
+    name: str
+    """The name given to the token when it was created (unique among the user's tokens)"""
+
+    created_at: datetime
+    """When the token was created"""
+
+    expires_at: datetime | None = None
+    """When the token expires, or null if it never expires"""
+
+    last_used_at: datetime | None = None
+    """Approximate time the token was last presented on a request, or null if never used"""
+
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
+
+
+class NewAPIToken(BaseModel):
+    """
+    A newly-created API token, including the plaintext token
+
+    The plaintext token is only available here, in the response to creating the token. It is not
+    stored and cannot be retrieved later.
+    """
+
+    token: str
+    """The plaintext token. Paste this into a client's Authorization header. Store it securely - it
+    cannot be retrieved again"""
+
+    info: APIToken
+    """Metadata about the token"""
+
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
+
+
+class APITokenCreateBody(BaseModel):
+    """
+    Options for creating a new API token
+    """
+
+    name: str = Field(..., min_length=1, max_length=MAX_API_TOKEN_NAME_LENGTH)
+    """A name to identify the token. Must be unique among the user's tokens."""
+
+    expires_at: AwareDatetime | None = None
+    """When the token should expire. Must be timezone-aware. Null requests a non-expiring token,
+    subject to the server's api_token_default_lifetime and api_token_max_lifetime policy"""
+
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)

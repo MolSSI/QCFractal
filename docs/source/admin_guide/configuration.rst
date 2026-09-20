@@ -320,6 +320,8 @@ you.
    login_rate_limit_max_attempts
    login_rate_limit_ip_max_attempts
    login_rate_limit_window
+   api_token_default_lifetime
+   api_token_max_lifetime
 
 Browser sessions and cross-site requests
 """"""""""""""""""""""""""""""""""""""""

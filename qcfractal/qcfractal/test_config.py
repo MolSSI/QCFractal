@@ -169,3 +169,43 @@ def test_config_session_cookie_defaults(tmp_path):
     assert cfg.api.user_session_cookie_httponly is True
     assert cfg.api.user_session_cookie_secure is True
     assert cfg.api.user_session_cookie_samesite == "Lax"
+
+
+def test_config_api_token_lifetimes(tmp_path):
+    base_folder = str(tmp_path)
+
+    # Defaults: no expiration, no limit
+    cfg = FractalConfig(base_folder=base_folder, **copy.deepcopy(_base_config))
+    assert cfg.api.api_token_default_lifetime is None
+    assert cfg.api.api_token_max_lifetime is None
+
+    # Durations are parsed like the other duration fields, and null is accepted
+    base_config = copy.deepcopy(_base_config)
+    base_config["api"]["api_token_default_lifetime"] = "30d"
+    base_config["api"]["api_token_max_lifetime"] = None
+    cfg = FractalConfig(base_folder=base_folder, **base_config)
+    assert cfg.api.api_token_default_lifetime == 30 * 86400
+    assert cfg.api.api_token_max_lifetime is None
+
+    base_config["api"]["api_token_max_lifetime"] = 90 * 86400
+    cfg = FractalConfig(base_folder=base_folder, **base_config)
+    assert cfg.api.api_token_max_lifetime == 90 * 86400
+
+
+def test_config_api_token_lifetimes_invalid(tmp_path):
+    base_folder = str(tmp_path)
+
+    # Zero/negative lifetimes are rejected
+    for field in ("api_token_default_lifetime", "api_token_max_lifetime"):
+        for bad in (0, -30):
+            base_config = copy.deepcopy(_base_config)
+            base_config["api"][field] = bad
+            with pytest.raises(ValueError, match="positive duration"):
+                FractalConfig(base_folder=base_folder, **base_config)
+
+    # A default longer than the maximum is contradictory
+    base_config = copy.deepcopy(_base_config)
+    base_config["api"]["api_token_default_lifetime"] = "91d"
+    base_config["api"]["api_token_max_lifetime"] = "90d"
+    with pytest.raises(ValueError, match="may not exceed"):
+        FractalConfig(base_folder=base_folder, **base_config)
