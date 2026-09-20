@@ -1,6 +1,7 @@
 from typing import Any
 from flask import jsonify, current_app, g
 
+import qcfractal
 from qcfractal.flask_app.api_v1.blueprint import api_v1
 from qcfractal.flask_app.decorators import no_permission_required
 from qcfractal.flask_app.openapi import generate_openapi_spec
@@ -75,4 +76,4 @@ def get_openapi_spec_v1() -> dict[str, Any]:
     Returns an openapi specification for all endpoints on this server
     """
 
-    return generate_openapi_spec(current_app)
+    return generate_openapi_spec(current_app, version=qcfractal.__version__)
