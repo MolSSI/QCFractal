@@ -108,7 +108,9 @@ def background_add_torsiondrive_dataset_entries_v1(
 @api_v1.route("/datasets/torsiondrive/<int:dataset_id>/entries/addFrom", methods=["POST"])
 @check_permissions("datasets", "modify")
 @serialization()
-def add_torsiondrive_dataset_entries_from_v1(dataset_id: int, body_data: TorsiondriveDatasetEntriesFrom):
+def add_torsiondrive_dataset_entries_from_v1(
+    dataset_id: int, body_data: TorsiondriveDatasetEntriesFrom
+) -> InsertCountsMetadata:
     return storage_socket.datasets.torsiondrive.add_entries_from_ds(
         dataset_id=dataset_id,
         from_dataset_id=body_data.dataset_id,
