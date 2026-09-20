@@ -1,9 +1,17 @@
 from collections.abc import Iterator
-from typing import Generic, TypeVar
+from typing import Any, Generic, Protocol, TypeVar
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-T = TypeVar("T")
+
+class _HasId(Protocol):
+    """Anything returned by a query iterator must have an id, which is used as the pagination cursor"""
+
+    @property
+    def id(self) -> Any: ...
+
+
+T = TypeVar("T", bound=_HasId)
 
 
 def validate_list_to_single(v):
@@ -98,17 +106,26 @@ class QueryIteratorBase(Generic[T]):
         self._batch_limit = batch_limit
 
         # Total number of rows/whatever we want to fetch
-        self._total_limit = query_filters.limit
+        self._total_limit: int | None = query_filters.limit
+
+        # The batch we are currently iterating over, and our position within it
+        self._current_batch: list[T] = []
+        self._current_pos: int = 0
+        self._fetched: int = 0
 
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         """
         Starts retrieval of results from the beginning again
         """
 
-        self._current_batch: list[T] | None = None
-        self._fetched: int = 0
+        self._current_batch = []
+        self._fetched = 0
+
+        # Clear the pagination cursor. Otherwise, the next request would pick up where the
+        # previous pass left off, and iteration would start from the end (that is, from nothing)
+        self._query_filters.cursor = None
 
         self._fetch_batch()
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import math
 import os
-from collections.abc import Iterable, Callable, Sequence, Mapping
+from collections.abc import Collection, Iterable, Callable, Sequence, Mapping
 from datetime import datetime
 from enum import Enum
 from typing import (
@@ -994,6 +994,7 @@ class BaseDataset(BaseModel):
             specification_names = make_list(specification_names).copy()
 
         # Strip out existing specifications if we aren't forcing refetching
+        specifications_tofetch: Collection[str]
         if force_refetch:
             specifications_tofetch = specification_names
         else:
@@ -1147,6 +1148,7 @@ class BaseDataset(BaseModel):
             entry_names = make_list(entry_names).copy()
 
         # Strip out existing entries if we aren't forcing refetching
+        entries_tofetch: Collection[str]
         if force_refetch:
             entries_tofetch = entry_names
         else:
@@ -1225,6 +1227,7 @@ class BaseDataset(BaseModel):
             # What we have cached already
             cached_entries = set(self._cache_data.get_entry_names())
 
+            entries_tofetch: Collection[str]
             for entry_names_batch in chunk_iterable(entry_names, batch_size):
                 # If forcing refetching, then use the whole batch. Otherwise, strip out
                 # any existing entries
@@ -2724,10 +2727,10 @@ class DatasetFetchRecordsBody(RestModelBase):
 class DatasetCreateViewBody(RestModelBase):
     description: str
     provenance: dict[str, Any]
-    status: list[RecordStatusEnum] | None = (None,)
-    include: list[str] | None = (None,)
-    exclude: list[str] | None = (None,)
-    include_children: bool = (True,)
+    status: list[RecordStatusEnum] | None = None
+    include: list[str] | None = None
+    exclude: list[str] | None = None
+    include_children: bool = True
 
 
 class DatasetSubmitBody(RestModelBase):
