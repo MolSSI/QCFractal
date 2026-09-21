@@ -141,6 +141,13 @@ class UserAPITokenORM(BaseORM):
     # Human-readable name supplied by the creator ("laptop", "CI"). Unique per user.
     name = Column(String, nullable=False)
 
+    # What the token is allowed to do (see qcportal APITokenScopeEnum). Currently always
+    # "unlimited" (the owner's full role); a placeholder so restricted scopes can be added later
+    # without a schema change. A plain string (like UserORM.role) rather than a native enum, so
+    # new scope values need no migration. The "everything" scope is a named value - a null or
+    # empty scope must never be interpreted as unlimited access.
+    scope = Column(String, nullable=False, server_default="unlimited")
+
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
 
     # Null means the token never expires
@@ -165,6 +172,7 @@ class UserAPITokenORM(BaseORM):
             "user_id": self.user_id,
             "token_prefix": self.token_prefix,
             "name": self.name,
+            "scope": self.scope,
             "created_at": self.created_at,
             "expires_at": self.expires_at,
             "last_used_at": self.last_used_at,

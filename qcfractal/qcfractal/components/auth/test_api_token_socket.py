@@ -307,3 +307,24 @@ def test_api_token_socket_past_expiry_rejected(storage_socket: SQLAlchemySocket)
     past = now_at_utc() - datetime.timedelta(seconds=1)
     with pytest.raises(UserManagementError, match="in the future"):
         storage_socket.auth.create_api_token(user_id, "t", expires_at=past)
+
+
+def test_api_token_socket_scope_placeholder(storage_socket: SQLAlchemySocket):
+    from qcportal.auth import APITokenScopeEnum
+
+    user_id = _add_user(storage_socket)
+
+    # Default scope is "unlimited" and appears in the metadata and listings
+    _, info = storage_socket.auth.create_api_token(user_id, "t1")
+    assert info["scope"] == "unlimited"
+    assert storage_socket.auth.list_api_tokens(user_id)[0]["scope"] == "unlimited"
+
+    # The scope may be given explicitly, as a string or the enum
+    _, info = storage_socket.auth.create_api_token(user_id, "t2", scope="unlimited")
+    assert info["scope"] == "unlimited"
+    _, info = storage_socket.auth.create_api_token(user_id, "t3", scope=APITokenScopeEnum.unlimited)
+    assert info["scope"] == "unlimited"
+
+    # An unknown scope is rejected
+    with pytest.raises(UserManagementError, match="Unknown API token scope"):
+        storage_socket.auth.create_api_token(user_id, "t4", scope="read_only")

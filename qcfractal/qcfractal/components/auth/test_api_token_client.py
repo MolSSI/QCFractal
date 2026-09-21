@@ -141,3 +141,16 @@ def test_api_token_client_datetime_roundtrip(secure_snowflake):
     # Survives with timezone info
     assert new_token.info.expires_at.tzinfo is not None
     assert abs((new_token.info.expires_at - expires).total_seconds()) < 5
+
+
+def test_api_token_client_scope_roundtrip(secure_snowflake):
+    # The scope placeholder survives the wire in both directions
+    admin = secure_snowflake.user_client("admin_user")
+
+    new_token = admin.create_api_token("scoped", scope="unlimited")
+    assert new_token.info.scope == "unlimited"
+    assert admin.list_api_tokens()[0].scope == "unlimited"
+
+    # Requesting a scope the server does not know is rejected client-side by the strict body model
+    with pytest.raises(Exception, match="unlimited|validation"):
+        admin.create_api_token("bad_scope", scope="read_only")

@@ -24,6 +24,7 @@ def upgrade():
         sa.Column("token_hash", sa.String(), nullable=False),
         sa.Column("token_prefix", sa.String(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
+        sa.Column("scope", sa.String(), server_default="unlimited", nullable=False),
         sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("expires_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("last_used_at", sa.TIMESTAMP(timezone=True), nullable=True),

@@ -24,6 +24,44 @@ MAX_API_TOKEN_LENGTH = 128
 _API_TOKEN_BODY_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
+class APITokenScopeEnum(str, Enum):
+    """
+    Named scopes for API tokens
+
+    A token's scope is what it is allowed to do, relative to its owner's role - the effective
+    permission can only ever be a restriction of the role, never an extension. A scope is stored
+    and transmitted as a plain string, validated by validate_api_token_scope(); this enum lists
+    the named values that validator accepts. Currently there is exactly one, ``unlimited``,
+    meaning the token carries the owner's full role. Future scopes may be parameterized (for
+    example, limiting writes to particular projects) and so will be handled by the validator's
+    grammar rather than listed here. The "everything" scope is always this explicit named value -
+    a null or empty scope must never be interpreted as unlimited access.
+    """
+
+    unlimited = "unlimited"
+
+
+def validate_api_token_scope(scope: str | APITokenScopeEnum) -> str:
+    """
+    Validates an API token scope, returning its canonical string form
+
+    This is the single place scope values are validated, shared by the client models and the
+    server. Today the grammar is trivial - the only valid scope is "unlimited" - and future
+    parameterized scopes extend the grammar here, without changing any field or column type.
+
+    Raises ValueError for a scope this version does not recognize.
+    """
+
+    if isinstance(scope, APITokenScopeEnum):
+        return scope.value
+    if isinstance(scope, str):
+        try:
+            return APITokenScopeEnum(scope).value
+        except ValueError:
+            pass
+    raise ValueError(f"Unknown API token scope: '{scope}'")
+
+
 def looks_like_api_token(raw: str) -> bool:
     """
     Returns whether a string is shaped like an API token
@@ -241,6 +279,11 @@ class APIToken(BaseModel):
     name: str
     """The name given to the token when it was created (unique among the user's tokens)"""
 
+    scope: str = APITokenScopeEnum.unlimited.value
+    """What the token is allowed to do (see APITokenScopeEnum). Deliberately a plain string here,
+    like UserInfo.role, so an older client can still parse listings from a newer server that has
+    scopes this client does not know about"""
+
     created_at: datetime
     """When the token was created"""
 
@@ -279,8 +322,23 @@ class APITokenCreateBody(BaseModel):
     name: str = Field(..., min_length=1, max_length=MAX_API_TOKEN_NAME_LENGTH)
     """A name to identify the token. Must be unique among the user's tokens."""
 
+    scope: str = APITokenScopeEnum.unlimited.value
+    """What the token should be allowed to do. Currently only "unlimited" (the owner's full role)
+    exists. A plain (but validated) string, so the public schema never changes when new scopes
+    are added; a scope this server does not recognize is rejected"""
+
     expires_at: AwareDatetime | None = None
     """When the token should expire. Must be timezone-aware. Null requests a non-expiring token,
     subject to the server's api_token_default_lifetime and api_token_max_lifetime policy"""
 
     model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
+
+    @field_validator("scope", mode="before")
+    @classmethod
+    def _valid_scope(cls, v):
+        """Makes sure the scope is one this version understands"""
+
+        try:
+            return validate_api_token_scope(v)
+        except Exception as e:
+            raise ValueError(str(e))

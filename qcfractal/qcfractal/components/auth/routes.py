@@ -246,7 +246,7 @@ def list_user_api_tokens_v1(username_or_id: int | str) -> list[dict[str, Any]]:
 def create_user_api_token_v1(username_or_id: int | str, body_data: APITokenCreateBody) -> NewAPIToken:
     user_id = storage_socket.users.get_optional_user_id(username_or_id)
     raw_token, info = storage_socket.auth.create_api_token(
-        user_id, name=body_data.name, expires_at=body_data.expires_at
+        user_id, name=body_data.name, expires_at=body_data.expires_at, scope=body_data.scope
     )
     return NewAPIToken(token=raw_token, info=APIToken(**info))
 
@@ -273,7 +273,7 @@ def list_my_api_tokens_v1() -> list[dict[str, Any]]:
 @serialization()
 def create_my_api_token_v1(body_data: APITokenCreateBody) -> NewAPIToken:
     raw_token, info = storage_socket.auth.create_api_token(
-        g.user_id, name=body_data.name, expires_at=body_data.expires_at
+        g.user_id, name=body_data.name, expires_at=body_data.expires_at, scope=body_data.scope
     )
     return NewAPIToken(token=raw_token, info=APIToken(**info))
 
