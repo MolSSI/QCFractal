@@ -123,6 +123,7 @@ def modify_user_v1(body_data: UserInfo) -> None:
 
 @api_v1.route("/me", methods=["PATCH"])
 @check_permissions("me", "modify", True)
+@deny_api_token_auth()
 @serialization()
 def modify_my_user_v1(body_data: UserInfo) -> None:
     if body_data.id is None or body_data.username is None:

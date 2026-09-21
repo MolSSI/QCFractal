@@ -396,3 +396,19 @@ def test_password_auth_can_still_administer_users(secure_snowflake):
     }
     r = requests.post(f"{uri}/api/v1/users", headers=h, data=json.dumps([new_user, "a_password_123"]))
     assert r.status_code == 200
+
+
+def test_api_token_cannot_modify_own_user(secure_snowflake):
+    # PATCH /me (own metadata) is also refused under token auth, for consistency with the rest of
+    # the account-management surface
+    import json
+
+    uri = secure_snowflake.get_uri()
+    raw, _ = _mint_token(secure_snowflake, "admin_user")
+
+    me = requests.get(f"{uri}/api/v1/me", headers=_auth(raw)).json()
+    me["fullname"] = "Sneaky Rename"
+    r = requests.patch(
+        f"{uri}/api/v1/me", headers={**_auth(raw), "Content-Type": "application/json"}, data=json.dumps(me)
+    )
+    assert r.status_code == 403
