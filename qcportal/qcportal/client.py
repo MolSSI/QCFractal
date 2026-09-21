@@ -66,6 +66,7 @@ from .auth import (
     APIToken,
     NewAPIToken,
     APITokenCreateBody,
+    APITokenScopeEnum,
     is_valid_username,
     is_valid_password,
     is_valid_groupname,
@@ -4144,6 +4145,7 @@ class PortalClient(PortalClientBase):
         name: str,
         expires_at: datetime | None = None,
         username_or_id: int | str | None = None,
+        scope: str = APITokenScopeEnum.unlimited.value,
     ) -> NewAPIToken:
         """
         Create a new API token
@@ -4160,9 +4162,12 @@ class PortalClient(PortalClientBase):
             applies (which may be no expiration).
         username_or_id
             The user to create the token for. If None, creates a token for the current user.
+        scope
+            What the token should be allowed to do. Currently only "unlimited" (the owner's
+            full role) exists; this is a placeholder for future restricted scopes.
         """
 
-        body = APITokenCreateBody(name=name, expires_at=expires_at)
+        body = APITokenCreateBody(name=name, expires_at=expires_at, scope=scope)
 
         if username_or_id is None:
             return self.make_request(

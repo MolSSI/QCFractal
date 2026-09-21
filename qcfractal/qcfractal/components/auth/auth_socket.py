@@ -15,8 +15,10 @@ from sqlalchemy.exc import IntegrityError
 from qcportal.auth import (
     UserInfo,
     API_TOKEN_PREFIX,
+    APITokenScopeEnum,
     MAX_API_TOKEN_NAME_LENGTH,
     looks_like_api_token,
+    validate_api_token_scope,
 )
 from qcportal.exceptions import AuthenticationFailure, SecurityNotEnabledError, UserManagementError
 from qcportal.utils import now_at_utc
@@ -410,6 +412,7 @@ class AuthSocket:
         user_id: int,
         name: str,
         expires_at: Optional[datetime.datetime] = None,
+        scope: Union[str, APITokenScopeEnum] = APITokenScopeEnum.unlimited,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[str, Dict[str, Any]]:
@@ -430,6 +433,13 @@ class AuthSocket:
             raise UserManagementError("An API token name is required")
         if len(name) > MAX_API_TOKEN_NAME_LENGTH:
             raise UserManagementError(f"API token name must be at most {MAX_API_TOKEN_NAME_LENGTH} characters")
+
+        # Scope is a placeholder for now - only "unlimited" exists - but is validated and stored so
+        # restricted scopes can be added later without a schema or wire-format change
+        try:
+            scope = validate_api_token_scope(scope)
+        except ValueError as e:
+            raise UserManagementError(str(e))
 
         now = now_at_utc()
         stored_expires_at = self._resolve_api_token_expiration(expires_at, now)
@@ -461,6 +471,7 @@ class AuthSocket:
                 token_hash=token_hash,
                 token_prefix=token_prefix,
                 name=name,
+                scope=scope,
                 created_at=now,
                 expires_at=stored_expires_at,
                 last_used_at=None,
