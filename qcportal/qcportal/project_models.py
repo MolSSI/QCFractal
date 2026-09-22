@@ -66,6 +66,16 @@ class ProjectAddBody(RestModelBase):
     existing_ok: bool = False
 
 
+class ProjectModifyMetadata(RestModelBase):
+    name: str
+    description: str
+    tagline: str
+    tags: list[str]
+    default_compute_tag: str
+    default_compute_priority: PriorityEnum
+    extras: dict[str, Any]
+
+
 # This is basically a duplicate of DatasetAddBody, but with
 # dataset_type added. Ok to duplicate because we will eventually move
 # to projects-only
@@ -236,6 +246,52 @@ class Project(BaseModel):
         This may also be called from derived class propagate_client functions as well
         """
         self._client = client
+
+    def _update_metadata(self, **kwargs):
+        self.assert_online()
+
+        new_body = {
+            "name": self.name,
+            "description": self.description,
+            "tagline": self.tagline,
+            "tags": self.tags,
+            "default_compute_tag": self.default_compute_tag,
+            "default_compute_priority": self.default_compute_priority,
+            "extras": self.extras,
+        }
+
+        new_body.update(**kwargs)
+        body = ProjectModifyMetadata(**new_body)
+        self._client.make_request("patch", f"api/v1/projects/{self.id}", None, body=body)
+
+        self.name = body.name
+        self.description = body.description
+        self.tagline = body.tagline
+        self.tags = body.tags
+        self.default_compute_tag = body.default_compute_tag
+        self.default_compute_priority = body.default_compute_priority
+        self.extras = body.extras
+
+    def set_name(self, new_name: str):
+        self._update_metadata(name=new_name)
+
+    def set_description(self, new_description: str):
+        self._update_metadata(description=new_description)
+
+    def set_tagline(self, new_tagline: str):
+        self._update_metadata(tagline=new_tagline)
+
+    def set_tags(self, new_tags: list[str]):
+        self._update_metadata(tags=new_tags)
+
+    def set_default_compute_tag(self, new_default_compute_tag: str):
+        self._update_metadata(default_compute_tag=new_default_compute_tag)
+
+    def set_default_compute_priority(self, new_default_compute_priority: PriorityEnum):
+        self._update_metadata(default_compute_priority=new_default_compute_priority)
+
+    def set_extras(self, new_extras: dict[str, Any]):
+        self._update_metadata(extras=new_extras)
 
     #############################
     # General info

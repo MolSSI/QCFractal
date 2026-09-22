@@ -94,6 +94,58 @@ def test_project_client_add_get_records_datasets(snowflake_client: PortalClient)
     assert plist[0]["dataset_count"] == 2
 
 
+def test_project_client_update_metadata(snowflake_client: PortalClient):
+    proj = snowflake_client.add_project(
+        "test project",
+        "Test Description",
+        "a Tagline",
+        ["tag1", "tag2"],
+        "test_compute_tag",
+        PriorityEnum.low,
+        {"meta_key_1": "meta_value_1"},
+    )
+    proj_id = proj.id
+
+    proj.set_name("renamed project")
+    proj.set_description("New Description")
+    proj.set_tagline("A new tagline")
+    proj.set_tags(["tag3"])
+    proj.set_default_compute_tag("new_compute_tag")
+    proj.set_default_compute_priority(PriorityEnum.high)
+    proj.set_extras({"meta_key_2": "meta_value_2"})
+
+    # Fields should be updated locally too
+    assert proj.name == "renamed project"
+    assert proj.description == "New Description"
+    assert proj.tagline == "A new tagline"
+    assert proj.tags == ["tag3"]
+    assert proj.default_compute_tag == "new_compute_tag"
+    assert proj.default_compute_priority == PriorityEnum.high
+    assert proj.extras == {"meta_key_2": "meta_value_2"}
+
+    # And a fresh fetch from the server should reflect the same
+    proj_fresh = snowflake_client.get_project_by_id(proj_id)
+    assert proj_fresh.name == "renamed project"
+    assert proj_fresh.description == "New Description"
+    assert proj_fresh.tagline == "A new tagline"
+    assert proj_fresh.tags == ["tag3"]
+    assert proj_fresh.default_compute_tag == "new_compute_tag"
+    assert proj_fresh.default_compute_priority == PriorityEnum.high
+    assert proj_fresh.extras == {"meta_key_2": "meta_value_2"}
+
+
+def test_project_client_rename_collision(snowflake_client: PortalClient):
+    proj1 = snowflake_client.add_project("project one")
+    snowflake_client.add_project("project two")
+
+    with pytest.raises(PortalRequestError, match="Project named 'project two' already exists"):
+        proj1.set_name("project two")
+
+    # case-insensitive rename should not error out against itself
+    proj1.set_name("PROJECT ONE")
+    assert proj1.name == "PROJECT ONE"
+
+
 def test_project_client_get_by_name_fresh_project(snowflake_client: PortalClient):
     # get_record/get_dataset by name must work on a freshly-obtained Project object, where the
     # local record/dataset metadata caches have not been populated yet (eg by a prior add_record

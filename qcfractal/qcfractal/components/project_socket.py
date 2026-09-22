@@ -23,7 +23,7 @@ from qcportal.all_results import AllResultTypes
 from qcportal.exceptions import MissingDataError, UserReportableError, AlreadyExistsError
 from qcportal.internal_jobs import InternalJobStatusEnum
 from qcportal.metadata_models import InsertCountsMetadata
-from qcportal.project_models import ProjectAttachmentType
+from qcportal.project_models import ProjectAttachmentType, ProjectModifyMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:
@@ -98,6 +98,52 @@ class ProjectSocket:
             session.add(proj_orm)
             session.commit()
             return proj_orm.id
+
+    def update_metadata(
+        self, project_id: int, new_metadata: ProjectModifyMetadata, *, session: Optional[Session] = None
+    ):
+        """
+        Updates the metadata of a project
+
+        This will overwrite the existing metadata. An exception is raised on any error
+
+        Parameters
+        ----------
+        project_id
+            ID of a project
+        new_metadata
+            New metadata to store
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            stmt = select(ProjectORM).where(ProjectORM.id == project_id)
+            stmt = stmt.with_for_update()
+            proj = session.execute(stmt).scalar_one_or_none()
+
+            if proj is None:
+                raise MissingDataError(f"Could not find project with id={project_id}")
+
+            if proj.name != new_metadata.name:
+                # If only change in case, no need to check if it already exists
+                if proj.name.lower() != new_metadata.name.lower():
+                    stmt2 = select(ProjectORM.id).where(ProjectORM.lname == new_metadata.name.lower())
+                    existing = session.execute(stmt2).scalar_one_or_none()
+
+                    if existing:
+                        raise AlreadyExistsError(f"Project named '{new_metadata.name}' already exists")
+
+                proj.name = new_metadata.name
+
+            proj.description = new_metadata.description
+            proj.tagline = new_metadata.tagline
+            proj.tags = new_metadata.tags
+            proj.extras = new_metadata.extras
+
+            proj.default_compute_tag = new_metadata.default_compute_tag
+            proj.default_compute_priority = new_metadata.default_compute_priority
 
     def get(
         self,
