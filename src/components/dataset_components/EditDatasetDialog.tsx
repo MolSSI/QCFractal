@@ -3,7 +3,7 @@ import * as qcpTypes from "../../PortalTypes";
 import { PriorityEnum } from "../../PortalTypes";
 import { usePortalClient } from "../../PortalClient.tsx";
 import { useAuth } from "../../Auth.tsx";
-import { describeRequestError } from "../../Utils.ts";
+import { describeRequestError, formatPriority } from "../../Utils.ts";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Button,
@@ -248,9 +248,9 @@ export const EditDatasetMetadataButton: React.FC<EditDatasetProps> = ({
                       setComputePriority(e.target.value as PriorityEnum)
                     }
                   >
-                    <MenuItem value={0}>0</MenuItem>
-                    <MenuItem value={1}>1</MenuItem>
-                    <MenuItem value={2}>2</MenuItem>
+                    <MenuItem value={0}>{formatPriority(0)}</MenuItem>
+                    <MenuItem value={1}>{formatPriority(1)}</MenuItem>
+                    <MenuItem value={2}>{formatPriority(2)}</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>

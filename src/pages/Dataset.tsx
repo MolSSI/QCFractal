@@ -27,7 +27,7 @@ import DatasetSpecificationTable from "../components/dataset_components/DatasetS
 import DatasetEntryTable from "../components/dataset_components/DatasetEntryTable";
 import DatasetRecords from "../components/dataset_components/DatasetRecords";
 import { AttachmentTable } from "../components/AttachmentTable";
-import { asRecord } from "../Utils.ts";
+import { asRecord, formatPriority } from "../Utils.ts";
 import MarkdownContent from "../components/MarkdownContent";
 import {
   areDatasetViewStatesEqual,
@@ -503,7 +503,7 @@ export default function Dataset() {
                     Default Compute Priority
                   </Typography>
                   <Typography variant="body1">
-                    {datasetData.default_priority}
+                    {formatPriority(datasetData.default_priority) ?? "N/A"}
                   </Typography>
                 </Box>
               </Box>

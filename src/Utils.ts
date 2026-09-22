@@ -113,6 +113,22 @@ export function formatCpuHoursSpan(cpuHours: number): string | undefined {
   return years >= 1 ? format(years, "year") : format(days, "day");
 }
 
+const PRIORITY_NAMES: Record<number, string> = {
+  0: "low",
+  1: "normal",
+  2: "high",
+};
+
+export function formatPriority(
+  priority: number | null | undefined,
+): string | undefined {
+  if (priority === null || priority === undefined) {
+    return undefined;
+  }
+
+  return PRIORITY_NAMES[priority] ?? String(priority);
+}
+
 export function formatSize(bytes: number): string {
   if (bytes === 0) return "0 Bytes";
   const k = 1024;
