@@ -43,3 +43,20 @@ def test_homepage_serve_dir(postgres_server, tmp_path, client_encoding):
 
     r = requests.get(snowflake.get_uri() + "/missing.html", headers={"Accept": "text/html"})
     assert r.status_code == 404
+
+
+def test_homepage_unknown_route_404(postgres_server, client_encoding):
+    # Unknown routes must return a clean 404, not a 405. The homepage blueprint's catch-all route
+    # (GET only) matches every path, so Werkzeug's default routing would otherwise consider any
+    # unknown, non-GET request a "match" for that route with the wrong method, and report 405
+    # Method Not Allowed instead of 404.
+    pg_harness = postgres_server.get_new_harness("test_homepage_unknown_route_404")
+    snowflake = QCATestingSnowflake(pg_harness, client_encoding)
+
+    for method in ("get", "post", "put", "patch", "delete"):
+        r = getattr(requests, method)(snowflake.get_uri() + "/api/v1/zzz/nonexistent")
+        assert r.status_code == 404, f"{method} unknown route returned {r.status_code}"
+
+    # A known route with the wrong method should still correctly report 405
+    r = requests.patch(snowflake.get_uri() + "/api/v1/ping")
+    assert r.status_code == 405
