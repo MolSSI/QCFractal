@@ -317,6 +317,38 @@ def test_project_client_delete_with_datasets(snowflake_client: PortalClient):
         snowflake_client.get_dataset_by_id(ds2.id)
 
 
+def test_project_client_delete_shared_dataset(snowflake_client: PortalClient):
+    # A dataset can be linked into more than one project. Deleting it (with
+    # delete_datasets=True) from one project must not fail just because another project still
+    # links to it - but it also must not actually delete a dataset still in use by another
+    # project. This must silently no-op (skip the deletion) rather than error, the same as
+    # deleting a record that's still referenced elsewhere.
+    proj1 = snowflake_client.add_project("test project 1")
+    proj2 = snowflake_client.add_project("test project 2")
+
+    ds = proj1.add_dataset("singlepoint", "shared dataset")
+    proj2.link_dataset(ds.id)
+
+    proj1.unlink_datasets([ds.id], delete_datasets=True)
+
+    # proj1's own link is gone
+    proj1.fetch_dataset_metadata()
+    assert proj1.dataset_metadata == []
+
+    # But the dataset itself survives, since proj2 still links to it
+    ds_still_there = snowflake_client.get_dataset_by_id(ds.id)
+    assert ds_still_there.id == ds.id
+
+    proj2.fetch_dataset_metadata()
+    assert [d.dataset_id for d in proj2.dataset_metadata] == [ds.id]
+
+    # Now that proj2 is the only remaining link, deleting from proj2 should actually delete it
+    proj2.unlink_datasets([ds.id], delete_datasets=True)
+
+    with pytest.raises(PortalRequestError, match="Could not find dataset"):
+        snowflake_client.get_dataset_by_id(ds.id)
+
+
 def test_project_client_status(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
     storage_socket = snowflake.get_storage_socket()

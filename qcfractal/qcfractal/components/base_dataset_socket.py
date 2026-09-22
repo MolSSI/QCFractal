@@ -1249,9 +1249,17 @@ class BaseDatasetSocket:
                 stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
                 record_ids = session.execute(stmt).scalars().all()
 
-            stmt = delete(BaseDatasetORM)
-            stmt = stmt.where(BaseDatasetORM.id == dataset_id)
-            session.execute(stmt)
+            # A dataset can be linked into more than one project. If it still is, silently skip
+            # the actual deletion rather than deleting a dataset still in use by another
+            # project (or raising an error) - the same behavior as deleting a record that is
+            # still referenced elsewhere (see delete_general/records.delete).
+            try:
+                with session.begin_nested():
+                    stmt = delete(BaseDatasetORM)
+                    stmt = stmt.where(BaseDatasetORM.id == dataset_id)
+                    session.execute(stmt)
+            except IntegrityError:
+                return
 
             if delete_records:
                 self.root_socket.records.delete(record_ids, soft_delete=False, delete_children=True, session=session)

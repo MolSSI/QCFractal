@@ -589,7 +589,8 @@ class ProjectSocket:
         stmt = stmt.where(ProjectDatasetORM.dataset_id.in_(dataset_ids))
         stmt = stmt.returning(ProjectDatasetORM.dataset_id)
 
-        with self.root_socket.optional_session(session, True) as session:
+        # Not read-only: this deletes the project/dataset links, and optionally the datasets
+        with self.root_socket.optional_session(session) as session:
             ds_ids = session.execute(stmt).scalars().all()
 
             # Use ds_ids so we only delete datasets that were removed from this dataset
