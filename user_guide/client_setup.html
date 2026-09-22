@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../_static/documentation_options.js?v=8f78e213"></script>
+    <script src="../_static/documentation_options.js?v=63b587c5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="QCArchive User Guide" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post50+g752d014e8" />
+  <meta name="docsearch:version" content="0.70.post66+g732a4f4ad" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -577,6 +577,21 @@ CONFIG FILE</label><div class="sd-tab-content docutils">
 </div>
 </div>
 </div>
+<p>Instead of a username and password, you can authenticate with a long-lived API token
+(see <a class="reference internal" href="../overview/users_groups.html#overview-api-tokens"><span class="std std-ref">API tokens</span></a>). This is the recommended way to keep a static credential in
+a file, and is what a non-interactive client (such as an MCP server) should use:</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
+CONFIG FILE</label><div class="sd-tab-content docutils">
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://qcademo.molssi.org</span>
+<span class="nt">api_token</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">qcf_your_token_here</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Because the token is a durable credential, keep the file private (for example <code class="docutils literal notranslate"><span class="pre">chmod</span> <span class="pre">600</span></code>);
+<code class="docutils literal notranslate"><span class="pre">PortalClient</span></code> warns if it is readable by other users.</p>
 </section>
 <section id="multiple-servers">
 <h3>Multiple Servers<a class="headerlink" href="#multiple-servers" title="Link to this heading">#</a></h3>
@@ -584,8 +599,8 @@ CONFIG FILE</label><div class="sd-tab-content docutils">
 the address and other options. The name is arbitrary and is for the user to
 differentiate between different servers.</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-2">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-3">
 CONFIG FILE</label><div class="sd-tab-content docutils">
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">qca_demo_server</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://qcademo.molssi.org</span>
@@ -609,13 +624,25 @@ CONFIG FILE</label><div class="sd-tab-content docutils">
 <p>The information needed for constructing a client can also be read from environment variables.
 See <a class="reference internal" href="qcportal_reference/clients.html#qcportal.client.PortalClient.from_env" title="qcportal.client.PortalClient.from_env"><code class="xref py py-meth docutils literal notranslate"><span class="pre">PortalClient.from_env</span></code></a></p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-3">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
 CONFIG FILE</label><div class="sd-tab-content docutils">
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">QCPORTAL_ADDRESS</span><span class="o">=</span><span class="s2">"https://qcademo.molssi.org"</span>
 <span class="nb">export</span><span class="w"> </span><span class="nv">QCPORTAL_USERNAME</span><span class="o">=</span><span class="s2">"your_username"</span>
 <span class="nb">export</span><span class="w"> </span><span class="nv">QCPORTAL_PASSWORD</span><span class="o">=</span><span class="s2">"Secret_Password"</span>
 <span class="nb">export</span><span class="w"> </span><span class="nv">QCPORTAL_CACHE_DIR</span><span class="o">=</span><span class="s2">"/path_to_cache"</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Or, to authenticate with an API token instead of a username and password (the two are
+mutually exclusive):</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
+CONFIG FILE</label><div class="sd-tab-content docutils">
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">QCPORTAL_ADDRESS</span><span class="o">=</span><span class="s2">"https://qcademo.molssi.org"</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">QCPORTAL_API_TOKEN</span><span class="o">=</span><span class="s2">"qcf_your_token_here"</span>
 </pre></div>
 </div>
 </div>

@@ -48,6 +48,22 @@ contain the address and user information.
       username: your_username
       password: Secret_Password
 
+Instead of a username and password, you can authenticate with a long-lived API token
+(see :ref:`overview_api_tokens`). This is the recommended way to keep a static credential in
+a file, and is what a non-interactive client (such as an MCP server) should use:
+
+.. tab-set::
+
+  .. tab-item:: CONFIG FILE
+
+    .. code-block:: yaml
+
+      address: https://qcademo.molssi.org
+      api_token: qcf_your_token_here
+
+Because the token is a durable credential, keep the file private (for example ``chmod 600``);
+``PortalClient`` warns if it is readable by other users.
+
 Multiple Servers
 ~~~~~~~~~~~~~~~~
 
@@ -93,5 +109,17 @@ See :meth:`PortalClient.from_env <qcportal.client.PortalClient.from_env>`
       export QCPORTAL_USERNAME="your_username"
       export QCPORTAL_PASSWORD="Secret_Password"
       export QCPORTAL_CACHE_DIR="/path_to_cache"
+
+Or, to authenticate with an API token instead of a username and password (the two are
+mutually exclusive):
+
+.. tab-set::
+
+  .. tab-item:: CONFIG FILE
+
+    .. code-block:: bash
+
+      export QCPORTAL_ADDRESS="https://qcademo.molssi.org"
+      export QCPORTAL_API_TOKEN="qcf_your_token_here"
 
 

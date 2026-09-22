@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../_static/documentation_options.js?v=8f78e213"></script>
+    <script src="../_static/documentation_options.js?v=63b587c5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Internal Jobs" href="internal_jobs.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post50+g752d014e8" />
+  <meta name="docsearch:version" content="0.70.post66+g732a4f4ad" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -571,6 +571,66 @@ a name and a description.</p>
 <p>Group membership is visible on a user’s own information and is included in the session token,
 so an application built against the web API can read it and use it for its own purposes.</p>
 </section>
+<section id="api-tokens">
+<span id="overview-api-tokens"></span><h2>API tokens<a class="headerlink" href="#api-tokens" title="Link to this heading">#</a></h2>
+<p>Besides a username and password, a user can authenticate with a <strong>long-lived API token</strong>: an
+opaque string, beginning <code class="docutils literal notranslate"><span class="pre">qcf_</span></code>, that is sent in a static <code class="docutils literal notranslate"><span class="pre">Authorization:</span> <span class="pre">Bearer</span> <span class="pre">&lt;token&gt;</span></code>
+header. Unlike the username/password flow - which obtains a short-lived token that
+<a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a> silently refreshes - an API token needs no refreshing,
+so it suits clients that can only set a fixed header (an MCP server, a CI job, a compute
+manager) and cannot run the refresh logic themselves.</p>
+<p>A few things are worth knowing:</p>
+<p><strong>A token inherits the user’s role.</strong> It carries exactly the permissions of its owner at the
+time each request is made - there is no per-token scoping. Changing the user’s role, or
+disabling the account, changes what the token can do (within a few seconds; see below).</p>
+<p><strong>A token cannot manage credentials or accounts.</strong> Several actions are refused when a request
+is authenticated by a token, and require a username/password (or browser) login instead:
+creating or deleting API tokens, changing the account password, and creating, modifying, or
+deleting users. This keeps revocation meaningful - a leaked token cannot mint fresh tokens,
+create a new account, or lock the owner out to outlive the token you revoke. (A token can
+still <em>list</em> tokens.) This matches platforms such as GitHub, where tokens and accounts are
+managed only through an interactive login.</p>
+<p><strong>A token has a name.</strong> Each token is created with a name that must be unique among your
+tokens (<code class="docutils literal notranslate"><span class="pre">laptop</span></code>, <code class="docutils literal notranslate"><span class="pre">ci</span></code>). It identifies the token in a listing and when revoking.</p>
+<p><strong>The token is shown once.</strong> Creating a token returns the plaintext exactly once; the server
+stores only a hash and can never show it again. If it is lost, revoke it and create another.</p>
+<p><strong>Revocation and other changes take effect within a few seconds.</strong> Deleting a token, disabling
+the account, or changing its role all take effect within a few seconds (the server briefly
+caches token and user verification to avoid a database round trip on every request). Note that
+revoking a token does not undo actions already taken with it, nor revoke other tokens it may
+have created.</p>
+<p><strong>Tokens are for programmatic clients, not browsers.</strong> A browser client should use the
+session cookie, which is protected against cross-site use; a token pasted into browser
+JavaScript has no such protection.</p>
+<p>Optionally, a server can require tokens to expire, via <code class="docutils literal notranslate"><span class="pre">api_token_default_lifetime</span></code> and
+<code class="docutils literal notranslate"><span class="pre">api_token_max_lifetime</span></code> (see <a class="reference internal" href="../admin_guide/configuration.html#server-configuration"><span class="std std-ref">Server Configuration</span></a>). By default tokens do not expire.</p>
+<p>Manage tokens through <a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a>:
+<a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.create_api_token" title="qcportal.client.PortalClient.create_api_token"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_api_token()</span></code></a>,
+<a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_api_tokens" title="qcportal.client.PortalClient.list_api_tokens"><code class="xref py py-meth docutils literal notranslate"><span class="pre">list_api_tokens()</span></code></a>, and
+<a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.delete_api_token" title="qcportal.client.PortalClient.delete_api_token"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_api_token()</span></code></a>. With no <code class="docutils literal notranslate"><span class="pre">username_or_id</span></code> these act
+on your own account (any logged-in user may manage their own tokens); an administrator may
+pass another user’s name to manage theirs.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">new_token</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">create_api_token</span><span class="p">(</span><span class="s2">"my laptop"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_token</span><span class="o">.</span><span class="n">token</span>          <span class="c1"># the plaintext - store it now, it is not shown again</span>
+<span class="go">'qcf_...'</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Use it from another client</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalClient</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">"https://ml.qcarchive.molssi.org"</span><span class="p">,</span> <span class="n">api_token</span><span class="o">=</span><span class="s2">"qcf_..."</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Later, list and revoke</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">list_api_tokens</span><span class="p">()]</span>
+<span class="go">[4]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">delete_api_token</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
 <section id="servers-with-security-disabled">
 <span id="overview-security-disabled"></span><h2>Servers with security disabled<a class="headerlink" href="#servers-with-security-disabled" title="Link to this heading">#</a></h2>
 <p>Authentication is optional. A server started with <code class="docutils literal notranslate"><span class="pre">enable_security:</span> <span class="pre">false</span></code> does not
@@ -581,8 +641,8 @@ quickstart asks you for a password.</p>
 <p>The exception is user and group management itself. Those endpoints require security to be
 enabled, and refuse to run otherwise:</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-0">
+<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">list_users</span><span class="p">()</span>
 <span class="go">qcportal.client_base.PortalRequestError: Request failed: Cannot access 'users' with security disabled</span>
@@ -618,8 +678,8 @@ information</p></td>
 <p>The <code class="docutils literal notranslate"><span class="pre">anonymous</span></code> role is read-only. Submitting anything, or modifying anything, requires
 logging in as a user whose role permits it.</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-1">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># No credentials - works if the server allows unauthenticated read</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">"https://ml.qcarchive.molssi.org"</span><span class="p">)</span>
@@ -652,6 +712,7 @@ subcommand; use <a class="reference internal" href="../user_guide/qcportal_refer
 <ul class="simple">
 <li><p><a class="reference internal" href="../user_guide/qcportal_reference/auth.html#qcportal.auth.models.UserInfo" title="qcportal.auth.models.UserInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">qcportal.auth.models.UserInfo</span></code></a></p></li>
 <li><p><a class="reference internal" href="../user_guide/qcportal_reference/auth.html#qcportal.auth.models.GroupInfo" title="qcportal.auth.models.GroupInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">qcportal.auth.models.GroupInfo</span></code></a></p></li>
+<li><p><a class="reference internal" href="../user_guide/qcportal_reference/auth.html#qcportal.auth.models.APIToken" title="qcportal.auth.models.APIToken"><code class="xref py py-class docutils literal notranslate"><span class="pre">qcportal.auth.models.APIToken</span></code></a>, <a class="reference internal" href="../user_guide/qcportal_reference/auth.html#qcportal.auth.models.NewAPIToken" title="qcportal.auth.models.NewAPIToken"><code class="xref py py-class docutils literal notranslate"><span class="pre">qcportal.auth.models.NewAPIToken</span></code></a></p></li>
 <li><p>PortalClient methods</p>
 <ul>
 <li><p><a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.get_user" title="qcportal.client.PortalClient.get_user"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_user()</span></code></a>, <a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_users" title="qcportal.client.PortalClient.list_users"><code class="xref py py-meth docutils literal notranslate"><span class="pre">list_users()</span></code></a></p></li>
@@ -660,6 +721,8 @@ subcommand; use <a class="reference internal" href="../user_guide/qcportal_refer
 <li><p><a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.change_user_password" title="qcportal.client.PortalClient.change_user_password"><code class="xref py py-meth docutils literal notranslate"><span class="pre">change_user_password()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_groups" title="qcportal.client.PortalClient.list_groups"><code class="xref py py-meth docutils literal notranslate"><span class="pre">list_groups()</span></code></a>, <a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.get_group" title="qcportal.client.PortalClient.get_group"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_group()</span></code></a>,
 <a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.add_group" title="qcportal.client.PortalClient.add_group"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_group()</span></code></a>, <a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.delete_group" title="qcportal.client.PortalClient.delete_group"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_group()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.create_api_token" title="qcportal.client.PortalClient.create_api_token"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_api_token()</span></code></a>, <a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_api_tokens" title="qcportal.client.PortalClient.list_api_tokens"><code class="xref py py-meth docutils literal notranslate"><span class="pre">list_api_tokens()</span></code></a>,
+<a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.delete_api_token" title="qcportal.client.PortalClient.delete_api_token"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_api_token()</span></code></a></p></li>
 </ul>
 </li>
 </ul>
@@ -716,6 +779,7 @@ subcommand; use <a class="reference internal" href="../user_guide/qcportal_refer
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#users">Users</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#roles">Roles</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#groups">Groups</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-tokens">API tokens</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#servers-with-security-disabled">Servers with security disabled</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#read-only-access-without-logging-in">Read-only access without logging in</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#managing-users-and-groups">Managing users and groups</a></li>

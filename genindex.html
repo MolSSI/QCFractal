@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=8f78e213"></script>
+    <script src="_static/documentation_options.js?v=63b587c5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post50+g752d014e8" />
+  <meta name="docsearch:version" content="0.70.post66+g732a4f4ad" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -467,6 +467,8 @@
       <ul>
         <li><a href="user_guide/qcportal_reference/utils_misc.html#qcportal.exceptions.AlreadyExistsError.__init__">(AlreadyExistsError method)</a>
 </li>
+        <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APITokenScopeEnum.__init__">(APITokenScopeEnum method)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/utils_misc.html#qcportal.exceptions.AuthenticationFailure.__init__">(AuthenticationFailure method)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/utils_misc.html#qcportal.exceptions.AuthorizationFailure.__init__">(AuthorizationFailure method)</a>
@@ -862,8 +864,6 @@
       </ul></li>
       <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.after_function">after_function (InternalJob attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob.after_function_kwargs">after_function_kwargs (InternalJob attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBKeywords.align">align (NEBKeywords attribute)</a>
@@ -876,6 +876,8 @@
         <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.WavefunctionProtocolEnum.all">(WavefunctionProtocolEnum attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="admin_guide/configuration.html#qcfractal.config.FractalConfig.allow_unauthenticated_read">allow_unauthenticated_read (FractalConfig attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.ErrorCorrectionProtocol.allows">allows() (ErrorCorrectionProtocol method)</a>
@@ -888,7 +890,19 @@
 </li>
       <li><a href="admin_guide/configuration.html#qcfractal.config.FractalConfig.api_limits">api_limits (FractalConfig attribute)</a>
 </li>
+      <li><a href="admin_guide/configuration.html#qcfractal.config.WebAPIConfig.api_token_default_lifetime">api_token_default_lifetime (WebAPIConfig attribute)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogEntry.api_token_id">api_token_id (AccessLogEntry attribute)</a>
+</li>
+      <li><a href="admin_guide/configuration.html#qcfractal.config.WebAPIConfig.api_token_max_lifetime">api_token_max_lifetime (WebAPIConfig attribute)</a>
+</li>
       <li><a href="admin_guide/configuration.html#qcfractal.config.APILimitConfig">APILimitConfig (class in qcfractal.config)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APIToken">APIToken (class in qcportal.auth.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APITokenCreateBody">APITokenCreateBody (class in qcportal.auth.models)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APITokenScopeEnum">APITokenScopeEnum (class in qcportal.auth.models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/utils_misc.html#qcportal.utils.apply_jitter">apply_jitter() (in module qcportal.utils)</a>
 </li>
@@ -1808,6 +1822,8 @@
 </li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ServerStatsEntry.cpu_hours">cpu_hours (ServerStatsEntry attribute)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.create_api_token">create_api_token() (PortalClient method)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.create_dataset_view">create_dataset_view() (in module qcportal.dataset_models)</a>
 
       <ul>
@@ -1850,6 +1866,8 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveQueryFilters.created_after">(TorsiondriveQueryFilters attribute)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APIToken.created_at">created_at (APIToken attribute)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.GridoptimizationQueryFilters.created_before">created_before (GridoptimizationQueryFilters attribute)</a>
 
       <ul>
@@ -2256,6 +2274,8 @@
 </li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.delete_access_log">delete_access_log() (PortalClient method)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.delete_api_token">delete_api_token() (PortalClient method)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.delete_attachment">delete_attachment() (BaseDataset method)</a>
 
       <ul>
@@ -2280,10 +2300,10 @@
 </li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.delete_dataset">delete_dataset() (PortalClient method)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.delete_dataset_record">delete_dataset_record() (DatasetCache method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.DatasetCache.delete_dataset_record">delete_dataset_record() (DatasetCache method)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectDeleteParams.delete_dataset_records">delete_dataset_records (ProjectDeleteParams attribute)</a>
 
       <ul>
@@ -2746,8 +2766,6 @@
       </ul></li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.ErrorLogQueryFilters.error_id">error_id (ErrorLogQueryFilters attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.DeleteMetadata.error_idx">error_idx (DeleteMetadata property)</a>
 
       <ul>
@@ -2756,6 +2774,8 @@
         <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.UpdateMetadata.error_idx">(UpdateMetadata property)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.DeleteMetadata.error_string">error_string (DeleteMetadata property)</a>
 
       <ul>
@@ -2822,6 +2842,12 @@
         <li><a href="user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectAddBody.existing_ok">(ProjectAddBody attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/projects.html#qcportal.project_models.ProjectDatasetAddBody.existing_ok">(ProjectDatasetAddBody attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APIToken.expires_at">expires_at (APIToken attribute)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APITokenCreateBody.expires_at">(APITokenCreateBody attribute)</a>
 </li>
       </ul></li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.ContributedValues.external_url">external_url (ContributedValues attribute)</a>
@@ -3651,6 +3677,8 @@
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogEntry.id">id (AccessLogEntry attribute)</a>
 
       <ul>
+        <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APIToken.id">(APIToken attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.id">(BaseDataset attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.id">(BaseRecord attribute)</a>
@@ -3757,6 +3785,8 @@
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.ContributedValues.index">index (ContributedValues attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/gridoptimization.html#qcportal.gridoptimization.record_models.ScanDimension.indices">indices (ScanDimension attribute)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.NewAPIToken.info">info (NewAPIToken attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/optimization.html#qcportal.optimization.record_models.TrajectoryProtocolEnum.initial_and_final">initial_and_final (TrajectoryProtocolEnum attribute)</a>
 </li>
@@ -4070,6 +4100,8 @@
 </li>
       <li><a href="user_guide/qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before">last_updated_before (InternalJobQueryFilters attribute)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APIToken.last_used_at">last_used_at (APIToken attribute)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/records/manybody.html#qcportal.manybody.record_models.ManybodySpecification.levels">levels (ManybodySpecification attribute)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogQueryFilters.limit">limit (AccessLogQueryFilters attribute)</a>
@@ -4111,6 +4143,8 @@
       <li><a href="user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.link_dataset">link_dataset() (Project method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.link_record">link_record() (Project method)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_api_tokens">list_api_tokens() (PortalClient method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_datasets">list_datasets() (PortalClient method)</a>
 </li>
@@ -4187,6 +4221,8 @@
       <li><a href="admin_guide/configuration.html#qcfractal.config.WebAPIConfig.login_rate_limit_window">login_rate_limit_window (WebAPIConfig attribute)</a>
 </li>
       <li><a href="admin_guide/configuration.html#qcfractal.config.FractalConfig.loglevel">loglevel (FractalConfig attribute)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.looks_like_api_token">looks_like_api_token() (in module qcportal.auth.models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.PriorityEnum.low">low (PriorityEnum attribute)</a>
 </li>
@@ -4747,9 +4783,13 @@
 </li>
       <li><a href="user_guide/qcportal_reference/metadata_models.html#qcportal.metadata_models.UpdateMetadata.n_updated">n_updated (UpdateMetadata property)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.name">name (BaseDataset attribute)</a>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APIToken.name">name (APIToken attribute)</a>
 
       <ul>
+        <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APITokenCreateBody.name">(APITokenCreateBody attribute)</a>
+</li>
+        <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.name">(BaseDataset attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.name">(BaseRecord attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/managers.html#qcportal.managers.models.ComputeManager.name">(ComputeManager attribute)</a>
@@ -4964,6 +5004,8 @@
       <li><a href="user_guide/qcportal_reference/records/neb.html#qcportal.neb.record_models.NEBSpecification">NEBSpecification (class in qcportal.neb.record_models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.dataset_models.DatasetCloneBody.new_dataset_name">new_dataset_name (DatasetCloneBody attribute)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.NewAPIToken">NewAPIToken (class in qcportal.auth.models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/utils_misc.html#qcportal.exceptions.NoClientError">NoClientError</a>
 </li>
@@ -6397,6 +6439,12 @@
       </ul></li>
       <li><a href="user_guide/qcportal_reference/tasks_services.html#qcportal.generic_result.GenericTaskResult.schema_name">schema_name (GenericTaskResult attribute)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APIToken.scope">scope (APIToken attribute)</a>
+
+      <ul>
+        <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APITokenCreateBody.scope">(APITokenCreateBody attribute)</a>
+</li>
+      </ul></li>
       <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.ExecutorConfig.scratch_directory">scratch_directory (ExecutorConfig attribute)</a>
 
       <ul>
@@ -7355,8 +7403,6 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.task">(TorsiondriveRecord property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/records/base_record_models.html#qcportal.record_models.BaseRecord.task_">task_ (BaseRecord attribute)</a>
 
       <ul>
@@ -7377,6 +7423,8 @@
         <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveRecord.task_">(TorsiondriveRecord attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/tasks_services.html#qcportal.tasks.models.TaskClaimBody">TaskClaimBody (class in qcportal.tasks.models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/tasks_services.html#qcportal.tasks.models.TaskReturnBody">TaskReturnBody (class in qcportal.tasks.models)</a>
@@ -7407,6 +7455,10 @@
         <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord.to_qcschema_result">(SinglepointRecord method)</a>
 </li>
       </ul></li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.NewAPIToken.token">token (NewAPIToken attribute)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APIToken.token_prefix">token_prefix (APIToken attribute)</a>
+</li>
       <li><a href="admin_guide/managers/index.html#qcfractalcompute.config.TorqueExecutorConfig">TorqueExecutorConfig (class in qcfractalcompute.config)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/torsiondrive.html#qcportal.torsiondrive.record_models.TorsiondriveAddBody">TorsiondriveAddBody (class in qcportal.torsiondrive.record_models)</a>
@@ -7533,6 +7585,8 @@
 </li>
       <li><a href="admin_guide/configuration.html#qcfractal.config.AutoResetConfig.unknown_error">unknown_error (AutoResetConfig attribute)</a>
 </li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APITokenScopeEnum.unlimited">unlimited (APITokenScopeEnum attribute)</a>
+</li>
       <li><a href="user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.unlink_datasets">unlink_datasets() (Project method)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.unlink_records">unlink_records() (Project method)</a>
@@ -7609,9 +7663,11 @@
       </ul></li>
       <li><a href="user_guide/qcportal_reference/serverinfo.html#qcportal.serverinfo.models.AccessLogEntry.user_agent">user_agent (AccessLogEntry attribute)</a>
 </li>
-      <li><a href="user_guide/qcportal_reference/clients.html#qcportal.manager_client.ManagerClient.user_id">user_id (ManagerClient attribute)</a>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.APIToken.user_id">user_id (APIToken attribute)</a>
 
       <ul>
+        <li><a href="user_guide/qcportal_reference/clients.html#qcportal.manager_client.ManagerClient.user_id">(ManagerClient attribute)</a>
+</li>
         <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.user_id">(PortalClient attribute)</a>
 </li>
         <li><a href="user_guide/qcportal_reference/clients.html#qcportal.client_base.PortalClientBase.user_id">(PortalClientBase attribute)</a>
@@ -7664,6 +7720,8 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user_guide/qcportal_reference/clients.html#qcportal.cache.PortalCache.vacuum">vacuum() (PortalCache method)</a>
+</li>
+      <li><a href="user_guide/qcportal_reference/auth.html#qcportal.auth.models.validate_api_token_scope">validate_api_token_scope() (in module qcportal.auth.models)</a>
 </li>
       <li><a href="user_guide/qcportal_reference/records/singlepoint.html#qcportal.singlepoint.dataset_models.SinglepointDatasetEntriesFrom.validate_input">validate_input() (SinglepointDatasetEntriesFrom method)</a>
 

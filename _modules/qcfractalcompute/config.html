@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=8f78e213"></script>
+    <script src="../../_static/documentation_options.js?v=63b587c5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post50+g752d014e8" />
+  <meta name="docsearch:version" content="0.70.post66+g732a4f4ad" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -626,8 +626,8 @@
 <span class="sd">    can be changed, but only once the Manager is shutdown and the settings changed. Multiple Managers however can be</span>
 <span class="sd">    started in parallel with each other, but must be done as separate calls to the CLI.</span>
 
-<span class="sd">    Caution: The password here is written in plain text, so it is up to the owner/writer of the configuration file</span>
-<span class="sd">    to ensure its security.</span>
+<span class="sd">    Caution: The password or API token here is written in plain text, so it is up to the owner/writer of the</span>
+<span class="sd">    configuration file to ensure its security.</span>
 <span class="sd">    """</span>
 
     <span class="n">fractal_uri</span><span class="p">:</span> <span class="nb">str</span>
@@ -641,8 +641,19 @@
     <span class="n">password</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="w">    </span><span class="sd">"""Password to authenticate to the Fractal Server with (alongside the `username`)"""</span>
 
+    <span class="n">api_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">"""A long-lived API token to authenticate with, instead of a username and password. Mutually exclusive with</span>
+<span class="sd">    them. A revocable, individually-attributable token is preferable to a shared account password for a manager.</span>
+<span class="sd">    """</span>
+
     <span class="n">verify</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="w">    </span><span class="sd">"""If True, verify SSL certificate of the server"""</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_credentials</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Provide either an api_token or a username/password, not both"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">FractalComputeConfig</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>

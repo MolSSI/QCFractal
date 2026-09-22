@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=8f78e213"></script>
+    <script src="../../_static/documentation_options.js?v=63b587c5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post50+g752d014e8" />
+  <meta name="docsearch:version" content="0.70.post66+g732a4f4ad" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -521,6 +521,10 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.auth</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">UserInfo</span><span class="p">,</span>
     <span class="n">GroupInfo</span><span class="p">,</span>
+    <span class="n">APIToken</span><span class="p">,</span>
+    <span class="n">NewAPIToken</span><span class="p">,</span>
+    <span class="n">APITokenCreateBody</span><span class="p">,</span>
+    <span class="n">APITokenScopeEnum</span><span class="p">,</span>
     <span class="n">is_valid_username</span><span class="p">,</span>
     <span class="n">is_valid_password</span><span class="p">,</span>
     <span class="n">is_valid_groupname</span><span class="p">,</span>
@@ -604,6 +608,7 @@
         <span class="n">verify</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">show_motd</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
+        <span class="n">api_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">cache_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">cache_max_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -623,13 +628,15 @@
 <span class="sd">            SSL keys.</span>
 <span class="sd">        show_motd</span>
 <span class="sd">            If a Message-of-the-Day is available, display it</span>
+<span class="sd">        api_token</span>
+<span class="sd">            A long-lived API token to authenticate with, instead of a username and password</span>
 <span class="sd">        cache_dir</span>
 <span class="sd">            Directory to store an internal cache of records and other data</span>
 <span class="sd">        cache_max_size</span>
 <span class="sd">            Maximum size of the cache directory</span>
 <span class="sd">        """</span>
 
-        <span class="n">PortalClientBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">verify</span><span class="p">,</span> <span class="n">show_motd</span><span class="p">)</span>
+        <span class="n">PortalClientBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">verify</span><span class="p">,</span> <span class="n">show_motd</span><span class="p">,</span> <span class="n">api_token</span><span class="o">=</span><span class="n">api_token</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">"PortalClient"</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">PortalCache</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">,</span> <span class="n">cache_max_size</span><span class="p">)</span></div>
 
@@ -4835,6 +4842,94 @@
             <span class="n">is_valid_username</span><span class="p">(</span><span class="n">username_or_id</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">"delete"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"api/v1/users/</span><span class="si">{</span><span class="n">username_or_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+
+    <span class="c1">##############################################################</span>
+    <span class="c1"># API tokens</span>
+    <span class="c1">##############################################################</span>
+<div class="viewcode-block" id="PortalClient.list_api_tokens">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_api_tokens">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_api_tokens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username_or_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">APIToken</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        List a user's API tokens (never including the tokens themselves)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        username_or_id</span>
+<span class="sd">            The user whose tokens to list. If None, lists the current user's own tokens.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">username_or_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">"get"</span><span class="p">,</span> <span class="s2">"api/v1/me/tokens"</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">APIToken</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">username_or_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">is_valid_username</span><span class="p">(</span><span class="n">username_or_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">"get"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"api/v1/users/</span><span class="si">{</span><span class="n">username_or_id</span><span class="si">}</span><span class="s2">/tokens"</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">APIToken</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="PortalClient.create_api_token">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.create_api_token">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_api_token</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">expires_at</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">username_or_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">APITokenScopeEnum</span><span class="o">.</span><span class="n">unlimited</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NewAPIToken</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Create a new API token</span>
+
+<span class="sd">        The returned object contains the plaintext token, which is shown only once and cannot be</span>
+<span class="sd">        retrieved later.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name</span>
+<span class="sd">            A name to identify the token. Must be unique among the user's tokens.</span>
+<span class="sd">        expires_at</span>
+<span class="sd">            When the token should expire (timezone-aware). If None, the server's default policy</span>
+<span class="sd">            applies (which may be no expiration).</span>
+<span class="sd">        username_or_id</span>
+<span class="sd">            The user to create the token for. If None, creates a token for the current user.</span>
+<span class="sd">        scope</span>
+<span class="sd">            What the token should be allowed to do. Currently only "unlimited" (the owner's</span>
+<span class="sd">            full role) exists; this is a placeholder for future restricted scopes.</span>
+<span class="sd">        """</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="n">APITokenCreateBody</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">expires_at</span><span class="o">=</span><span class="n">expires_at</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">username_or_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+                <span class="s2">"post"</span><span class="p">,</span> <span class="s2">"api/v1/me/tokens"</span><span class="p">,</span> <span class="n">NewAPIToken</span><span class="p">,</span> <span class="n">body_model</span><span class="o">=</span><span class="n">APITokenCreateBody</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">username_or_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">is_valid_username</span><span class="p">(</span><span class="n">username_or_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span>
+            <span class="s2">"post"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"api/v1/users/</span><span class="si">{</span><span class="n">username_or_id</span><span class="si">}</span><span class="s2">/tokens"</span><span class="p">,</span> <span class="n">NewAPIToken</span><span class="p">,</span> <span class="n">body_model</span><span class="o">=</span><span class="n">APITokenCreateBody</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PortalClient.delete_api_token">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.delete_api_token">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_api_token</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">username_or_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Delete (revoke) an API token</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        token_id</span>
+<span class="sd">            The id of the token to delete</span>
+<span class="sd">        username_or_id</span>
+<span class="sd">            The owner of the token. If None, deletes one of the current user's own tokens.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">username_or_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">"delete"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"api/v1/me/tokens/</span><span class="si">{</span><span class="n">token_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">username_or_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">is_valid_username</span><span class="p">(</span><span class="n">username_or_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_request</span><span class="p">(</span><span class="s2">"delete"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"api/v1/users/</span><span class="si">{</span><span class="n">username_or_id</span><span class="si">}</span><span class="s2">/tokens/</span><span class="si">{</span><span class="n">token_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 </div>
 
 </pre></div>

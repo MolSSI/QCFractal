@@ -92,6 +92,78 @@ Group membership is visible on a user's own information and is included in the s
 so an application built against the web API can read it and use it for its own purposes.
 
 
+.. _overview_api_tokens:
+
+API tokens
+----------
+
+Besides a username and password, a user can authenticate with a **long-lived API token**: an
+opaque string, beginning ``qcf_``, that is sent in a static ``Authorization: Bearer <token>``
+header. Unlike the username/password flow - which obtains a short-lived token that
+:class:`~qcportal.client.PortalClient` silently refreshes - an API token needs no refreshing,
+so it suits clients that can only set a fixed header (an MCP server, a CI job, a compute
+manager) and cannot run the refresh logic themselves.
+
+A few things are worth knowing:
+
+**A token inherits the user's role.** It carries exactly the permissions of its owner at the
+time each request is made - there is no per-token scoping. Changing the user's role, or
+disabling the account, changes what the token can do (within a few seconds; see below).
+
+**A token cannot manage credentials or accounts.** Several actions are refused when a request
+is authenticated by a token, and require a username/password (or browser) login instead:
+creating or deleting API tokens, changing the account password, and creating, modifying, or
+deleting users. This keeps revocation meaningful - a leaked token cannot mint fresh tokens,
+create a new account, or lock the owner out to outlive the token you revoke. (A token can
+still *list* tokens.) This matches platforms such as GitHub, where tokens and accounts are
+managed only through an interactive login.
+
+**A token has a name.** Each token is created with a name that must be unique among your
+tokens (``laptop``, ``ci``). It identifies the token in a listing and when revoking.
+
+**The token is shown once.** Creating a token returns the plaintext exactly once; the server
+stores only a hash and can never show it again. If it is lost, revoke it and create another.
+
+**Revocation and other changes take effect within a few seconds.** Deleting a token, disabling
+the account, or changing its role all take effect within a few seconds (the server briefly
+caches token and user verification to avoid a database round trip on every request). Note that
+revoking a token does not undo actions already taken with it, nor revoke other tokens it may
+have created.
+
+**Tokens are for programmatic clients, not browsers.** A browser client should use the
+session cookie, which is protected against cross-site use; a token pasted into browser
+JavaScript has no such protection.
+
+Optionally, a server can require tokens to expire, via ``api_token_default_lifetime`` and
+``api_token_max_lifetime`` (see :ref:`server_configuration`). By default tokens do not expire.
+
+Manage tokens through :class:`~qcportal.client.PortalClient`:
+:meth:`~qcportal.client.PortalClient.create_api_token`,
+:meth:`~qcportal.client.PortalClient.list_api_tokens`, and
+:meth:`~qcportal.client.PortalClient.delete_api_token`. With no ``username_or_id`` these act
+on your own account (any logged-in user may manage their own tokens); an administrator may
+pass another user's name to manage theirs.
+
+.. tab-set::
+
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> new_token = client.create_api_token("my laptop")
+      >>> new_token.token          # the plaintext - store it now, it is not shown again
+      'qcf_...'
+
+      >>> # Use it from another client
+      >>> from qcportal import PortalClient
+      >>> c = PortalClient("https://ml.qcarchive.molssi.org", api_token="qcf_...")
+
+      >>> # Later, list and revoke
+      >>> [t.id for t in client.list_api_tokens()]
+      [4]
+      >>> client.delete_api_token(4)
+
+
 .. _overview_security_disabled:
 
 Servers with security disabled
@@ -179,6 +251,7 @@ Users and Groups API Reference
 
 * :class:`qcportal.auth.models.UserInfo`
 * :class:`qcportal.auth.models.GroupInfo`
+* :class:`qcportal.auth.models.APIToken`, :class:`qcportal.auth.models.NewAPIToken`
 
 * PortalClient methods
 
@@ -188,3 +261,5 @@ Users and Groups API Reference
   * :meth:`~qcportal.client.PortalClient.change_user_password`
   * :meth:`~qcportal.client.PortalClient.list_groups`, :meth:`~qcportal.client.PortalClient.get_group`,
     :meth:`~qcportal.client.PortalClient.add_group`, :meth:`~qcportal.client.PortalClient.delete_group`
+  * :meth:`~qcportal.client.PortalClient.create_api_token`, :meth:`~qcportal.client.PortalClient.list_api_tokens`,
+    :meth:`~qcportal.client.PortalClient.delete_api_token`

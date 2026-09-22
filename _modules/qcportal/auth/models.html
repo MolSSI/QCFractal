@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../../_static/documentation_options.js?v=8f78e213"></script>
+    <script src="../../../_static/documentation_options.js?v=63b587c5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post50+g752d014e8" />
+  <meta name="docsearch:version" content="0.70.post66+g732a4f4ad" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -456,12 +456,94 @@
                 <article class="bd-article">
                   
   <h1>Source code for qcportal.auth.models</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">field_validator</span><span class="p">,</span> <span class="n">ConfigDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AwareDatetime</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">field_validator</span><span class="p">,</span> <span class="n">ConfigDict</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">..common_types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Max128Str</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidPasswordError</span><span class="p">,</span> <span class="n">InvalidUsernameError</span><span class="p">,</span> <span class="n">InvalidGroupnameError</span>
+
+<span class="c1"># Every API token begins with this fixed prefix. It makes a token recognizable to secret scanners</span>
+<span class="c1"># and lets the server dispatch on the shape of an Authorization header before attempting to parse</span>
+<span class="c1"># it as a JWT. Shared here so the client and server agree on it.</span>
+<span class="n">API_TOKEN_PREFIX</span> <span class="o">=</span> <span class="s2">"qcf_"</span>
+
+<span class="c1"># Longest name accepted for an API token</span>
+<span class="n">MAX_API_TOKEN_NAME_LENGTH</span> <span class="o">=</span> <span class="mi">128</span>
+
+<span class="c1"># Longest string we will treat as a possible API token. A token is a fixed, known size; anything</span>
+<span class="c1"># much larger is malformed, and (on the server) hashing an unbounded header on every request would</span>
+<span class="c1"># be a cheap amplification vector.</span>
+<span class="n">MAX_API_TOKEN_LENGTH</span> <span class="o">=</span> <span class="mi">128</span>
+
+<span class="c1"># The random part of a token is secrets.token_urlsafe output</span>
+<span class="n">_API_TOKEN_BODY_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^[A-Za-z0-9_-]+$"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="APITokenScopeEnum">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.APITokenScopeEnum">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">APITokenScopeEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Named scopes for API tokens</span>
+
+<span class="sd">    A token's scope is what it is allowed to do, relative to its owner's role - the effective</span>
+<span class="sd">    permission can only ever be a restriction of the role, never an extension. A scope is stored</span>
+<span class="sd">    and transmitted as a plain string, validated by validate_api_token_scope(); this enum lists</span>
+<span class="sd">    the named values that validator accepts. Currently there is exactly one, ``unlimited``,</span>
+<span class="sd">    meaning the token carries the owner's full role. Future scopes may be parameterized (for</span>
+<span class="sd">    example, limiting writes to particular projects) and so will be handled by the validator's</span>
+<span class="sd">    grammar rather than listed here. The "everything" scope is always this explicit named value -</span>
+<span class="sd">    a null or empty scope must never be interpreted as unlimited access.</span>
+<span class="sd">    """</span>
+
+    <span class="n">unlimited</span> <span class="o">=</span> <span class="s2">"unlimited"</span></div>
+
+
+
+<div class="viewcode-block" id="validate_api_token_scope">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.validate_api_token_scope">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_api_token_scope</span><span class="p">(</span><span class="n">scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">APITokenScopeEnum</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Validates an API token scope, returning its canonical string form</span>
+
+<span class="sd">    This is the single place scope values are validated, shared by the client models and the</span>
+<span class="sd">    server. Today the grammar is trivial - the only valid scope is "unlimited" - and future</span>
+<span class="sd">    parameterized scopes extend the grammar here, without changing any field or column type.</span>
+
+<span class="sd">    Raises ValueError for a scope this version does not recognize.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">APITokenScopeEnum</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">scope</span><span class="o">.</span><span class="n">value</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">APITokenScopeEnum</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown API token scope: '</span><span class="si">{</span><span class="n">scope</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="looks_like_api_token">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.looks_like_api_token">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">looks_like_api_token</span><span class="p">(</span><span class="n">raw</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Returns whether a string is shaped like an API token</span>
+
+<span class="sd">    This is a cheap syntactic check (prefix, length, character set), shared by the client (to fail</span>
+<span class="sd">    fast before a network round trip) and the server (to reject obviously-bad input before hashing).</span>
+<span class="sd">    It says nothing about whether the token actually exists or is valid.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">raw</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">API_TOKEN_PREFIX</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_API_TOKEN_LENGTH</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">API_TOKEN_PREFIX</span><span class="p">)</span> <span class="p">:]</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">body</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">bool</span><span class="p">(</span><span class="n">_API_TOKEN_BODY_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">body</span><span class="p">))</span></div>
+
 
 
 <div class="viewcode-block" id="AuthTypeEnum">
@@ -657,6 +739,100 @@
             <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
                 <span class="n">is_valid_groupname</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">v</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="APIToken">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.APIToken">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">APIToken</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Metadata about a long-lived API token</span>
+
+<span class="sd">    This never contains the token itself. The plaintext token is shown exactly once, when the</span>
+<span class="sd">    token is created (see NewAPIToken); afterwards only this metadata is available.</span>
+<span class="sd">    """</span>
+
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span>
+<span class="w">    </span><span class="sd">"""The id of the token (used to revoke it)"""</span>
+
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span>
+<span class="w">    </span><span class="sd">"""The id of the user the token authenticates as"""</span>
+
+    <span class="n">token_prefix</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">"""The first few characters of the token, for identifying it in a listing"""</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">"""The name given to the token when it was created (unique among the user's tokens)"""</span>
+
+    <span class="n">scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">APITokenScopeEnum</span><span class="o">.</span><span class="n">unlimited</span><span class="o">.</span><span class="n">value</span>
+<span class="w">    </span><span class="sd">"""What the token is allowed to do (see APITokenScopeEnum). Deliberately a plain string here,</span>
+<span class="sd">    like UserInfo.role, so an older client can still parse listings from a newer server that has</span>
+<span class="sd">    scopes this client does not know about"""</span>
+
+    <span class="n">created_at</span><span class="p">:</span> <span class="n">datetime</span>
+<span class="w">    </span><span class="sd">"""When the token was created"""</span>
+
+    <span class="n">expires_at</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">"""When the token expires, or null if it never expires"""</span>
+
+    <span class="n">last_used_at</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">"""Approximate time the token was last presented on a request, or null if never used"""</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="NewAPIToken">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.NewAPIToken">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">NewAPIToken</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    A newly-created API token, including the plaintext token</span>
+
+<span class="sd">    The plaintext token is only available here, in the response to creating the token. It is not</span>
+<span class="sd">    stored and cannot be retrieved later.</span>
+<span class="sd">    """</span>
+
+    <span class="n">token</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">"""The plaintext token. Paste this into a client's Authorization header. Store it securely - it</span>
+<span class="sd">    cannot be retrieved again"""</span>
+
+    <span class="n">info</span><span class="p">:</span> <span class="n">APIToken</span>
+<span class="w">    </span><span class="sd">"""Metadata about the token"""</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="APITokenCreateBody">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.APITokenCreateBody">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">APITokenCreateBody</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Options for creating a new API token</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="n">MAX_API_TOKEN_NAME_LENGTH</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""A name to identify the token. Must be unique among the user's tokens."""</span>
+
+    <span class="n">scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">APITokenScopeEnum</span><span class="o">.</span><span class="n">unlimited</span><span class="o">.</span><span class="n">value</span>
+<span class="w">    </span><span class="sd">"""What the token should be allowed to do. Currently only "unlimited" (the owner's full role)</span>
+<span class="sd">    exists. A plain (but validated) string, so the public schema never changes when new scopes</span>
+<span class="sd">    are added; a scope this server does not recognize is rejected"""</span>
+
+    <span class="n">expires_at</span><span class="p">:</span> <span class="n">AwareDatetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">"""When the token should expire. Must be timezone-aware. Null requests a non-expiring token,</span>
+<span class="sd">    subject to the server's api_token_default_lifetime and api_token_max_lifetime policy"""</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"scope"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_valid_scope</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Makes sure the scope is one this version understands"""</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">validate_api_token_scope</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
 

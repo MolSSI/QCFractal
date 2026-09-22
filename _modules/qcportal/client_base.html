@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=8f78e213"></script>
+    <script src="../../_static/documentation_options.js?v=63b587c5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post50+g752d014e8" />
+  <meta name="docsearch:version" content="0.70.post66+g732a4f4ad" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -475,8 +475,31 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">API_TOKEN_PREFIX</span><span class="p">,</span> <span class="n">UserInfo</span><span class="p">,</span> <span class="n">looks_like_api_token</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">AuthenticationFailure</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.serialization</span><span class="w"> </span><span class="kn">import</span> <span class="n">serialize</span><span class="p">,</span> <span class="n">deserialize</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_response_msg</span><span class="p">(</span><span class="n">response</span><span class="p">:</span> <span class="n">requests</span><span class="o">.</span><span class="n">Response</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Best-effort extraction of a human-readable message from an error response</span>
+
+<span class="sd">    The server returns errors as JSON with the message under "msg", but an error may also come from</span>
+<span class="sd">    a reverse proxy or load balancer as HTML, an empty body, or a non-object JSON value. This never</span>
+<span class="sd">    raises, so callers can use it on any response.</span>
+<span class="sd">    """</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">reason</span> <span class="ow">or</span> <span class="s2">""</span>
+
+    <span class="n">msg</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"msg"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="c1"># A non-string "msg" (null, a number, a list) is not a usable message. Fall back so that</span>
+        <span class="c1"># callers doing substring checks always get a string.</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">reason</span> <span class="ow">or</span> <span class="s2">""</span>
+    <span class="k">return</span> <span class="n">msg</span>
 
 <span class="n">AllowedConnectionExceptions</span> <span class="o">=</span> <span class="p">(</span>
     <span class="ne">ConnectionError</span><span class="p">,</span>
@@ -504,8 +527,13 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">pretty_print_request</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">requests</span><span class="o">.</span><span class="n">PreparedRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">"----------------------"</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">req</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-    <span class="c1"># Header values may be bytes, so convert explicitly</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">req</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+    <span class="c1"># Header values may be bytes, so convert explicitly. The Authorization header carries a bearer</span>
+    <span class="c1"># credential (a JWT or a long-lived API token), so its value is redacted even in debug output</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="s1">'&lt;redacted&gt;'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">'authorization'</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">req</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">"----------------------"</span><span class="p">)</span></div>
 
 
@@ -551,6 +579,7 @@
         <span class="n">verify</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">show_motd</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
+        <span class="n">api_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">information_endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"api/v1/information"</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Initializes a PortalClient instance from an address and verification information.</span>
@@ -569,7 +598,20 @@
 <span class="sd">            SSL keys.</span>
 <span class="sd">        show_motd</span>
 <span class="sd">            If a Message-of-the-Day is available, display it</span>
+<span class="sd">        api_token</span>
+<span class="sd">            A long-lived API token to authenticate with, as an alternative to a username and</span>
+<span class="sd">            password. Mutually exclusive with them. Unlike the username/password flow, this needs</span>
+<span class="sd">            no token refreshing, so it is suitable for clients that only set a static header.</span>
 <span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">api_token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">username</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">password</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot provide both an api_token and a username/password"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">api_token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">looks_like_api_token</span><span class="p">(</span><span class="n">api_token</span><span class="p">):</span>
+            <span class="c1"># A cheap client-side check (prefix, length, character set) so an obviously malformed</span>
+            <span class="c1"># token - e.g. a password pasted into the wrong field - fails immediately with a clear</span>
+            <span class="c1"># message rather than a 401 after a round trip. The server remains authoritative.</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"That does not look like a valid API token (it should start with '</span><span class="si">{</span><span class="n">API_TOKEN_PREFIX</span><span class="si">}</span><span class="s2">')"</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">"PortalClientBase"</span><span class="p">)</span>
 
@@ -622,6 +664,7 @@
         <span class="c1"># Credentials and JWT tokens/expirations. These are all set by _get_JWT_token</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_password</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_api_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_refresh_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_exp</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -631,6 +674,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_username</span> <span class="o">=</span> <span class="n">username</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_password</span> <span class="o">=</span> <span class="n">password</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_get_JWT_token</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">api_token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># A static bearer credential - no login, no refresh. Just set it on the session so it</span>
+            <span class="c1"># rides on every request, exactly as the JWT access token does.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_api_token</span> <span class="o">=</span> <span class="n">api_token</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_req_session</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"Authorization"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Bearer </span><span class="si">{</span><span class="n">api_token</span><span class="si">}</span><span class="s2">"</span><span class="p">})</span>
 
         <span class="c1"># Try to connect and pull the server info</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_server_information</span><span class="p">()</span>
@@ -647,6 +695,12 @@
                 <span class="s2">"does not support. "</span>
                 <span class="sa">f</span><span class="s2">"client version: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">__version__</span><span class="p">)</span><span class="si">}</span><span class="s2">, server version: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="p">[</span><span class="s1">'version'</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
+
+        <span class="c1"># With username/password the user id came from the decoded JWT. An API token is opaque, so</span>
+        <span class="c1"># ask the server who we are. A failure to reach /me is not fatal (a compute-only proxy may</span>
+        <span class="c1"># not expose it, or security may be disabled), but a 401 means the token itself is bad.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bootstrap_identity_from_token</span><span class="p">()</span>
 
         <span class="n">motd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"motd"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">show_motd</span> <span class="ow">and</span> <span class="n">motd</span><span class="p">:</span>
@@ -716,6 +770,20 @@
         <span class="k">if</span> <span class="s2">"address"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">"Config file must at least contain an address field."</span><span class="p">)</span>
 
+        <span class="c1"># A config file holding a credential (an API token or a password) should not be readable by</span>
+        <span class="c1"># other users. Warn (but do not refuse), mirroring the caution ssh applies to private keys.</span>
+        <span class="n">has_credential</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"api_token"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"password"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">has_credential</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"posix"</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">mode</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span><span class="o">.</span><span class="n">st_mode</span>
+                <span class="k">if</span> <span class="n">mode</span> <span class="o">&amp;</span> <span class="mo">0o077</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">"PortalClientBase"</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"Config file </span><span class="si">{</span><span class="n">config_path</span><span class="si">}</span><span class="s2"> contains a credential but is readable by other "</span>
+                        <span class="s2">"users. Consider 'chmod 600' on it."</span>
+                    <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span></div>
 
 
@@ -730,6 +798,7 @@
 <span class="sd">          * QCPORTAL_ADDRESS (required)</span>
 <span class="sd">          * QCPORTAL_USERNAME (optional)</span>
 <span class="sd">          * QCPORTAL_PASSWORD (optional)</span>
+<span class="sd">          * QCPORTAL_API_TOKEN (optional, mutually exclusive with username/password)</span>
 <span class="sd">          * QCPORTAL_VERIFY (optional, defaults to True)</span>
 <span class="sd">          * QCPORTAL_CACHE_DIR (optional)</span>
 
@@ -742,11 +811,17 @@
         <span class="n">address</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"QCPORTAL_ADDRESS"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">username</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"QCPORTAL_USERNAME"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">password</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"QCPORTAL_PASSWORD"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">api_token</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"QCPORTAL_API_TOKEN"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">verify</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"QCPORTAL_VERIFY"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"QCPORTAL_CACHE_DIR"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">address</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">"Required environment variable 'QCPORTAL_ADDRESS' not found"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">api_token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">username</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">password</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Set either QCPORTAL_API_TOKEN or QCPORTAL_USERNAME/QCPORTAL_PASSWORD, not both"</span>
+            <span class="p">)</span>
 
         <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"address"</span><span class="p">:</span> <span class="n">address</span><span class="p">}</span>
 
@@ -755,6 +830,9 @@
 
         <span class="k">if</span> <span class="n">password</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">data</span><span class="p">[</span><span class="s2">"password"</span><span class="p">]</span> <span class="o">=</span> <span class="n">password</span>
+
+        <span class="k">if</span> <span class="n">api_token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">"api_token"</span><span class="p">]</span> <span class="o">=</span> <span class="n">api_token</span>
 
         <span class="k">if</span> <span class="n">cache_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">data</span><span class="p">[</span><span class="s2">"cache_dir"</span><span class="p">]</span> <span class="o">=</span> <span class="n">cache_dir</span>
@@ -844,7 +922,41 @@
 
         <span class="k">return</span> <span class="n">ret</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_bootstrap_identity_from_token</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Populates self.user_id / self.username for an API-token client by asking the server</span>
+
+<span class="sd">        Called only in token mode. On a normal secure server /me is reachable by any authenticated</span>
+<span class="sd">        user, so this should succeed - the one exception is a server with security disabled, where</span>
+<span class="sd">        /me returns 401 and there is no identity to learn (but the token may still be usable for</span>
+<span class="sd">        the open endpoints). Any other error means either the token is bad or something is wrong, so</span>
+<span class="sd">        it is raised rather than silently producing an identity-less client.</span>
+<span class="sd">        """</span>
+
+        <span class="n">full_uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">+</span> <span class="s2">"api/v1/me"</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">"GET"</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">full_uri</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"Accept"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">})</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="n">user_info</span> <span class="o">=</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">ret</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"Content-Type"</span><span class="p">],</span> <span class="n">UserInfo</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">user_info</span><span class="o">.</span><span class="n">id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">user_info</span><span class="o">.</span><span class="n">username</span>
+            <span class="k">return</span>
+
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">_response_msg</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+
+        <span class="c1"># A server with security disabled returns 401 from /me (it requires security). The token is</span>
+        <span class="c1"># not necessarily bad, and there is simply no identity to learn - tolerate it.</span>
+        <span class="k">if</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span> <span class="ow">and</span> <span class="s2">"security disabled"</span> <span class="ow">in</span> <span class="n">msg</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Server has security disabled; cannot determine identity from API token"</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Anything else (a genuine 401, a 404, a 5xx) is a real problem - do not hide it behind an</span>
+        <span class="c1"># identity-less client</span>
+        <span class="k">raise</span> <span class="n">AuthenticationFailure</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not authenticate API token: </span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_JWT_token</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"JWT login attempted on an API-token client"</span>
 
         <span class="n">full_uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">+</span> <span class="s2">"auth/v1/login"</span>
         <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"username"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="p">,</span> <span class="s2">"password"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_password</span><span class="p">}</span>
@@ -870,13 +982,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_refresh_exp</span> <span class="o">=</span> <span class="n">decoded_refresh_token</span><span class="p">[</span><span class="s2">"exp"</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">decoded_access_token</span><span class="p">[</span><span class="s2">"sub"</span><span class="p">])</span>  <span class="c1"># "identity" "subject"</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"msg"</span><span class="p">]</span>
-            <span class="k">except</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">reason</span>
-            <span class="k">raise</span> <span class="n">AuthenticationFailure</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">AuthenticationFailure</span><span class="p">(</span><span class="n">_response_msg</span><span class="p">(</span><span class="n">ret</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_refresh_JWT_token</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"JWT refresh attempted on an API-token client"</span>
 
         <span class="n">full_uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">+</span> <span class="s2">"auth/v1/refresh"</span>
         <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"Authorization"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Bearer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_jwt_refresh_token</span><span class="si">}</span><span class="s2">"</span><span class="p">}</span>
@@ -896,15 +1005,17 @@
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_exp</span> <span class="o">=</span> <span class="n">decoded_access_token</span><span class="p">[</span><span class="s2">"exp"</span><span class="p">]</span>
 
-        <span class="k">elif</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span> <span class="ow">and</span> <span class="s2">"Token has expired"</span> <span class="ow">in</span> <span class="n">ret</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"msg"</span><span class="p">]:</span>
+            <span class="k">return</span>
+
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">_response_msg</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span> <span class="ow">and</span> <span class="s2">"Token has expired"</span> <span class="ow">in</span> <span class="n">msg</span><span class="p">:</span>
             <span class="c1"># If the refresh token has expired, try to log in again</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_get_JWT_token</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span> <span class="ow">and</span> <span class="sa">f</span><span class="s2">" is disabled"</span> <span class="ow">in</span> <span class="n">ret</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"msg"</span><span class="p">]:</span>
+        <span class="k">elif</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span> <span class="ow">and</span> <span class="s2">" is disabled"</span> <span class="ow">in</span> <span class="n">msg</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">AuthenticationFailure</span><span class="p">(</span><span class="s2">"User account has been disabled"</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span> <span class="ow">and</span> <span class="sa">f</span><span class="s2">" does not exist"</span> <span class="ow">in</span> <span class="n">ret</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"msg"</span><span class="p">]:</span>
+        <span class="k">elif</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span> <span class="ow">and</span> <span class="s2">" does not exist"</span> <span class="ow">in</span> <span class="n">msg</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">AuthenticationFailure</span><span class="p">(</span><span class="s2">"User account no longer exists"</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># shouldn't happen unless user is blacklisted or something</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">ret</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">ConnectionRefusedError</span><span class="p">(</span><span class="s2">"Unable to refresh JWT authorization token! This is a server issue!!"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_request</span><span class="p">(</span>
@@ -946,8 +1057,13 @@
 
         <span class="c1"># If JWT token expired, automatically renew it and retry once. This should have been caught above,</span>
         <span class="c1"># but can happen in rare instances where the token expires between the time we check it and the time</span>
-        <span class="c1"># we use it.</span>
-        <span class="k">if</span> <span class="n">internal_retry</span> <span class="ow">and</span> <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"Token has expired"</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"msg"</span><span class="p">]:</span>
+        <span class="c1"># we use it. Only applies to the JWT flow - an API token cannot be refreshed.</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">internal_retry</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_token</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="s2">"Token has expired"</span> <span class="ow">in</span> <span class="n">_response_msg</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_JWT_token</span><span class="p">()</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">url_params</span><span class="o">=</span><span class="n">url_params</span><span class="p">,</span> <span class="n">internal_retry</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
@@ -956,12 +1072,14 @@
                 <span class="c1"># For many errors returned by our code, the error details are returned as json</span>
                 <span class="c1"># with the error message stored under "msg"</span>
                 <span class="n">details</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">details</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"msg"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">details</span><span class="p">)}</span>
             <span class="k">except</span><span class="p">:</span>
                 <span class="c1"># If this error comes from, ie, the web server or something else, then</span>
                 <span class="c1"># we have to use 'reason'</span>
                 <span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"msg"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reason</span><span class="p">}</span>
 
-            <span class="k">raise</span> <span class="n">PortalRequestError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Request failed: </span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s1">'msg'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">PortalRequestError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Request failed: </span><span class="si">{</span><span class="n">details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'msg'</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="o">.</span><span class="n">reason</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">r</span>
 
