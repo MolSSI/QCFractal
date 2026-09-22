@@ -468,8 +468,8 @@ class PortalClient(PortalClientBase):
         Returns
         -------
         :
-            A list of dictionaries, each with the keys ``record_id`` (which holds the *dataset*
-            ID), ``project_id``, ``project_name``, and ``dataset_name``
+            A list of dictionaries, each with the keys ``dataset_id``, ``project_id``,
+            ``project_name``, and ``dataset_name``
         """
         body = ProjectQueryDatasets(dataset_id=make_list(dataset_id))
         return self.make_request("post", f"api/v1/projects/querydatasets", list[dict[str, Any]], body=body)

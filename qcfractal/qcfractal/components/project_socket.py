@@ -348,7 +348,7 @@ class ProjectSocket:
             ret = session.execute(stmt).all()
             return [
                 {
-                    "record_id": x[0],
+                    "dataset_id": x[0],
                     "project_id": x[1],
                     "project_name": x[2],
                     "dataset_name": x[3],

@@ -496,7 +496,7 @@ def test_project_client_query_datasets(snowflake_client: PortalClient):
     qr = snowflake_client.query_project_datasets(ds2.id)
     assert len(qr) == 1
     assert qr[0]["project_id"] == proj2.id
-    assert qr[0]["record_id"] == ds2.id
+    assert qr[0]["dataset_id"] == ds2.id
     assert qr[0]["project_name"] == proj2.name
     assert qr[0]["dataset_name"] == "test dataset 2"
 
