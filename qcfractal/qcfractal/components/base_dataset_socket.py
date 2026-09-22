@@ -509,6 +509,15 @@ class BaseDatasetSocket:
             ds.default_compute_tag = new_metadata.default_compute_tag
             ds.default_compute_priority = new_metadata.default_compute_priority
 
+            # The pre-check above is a fast path, not a guarantee - two concurrent renames to
+            # the same name can both pass it before either commits. Flushing here lets the
+            # dataset_type+lname unique constraint catch that race, converting what would
+            # otherwise be an unhandled IntegrityError into a clean, reportable error.
+            try:
+                session.flush()
+            except IntegrityError:
+                raise AlreadyExistsError(f"{self.dataset_type} dataset named '{new_metadata.name}' already exists")
+
     def add_specifications(
         self,
         dataset_id: int,

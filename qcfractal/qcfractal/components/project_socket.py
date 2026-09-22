@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select, delete, func
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import IntegrityError
 
 from qcfractal.components.dataset_db_models import BaseDatasetORM
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
@@ -144,6 +145,15 @@ class ProjectSocket:
 
             proj.default_compute_tag = new_metadata.default_compute_tag
             proj.default_compute_priority = new_metadata.default_compute_priority
+
+            # The pre-check above is a fast path, not a guarantee - two concurrent renames to
+            # the same name can both pass it before either commits. Flushing here lets the
+            # lname unique constraint catch that race, converting what would otherwise be an
+            # unhandled IntegrityError into a clean, reportable error.
+            try:
+                session.flush()
+            except IntegrityError:
+                raise AlreadyExistsError(f"Project named '{new_metadata.name}' already exists")
 
     def get(
         self,
