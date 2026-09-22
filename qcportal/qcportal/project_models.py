@@ -290,7 +290,7 @@ class Project(BaseModel):
     # Records
     #############################
     def _lookup_record_id(self, name: str) -> int:
-        for d in self._record_metadata:
+        for d in self.record_metadata:
             if d.name == name:
                 return d.record_id
 
@@ -565,7 +565,7 @@ class Project(BaseModel):
     # Datasets
     #############################
     def _lookup_dataset_id(self, name: str) -> int:
-        for d in self._dataset_metadata:
+        for d in self.dataset_metadata:
             if d.name == name:
                 return d.dataset_id
 

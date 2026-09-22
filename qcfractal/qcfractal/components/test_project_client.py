@@ -94,6 +94,30 @@ def test_project_client_add_get_records_datasets(snowflake_client: PortalClient)
     assert plist[0]["dataset_count"] == 2
 
 
+def test_project_client_get_by_name_fresh_project(snowflake_client: PortalClient):
+    # get_record/get_dataset by name must work on a freshly-obtained Project object, where the
+    # local record/dataset metadata caches have not been populated yet (eg by a prior add_record
+    # or add_dataset call on that same object). The name lookup must trigger the lazy fetch.
+    proj = snowflake_client.add_project("test project")
+
+    r = proj.add_record("test_record", test_inp_1)
+    ds = proj.add_dataset("singlepoint", "test singlepoint dataset")
+
+    proj_fresh = snowflake_client.get_project_by_id(proj.id)
+
+    r_test = proj_fresh.get_record("test_record")
+    ds_test = proj_fresh.get_dataset("test singlepoint dataset")
+
+    assert r_test.id == r.id
+    assert ds_test.id == ds.id
+
+    with pytest.raises(KeyError):
+        proj_fresh.get_record("does not exist")
+
+    with pytest.raises(KeyError):
+        proj_fresh.get_dataset("does not exist")
+
+
 def test_project_client_link_records_datasets(snowflake_client: PortalClient):
 
     # Add these directly to the server (not part of the project)
