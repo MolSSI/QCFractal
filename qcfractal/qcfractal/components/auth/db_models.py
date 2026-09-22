@@ -116,6 +116,69 @@ class UserSessionORM(BaseORM):
         }
 
 
+class UserAPITokenORM(BaseORM):
+    """
+    Table for storing long-lived API tokens
+
+    An API token is a bearer credential: presenting it is enough to act as the owning user. Only
+    the SHA-256 hash of the token is ever stored (see UserSessionORM.session_key_hash for the same
+    reasoning) - never "optimize" verification into a lookup by token_prefix followed by comparing
+    token_hash in python. If that is ever done, the comparison must use hmac.compare_digest.
+    """
+
+    __tablename__ = "user_api_token"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="cascade"), nullable=False)
+
+    # SHA-256 (hex) of the full token as presented in the Authorization header (prefix included)
+    token_hash = Column(String, nullable=False)
+
+    # The first few characters of the token ("qcf_" plus a bit of the secret). Not secret itself -
+    # it exists so a listing can be correlated with the token pasted into some config file
+    token_prefix = Column(String, nullable=False)
+
+    # Human-readable name supplied by the creator ("laptop", "CI"). Unique per user.
+    name = Column(String, nullable=False)
+
+    # What the token is allowed to do (see qcportal APITokenScopeEnum). Currently always
+    # "unlimited" (the owner's full role); a placeholder so restricted scopes can be added later
+    # without a schema change. A plain string (like UserORM.role) rather than a native enum, so
+    # new scope values need no migration. The "everything" scope is a named value - a null or
+    # empty scope must never be interpreted as unlimited access.
+    scope = Column(String, nullable=False, server_default="unlimited")
+
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=now_at_utc)
+
+    # Null means the token never expires
+    expires_at = Column(TIMESTAMP(timezone=True), nullable=True)
+
+    # Approximate (throttled) time the token was last presented and passed token verification;
+    # null if never used. Note this records presentation of a valid token, even if the request was
+    # ultimately rejected (e.g. the owner is disabled) - it answers "is this token still in use".
+    last_used_at = Column(TIMESTAMP(timezone=True), nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("token_hash", name="ux_user_api_token_token_hash"),
+        UniqueConstraint("user_id", "name", name="ux_user_api_token_user_id_name"),
+        Index("ix_user_api_token_user_id", "user_id"),
+    )
+
+    _qcportal_model_excludes = ["token_hash"]
+
+    def public_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "token_prefix": self.token_prefix,
+            "name": self.name,
+            "scope": self.scope,
+            "created_at": self.created_at,
+            "expires_at": self.expires_at,
+            "last_used_at": self.last_used_at,
+        }
+
+
 class UserPreferencesORM(BaseORM):
     """
     Table for storing user preference information

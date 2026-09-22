@@ -17,8 +17,31 @@ from packaging.version import parse as parse_version
 from tqdm import tqdm
 
 from . import __version__
+from .auth import API_TOKEN_PREFIX, UserInfo, looks_like_api_token
 from .exceptions import AuthenticationFailure
 from .serialization import serialize, deserialize
+
+
+def _response_msg(response: requests.Response) -> str:
+    """
+    Best-effort extraction of a human-readable message from an error response
+
+    The server returns errors as JSON with the message under "msg", but an error may also come from
+    a reverse proxy or load balancer as HTML, an empty body, or a non-object JSON value. This never
+    raises, so callers can use it on any response.
+    """
+
+    try:
+        body = response.json()
+    except Exception:
+        return response.reason or ""
+
+    msg = body.get("msg") if isinstance(body, dict) else None
+    if not isinstance(msg, str):
+        # A non-string "msg" (null, a number, a list) is not a usable message. Fall back so that
+        # callers doing substring checks always get a string.
+        return response.reason or ""
+    return msg
 
 AllowedConnectionExceptions = (
     ConnectionError,
@@ -44,8 +67,13 @@ _connection_error_msg = "\n\nCould not connect to server {}, please check the ad
 def pretty_print_request(req: requests.PreparedRequest) -> None:
     print("----------------------")
     print(f"{req.method} {req.url}")
-    # Header values may be bytes, so convert explicitly
-    print("\n".join(f"{k}: {str(v)}" for k, v in req.headers.items()))
+    # Header values may be bytes, so convert explicitly. The Authorization header carries a bearer
+    # credential (a JWT or a long-lived API token), so its value is redacted even in debug output
+    print(
+        "\n".join(
+            f"{k}: {'<redacted>' if k.lower() == 'authorization' else str(v)}" for k, v in req.headers.items()
+        )
+    )
     print("----------------------")
 
 
@@ -77,6 +105,7 @@ class PortalClientBase:
         verify: bool = True,
         show_motd: bool = True,
         *,
+        api_token: str | None = None,
         information_endpoint: str = "api/v1/information",
     ) -> None:
         """Initializes a PortalClient instance from an address and verification information.
@@ -95,7 +124,20 @@ class PortalClientBase:
             SSL keys.
         show_motd
             If a Message-of-the-Day is available, display it
+        api_token
+            A long-lived API token to authenticate with, as an alternative to a username and
+            password. Mutually exclusive with them. Unlike the username/password flow, this needs
+            no token refreshing, so it is suitable for clients that only set a static header.
         """
+
+        if api_token is not None and (username is not None or password is not None):
+            raise ValueError("Cannot provide both an api_token and a username/password")
+
+        if api_token is not None and not looks_like_api_token(api_token):
+            # A cheap client-side check (prefix, length, character set) so an obviously malformed
+            # token - e.g. a password pasted into the wrong field - fails immediately with a clear
+            # message rather than a 401 after a round trip. The server remains authoritative.
+            raise ValueError(f"That does not look like a valid API token (it should start with '{API_TOKEN_PREFIX}')")
 
         self._logger = logging.getLogger("PortalClientBase")
 
@@ -148,6 +190,7 @@ class PortalClientBase:
         # Credentials and JWT tokens/expirations. These are all set by _get_JWT_token
         self._username: str | None = None
         self._password: str | None = None
+        self._api_token: str | None = None
         self._jwt_access_token: str | None = None
         self._jwt_refresh_token: str | None = None
         self._jwt_access_exp: int | None = None
@@ -157,6 +200,11 @@ class PortalClientBase:
             self._username = username
             self._password = password
             self._get_JWT_token()
+        elif api_token is not None:
+            # A static bearer credential - no login, no refresh. Just set it on the session so it
+            # rides on every request, exactly as the JWT access token does.
+            self._api_token = api_token
+            self._req_session.headers.update({"Authorization": f"Bearer {api_token}"})
 
         # Try to connect and pull the server info
         self.server_info: dict[str, Any] = self.get_server_information()
@@ -173,6 +221,12 @@ class PortalClientBase:
                 "does not support. "
                 f"client version: {str(__version__)}, server version: {str(self.server_info['version'])}"
             )
+
+        # With username/password the user id came from the decoded JWT. An API token is opaque, so
+        # ask the server who we are. A failure to reach /me is not fatal (a compute-only proxy may
+        # not expose it, or security may be disabled), but a 401 means the token itself is bad.
+        if self._api_token is not None:
+            self._bootstrap_identity_from_token()
 
         motd = self.server_info.get("motd", "")
         if show_motd and motd:
@@ -239,6 +293,20 @@ class PortalClientBase:
         if "address" not in data:
             raise KeyError("Config file must at least contain an address field.")
 
+        # A config file holding a credential (an API token or a password) should not be readable by
+        # other users. Warn (but do not refuse), mirroring the caution ssh applies to private keys.
+        has_credential = data.get("api_token") is not None or data.get("password") is not None
+        if has_credential and os.name == "posix":
+            try:
+                mode = os.stat(config_path).st_mode
+                if mode & 0o077:
+                    logging.getLogger("PortalClientBase").warning(
+                        f"Config file {config_path} contains a credential but is readable by other "
+                        "users. Consider 'chmod 600' on it."
+                    )
+            except OSError:
+                pass
+
         return cls(**data)
 
     @classmethod
@@ -250,6 +318,7 @@ class PortalClientBase:
           * QCPORTAL_ADDRESS (required)
           * QCPORTAL_USERNAME (optional)
           * QCPORTAL_PASSWORD (optional)
+          * QCPORTAL_API_TOKEN (optional, mutually exclusive with username/password)
           * QCPORTAL_VERIFY (optional, defaults to True)
           * QCPORTAL_CACHE_DIR (optional)
 
@@ -262,11 +331,17 @@ class PortalClientBase:
         address = os.environ.get("QCPORTAL_ADDRESS", None)
         username = os.environ.get("QCPORTAL_USERNAME", None)
         password = os.environ.get("QCPORTAL_PASSWORD", None)
+        api_token = os.environ.get("QCPORTAL_API_TOKEN", None)
         verify = os.environ.get("QCPORTAL_VERIFY", True)
         cache_dir = os.environ.get("QCPORTAL_CACHE_DIR", None)
 
         if address is None:
             raise KeyError("Required environment variable 'QCPORTAL_ADDRESS' not found")
+
+        if api_token is not None and (username is not None or password is not None):
+            raise ValueError(
+                "Set either QCPORTAL_API_TOKEN or QCPORTAL_USERNAME/QCPORTAL_PASSWORD, not both"
+            )
 
         data: dict[str, Any] = {"address": address}
 
@@ -275,6 +350,9 @@ class PortalClientBase:
 
         if password is not None:
             data["password"] = password
+
+        if api_token is not None:
+            data["api_token"] = api_token
 
         if cache_dir is not None:
             data["cache_dir"] = cache_dir
@@ -363,7 +441,41 @@ class PortalClientBase:
 
         return ret
 
+    def _bootstrap_identity_from_token(self) -> None:
+        """
+        Populates self.user_id / self.username for an API-token client by asking the server
+
+        Called only in token mode. On a normal secure server /me is reachable by any authenticated
+        user, so this should succeed - the one exception is a server with security disabled, where
+        /me returns 401 and there is no identity to learn (but the token may still be usable for
+        the open endpoints). Any other error means either the token is bad or something is wrong, so
+        it is raised rather than silently producing an identity-less client.
+        """
+
+        full_uri = self.address + "api/v1/me"
+        req = requests.Request(method="GET", url=full_uri, headers={"Accept": self.encoding})
+        ret = self._send_request(req)
+
+        if ret.status_code == 200:
+            user_info = deserialize(ret.content, ret.headers["Content-Type"], UserInfo)
+            self.user_id = user_info.id
+            self.username = user_info.username
+            return
+
+        msg = _response_msg(ret)
+
+        # A server with security disabled returns 401 from /me (it requires security). The token is
+        # not necessarily bad, and there is simply no identity to learn - tolerate it.
+        if ret.status_code == 401 and "security disabled" in msg:
+            self._logger.debug("Server has security disabled; cannot determine identity from API token")
+            return
+
+        # Anything else (a genuine 401, a 404, a 5xx) is a real problem - do not hide it behind an
+        # identity-less client
+        raise AuthenticationFailure(f"Could not authenticate API token: {msg}")
+
     def _get_JWT_token(self) -> None:
+        assert self._api_token is None, "JWT login attempted on an API-token client"
 
         full_uri = self.address + "auth/v1/login"
         json = {"username": self._username, "password": self._password}
@@ -389,13 +501,10 @@ class PortalClientBase:
             self._jwt_refresh_exp = decoded_refresh_token["exp"]
             self.user_id = int(decoded_access_token["sub"])  # "identity" "subject"
         else:
-            try:
-                msg = ret.json()["msg"]
-            except:
-                msg = ret.reason
-            raise AuthenticationFailure(msg)
+            raise AuthenticationFailure(_response_msg(ret))
 
     def _refresh_JWT_token(self) -> None:
+        assert self._api_token is None, "JWT refresh attempted on an API-token client"
 
         full_uri = self.address + "auth/v1/refresh"
         headers = {"Authorization": f"Bearer {self._jwt_refresh_token}"}
@@ -415,15 +524,17 @@ class PortalClientBase:
             )
             self._jwt_access_exp = decoded_access_token["exp"]
 
-        elif ret.status_code == 401 and "Token has expired" in ret.json()["msg"]:
+            return
+
+        msg = _response_msg(ret)
+        if ret.status_code == 401 and "Token has expired" in msg:
             # If the refresh token has expired, try to log in again
             self._get_JWT_token()
-        elif ret.status_code == 401 and f" is disabled" in ret.json()["msg"]:
+        elif ret.status_code == 401 and " is disabled" in msg:
             raise AuthenticationFailure("User account has been disabled")
-        elif ret.status_code == 401 and f" does not exist" in ret.json()["msg"]:
+        elif ret.status_code == 401 and " does not exist" in msg:
             raise AuthenticationFailure("User account no longer exists")
         else:  # shouldn't happen unless user is blacklisted or something
-            print(ret, ret.text)
             raise ConnectionRefusedError("Unable to refresh JWT authorization token! This is a server issue!!")
 
     def _request(
@@ -465,8 +576,13 @@ class PortalClientBase:
 
         # If JWT token expired, automatically renew it and retry once. This should have been caught above,
         # but can happen in rare instances where the token expires between the time we check it and the time
-        # we use it.
-        if internal_retry and (r.status_code == 401) and "Token has expired" in r.json()["msg"]:
+        # we use it. Only applies to the JWT flow - an API token cannot be refreshed.
+        if (
+            internal_retry
+            and self._api_token is None
+            and (r.status_code == 401)
+            and "Token has expired" in _response_msg(r)
+        ):
             self._refresh_JWT_token()
             return self._request(method, endpoint, body=body, url_params=url_params, internal_retry=False)
 
@@ -475,12 +591,14 @@ class PortalClientBase:
                 # For many errors returned by our code, the error details are returned as json
                 # with the error message stored under "msg"
                 details = r.json()
+                if not isinstance(details, dict):
+                    details = {"msg": str(details)}
             except:
                 # If this error comes from, ie, the web server or something else, then
                 # we have to use 'reason'
                 details = {"msg": r.reason}
 
-            raise PortalRequestError(f"Request failed: {details['msg']}", r.status_code, details)
+            raise PortalRequestError(f"Request failed: {details.get('msg', r.reason)}", r.status_code, details)
 
         return r
 

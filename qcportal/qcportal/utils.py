@@ -541,7 +541,10 @@ def time_based_cache(seconds: int = 10, maxsize: int | None = None):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             key = (args, frozenset(kwargs.items()))
-            now = time.time()
+            # Use a monotonic clock: this measures elapsed time for expiry, so it must not be
+            # affected by wall-clock adjustments (NTP steps, manual changes). A backward wall-clock
+            # step would otherwise keep stale entries (e.g. a revoked token) alive past the TTL.
+            now = time.monotonic()
 
             with lock:
                 # Clean up old items
