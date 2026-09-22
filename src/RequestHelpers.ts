@@ -1,5 +1,5 @@
 import * as qcpExceptions from "./Exceptions";
-import { server_address, server_headers } from "./request_config";
+import { csrf_headers, server_address, server_headers } from "./request_config";
 
 function objectToQueryParams(obj: Record<string, unknown>): string {
   const params = new URLSearchParams();
@@ -60,6 +60,9 @@ export async function rawRequest<T>(
         throw new qcpExceptions.AuthenticationError(
           `API request failed (401 ${response.statusText}) - ${message}`,
         );
+      } else if (response.status === 429) {
+        // Rate limited (e.g. too many failed logins). The server sends a human-readable message
+        throw new qcpExceptions.RateLimitError(message);
       } else if (response.status === 403) {
         throw new qcpExceptions.AuthorizationError(
           `API request failed (403 ${response.statusText}) - ${message}`,
@@ -87,8 +90,11 @@ export async function rawMakeRequest<T>(
   const req_options: RequestInit = {
     method,
     // For FormData, omit Content-Type so the browser sets it with the
-    // multipart boundary. Keep Accept so we still expect a JSON response.
-    headers: isFormData ? { Accept: "application/json" } : server_headers,
+    // multipart boundary. Keep Accept so we still expect a JSON response,
+    // and the CSRF header so the server accepts the request.
+    headers: isFormData
+      ? { Accept: "application/json", ...csrf_headers }
+      : server_headers,
     credentials: "include",
     body: isFormData ? body : body ? JSON.stringify(body) : undefined,
   };
