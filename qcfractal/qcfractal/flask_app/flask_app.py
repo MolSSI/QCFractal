@@ -142,4 +142,13 @@ def create_flask_app(qcfractal_config: FractalConfig, finished_queue: Optional[q
         if not hasattr(view, "_has_permission_check"):
             raise RuntimeError(f"Route {endpoint} does not have permission check")
 
+    # A copy of the URL map excluding the homepage blueprint's catch-all route, used by
+    # handlers.handle_method_not_allowed to tell a genuine 405 apart from an unknown route
+    # (see that function for why the catch-all route makes this necessary)
+    from werkzeug.routing import Map
+
+    app.config["ROUTES_WITHOUT_HOMEPAGE_MAP"] = Map(
+        [rule.empty() for rule in app.url_map.iter_rules() if rule.endpoint != "home.homepage"]
+    )
+
     return app

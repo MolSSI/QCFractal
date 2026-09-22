@@ -402,20 +402,23 @@ class ProjectSocket:
             if ds_id is None:
                 raise MissingDataError(f"Dataset {dataset_id} not found in project {project_id}")
 
-    def _lookup_project_dataset_id_by_name(
+    def _lookup_project_dataset_by_name(
         self, project_id: int, dataset_name: str, *, session: Optional[Session] = None
-    ) -> Optional[int]:
+    ) -> Optional[Tuple[int, str]]:
         """
-        Returns the ID of the dataset with the given name attached to the given project, or None if
-        this project has no dataset with that name
+        Returns the (ID, dataset_type) of the dataset with the given name attached to the given project,
+        or None if this project has no dataset with that name
+
+        A project can have at most one dataset under a given name, regardless of dataset type
         """
-        stmt = select(ProjectDatasetORM.dataset_id)
+        stmt = select(ProjectDatasetORM.dataset_id, BaseDatasetORM.dataset_type)
         stmt = stmt.join(BaseDatasetORM, ProjectDatasetORM.dataset_id == BaseDatasetORM.id)
         stmt = stmt.where(ProjectDatasetORM.project_id == project_id)
         stmt = stmt.where(BaseDatasetORM.lname == dataset_name.lower())
 
         with self.root_socket.optional_session(session, True) as session:
-            return session.execute(stmt).scalar_one_or_none()
+            row = session.execute(stmt).one_or_none()
+            return None if row is None else (row[0], row[1])
 
     def get_dataset_metadata(self, project_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
         stmt = select(
@@ -467,9 +470,15 @@ class ProjectSocket:
         ds_socket = self.root_socket.datasets.get_socket(dataset_type)
 
         with self.root_socket.optional_session(session) as session:
-            existing_ds_id = self._lookup_project_dataset_id_by_name(project_id, dataset_name, session=session)
-            if existing_ds_id is not None:
-                if existing_ok:
+            existing = self._lookup_project_dataset_by_name(project_id, dataset_name, session=session)
+            if existing is not None:
+                existing_ds_id, existing_ds_type = existing
+                if existing_ds_type != dataset_type:
+                    raise AlreadyExistsError(
+                        f"Dataset '{dataset_name}' already exists in project {project_id} as a "
+                        f"'{existing_ds_type}' dataset, not '{dataset_type}'"
+                    )
+                elif existing_ok:
                     return existing_ds_id
                 else:
                     raise AlreadyExistsError(f"Dataset '{dataset_name}' already exists in project {project_id}")

@@ -424,6 +424,23 @@ def test_project_client_add_dataset_cross_project_collision(snowflake_client: Po
     assert ds1_again.id == ds1.id
 
 
+def test_project_client_add_dataset_existing_ok_wrong_type(snowflake_client: PortalClient):
+    # A project can only have one dataset under a given local name, regardless of type. If that
+    # name is already taken by a dataset of a *different* type than requested, existing_ok=True
+    # must not silently hand back the wrong-type dataset - it's still a conflict.
+    proj = snowflake_client.add_project("test project")
+    ds1 = proj.add_dataset("singlepoint", "shared name")
+
+    with pytest.raises(
+        PortalRequestError, match="Dataset 'shared name' already exists in project .* as a 'singlepoint' dataset"
+    ):
+        proj.add_dataset("optimization", "shared name", existing_ok=True)
+
+    # Same-type existing_ok=True should still work as get-or-create
+    ds1_again = proj.add_dataset("singlepoint", "shared name", existing_ok=True)
+    assert ds1_again.id == ds1.id
+
+
 def test_project_client_import_records(secure_snowflake: QCATestingSnowflake):
 
     client = secure_snowflake.user_client("submit_user")

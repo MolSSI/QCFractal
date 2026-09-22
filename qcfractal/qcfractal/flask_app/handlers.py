@@ -5,7 +5,7 @@ from typing import Dict, Any
 from flask import g, request, current_app, jsonify, Response
 from jwt.exceptions import InvalidSubjectError
 from werkzeug.exceptions import InternalServerError, HTTPException, TooManyRequests, MethodNotAllowed, NotFound
-from werkzeug.routing import Map
+from werkzeug.routing import RequestRedirect
 
 from qcfractal.flask_app import storage_socket
 from qcportal.exceptions import (
@@ -171,19 +171,17 @@ def _path_matches_a_real_route(path: str) -> bool:
     path, Werkzeug considers it a "match" (with the wrong method) for any unknown, non-GET
     request, and raises MethodNotAllowed (405) instead of NotFound (404). To tell a genuine
     405 (a real, registered endpoint that just doesn't support this method) apart from that,
-    we re-match the path against a copy of the URL map with the homepage route excluded.
+    we re-match the path against ROUTES_WITHOUT_HOMEPAGE_MAP - a copy of the URL map (built
+    once at app-creation time; see flask_app.py) with the homepage route excluded.
     """
-    routes_without_homepage = getattr(current_app, "_routes_without_homepage_map", None)
-    if routes_without_homepage is None:
-        rules = [rule.empty() for rule in current_app.url_map.iter_rules() if rule.endpoint != "home.homepage"]
-        routes_without_homepage = Map(rules)
-        current_app._routes_without_homepage_map = routes_without_homepage
-
+    routes_without_homepage = current_app.config["ROUTES_WITHOUT_HOMEPAGE_MAP"]
     adapter = routes_without_homepage.bind(request.host)
     try:
         adapter.match(path, method=request.method)
         return True
-    except MethodNotAllowed:
+    except (MethodNotAllowed, RequestRedirect):
+        # MethodNotAllowed: a real rule matches this path, just not this method
+        # RequestRedirect: a real rule matches (eg a trailing-slash mismatch)
         return True
     except NotFound:
         return False
