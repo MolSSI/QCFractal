@@ -416,7 +416,7 @@ class BaseDatasetSocket:
             ds_orm.creator_user_id = creator_user_id
 
             session.add(ds_orm)
-            session.commit()
+            session.flush()
             return ds_orm.id
 
     def update_record_count(self, dataset_id: int, change: Optional[int], *, session: Optional[Session] = None):

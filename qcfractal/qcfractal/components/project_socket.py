@@ -356,15 +356,20 @@ class ProjectSocket:
             if ds_id is None:
                 raise MissingDataError(f"Dataset {dataset_id} not found in project {project_id}")
 
-    def dataset_name_exists(self, project_id: int, dataset_name: str, *, session: Optional[Session] = None):
+    def _lookup_project_dataset_id_by_name(
+        self, project_id: int, dataset_name: str, *, session: Optional[Session] = None
+    ) -> Optional[int]:
+        """
+        Returns the ID of the dataset with the given name attached to the given project, or None if
+        this project has no dataset with that name
+        """
         stmt = select(ProjectDatasetORM.dataset_id)
         stmt = stmt.join(BaseDatasetORM, ProjectDatasetORM.dataset_id == BaseDatasetORM.id)
         stmt = stmt.where(ProjectDatasetORM.project_id == project_id)
         stmt = stmt.where(BaseDatasetORM.lname == dataset_name.lower())
 
         with self.root_socket.optional_session(session, True) as session:
-            ds_id = session.execute(stmt).scalar_one_or_none()
-            return ds_id is not None
+            return session.execute(stmt).scalar_one_or_none()
 
     def get_dataset_metadata(self, project_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
         stmt = select(
@@ -416,12 +421,21 @@ class ProjectSocket:
         ds_socket = self.root_socket.datasets.get_socket(dataset_type)
 
         with self.root_socket.optional_session(session) as session:
-            if self.dataset_name_exists(project_id, dataset_name, session=session):
-                raise ValueError(f"Dataset '{dataset_name}' already exists in project {project_id}")
+            existing_ds_id = self._lookup_project_dataset_id_by_name(project_id, dataset_name, session=session)
+            if existing_ds_id is not None:
+                if existing_ok:
+                    return existing_ds_id
+                else:
+                    raise AlreadyExistsError(f"Dataset '{dataset_name}' already exists in project {project_id}")
 
             # Note - name, description, tagline, and tags gets duplicated in places - in the dataset, and in the
             # link between the project and the dataset
             # This should be fixed at some point
+            #
+            # existing_ok is always False here: this project does not already have a dataset with this name
+            # (checked above), so a name collision at this point means some *other* project owns a dataset
+            # with this name. That is a hard conflict, not a get-or-create - existing_ok only applies within
+            # a single project.
             ds_id = ds_socket.add(
                 name=dataset_name,
                 description=description,
@@ -432,7 +446,7 @@ class ProjectSocket:
                 default_compute_priority=default_compute_priority,
                 extras=extras,
                 creator_user=creator_user,
-                existing_ok=existing_ok,
+                existing_ok=False,
                 session=session,
             )
 

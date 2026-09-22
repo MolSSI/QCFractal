@@ -289,6 +289,33 @@ def test_project_client_add_duplicates(snowflake_client: PortalClient):
         proj.add_dataset("optimization", "test optimization dataset")
 
 
+def test_project_client_add_dataset_cross_project_collision(snowflake_client: PortalClient):
+    # A dataset name is global (shared base_dataset table), so two different projects
+    # cannot each create their own dataset with the same name. This must be a clean,
+    # reported error - not a 500 - and must not create a partial cross-project link.
+    proj1 = snowflake_client.add_project("test project 1")
+    proj2 = snowflake_client.add_project("test project 2")
+
+    ds1 = proj1.add_dataset("singlepoint", "shared dataset name")
+
+    with pytest.raises(PortalRequestError, match="Dataset with type='singlepoint' and name='shared dataset name'"):
+        proj2.add_dataset("singlepoint", "shared dataset name")
+
+    # No partial link should have been created for proj2
+    assert proj2.dataset_metadata == []
+
+    # existing_ok=True must not silently link proj2 to proj1's dataset either - the name
+    # is owned by another project, so this is still a hard conflict
+    with pytest.raises(PortalRequestError, match="Dataset with type='singlepoint' and name='shared dataset name'"):
+        proj2.add_dataset("singlepoint", "shared dataset name", existing_ok=True)
+
+    assert proj2.dataset_metadata == []
+
+    # existing_ok=True should still be idempotent *within* the same project
+    ds1_again = proj1.add_dataset("singlepoint", "shared dataset name", existing_ok=True)
+    assert ds1_again.id == ds1.id
+
+
 def test_project_client_import_records(secure_snowflake: QCATestingSnowflake):
 
     client = secure_snowflake.user_client("submit_user")
