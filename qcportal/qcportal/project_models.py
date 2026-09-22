@@ -331,6 +331,12 @@ class Project(BaseModel):
         entry counts only the records added directly to the project; the ``datasets`` entry
         counts the records of all the datasets in the project, summed together.
 
+        Note
+        ----
+        This is unrelated to, and has a different shape than, :meth:`BaseDataset.status`. This
+        method returns a two-key roll-up (``records``/``datasets``); the dataset method returns
+        a dictionary keyed by specification name.
+
         Returns
         -------
         :
