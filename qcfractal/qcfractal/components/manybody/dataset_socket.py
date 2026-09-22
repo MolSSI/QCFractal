@@ -4,9 +4,11 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
+import pydantic_core
 from sqlalchemy import select, literal, insert
 
 from qcfractal.components.manybody.record_db_models import ManybodyRecordORM
+from qcportal.exceptions import InvalidArgumentsError
 from qcportal.manybody import ManybodyDatasetNewEntry, ManybodySpecification
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.record_models import PriorityEnum
@@ -121,9 +123,17 @@ class ManybodyDatasetSocket(BaseDatasetSocket):
                 for v in new_spec["levels"].values():
                     v["keywords"].update(entry.additional_singlepoint_keywords)
 
+                try:
+                    mb_spec = ManybodySpecification(**new_spec)
+                except pydantic_core.ValidationError as e:
+                    raise InvalidArgumentsError(
+                        f"Invalid additional_singlepoint_keywords for entry '{entry.name}' with specification "
+                        f"'{spec.name}': {e}"
+                    ) from e
+
                 meta, mb_ids = self.root_socket.records.manybody.add(
                     initial_molecules=[entry.initial_molecule_id],
-                    mb_spec=ManybodySpecification(**new_spec),
+                    mb_spec=mb_spec,
                     compute_tag=compute_tag,
                     compute_priority=compute_priority,
                     creator_user=creator_user_id,

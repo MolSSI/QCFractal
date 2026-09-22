@@ -4,9 +4,11 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
+import pydantic_core
 from sqlalchemy import select, literal, insert
 
 from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
+from qcportal.exceptions import InvalidArgumentsError
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.optimization import OptimizationDatasetNewEntry, OptimizationSpecification
 from qcportal.record_models import PriorityEnum
@@ -120,9 +122,17 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
                 new_spec = copy.deepcopy(spec_input_dict)
                 new_spec["keywords"].update(entry.additional_keywords)
 
+                try:
+                    opt_spec = OptimizationSpecification(**new_spec)
+                except pydantic_core.ValidationError as e:
+                    raise InvalidArgumentsError(
+                        f"Invalid additional_keywords for entry '{entry.name}' with specification "
+                        f"'{spec.name}': {e}"
+                    ) from e
+
                 meta, opt_ids = self.root_socket.records.optimization.add(
                     initial_molecules=[entry.initial_molecule_id],
-                    opt_spec=OptimizationSpecification(**new_spec),
+                    opt_spec=opt_spec,
                     compute_tag=compute_tag,
                     compute_priority=compute_priority,
                     creator_user=creator_user_id,

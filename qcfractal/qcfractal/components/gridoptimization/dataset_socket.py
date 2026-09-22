@@ -4,9 +4,11 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
+import pydantic_core
 from sqlalchemy import select, literal, insert
 
 from qcfractal.components.gridoptimization.record_db_models import GridoptimizationRecordORM
+from qcportal.exceptions import InvalidArgumentsError
 from qcportal.gridoptimization import GridoptimizationDatasetNewEntry, GridoptimizationSpecification
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.record_models import PriorityEnum
@@ -94,10 +96,16 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
                 new_go_spec["keywords"].update(entry.additional_keywords)
                 new_go_spec["optimization_specification"]["keywords"].update(entry.additional_optimization_keywords)
 
-                go_spec = GridoptimizationSpecification(
-                    optimization_specification=new_go_spec["optimization_specification"],
-                    keywords=new_go_spec["keywords"],
-                )
+                try:
+                    go_spec = GridoptimizationSpecification(
+                        optimization_specification=new_go_spec["optimization_specification"],
+                        keywords=new_go_spec["keywords"],
+                    )
+                except pydantic_core.ValidationError as e:
+                    raise InvalidArgumentsError(
+                        f"Invalid additional_keywords for entry '{entry.name}' with specification "
+                        f"'{spec.name}': {e}"
+                    ) from e
 
                 meta, gridopt_ids = self.root_socket.records.gridoptimization.add(
                     initial_molecules=[entry.initial_molecule_id],
