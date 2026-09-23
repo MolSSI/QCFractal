@@ -7,7 +7,8 @@ failing sub-computation, before the fix to RecordSocket.update_failed_task. Thei
 compute-history error output already contains the useful stdout/stderr - it's just
 nested rather than promoted to its own output row - so this script is a pure data
 backfill. It does not require an alembic migration and is safe to run multiple times
-(only history rows still missing a stdout output are touched).
+(only history rows still missing a stdout output are candidates; ones already
+handled, or ones examined and found to have nothing to extract, are left alone).
 """
 
 import argparse
@@ -25,10 +26,20 @@ from qcfractal.config import read_configuration
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcportal.record_models import OutputTypeEnum, RecordStatusEnum
 
+BATCH_SIZE = 50
+
 
 def _candidates_stmt():
     # history rows that errored, have an error output (so there's something to mine),
-    # but no stdout output yet (so we don't touch rows the normal code path already handled)
+    # but no stdout output yet (so we don't touch rows the normal code path already handled).
+    #
+    # NOTE: this is only a coarse pre-filter. Not every row matching it actually has a
+    # nested failed_result to extract (eg a plain program failure, as opposed to a
+    # procedure like geomeTRIC/optking wrapping one) - those rows will never gain a
+    # stdout output and so would ALWAYS match this filter again. Callers must not
+    # requery this filter in a loop expecting it to eventually come back empty;
+    # instead, the candidate id list is snapshotted once (see __main__) and each
+    # id is visited exactly one time.
     return (
         select(RecordComputeHistoryORM.id)
         .where(RecordComputeHistoryORM.status == RecordStatusEnum.error)
@@ -37,58 +48,64 @@ def _candidates_stmt():
     )
 
 
-def migration_process(fractal_config, dry_run, done_queue):
+def _process_batch(session, history_ids, dry_run) -> int:
+    """Examines one batch of (already snapshotted) history ids. Returns how many were
+    actually updated. Never called twice for the same id within a run."""
+
+    stmt = (
+        select(RecordComputeHistoryORM)
+        .where(RecordComputeHistoryORM.id.in_(history_ids))
+        .options(selectinload(RecordComputeHistoryORM.outputs).options(undefer(OutputStoreORM.data)))
+    )
+    histories = session.execute(stmt).scalars().all()
+
+    n_updated = 0
+    for history in histories:
+        error_orm = history.outputs.get(OutputTypeEnum.error)
+        if error_orm is None:
+            continue
+
+        error_dict = error_orm.get_output()
+        extras = error_dict.get("extras") if isinstance(error_dict, dict) else None
+
+        stdout_parts = _collect_nested_outputs(extras, "stdout")
+        stderr_parts = _collect_nested_outputs(extras, "stderr")
+
+        # Nothing nested to extract - this row will never gain a stdout output, but that's
+        # fine: we snapshotted the candidate list up front, so we simply won't revisit it.
+        if not stdout_parts and not stderr_parts:
+            continue
+
+        if not dry_run:
+            if stdout_parts:
+                history.outputs[OutputTypeEnum.stdout] = create_output_orm(
+                    OutputTypeEnum.stdout, _NESTED_OUTPUT_SEPARATOR.join(stdout_parts)
+                )
+            if stderr_parts:
+                history.outputs[OutputTypeEnum.stderr] = create_output_orm(
+                    OutputTypeEnum.stderr, _NESTED_OUTPUT_SEPARATOR.join(stderr_parts)
+                )
+
+        n_updated += 1
+
+    if not dry_run:
+        session.commit()
+    else:
+        session.rollback()
+
+    return n_updated
+
+
+def worker_process(fractal_config, history_ids, dry_run, done_queue):
+    """Processes a fixed, disjoint slice of history ids exactly once each."""
 
     socket = SQLAlchemySocket(fractal_config)
     session = socket.Session()
 
-    while True:
-        stmt = _candidates_stmt().limit(50).with_for_update(skip_locked=True)
-        history_ids = session.execute(stmt).scalars().all()
-
-        if len(history_ids) == 0:
-            break
-
-        stmt = (
-            select(RecordComputeHistoryORM)
-            .where(RecordComputeHistoryORM.id.in_(history_ids))
-            .options(selectinload(RecordComputeHistoryORM.outputs).options(undefer(OutputStoreORM.data)))
-        )
-        histories = session.execute(stmt).scalars().all()
-
-        updated = 0
-        for history in histories:
-            error_orm = history.outputs.get(OutputTypeEnum.error)
-            if error_orm is None:
-                continue
-
-            error_dict = error_orm.get_output()
-            extras = error_dict.get("extras") if isinstance(error_dict, dict) else None
-
-            stdout_parts = _collect_nested_outputs(extras, "stdout")
-            stderr_parts = _collect_nested_outputs(extras, "stderr")
-
-            if not stdout_parts and not stderr_parts:
-                continue
-
-            if not dry_run:
-                if stdout_parts:
-                    history.outputs[OutputTypeEnum.stdout] = create_output_orm(
-                        OutputTypeEnum.stdout, _NESTED_OUTPUT_SEPARATOR.join(stdout_parts)
-                    )
-                if stderr_parts:
-                    history.outputs[OutputTypeEnum.stderr] = create_output_orm(
-                        OutputTypeEnum.stderr, _NESTED_OUTPUT_SEPARATOR.join(stderr_parts)
-                    )
-
-            updated += 1
-
-        if not dry_run:
-            session.commit()
-        else:
-            session.rollback()
-
-        done_queue.put(len(histories))
+    for i in range(0, len(history_ids), BATCH_SIZE):
+        chunk = history_ids[i : i + BATCH_SIZE]
+        _process_batch(session, chunk, dry_run)
+        done_queue.put(len(chunk))
 
 
 if __name__ == "__main__":
@@ -108,27 +125,35 @@ if __name__ == "__main__":
 
     session = socket.Session()
 
-    stmt = select(func.count()).select_from(_candidates_stmt().subquery())
-    need_migrating = session.execute(stmt).scalar_one()
+    # Snapshot the full candidate list once. Every id in this list is visited exactly one
+    # time below, regardless of whether it turns out to actually be fixable - that's what
+    # guarantees this script terminates.
+    all_ids = session.execute(_candidates_stmt()).scalars().all()
 
-    print(f"{need_migrating} compute-history entries are candidates for a stdout/stderr backfill (approx)")
+    print(f"{len(all_ids)} compute-history entries are candidates for a stdout/stderr backfill (exact)")
 
-    if need_migrating == 0:
+    if len(all_ids) == 0:
         raise SystemExit(0)
+
+    nproc = max(1, args.nproc)
+    id_chunks = [all_ids[i::nproc] for i in range(nproc)]
+    id_chunks = [c for c in id_chunks if c]
 
     proc_pool = []
     done_queue = multiprocessing.Queue()
 
-    for _ in range(args.nproc):
-        proc = multiprocessing.Process(target=migration_process, args=(fractal_config, args.dry_run, done_queue))
+    for chunk in id_chunks:
+        proc = multiprocessing.Process(
+            target=worker_process, args=(fractal_config, chunk, args.dry_run, done_queue)
+        )
         proc.start()
         proc_pool.append(proc)
 
-    with tqdm.tqdm(total=need_migrating) as pbar:
+    with tqdm.tqdm(total=len(all_ids)) as pbar:
         while any(x.is_alive() for x in proc_pool):
             try:
-                migrated_count = done_queue.get(timeout=1)
-                pbar.update(migrated_count)
+                done_count = done_queue.get(timeout=1)
+                pbar.update(done_count)
             except Empty:
                 pass
 
