@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../../_static/documentation_options.js?v=63b587c5"></script>
+    <script src="../../../_static/documentation_options.js?v=cc63007f"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Gridoptimization Records" href="gridoptimization.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post66+g732a4f4ad" />
+  <meta name="docsearch:version" content="0.70.post80+g23be93d4f" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -3127,6 +3127,12 @@ are ignored.</p>
 <span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.manybody.dataset_models.ManybodyDataset.status" title="Link to this definition">#</a></dt>
 <dd><p>Returns the status of the dataset’s computations, broken down by specification</p>
 <p>The status is computed on the server, and does not require downloading any records.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is unrelated to, and has a different shape than, <code class="xref py py-meth docutils literal notranslate"><span class="pre">Project.status()</span></code>. This
+method returns a dictionary keyed by specification name; the project method returns a
+two-key roll-up (<code class="docutils literal notranslate"><span class="pre">records</span></code>/<code class="docutils literal notranslate"><span class="pre">datasets</span></code>).</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A dictionary with specification names as keys. Each value is itself a dictionary

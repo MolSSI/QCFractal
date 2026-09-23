@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=63b587c5"></script>
+    <script src="../../_static/documentation_options.js?v=cc63007f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post66+g732a4f4ad" />
+  <meta name="docsearch:version" content="0.70.post80+g23be93d4f" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1248,6 +1248,12 @@
 <span class="sd">        Returns the status of the dataset's computations, broken down by specification</span>
 
 <span class="sd">        The status is computed on the server, and does not require downloading any records.</span>
+
+<span class="sd">        Note</span>
+<span class="sd">        ----</span>
+<span class="sd">        This is unrelated to, and has a different shape than, :meth:`Project.status`. This</span>
+<span class="sd">        method returns a dictionary keyed by specification name; the project method returns a</span>
+<span class="sd">        two-key roll-up (``records``/``datasets``).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>

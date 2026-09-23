@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=63b587c5"></script>
+    <script src="../../_static/documentation_options.js?v=cc63007f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Molecule" href="molecules.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post66+g732a4f4ad" />
+  <meta name="docsearch:version" content="0.70.post80+g23be93d4f" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -953,11 +953,100 @@ destination path, an exception will be raised.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="qcportal.project_models.ProjectDatasetAddBody">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ProjectDatasetAddBody</span></span><a class="reference internal" href="../../_modules/qcportal/project_models.html#ProjectDatasetAddBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.ProjectDatasetAddBody" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="qcportal.project_models.ProjectModifyMetadata">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ProjectModifyMetadata</span></span><a class="reference internal" href="../../_modules/qcportal/project_models.html#ProjectModifyMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.ProjectModifyMetadata" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
 <div class="pst-scrollable-table-container"><table class="table" id="id6">
 <caption><span class="caption-text">Fields</span><a class="headerlink" href="#id6" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.project_models.ProjectModifyMetadata.default_compute_priority" title="qcportal.project_models.ProjectModifyMetadata.default_compute_priority"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_compute_priority</span></code></a></p></td>
+<td><p><a class="reference internal" href="records/base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">PriorityEnum</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.project_models.ProjectModifyMetadata.default_compute_tag" title="qcportal.project_models.ProjectModifyMetadata.default_compute_tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_compute_tag</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.project_models.ProjectModifyMetadata.description" title="qcportal.project_models.ProjectModifyMetadata.description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">description</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.project_models.ProjectModifyMetadata.extras" title="qcportal.project_models.ProjectModifyMetadata.extras"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extras</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code></a>]</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.project_models.ProjectModifyMetadata.name" title="qcportal.project_models.ProjectModifyMetadata.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.project_models.ProjectModifyMetadata.tagline" title="qcportal.project_models.ProjectModifyMetadata.tagline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tagline</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.project_models.ProjectModifyMetadata.tags" title="qcportal.project_models.ProjectModifyMetadata.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.project_models.ProjectModifyMetadata.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.project_models.ProjectModifyMetadata.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.project_models.ProjectModifyMetadata.description">
+<span class="sig-name descname"><span class="pre">description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.project_models.ProjectModifyMetadata.description" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.project_models.ProjectModifyMetadata.tagline">
+<span class="sig-name descname"><span class="pre">tagline</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.project_models.ProjectModifyMetadata.tagline" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.project_models.ProjectModifyMetadata.tags">
+<span class="sig-name descname"><span class="pre">tags</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.project_models.ProjectModifyMetadata.tags" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.project_models.ProjectModifyMetadata.default_compute_tag">
+<span class="sig-name descname"><span class="pre">default_compute_tag</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.project_models.ProjectModifyMetadata.default_compute_tag" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.project_models.ProjectModifyMetadata.default_compute_priority">
+<span class="sig-name descname"><span class="pre">default_compute_priority</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="records/base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><span class="pre">PriorityEnum</span></a></span><a class="headerlink" href="#qcportal.project_models.ProjectModifyMetadata.default_compute_priority" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.project_models.ProjectModifyMetadata.extras">
+<span class="sig-name descname"><span class="pre">extras</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.project_models.ProjectModifyMetadata.extras" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcportal.project_models.ProjectDatasetAddBody">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ProjectDatasetAddBody</span></span><a class="reference internal" href="../../_modules/qcportal/project_models.html#ProjectDatasetAddBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.ProjectDatasetAddBody" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
+<div class="pst-scrollable-table-container"><table class="table" id="id7">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id7" title="Link to this table">#</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
 <th class="head"><p>Type</p></th>
@@ -1075,8 +1164,8 @@ destination path, an exception will be raised.</p></li>
 <dt class="sig sig-object py" id="qcportal.project_models.ProjectLinkDatasetBody">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ProjectLinkDatasetBody</span></span><a class="reference internal" href="../../_modules/qcportal/project_models.html#ProjectLinkDatasetBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.ProjectLinkDatasetBody" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
-<div class="pst-scrollable-table-container"><table class="table" id="id7">
-<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id7" title="Link to this table">#</a></caption>
+<div class="pst-scrollable-table-container"><table class="table" id="id8">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id8" title="Link to this table">#</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
 <th class="head"><p>Type</p></th>
@@ -1144,8 +1233,8 @@ destination path, an exception will be raised.</p></li>
 <dt class="sig sig-object py" id="qcportal.project_models.ProjectUnlinkDatasetsBody">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ProjectUnlinkDatasetsBody</span></span><a class="reference internal" href="../../_modules/qcportal/project_models.html#ProjectUnlinkDatasetsBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.ProjectUnlinkDatasetsBody" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
-<div class="pst-scrollable-table-container"><table class="table" id="id8">
-<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id8" title="Link to this table">#</a></caption>
+<div class="pst-scrollable-table-container"><table class="table" id="id9">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id9" title="Link to this table">#</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
 <th class="head"><p>Type</p></th>
@@ -1193,8 +1282,8 @@ destination path, an exception will be raised.</p></li>
 <dt class="sig sig-object py" id="qcportal.project_models.ProjectRecordAddBody">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ProjectRecordAddBody</span></span><a class="reference internal" href="../../_modules/qcportal/project_models.html#ProjectRecordAddBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.ProjectRecordAddBody" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="records/base_record_models.html#qcportal.record_models.RecordAddBodyBase" title="qcportal.record_models.RecordAddBodyBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordAddBodyBase</span></code></a></p>
-<div class="pst-scrollable-table-container"><table class="table" id="id9">
-<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id9" title="Link to this table">#</a></caption>
+<div class="pst-scrollable-table-container"><table class="table" id="id10">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id10" title="Link to this table">#</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
 <th class="head"><p>Type</p></th>
@@ -1282,8 +1371,8 @@ destination path, an exception will be raised.</p></li>
 <dt class="sig sig-object py" id="qcportal.project_models.ProjectRecordImportBody">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ProjectRecordImportBody</span></span><a class="reference internal" href="../../_modules/qcportal/project_models.html#ProjectRecordImportBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.ProjectRecordImportBody" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
-<div class="pst-scrollable-table-container"><table class="table" id="id10">
-<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id10" title="Link to this table">#</a></caption>
+<div class="pst-scrollable-table-container"><table class="table" id="id11">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id11" title="Link to this table">#</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
 <th class="head"><p>Type</p></th>
@@ -1341,8 +1430,8 @@ destination path, an exception will be raised.</p></li>
 <dt class="sig sig-object py" id="qcportal.project_models.ProjectLinkRecordBody">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ProjectLinkRecordBody</span></span><a class="reference internal" href="../../_modules/qcportal/project_models.html#ProjectLinkRecordBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.ProjectLinkRecordBody" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
-<div class="pst-scrollable-table-container"><table class="table" id="id11">
-<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id11" title="Link to this table">#</a></caption>
+<div class="pst-scrollable-table-container"><table class="table" id="id12">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id12" title="Link to this table">#</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
 <th class="head"><p>Type</p></th>
@@ -1400,8 +1489,8 @@ destination path, an exception will be raised.</p></li>
 <dt class="sig sig-object py" id="qcportal.project_models.ProjectUnlinkRecordsBody">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ProjectUnlinkRecordsBody</span></span><a class="reference internal" href="../../_modules/qcportal/project_models.html#ProjectUnlinkRecordsBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.ProjectUnlinkRecordsBody" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
-<div class="pst-scrollable-table-container"><table class="table" id="id12">
-<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id12" title="Link to this table">#</a></caption>
+<div class="pst-scrollable-table-container"><table class="table" id="id13">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id13" title="Link to this table">#</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
 <th class="head"><p>Type</p></th>
@@ -1439,8 +1528,8 @@ destination path, an exception will be raised.</p></li>
 <dt class="sig sig-object py" id="qcportal.project_models.ProjectAttachmentUploadBody">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ProjectAttachmentUploadBody</span></span><a class="reference internal" href="../../_modules/qcportal/project_models.html#ProjectAttachmentUploadBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.ProjectAttachmentUploadBody" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="external_files.html#qcportal.external_files.models.ExternalFileUploadBase" title="qcportal.external_files.models.ExternalFileUploadBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExternalFileUploadBase</span></code></a></p>
-<div class="pst-scrollable-table-container"><table class="table" id="id13">
-<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id13" title="Link to this table">#</a></caption>
+<div class="pst-scrollable-table-container"><table class="table" id="id14">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id14" title="Link to this table">#</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
 <th class="head"><p>Type</p></th>
@@ -1511,8 +1600,8 @@ destination path, an exception will be raised.</p></li>
 <p>Information about a record contained in a project</p>
 <p>This is the lightweight information about a record that a project stores, and does
 not include the record itself. Use <a class="reference internal" href="#qcportal.project_models.Project.get_record" title="qcportal.project_models.Project.get_record"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Project.get_record()</span></code></a> to obtain the full record.</p>
-<div class="pst-scrollable-table-container"><table class="table" id="id14">
-<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id14" title="Link to this table">#</a></caption>
+<div class="pst-scrollable-table-container"><table class="table" id="id15">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id15" title="Link to this table">#</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
 <th class="head"><p>Type</p></th>
@@ -1593,8 +1682,8 @@ not include the record itself. Use <a class="reference internal" href="#qcportal
 <p>Information about a dataset contained in a project</p>
 <p>This is the lightweight information about a dataset that a project stores, and does
 not include the dataset itself. Use <a class="reference internal" href="#qcportal.project_models.Project.get_dataset" title="qcportal.project_models.Project.get_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Project.get_dataset()</span></code></a> to obtain the full dataset.</p>
-<div class="pst-scrollable-table-container"><table class="table" id="id15">
-<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id15" title="Link to this table">#</a></caption>
+<div class="pst-scrollable-table-container"><table class="table" id="id16">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id16" title="Link to this table">#</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
 <th class="head"><p>Type</p></th>
@@ -1672,8 +1761,8 @@ not include the dataset itself. Use <a class="reference internal" href="#qcporta
 <dt class="sig sig-object py" id="qcportal.project_models.ProjectQueryRecords">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ProjectQueryRecords</span></span><a class="reference internal" href="../../_modules/qcportal/project_models.html#ProjectQueryRecords"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.ProjectQueryRecords" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
-<div class="pst-scrollable-table-container"><table class="table" id="id16">
-<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id16" title="Link to this table">#</a></caption>
+<div class="pst-scrollable-table-container"><table class="table" id="id17">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id17" title="Link to this table">#</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
 <th class="head"><p>Type</p></th>
@@ -1701,8 +1790,8 @@ not include the dataset itself. Use <a class="reference internal" href="#qcporta
 <dt class="sig sig-object py" id="qcportal.project_models.ProjectQueryDatasets">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ProjectQueryDatasets</span></span><a class="reference internal" href="../../_modules/qcportal/project_models.html#ProjectQueryDatasets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.ProjectQueryDatasets" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="base_models.html#qcportal.base_models.RestModelBase" title="qcportal.base_models.RestModelBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestModelBase</span></code></a></p>
-<div class="pst-scrollable-table-container"><table class="table" id="id17">
-<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id17" title="Link to this table">#</a></caption>
+<div class="pst-scrollable-table-container"><table class="table" id="id18">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id18" title="Link to this table">#</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
 <th class="head"><p>Type</p></th>
@@ -1734,8 +1823,8 @@ not include the dataset itself. Use <a class="reference internal" href="#qcporta
 <p>A project groups together the records and datasets belonging to a single piece of work.
 Within a project, records and datasets are given names, and most methods here accept
 either that name or the underlying ID.</p>
-<div class="pst-scrollable-table-container"><table class="table" id="id18">
-<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id18" title="Link to this table">#</a></caption>
+<div class="pst-scrollable-table-container"><table class="table" id="id19">
+<caption><span class="caption-text">Fields</span><a class="headerlink" href="#id19" title="Link to this table">#</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
 <th class="head"><p>Type</p></th>
@@ -1891,6 +1980,76 @@ validated to form a valid model.</p>
 <p>This may also be called from derived class propagate_client functions as well</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.project_models.Project.set_name">
+<span class="sig-name descname"><span class="pre">set_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/project_models.html#Project.set_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.Project.set_name" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.project_models.Project.set_description">
+<span class="sig-name descname"><span class="pre">set_description</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_description</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/project_models.html#Project.set_description"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.Project.set_description" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_description</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.project_models.Project.set_tagline">
+<span class="sig-name descname"><span class="pre">set_tagline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_tagline</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/project_models.html#Project.set_tagline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.Project.set_tagline" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_tagline</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.project_models.Project.set_tags">
+<span class="sig-name descname"><span class="pre">set_tags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/project_models.html#Project.set_tags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.Project.set_tags" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_tags</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.project_models.Project.set_default_compute_tag">
+<span class="sig-name descname"><span class="pre">set_default_compute_tag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_default_compute_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/project_models.html#Project.set_default_compute_tag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.Project.set_default_compute_tag" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_default_compute_tag</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.project_models.Project.set_default_compute_priority">
+<span class="sig-name descname"><span class="pre">set_default_compute_priority</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_default_compute_priority</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/project_models.html#Project.set_default_compute_priority"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.Project.set_default_compute_priority" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_default_compute_priority</strong> (<a class="reference internal" href="records/base_record_models.html#qcportal.record_models.PriorityEnum" title="qcportal.record_models.PriorityEnum"><em>PriorityEnum</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.project_models.Project.set_extras">
+<span class="sig-name descname"><span class="pre">set_extras</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_extras</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/project_models.html#Project.set_extras"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.Project.set_extras" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_extras</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>]</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="qcportal.project_models.Project.dataset_metadata">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">dataset_metadata</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#qcportal.project_models.ProjectDatasetMetadata" title="qcportal.project_models.ProjectDatasetMetadata"><span class="pre">ProjectDatasetMetadata</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.project_models.Project.dataset_metadata" title="Link to this definition">#</a></dt>
@@ -1915,6 +2074,12 @@ validated to form a valid model.</p>
 dictionary of record status to the number of records with that status. The <code class="docutils literal notranslate"><span class="pre">records</span></code>
 entry counts only the records added directly to the project; the <code class="docutils literal notranslate"><span class="pre">datasets</span></code> entry
 counts the records of all the datasets in the project, summed together.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is unrelated to, and has a different shape than, <code class="xref py py-meth docutils literal notranslate"><span class="pre">BaseDataset.status()</span></code>. This
+method returns a two-key roll-up (<code class="docutils literal notranslate"><span class="pre">records</span></code>/<code class="docutils literal notranslate"><span class="pre">datasets</span></code>); the dataset method returns
+a dictionary keyed by specification name.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Counts of record statuses, split into records and datasets</p>
@@ -2315,6 +2480,16 @@ The returned objects contain only the file metadata - use
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.ProjectAddBody.existing_ok"><code class="docutils literal notranslate"><span class="pre">ProjectAddBody.existing_ok</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.ProjectModifyMetadata"><code class="docutils literal notranslate"><span class="pre">ProjectModifyMetadata</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.ProjectModifyMetadata.name"><code class="docutils literal notranslate"><span class="pre">ProjectModifyMetadata.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.ProjectModifyMetadata.description"><code class="docutils literal notranslate"><span class="pre">ProjectModifyMetadata.description</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.ProjectModifyMetadata.tagline"><code class="docutils literal notranslate"><span class="pre">ProjectModifyMetadata.tagline</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.ProjectModifyMetadata.tags"><code class="docutils literal notranslate"><span class="pre">ProjectModifyMetadata.tags</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.ProjectModifyMetadata.default_compute_tag"><code class="docutils literal notranslate"><span class="pre">ProjectModifyMetadata.default_compute_tag</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.ProjectModifyMetadata.default_compute_priority"><code class="docutils literal notranslate"><span class="pre">ProjectModifyMetadata.default_compute_priority</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.ProjectModifyMetadata.extras"><code class="docutils literal notranslate"><span class="pre">ProjectModifyMetadata.extras</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.ProjectDatasetAddBody"><code class="docutils literal notranslate"><span class="pre">ProjectDatasetAddBody</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.ProjectDatasetAddBody.dataset_type"><code class="docutils literal notranslate"><span class="pre">ProjectDatasetAddBody.dataset_type</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.ProjectDatasetAddBody.name"><code class="docutils literal notranslate"><span class="pre">ProjectDatasetAddBody.name</span></code></a></li>
@@ -2420,6 +2595,13 @@ The returned objects contain only the file metadata - use
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.assert_online"><code class="docutils literal notranslate"><span class="pre">Project.assert_online()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.__init__"><code class="docutils literal notranslate"><span class="pre">Project.__init__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.propagate_client"><code class="docutils literal notranslate"><span class="pre">Project.propagate_client()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.set_name"><code class="docutils literal notranslate"><span class="pre">Project.set_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.set_description"><code class="docutils literal notranslate"><span class="pre">Project.set_description()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.set_tagline"><code class="docutils literal notranslate"><span class="pre">Project.set_tagline()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.set_tags"><code class="docutils literal notranslate"><span class="pre">Project.set_tags()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.set_default_compute_tag"><code class="docutils literal notranslate"><span class="pre">Project.set_default_compute_tag()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.set_default_compute_priority"><code class="docutils literal notranslate"><span class="pre">Project.set_default_compute_priority()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.set_extras"><code class="docutils literal notranslate"><span class="pre">Project.set_extras()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.dataset_metadata"><code class="docutils literal notranslate"><span class="pre">Project.dataset_metadata</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.record_metadata"><code class="docutils literal notranslate"><span class="pre">Project.record_metadata</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.status"><code class="docutils literal notranslate"><span class="pre">Project.status()</span></code></a></li>
