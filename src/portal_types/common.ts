@@ -230,6 +230,27 @@ export type BaseRecord = {
   properties: Record<string, any>;
 };
 
+// Body for PATCH api/v1/records. Single-record actions use a one-element
+// record_ids array; the server resolves the record type from the id.
+// Send one concern per request - the returned metadata only describes the
+// last field the backend handled.
+export type RecordModifyBody = {
+  record_ids: number[];
+  status?: RecordStatus;
+  compute_priority?: PriorityEnum;
+  compute_tag?: string;
+  comment?: string;
+};
+
+// Returned by the bulk record modification endpoints. A rejected action still
+// comes back 200, with an empty updated_idx and the reason in errors.
+export type UpdateMetadata = {
+  updated_idx: number[];
+  n_children_updated: number;
+  errors: [number, string][];
+  error_description: string | null;
+};
+
 export type RecordComment = {
   id: number;
   record_id: number;

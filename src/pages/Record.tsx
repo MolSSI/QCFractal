@@ -26,6 +26,7 @@ import ComputeHistory from "../components/ComputeHistory.tsx";
 import { FavoriteButton } from "../components/FavoriteButton.tsx";
 import { ViewOutputButton } from "../components/ViewOutputDialog.tsx";
 import { TaskServiceButton } from "../components/TaskServiceDialog.tsx";
+import { ResetRecordButton } from "../components/record_components/ResetRecordDialog.tsx";
 import { dateStringToLocalTime } from "../Utils.ts";
 
 interface RecordHeaderProps {
@@ -59,6 +60,14 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
                 : `Record ${recordData.id}`}
             </Typography>
           </Stack>
+
+          {/* Record actions */}
+          <Box sx={{ mt: 1 }}>
+            <ResetRecordButton
+              recordId={recordData.id}
+              status={recordData.status}
+            />
+          </Box>
 
           {/* Description */}
           {recordData.description && (
@@ -145,9 +154,6 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
           />
           <Button variant="outlined" size="small" disabled>
             Native Files
-          </Button>
-          <Button variant="outlined" size="small" disabled>
-            Reset
           </Button>
           <TaskServiceButton
             recordId={recordData.id}
