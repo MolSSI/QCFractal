@@ -12,7 +12,7 @@ from werkzeug.routing import IntegerConverter
 
 from .csrf import CSRF_HEADER
 from .rate_limit import FlaskLoginRateLimiter
-from .user_verify import FlaskUserVerifier
+from .user_verify import FlaskUserVerifier, FlaskTokenVerifier
 from .flask_session import QCFFlaskSessionInterface
 from .flask_socket import FlaskStorageSocket
 from ..db_socket import SQLAlchemySocket
@@ -37,6 +37,7 @@ jwt = JWTManager()
 # so two apps in one process never share login counters
 login_rate_limiter = FlaskLoginRateLimiter()
 user_verifier = FlaskUserVerifier()
+token_verifier = FlaskTokenVerifier()
 
 
 # Some routes allow for negative integers (ie, list index)
@@ -109,6 +110,7 @@ def create_flask_app(qcfractal_config: FractalConfig, finished_queue: Optional[q
     # Login rate limiting state belongs to this app, not to the process
     login_rate_limiter.init_app(app)
     user_verifier.init_app(app)
+    token_verifier.init_app(app)
 
     # Initialize the session interface after the storage socket
     app.session_interface = QCFFlaskSessionInterface(app)
@@ -139,5 +141,14 @@ def create_flask_app(qcfractal_config: FractalConfig, finished_queue: Optional[q
             continue
         if not hasattr(view, "_has_permission_check"):
             raise RuntimeError(f"Route {endpoint} does not have permission check")
+
+    # A copy of the URL map excluding the homepage blueprint's catch-all route, used by
+    # handlers.handle_method_not_allowed to tell a genuine 405 apart from an unknown route
+    # (see that function for why the catch-all route makes this necessary)
+    from werkzeug.routing import Map
+
+    app.config["ROUTES_WITHOUT_HOMEPAGE_MAP"] = Map(
+        [rule.empty() for rule in app.url_map.iter_rules() if rule.endpoint != "home.homepage"]
+    )
 
     return app

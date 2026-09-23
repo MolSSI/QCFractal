@@ -94,6 +94,82 @@ def test_project_client_add_get_records_datasets(snowflake_client: PortalClient)
     assert plist[0]["dataset_count"] == 2
 
 
+def test_project_client_update_metadata(snowflake_client: PortalClient):
+    proj = snowflake_client.add_project(
+        "test project",
+        "Test Description",
+        "a Tagline",
+        ["tag1", "tag2"],
+        "test_compute_tag",
+        PriorityEnum.low,
+        {"meta_key_1": "meta_value_1"},
+    )
+    proj_id = proj.id
+
+    proj.set_name("renamed project")
+    proj.set_description("New Description")
+    proj.set_tagline("A new tagline")
+    proj.set_tags(["tag3"])
+    proj.set_default_compute_tag("new_compute_tag")
+    proj.set_default_compute_priority(PriorityEnum.high)
+    proj.set_extras({"meta_key_2": "meta_value_2"})
+
+    # Fields should be updated locally too
+    assert proj.name == "renamed project"
+    assert proj.description == "New Description"
+    assert proj.tagline == "A new tagline"
+    assert proj.tags == ["tag3"]
+    assert proj.default_compute_tag == "new_compute_tag"
+    assert proj.default_compute_priority == PriorityEnum.high
+    assert proj.extras == {"meta_key_2": "meta_value_2"}
+
+    # And a fresh fetch from the server should reflect the same
+    proj_fresh = snowflake_client.get_project_by_id(proj_id)
+    assert proj_fresh.name == "renamed project"
+    assert proj_fresh.description == "New Description"
+    assert proj_fresh.tagline == "A new tagline"
+    assert proj_fresh.tags == ["tag3"]
+    assert proj_fresh.default_compute_tag == "new_compute_tag"
+    assert proj_fresh.default_compute_priority == PriorityEnum.high
+    assert proj_fresh.extras == {"meta_key_2": "meta_value_2"}
+
+
+def test_project_client_rename_collision(snowflake_client: PortalClient):
+    proj1 = snowflake_client.add_project("project one")
+    snowflake_client.add_project("project two")
+
+    with pytest.raises(PortalRequestError, match="Project named 'project two' already exists"):
+        proj1.set_name("project two")
+
+    # case-insensitive rename should not error out against itself
+    proj1.set_name("PROJECT ONE")
+    assert proj1.name == "PROJECT ONE"
+
+
+def test_project_client_get_by_name_fresh_project(snowflake_client: PortalClient):
+    # get_record/get_dataset by name must work on a freshly-obtained Project object, where the
+    # local record/dataset metadata caches have not been populated yet (eg by a prior add_record
+    # or add_dataset call on that same object). The name lookup must trigger the lazy fetch.
+    proj = snowflake_client.add_project("test project")
+
+    r = proj.add_record("test_record", test_inp_1)
+    ds = proj.add_dataset("singlepoint", "test singlepoint dataset")
+
+    proj_fresh = snowflake_client.get_project_by_id(proj.id)
+
+    r_test = proj_fresh.get_record("test_record")
+    ds_test = proj_fresh.get_dataset("test singlepoint dataset")
+
+    assert r_test.id == r.id
+    assert ds_test.id == ds.id
+
+    with pytest.raises(KeyError):
+        proj_fresh.get_record("does not exist")
+
+    with pytest.raises(KeyError):
+        proj_fresh.get_dataset("does not exist")
+
+
 def test_project_client_link_records_datasets(snowflake_client: PortalClient):
 
     # Add these directly to the server (not part of the project)
@@ -241,6 +317,38 @@ def test_project_client_delete_with_datasets(snowflake_client: PortalClient):
         snowflake_client.get_dataset_by_id(ds2.id)
 
 
+def test_project_client_delete_shared_dataset(snowflake_client: PortalClient):
+    # A dataset can be linked into more than one project. Deleting it (with
+    # delete_datasets=True) from one project must not fail just because another project still
+    # links to it - but it also must not actually delete a dataset still in use by another
+    # project. This must silently no-op (skip the deletion) rather than error, the same as
+    # deleting a record that's still referenced elsewhere.
+    proj1 = snowflake_client.add_project("test project 1")
+    proj2 = snowflake_client.add_project("test project 2")
+
+    ds = proj1.add_dataset("singlepoint", "shared dataset")
+    proj2.link_dataset(ds.id)
+
+    proj1.unlink_datasets([ds.id], delete_datasets=True)
+
+    # proj1's own link is gone
+    proj1.fetch_dataset_metadata()
+    assert proj1.dataset_metadata == []
+
+    # But the dataset itself survives, since proj2 still links to it
+    ds_still_there = snowflake_client.get_dataset_by_id(ds.id)
+    assert ds_still_there.id == ds.id
+
+    proj2.fetch_dataset_metadata()
+    assert [d.dataset_id for d in proj2.dataset_metadata] == [ds.id]
+
+    # Now that proj2 is the only remaining link, deleting from proj2 should actually delete it
+    proj2.unlink_datasets([ds.id], delete_datasets=True)
+
+    with pytest.raises(PortalRequestError, match="Could not find dataset"):
+        snowflake_client.get_dataset_by_id(ds.id)
+
+
 def test_project_client_status(snowflake: QCATestingSnowflake):
     snowflake_client = snowflake.client()
     storage_socket = snowflake.get_storage_socket()
@@ -287,6 +395,50 @@ def test_project_client_add_duplicates(snowflake_client: PortalClient):
 
     with pytest.raises(PortalRequestError, match="Dataset 'test optimization dataset' already exists in project"):
         proj.add_dataset("optimization", "test optimization dataset")
+
+
+def test_project_client_add_dataset_cross_project_collision(snowflake_client: PortalClient):
+    # A dataset name is global (shared base_dataset table), so two different projects
+    # cannot each create their own dataset with the same name. This must be a clean,
+    # reported error - not a 500 - and must not create a partial cross-project link.
+    proj1 = snowflake_client.add_project("test project 1")
+    proj2 = snowflake_client.add_project("test project 2")
+
+    ds1 = proj1.add_dataset("singlepoint", "shared dataset name")
+
+    with pytest.raises(PortalRequestError, match="Dataset with type='singlepoint' and name='shared dataset name'"):
+        proj2.add_dataset("singlepoint", "shared dataset name")
+
+    # No partial link should have been created for proj2
+    assert proj2.dataset_metadata == []
+
+    # existing_ok=True must not silently link proj2 to proj1's dataset either - the name
+    # is owned by another project, so this is still a hard conflict
+    with pytest.raises(PortalRequestError, match="Dataset with type='singlepoint' and name='shared dataset name'"):
+        proj2.add_dataset("singlepoint", "shared dataset name", existing_ok=True)
+
+    assert proj2.dataset_metadata == []
+
+    # existing_ok=True should still be idempotent *within* the same project
+    ds1_again = proj1.add_dataset("singlepoint", "shared dataset name", existing_ok=True)
+    assert ds1_again.id == ds1.id
+
+
+def test_project_client_add_dataset_existing_ok_wrong_type(snowflake_client: PortalClient):
+    # A project can only have one dataset under a given local name, regardless of type. If that
+    # name is already taken by a dataset of a *different* type than requested, existing_ok=True
+    # must not silently hand back the wrong-type dataset - it's still a conflict.
+    proj = snowflake_client.add_project("test project")
+    ds1 = proj.add_dataset("singlepoint", "shared name")
+
+    with pytest.raises(
+        PortalRequestError, match="Dataset 'shared name' already exists in project .* as a 'singlepoint' dataset"
+    ):
+        proj.add_dataset("optimization", "shared name", existing_ok=True)
+
+    # Same-type existing_ok=True should still work as get-or-create
+    ds1_again = proj.add_dataset("singlepoint", "shared name", existing_ok=True)
+    assert ds1_again.id == ds1.id
 
 
 def test_project_client_import_records(secure_snowflake: QCATestingSnowflake):
@@ -393,7 +545,7 @@ def test_project_client_query_datasets(snowflake_client: PortalClient):
     qr = snowflake_client.query_project_datasets(ds2.id)
     assert len(qr) == 1
     assert qr[0]["project_id"] == proj2.id
-    assert qr[0]["record_id"] == ds2.id
+    assert qr[0]["dataset_id"] == ds2.id
     assert qr[0]["project_name"] == proj2.name
     assert qr[0]["dataset_name"] == "test dataset 2"
 

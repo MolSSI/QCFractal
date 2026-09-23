@@ -4,6 +4,7 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
+import pydantic_core
 from sqlalchemy import select, literal, text, insert
 
 from qcfractal.components.singlepoint.record_db_models import SinglepointRecordORM
@@ -122,9 +123,17 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
                 new_spec = copy.deepcopy(spec_input_dict)
                 new_spec["keywords"].update(entry.additional_keywords)
 
+                try:
+                    qc_spec = QCSpecification(**new_spec)
+                except pydantic_core.ValidationError as e:
+                    raise InvalidArgumentsError(
+                        f"Invalid additional_keywords for entry '{entry.name}' with specification "
+                        f"'{spec.name}': {e}"
+                    ) from e
+
                 meta, sp_ids = self.root_socket.records.singlepoint.add(
                     molecules=[entry.molecule_id],
-                    qc_spec=QCSpecification(**new_spec),
+                    qc_spec=qc_spec,
                     compute_tag=compute_tag,
                     compute_priority=compute_priority,
                     creator_user=creator_user_id,

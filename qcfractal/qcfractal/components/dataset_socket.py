@@ -323,9 +323,11 @@ class DatasetSocket:
                 for x in ret
             ]
 
-    def get_contributed_values(self, dataset_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
+    def get_contributed_values(
+        self, dataset_id: int, *, session: Optional[Session] = None
+    ) -> Dict[str, Dict[str, Any]]:
         """
-        Get the contributed values for a dataset
+        Get the contributed values for a dataset, keyed by name
         """
 
         stmt = select(ContributedValuesORM)
@@ -333,7 +335,7 @@ class DatasetSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             cv = session.execute(stmt).scalars().all()
-            return [x.model_dict() for x in cv]
+            return {x.name: x.model_dict() for x in cv}
 
     def get_internal_job(
         self,

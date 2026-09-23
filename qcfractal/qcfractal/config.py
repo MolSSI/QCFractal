@@ -324,6 +324,15 @@ class WebAPIConfig(QCFConfigBase):
     login_rate_limit_window: int = 60
     """The sliding time window (in seconds) over which failed login attempts are counted"""
 
+    api_token_default_lifetime: int | None = None
+    """The lifetime (in seconds) given to a new API token when the creator does not specify an
+    expiration. The default (null) means such tokens never expire"""
+
+    api_token_max_lifetime: int | None = None
+    """The maximum lifetime (in seconds) of a new API token. When set, every new token must expire
+    within this time of its creation - a request for a longer-lived (or never-expiring) token is
+    rejected rather than silently shortened. The default (null) places no limit"""
+
     extra_flask_options: dict[str, Any] | None = None
     """Any additional options to pass directly to flask"""
 
@@ -335,11 +344,30 @@ class WebAPIConfig(QCFConfigBase):
         "jwt_refresh_token_expires",
         "user_session_max_age",
         "login_rate_limit_window",
+        "api_token_default_lifetime",
+        "api_token_max_lifetime",
         mode="before",
     )
     @classmethod
     def _convert_durations(cls, v):
+        # Some of these fields are optional - None means "no limit" and is not a duration
+        if v is None:
+            return None
         return duration_to_seconds(v)
+
+    @model_validator(mode="after")
+    def _check_api_token_lifetimes(self):
+        if self.api_token_default_lifetime is not None and self.api_token_default_lifetime <= 0:
+            raise ValueError("api_token_default_lifetime must be a positive duration (or null for no expiration)")
+        if self.api_token_max_lifetime is not None and self.api_token_max_lifetime <= 0:
+            raise ValueError("api_token_max_lifetime must be a positive duration (or null for no limit)")
+        if (
+            self.api_token_default_lifetime is not None
+            and self.api_token_max_lifetime is not None
+            and self.api_token_default_lifetime > self.api_token_max_lifetime
+        ):
+            raise ValueError("api_token_default_lifetime may not exceed api_token_max_lifetime")
+        return self
 
 
 # S3 bucket names are all lowercase characters and numbers

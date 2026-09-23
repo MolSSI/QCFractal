@@ -63,6 +63,7 @@ class AccessLogEntry(BaseModel):
     response_bytes: float | None
 
     user: str | None
+    api_token_id: int | None = None
 
     ip_address: IPvAnyAddress | None
     user_agent: str | None

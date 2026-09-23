@@ -233,10 +233,11 @@ class QCATestingSnowflake(FractalSnowflake):
         # Rate limiters and verification caches are per-app, but a session-scoped snowflake keeps
         # the same app across tests. Clear both so a lockout, or a verification result for a user
         # id that the recreated database has reused, cannot carry into the next test
-        from qcfractal.flask_app.flask_app import login_rate_limiter, user_verifier
+        from qcfractal.flask_app.flask_app import login_rate_limiter, user_verifier, token_verifier
 
         login_rate_limiter.reset_all()
         user_verifier.reset_all()
+        token_verifier.reset_all()
 
     def get_storage_socket(self) -> SQLAlchemySocket:
         """
@@ -294,7 +295,7 @@ class QCATestingSnowflake(FractalSnowflake):
         """
         self._stop_job_runner()
 
-    def client(self, username=None, password=None, cache_dir=None) -> PortalClient:
+    def client(self, username=None, password=None, cache_dir=None, api_token=None) -> PortalClient:
         """
         Obtain a client connected to this snowflake
 
@@ -306,6 +307,8 @@ class QCATestingSnowflake(FractalSnowflake):
             The password to use
         cache_dir
             Directory to store cache files in
+        api_token
+            An API token to connect with, instead of a username and password
 
         Returns
         -------
@@ -313,11 +316,13 @@ class QCATestingSnowflake(FractalSnowflake):
             A PortalClient that is connected to this snowflake
         """
 
-        client = PortalClient(self.get_uri(), username=username, password=password, cache_dir=cache_dir)
+        client = PortalClient(
+            self.get_uri(), username=username, password=password, cache_dir=cache_dir, api_token=api_token
+        )
         client.encoding = self.encoding
         return client
 
-    def manager_client(self, name_data: ManagerName, username=None, password=None) -> ManagerClient:
+    def manager_client(self, name_data: ManagerName, username=None, password=None, api_token=None) -> ManagerClient:
         """
         Obtain a manager client connected to this snowflake
 
@@ -335,5 +340,5 @@ class QCATestingSnowflake(FractalSnowflake):
         """
 
         # Now that we know it's up, create a manager client
-        client = ManagerClient(name_data, self.get_uri(), username=username, password=password)
+        client = ManagerClient(name_data, self.get_uri(), username=username, password=password, api_token=api_token)
         return client

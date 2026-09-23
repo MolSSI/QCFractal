@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select, delete, func
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import IntegrityError
 
 from qcfractal.components.dataset_db_models import BaseDatasetORM
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
@@ -23,7 +24,7 @@ from qcportal.all_results import AllResultTypes
 from qcportal.exceptions import MissingDataError, UserReportableError, AlreadyExistsError
 from qcportal.internal_jobs import InternalJobStatusEnum
 from qcportal.metadata_models import InsertCountsMetadata
-from qcportal.project_models import ProjectAttachmentType
+from qcportal.project_models import ProjectAttachmentType, ProjectModifyMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:
@@ -98,6 +99,61 @@ class ProjectSocket:
             session.add(proj_orm)
             session.commit()
             return proj_orm.id
+
+    def update_metadata(
+        self, project_id: int, new_metadata: ProjectModifyMetadata, *, session: Optional[Session] = None
+    ):
+        """
+        Updates the metadata of a project
+
+        This will overwrite the existing metadata. An exception is raised on any error
+
+        Parameters
+        ----------
+        project_id
+            ID of a project
+        new_metadata
+            New metadata to store
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            stmt = select(ProjectORM).where(ProjectORM.id == project_id)
+            stmt = stmt.with_for_update()
+            proj = session.execute(stmt).scalar_one_or_none()
+
+            if proj is None:
+                raise MissingDataError(f"Could not find project with id={project_id}")
+
+            if proj.name != new_metadata.name:
+                # If only change in case, no need to check if it already exists
+                if proj.name.lower() != new_metadata.name.lower():
+                    stmt2 = select(ProjectORM.id).where(ProjectORM.lname == new_metadata.name.lower())
+                    existing = session.execute(stmt2).scalar_one_or_none()
+
+                    if existing:
+                        raise AlreadyExistsError(f"Project named '{new_metadata.name}' already exists")
+
+                proj.name = new_metadata.name
+
+            proj.description = new_metadata.description
+            proj.tagline = new_metadata.tagline
+            proj.tags = new_metadata.tags
+            proj.extras = new_metadata.extras
+
+            proj.default_compute_tag = new_metadata.default_compute_tag
+            proj.default_compute_priority = new_metadata.default_compute_priority
+
+            # The pre-check above is a fast path, not a guarantee - two concurrent renames to
+            # the same name can both pass it before either commits. Flushing here lets the
+            # lname unique constraint catch that race, converting what would otherwise be an
+            # unhandled IntegrityError into a clean, reportable error.
+            try:
+                session.flush()
+            except IntegrityError:
+                raise AlreadyExistsError(f"Project named '{new_metadata.name}' already exists")
 
     def get(
         self,
@@ -302,7 +358,7 @@ class ProjectSocket:
             ret = session.execute(stmt).all()
             return [
                 {
-                    "record_id": x[0],
+                    "dataset_id": x[0],
                     "project_id": x[1],
                     "project_name": x[2],
                     "dataset_name": x[3],
@@ -356,15 +412,23 @@ class ProjectSocket:
             if ds_id is None:
                 raise MissingDataError(f"Dataset {dataset_id} not found in project {project_id}")
 
-    def dataset_name_exists(self, project_id: int, dataset_name: str, *, session: Optional[Session] = None):
-        stmt = select(ProjectDatasetORM.dataset_id)
+    def _lookup_project_dataset_by_name(
+        self, project_id: int, dataset_name: str, *, session: Optional[Session] = None
+    ) -> Optional[Tuple[int, str]]:
+        """
+        Returns the (ID, dataset_type) of the dataset with the given name attached to the given project,
+        or None if this project has no dataset with that name
+
+        A project can have at most one dataset under a given name, regardless of dataset type
+        """
+        stmt = select(ProjectDatasetORM.dataset_id, BaseDatasetORM.dataset_type)
         stmt = stmt.join(BaseDatasetORM, ProjectDatasetORM.dataset_id == BaseDatasetORM.id)
         stmt = stmt.where(ProjectDatasetORM.project_id == project_id)
         stmt = stmt.where(BaseDatasetORM.lname == dataset_name.lower())
 
         with self.root_socket.optional_session(session, True) as session:
-            ds_id = session.execute(stmt).scalar_one_or_none()
-            return ds_id is not None
+            row = session.execute(stmt).one_or_none()
+            return None if row is None else (row[0], row[1])
 
     def get_dataset_metadata(self, project_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
         stmt = select(
@@ -416,12 +480,27 @@ class ProjectSocket:
         ds_socket = self.root_socket.datasets.get_socket(dataset_type)
 
         with self.root_socket.optional_session(session) as session:
-            if self.dataset_name_exists(project_id, dataset_name, session=session):
-                raise ValueError(f"Dataset '{dataset_name}' already exists in project {project_id}")
+            existing = self._lookup_project_dataset_by_name(project_id, dataset_name, session=session)
+            if existing is not None:
+                existing_ds_id, existing_ds_type = existing
+                if existing_ds_type != dataset_type:
+                    raise AlreadyExistsError(
+                        f"Dataset '{dataset_name}' already exists in project {project_id} as a "
+                        f"'{existing_ds_type}' dataset, not '{dataset_type}'"
+                    )
+                elif existing_ok:
+                    return existing_ds_id
+                else:
+                    raise AlreadyExistsError(f"Dataset '{dataset_name}' already exists in project {project_id}")
 
             # Note - name, description, tagline, and tags gets duplicated in places - in the dataset, and in the
             # link between the project and the dataset
             # This should be fixed at some point
+            #
+            # existing_ok is always False here: this project does not already have a dataset with this name
+            # (checked above), so a name collision at this point means some *other* project owns a dataset
+            # with this name. That is a hard conflict, not a get-or-create - existing_ok only applies within
+            # a single project.
             ds_id = ds_socket.add(
                 name=dataset_name,
                 description=description,
@@ -432,7 +511,7 @@ class ProjectSocket:
                 default_compute_priority=default_compute_priority,
                 extras=extras,
                 creator_user=creator_user,
-                existing_ok=existing_ok,
+                existing_ok=False,
                 session=session,
             )
 
@@ -529,7 +608,8 @@ class ProjectSocket:
         stmt = stmt.where(ProjectDatasetORM.dataset_id.in_(dataset_ids))
         stmt = stmt.returning(ProjectDatasetORM.dataset_id)
 
-        with self.root_socket.optional_session(session, True) as session:
+        # Not read-only: this deletes the project/dataset links, and optionally the datasets
+        with self.root_socket.optional_session(session) as session:
             ds_ids = session.execute(stmt).scalars().all()
 
             # Use ds_ids so we only delete datasets that were removed from this dataset

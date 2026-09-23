@@ -115,3 +115,91 @@ class FlaskUserVerifier:
 
         for verifier in list(self._app_verifiers.values()):
             verifier.cache_clear()
+
+
+# How long an API token lookup may be reused. Like the user verification cache, this bounds how
+# long a revoked or expired token keeps working, so it is deliberately short. Reused here so token
+# and user verification behave consistently.
+TOKEN_CACHE_SECONDS = VERIFY_CACHE_SECONDS
+TOKEN_CACHE_MAXSIZE = 4096
+
+
+class CachedTokenVerifier:
+    """
+    Verifies API tokens against one storage socket, caching successful lookups briefly
+
+    An API token is presented on (potentially) every request, so verifying it against the database
+    each time would be a per-request round trip - and a second one, on top of user verification.
+    This caches the token->user lookup for a short time, mirroring CachedUserVerifier. A revoked or
+    expired token therefore keeps working for at most the cache lifetime, consistent with how a
+    disabled account or changed role takes effect.
+
+    Only successful lookups are cached. An invalid token raises (and is not cached), so each distinct
+    bad token still reaches the database - no worse than before, and it means a token created moments
+    ago is never stuck as "invalid".
+
+    Like CachedUserVerifier, this is free of flask and holds the socket it verifies against, so a
+    cache is never shared between two databases.
+    """
+
+    def __init__(
+        self,
+        storage_socket: SQLAlchemySocket,
+        seconds: int = TOKEN_CACHE_SECONDS,
+        maxsize: int = TOKEN_CACHE_MAXSIZE,
+    ):
+        self._storage_socket = storage_socket
+        self._verify_cached = time_based_cache(seconds=seconds, maxsize=maxsize)(self._verify_uncached)
+
+    def _verify_uncached(self, raw_token: str):
+        # Returns (user_id, token_id); raises AuthenticationFailure for an invalid token
+        return self._storage_socket.auth.verify_api_token(raw_token)
+
+    def verify(self, raw_token: str):
+        """
+        Returns (user_id, token_id) for a valid token, raising for an invalid one
+        """
+
+        return self._verify_cached(raw_token)
+
+    def cache_clear(self) -> None:
+        self._verify_cached.cache_clear()
+
+
+class FlaskTokenVerifier:
+    """
+    Flask extension owning one CachedTokenVerifier per application (see FlaskUserVerifier)
+    """
+
+    _app_verifiers: WeakKeyDictionary[Flask, CachedTokenVerifier]
+
+    def __init__(self):
+        self._app_verifiers = WeakKeyDictionary()
+
+    def init_app(self, app: Flask) -> None:
+        storage_socket = app.extensions["storage_socket"]
+        verifier = CachedTokenVerifier(storage_socket)
+
+        app.extensions["token_verifier"] = verifier
+        self._app_verifiers[app] = verifier
+
+    def _current(self) -> CachedTokenVerifier:
+        try:
+            return current_app.extensions["token_verifier"]
+        except KeyError:
+            raise RuntimeError("Token verifier not initialized for this flask app")
+
+    def verify(self, raw_token: str):
+        """
+        Returns (user_id, token_id) for a valid token, raising for an invalid one
+        """
+
+        return self._current().verify(raw_token)
+
+    def reset_all(self) -> None:
+        """
+        Clears every application's cache (only intended for testing)
+        """
+
+        for verifier in list(self._app_verifiers.values()):
+            verifier.cache_clear()

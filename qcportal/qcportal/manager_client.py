@@ -21,6 +21,8 @@ class ManagerClient(PortalClientBase):
         password: Optional[str] = None,
         verify: bool = True,
         show_motd: bool = False,
+        *,
+        api_token: Optional[str] = None,
     ) -> None:
         """Initializes a ManagerClient
 
@@ -40,6 +42,8 @@ class ManagerClient(PortalClientBase):
             SSL keys.
         show_motd
             If a Message-of-the-Day is available, display it
+        api_token
+            A long-lived API token to authenticate with, instead of a username and password
         """
 
         PortalClientBase.__init__(
@@ -49,6 +53,7 @@ class ManagerClient(PortalClientBase):
             password=password,
             verify=verify,
             show_motd=show_motd,
+            api_token=api_token,
             information_endpoint="compute/v1/information",
         )
 

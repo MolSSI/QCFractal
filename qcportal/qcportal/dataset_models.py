@@ -727,6 +727,12 @@ class BaseDataset(BaseModel):
 
         The status is computed on the server, and does not require downloading any records.
 
+        Note
+        ----
+        This is unrelated to, and has a different shape than, :meth:`Project.status`. This
+        method returns a dictionary keyed by specification name; the project method returns a
+        two-key roll-up (``records``/``datasets``).
+
         Returns
         -------
         :

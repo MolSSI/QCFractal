@@ -66,6 +66,16 @@ class ProjectAddBody(RestModelBase):
     existing_ok: bool = False
 
 
+class ProjectModifyMetadata(RestModelBase):
+    name: str
+    description: str
+    tagline: str
+    tags: list[str]
+    default_compute_tag: str
+    default_compute_priority: PriorityEnum
+    extras: dict[str, Any]
+
+
 # This is basically a duplicate of DatasetAddBody, but with
 # dataset_type added. Ok to duplicate because we will eventually move
 # to projects-only
@@ -237,6 +247,52 @@ class Project(BaseModel):
         """
         self._client = client
 
+    def _update_metadata(self, **kwargs):
+        self.assert_online()
+
+        new_body = {
+            "name": self.name,
+            "description": self.description,
+            "tagline": self.tagline,
+            "tags": self.tags,
+            "default_compute_tag": self.default_compute_tag,
+            "default_compute_priority": self.default_compute_priority,
+            "extras": self.extras,
+        }
+
+        new_body.update(**kwargs)
+        body = ProjectModifyMetadata(**new_body)
+        self._client.make_request("patch", f"api/v1/projects/{self.id}", None, body=body)
+
+        self.name = body.name
+        self.description = body.description
+        self.tagline = body.tagline
+        self.tags = body.tags
+        self.default_compute_tag = body.default_compute_tag
+        self.default_compute_priority = body.default_compute_priority
+        self.extras = body.extras
+
+    def set_name(self, new_name: str):
+        self._update_metadata(name=new_name)
+
+    def set_description(self, new_description: str):
+        self._update_metadata(description=new_description)
+
+    def set_tagline(self, new_tagline: str):
+        self._update_metadata(tagline=new_tagline)
+
+    def set_tags(self, new_tags: list[str]):
+        self._update_metadata(tags=new_tags)
+
+    def set_default_compute_tag(self, new_default_compute_tag: str):
+        self._update_metadata(default_compute_tag=new_default_compute_tag)
+
+    def set_default_compute_priority(self, new_default_compute_priority: PriorityEnum):
+        self._update_metadata(default_compute_priority=new_default_compute_priority)
+
+    def set_extras(self, new_extras: dict[str, Any]):
+        self._update_metadata(extras=new_extras)
+
     #############################
     # General info
     #############################
@@ -275,6 +331,12 @@ class Project(BaseModel):
         entry counts only the records added directly to the project; the ``datasets`` entry
         counts the records of all the datasets in the project, summed together.
 
+        Note
+        ----
+        This is unrelated to, and has a different shape than, :meth:`BaseDataset.status`. This
+        method returns a two-key roll-up (``records``/``datasets``); the dataset method returns
+        a dictionary keyed by specification name.
+
         Returns
         -------
         :
@@ -290,7 +352,7 @@ class Project(BaseModel):
     # Records
     #############################
     def _lookup_record_id(self, name: str) -> int:
-        for d in self._record_metadata:
+        for d in self.record_metadata:
             if d.name == name:
                 return d.record_id
 
@@ -565,7 +627,7 @@ class Project(BaseModel):
     # Datasets
     #############################
     def _lookup_dataset_id(self, name: str) -> int:
-        for d in self._dataset_metadata:
+        for d in self.dataset_metadata:
             if d.name == name:
                 return d.dataset_id
 

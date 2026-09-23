@@ -4,9 +4,11 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
+import pydantic_core
 from sqlalchemy import select, literal, insert
 
 from qcfractal.components.reaction.record_db_models import ReactionRecordORM
+from qcportal.exceptions import InvalidArgumentsError
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata
 from qcportal.reaction import ReactionDatasetNewEntry, ReactionSpecification
 from qcportal.record_models import PriorityEnum
@@ -133,11 +135,19 @@ class ReactionDatasetSocket(BaseDatasetSocket):
                 new_spec = copy.deepcopy(spec_input_dict)
                 new_spec["keywords"].update(entry.additional_keywords)
 
+                try:
+                    rxn_spec = ReactionSpecification(**new_spec)
+                except pydantic_core.ValidationError as e:
+                    raise InvalidArgumentsError(
+                        f"Invalid additional_keywords for entry '{entry.name}' with specification "
+                        f"'{spec.name}': {e}"
+                    ) from e
+
                 stoichiometry = [(x.coefficient, x.molecule_id) for x in entry.stoichiometries]
 
                 meta, rxn_ids = self.root_socket.records.reaction.add(
                     stoichiometries=[stoichiometry],
-                    rxn_spec=ReactionSpecification(**new_spec),
+                    rxn_spec=rxn_spec,
                     compute_tag=compute_tag,
                     compute_priority=compute_priority,
                     creator_user=creator_user_id,
