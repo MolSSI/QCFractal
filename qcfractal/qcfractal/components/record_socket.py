@@ -63,6 +63,32 @@ if TYPE_CHECKING:
 
 _default_error = ComputeError(error_type="not_supplied", error_message="No error message found on task.")
 
+_NESTED_OUTPUT_SEPARATOR = "\n\n===== nested failure =====\n\n"
+
+
+def _collect_nested_outputs(error_extras: Optional[Dict[str, Any]], key: str) -> List[str]:
+    """
+    Walks a chain of nested error.extras["failed_result"] dicts (as produced by procedures like
+    geomeTRIC/optking wrapping a failing sub-computation), collecting the given output key
+    (eg "stdout"/"stderr") at each level, outermost first.
+    """
+
+    found = []
+    extras = error_extras
+    while isinstance(extras, dict):
+        nested_result = extras.get("failed_result")
+        if not isinstance(nested_result, dict):
+            break
+
+        value = nested_result.get(key)
+        if value:
+            found.append(value)
+
+        nested_error = nested_result.get("error")
+        extras = nested_error.get("extras") if isinstance(nested_error, dict) else None
+
+    return found
+
 
 class RecordSocket:
     """
@@ -571,16 +597,28 @@ class RecordSocket:
         # Get the rest of the outputs
         # This is stored in "input_data" (I know...)
         # "input_data" can be anything. So ignore if it isn't a dict
+        stdout_parts = []
+        stderr_parts = []
         if isinstance(failed_result.input_data, dict):
-            stdout = failed_result.input_data.get("stdout", None)
-            stderr = failed_result.input_data.get("stderr", None)
+            top_stdout = failed_result.input_data.get("stdout", None)
+            top_stderr = failed_result.input_data.get("stderr", None)
 
-            if stdout is not None:
-                stdout_orm = create_output_orm(OutputTypeEnum.stdout, stdout)
-                all_outputs[OutputTypeEnum.stdout] = stdout_orm
-            if stderr is not None:
-                stderr_orm = create_output_orm(OutputTypeEnum.stderr, stderr)
-                all_outputs[OutputTypeEnum.stderr] = stderr_orm
+            if top_stdout:
+                stdout_parts.append(top_stdout)
+            if top_stderr:
+                stderr_parts.append(top_stderr)
+
+        # Some procedures (eg geomeTRIC, optking) don't put stdout/stderr on input_data. Instead, they
+        # nest the failed sub-result (which has its own stdout/stderr) under error.extras["failed_result"]
+        stdout_parts.extend(_collect_nested_outputs(error.extras, "stdout"))
+        stderr_parts.extend(_collect_nested_outputs(error.extras, "stderr"))
+
+        if stdout_parts:
+            stdout_orm = create_output_orm(OutputTypeEnum.stdout, _NESTED_OUTPUT_SEPARATOR.join(stdout_parts))
+            all_outputs[OutputTypeEnum.stdout] = stdout_orm
+        if stderr_parts:
+            stderr_orm = create_output_orm(OutputTypeEnum.stderr, _NESTED_OUTPUT_SEPARATOR.join(stderr_parts))
+            all_outputs[OutputTypeEnum.stderr] = stderr_orm
 
         # Build the history orm
         history_orm = RecordComputeHistoryORM()
