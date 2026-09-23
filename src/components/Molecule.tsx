@@ -88,6 +88,13 @@ function MoleculeStageProvider({
     const newStage = new Stage(stageElementRef.current!, {
       backgroundColor: theme.palette.background.paper,
     });
+
+    // NGL console.logs "STAGE LOG loading/loaded file" on every molecule it
+    // loads. Keep its log list, but keep the console clean
+    newStage.log = (msg: string) => {
+      newStage.logList.push(msg);
+    };
+
     setStage(newStage);
 
     const handleResize = () => newStage.handleResize();

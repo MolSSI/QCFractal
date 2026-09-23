@@ -84,7 +84,7 @@ function RecordRow({
                   <Typography variant="body2" fontWeight="bold">
                     Description
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" component="div">
                     <MarkdownContent>{record.description.trim()}</MarkdownContent>
                   </Typography>
                 </Box>
