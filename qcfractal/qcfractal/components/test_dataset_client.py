@@ -337,6 +337,46 @@ def test_dataset_client_get_computed_properties(snowflake: QCATestingSnowflake):
     assert "calcinfo_natom" in computed_prop["spec_1"]
 
 
+def test_dataset_client_contributed_values_empty(snowflake_client: PortalClient):
+    # contributed_values are legacy data with no API for adding them - only datasets migrated
+    # from an old QCFractal version have any. A dataset with none must not raise on access; the
+    # server previously sent an empty *list*, which failed validation against the client's
+    # dict-shaped response model.
+    ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
+    assert ds.contributed_values == {}
+
+
+def test_dataset_client_contributed_values(snowflake: QCATestingSnowflake):
+    from qcfractal.components.dataset_db_models import ContributedValuesORM
+
+    snowflake_client = snowflake.client()
+    storage_socket = snowflake.get_storage_socket()
+
+    ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
+
+    # No API exists for adding contributed values - they only ever arrive via a migration
+    # from an old QCFractal version, so insert directly into the database to simulate that
+    with storage_socket.session_scope() as session:
+        cv = ContributedValuesORM(
+            dataset_id=ds.id,
+            name="cv1",
+            values=[1.0, 2.0, 3.0],
+            index=["mol1", "mol2", "mol3"],
+            values_structure={},
+            theory_level="B3LYP/6-31G",
+            units="hartree",
+        )
+        session.add(cv)
+        session.commit()
+
+    cvals = ds.contributed_values
+    assert set(cvals.keys()) == {"cv1"}
+    assert cvals["cv1"].name == "cv1"
+    assert cvals["cv1"].values == [1.0, 2.0, 3.0]
+    assert cvals["cv1"].theory_level == "B3LYP/6-31G"
+    assert cvals["cv1"].units == "hartree"
+
+
 def test_dataset_client_copy_from_incompatible(snowflake_client: PortalClient):
     ds_1 = snowflake_client.add_dataset("singlepoint", "Test sp dataset")
     ds_2 = snowflake_client.add_dataset("optimization", "Test opt dataset")

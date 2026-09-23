@@ -4,7 +4,8 @@ from typing import Dict, Any
 
 from flask import g, request, current_app, jsonify, Response
 from jwt.exceptions import InvalidSubjectError
-from werkzeug.exceptions import InternalServerError, HTTPException, TooManyRequests
+from werkzeug.exceptions import InternalServerError, HTTPException, TooManyRequests, MethodNotAllowed, NotFound
+from werkzeug.routing import RequestRedirect
 
 from qcfractal.flask_app import storage_socket
 from qcportal.exceptions import (
@@ -159,6 +160,41 @@ def handle_too_many_requests(error: TooManyRequests):
     if getattr(error, "retry_after", None) is not None:
         response.headers["Retry-After"] = str(error.retry_after)
     return response, error.code
+
+
+def _path_matches_a_real_route(path: str) -> bool:
+    """
+    True if some route other than the catch-all homepage route matches the given path
+
+    The homepage blueprint registers a catch-all route (`/<path:file_path>`, GET only) so it
+    can serve a static site or redirect for arbitrary paths. Because that rule matches every
+    path, Werkzeug considers it a "match" (with the wrong method) for any unknown, non-GET
+    request, and raises MethodNotAllowed (405) instead of NotFound (404). To tell a genuine
+    405 (a real, registered endpoint that just doesn't support this method) apart from that,
+    we re-match the path against ROUTES_WITHOUT_HOMEPAGE_MAP - a copy of the URL map (built
+    once at app-creation time; see flask_app.py) with the homepage route excluded.
+    """
+    routes_without_homepage = current_app.config["ROUTES_WITHOUT_HOMEPAGE_MAP"]
+    adapter = routes_without_homepage.bind(request.host)
+    try:
+        adapter.match(path, method=request.method)
+        return True
+    except (MethodNotAllowed, RequestRedirect):
+        # MethodNotAllowed: a real rule matches this path, just not this method
+        # RequestRedirect: a real rule matches (eg a trailing-slash mismatch)
+        return True
+    except NotFound:
+        return False
+
+
+@home_v1.app_errorhandler(MethodNotAllowed)
+def handle_method_not_allowed(error):
+    # See _path_matches_a_real_route - avoid leaking a 405 for paths that don't correspond to
+    # any real endpoint, which would otherwise happen because of the homepage catch-all route
+    if not _path_matches_a_real_route(request.path):
+        return jsonify(msg="404 Not Found: The requested URL was not found on the server."), 404
+
+    return jsonify(msg=str(error)), error.code
 
 
 @home_v1.app_errorhandler(HTTPException)

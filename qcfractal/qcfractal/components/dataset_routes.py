@@ -482,7 +482,7 @@ def delete_dataset_attachment_v1(dataset_id: int, attachment_id: int) -> None:
 @api_v1.route("/datasets/<int:dataset_id>/contributed_values", methods=["GET"])
 @check_permissions("datasets", "read")
 @serialization()
-def fetch_dataset_contributed_values_v1(dataset_id: int) -> list[dict[str, Any]]:
+def fetch_dataset_contributed_values_v1(dataset_id: int) -> dict[str, dict[str, Any]]:
     return storage_socket.datasets.get_contributed_values(dataset_id)
 
 

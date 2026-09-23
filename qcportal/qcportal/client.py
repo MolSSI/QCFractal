@@ -346,7 +346,7 @@ class PortalClient(PortalClientBase):
         proj_id = self.make_request("post", f"api/v1/projects", int, body=body)
         return self.get_project_by_id(proj_id)
 
-    def get_project(self, project_name: str) -> Project:
+    def get_project(self, project_name_or_id: str | int) -> Project:
         """
         Obtain a project by name
 
@@ -354,17 +354,22 @@ class PortalClient(PortalClientBase):
 
         Parameters
         ----------
-        project_name
-            Name of the project to obtain
+        project_name_or_id
+            Name or ID of the project. Integers will always be treated as IDs, and strings
+            will always be treated as names.
 
         Returns
         -------
         :
             The project with the given name
         """
-        body = ProjectQueryModel(project_name=project_name)
-        proj_dict = self.make_request("post", f"api/v1/projects/query", dict[str, Any], body=body)
-        return Project(**proj_dict, client=self)
+        if isinstance(project_name_or_id, int):
+            project_dict = self.make_request("get", f"api/v1/projects/{project_name_or_id}", dict[str, Any])
+            return Project(**project_dict, client=self)
+        else:
+            body = ProjectQueryModel(project_name=project_name_or_id)
+            proj_dict = self.make_request("post", f"api/v1/projects/query", dict[str, Any], body=body)
+            return Project(**proj_dict, client=self)
 
     def get_project_by_id(self, project_id: int) -> Project:
         """
@@ -380,8 +385,8 @@ class PortalClient(PortalClientBase):
         :
             The project with the given ID
         """
-        project_dict = self.make_request("get", f"api/v1/projects/{project_id}", dict[str, Any])
-        return Project(**project_dict, client=self)
+        self._logger.warning("'get_project_by_id' is deprecated; use 'get_project' with an integer argument instead")
+        return self.get_project(project_id)
 
     def delete_project(
         self,
@@ -468,8 +473,8 @@ class PortalClient(PortalClientBase):
         Returns
         -------
         :
-            A list of dictionaries, each with the keys ``record_id`` (which holds the *dataset*
-            ID), ``project_id``, ``project_name``, and ``dataset_name``
+            A list of dictionaries, each with the keys ``dataset_id``, ``project_id``,
+            ``project_name``, and ``dataset_name``
         """
         body = ProjectQueryDatasets(dataset_id=make_list(dataset_id))
         return self.make_request("post", f"api/v1/projects/querydatasets", list[dict[str, Any]], body=body)

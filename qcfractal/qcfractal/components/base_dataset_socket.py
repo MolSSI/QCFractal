@@ -416,7 +416,7 @@ class BaseDatasetSocket:
             ds_orm.creator_user_id = creator_user_id
 
             session.add(ds_orm)
-            session.commit()
+            session.flush()
             return ds_orm.id
 
     def update_record_count(self, dataset_id: int, change: Optional[int], *, session: Optional[Session] = None):
@@ -508,6 +508,15 @@ class BaseDatasetSocket:
 
             ds.default_compute_tag = new_metadata.default_compute_tag
             ds.default_compute_priority = new_metadata.default_compute_priority
+
+            # The pre-check above is a fast path, not a guarantee - two concurrent renames to
+            # the same name can both pass it before either commits. Flushing here lets the
+            # dataset_type+lname unique constraint catch that race, converting what would
+            # otherwise be an unhandled IntegrityError into a clean, reportable error.
+            try:
+                session.flush()
+            except IntegrityError:
+                raise AlreadyExistsError(f"{self.dataset_type} dataset named '{new_metadata.name}' already exists")
 
     def add_specifications(
         self,
@@ -1249,9 +1258,17 @@ class BaseDatasetSocket:
                 stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
                 record_ids = session.execute(stmt).scalars().all()
 
-            stmt = delete(BaseDatasetORM)
-            stmt = stmt.where(BaseDatasetORM.id == dataset_id)
-            session.execute(stmt)
+            # A dataset can be linked into more than one project. If it still is, silently skip
+            # the actual deletion rather than deleting a dataset still in use by another
+            # project (or raising an error) - the same behavior as deleting a record that is
+            # still referenced elsewhere (see delete_general/records.delete).
+            try:
+                with session.begin_nested():
+                    stmt = delete(BaseDatasetORM)
+                    stmt = stmt.where(BaseDatasetORM.id == dataset_id)
+                    session.execute(stmt)
+            except IntegrityError:
+                return
 
             if delete_records:
                 self.root_socket.records.delete(record_ids, soft_delete=False, delete_children=True, session=session)

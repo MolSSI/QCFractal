@@ -22,6 +22,7 @@ from qcportal.project_models import (
     ProjectLinkRecordBody,
     ProjectUnlinkRecordsBody,
     ProjectAttachmentUploadBody,
+    ProjectModifyMetadata,
 )
 from qcportal.record_models import RecordStatusEnum
 
@@ -245,12 +246,11 @@ def get_project_record_v1(project_id: int, record_id: int, url_params: ProjURLPa
 #########################
 # Modifying metadata
 #########################
-# @api_v1.route("/projects/<string:project_type>/<int:project_id>", methods=["PATCH"])
-# @check_permissions("projects", "modify")
-# @serialization()
-# def modify_project_metadata_v1(project_type: str, project_id: int, body_data: DatasetModifyMetadata):
-#    ds_socket = storage_socket.projects.get_socket(project_type)
-#    return ds_socket.update_metadata(project_id, new_metadata=body_data)
+@api_v1.route("/projects/<int:project_id>", methods=["PATCH"])
+@check_permissions("projects", "modify")
+@serialization()
+def modify_project_metadata_v1(project_id: int, body_data: ProjectModifyMetadata) -> None:
+    return storage_socket.projects.update_metadata(project_id, new_metadata=body_data)
 
 
 #########################

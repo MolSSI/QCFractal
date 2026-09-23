@@ -4,6 +4,7 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
+import pydantic_core
 from sqlalchemy import select, literal, insert, text
 
 from qcfractal.components.torsiondrive.record_db_models import TorsiondriveRecordORM
@@ -96,10 +97,16 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
                 new_td_spec["keywords"].update(entry.additional_keywords)
                 new_td_spec["optimization_specification"]["keywords"].update(entry.additional_optimization_keywords)
 
-                td_spec = TorsiondriveSpecification(
-                    optimization_specification=new_td_spec["optimization_specification"],
-                    keywords=new_td_spec["keywords"],
-                )
+                try:
+                    td_spec = TorsiondriveSpecification(
+                        optimization_specification=new_td_spec["optimization_specification"],
+                        keywords=new_td_spec["keywords"],
+                    )
+                except pydantic_core.ValidationError as e:
+                    raise InvalidArgumentsError(
+                        f"Invalid additional_keywords for entry '{entry.name}' with specification "
+                        f"'{spec.name}': {e}"
+                    ) from e
 
                 meta, td_ids = self.root_socket.records.torsiondrive.add(
                     initial_molecules=[entry.initial_molecule_ids],
