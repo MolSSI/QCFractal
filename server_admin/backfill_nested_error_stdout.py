@@ -9,6 +9,16 @@ nested rather than promoted to its own output row - so this script is a pure dat
 backfill. It does not require an alembic migration and is safe to run multiple times
 (only history rows still missing a stdout output are candidates; ones already
 handled, or ones examined and found to have nothing to extract, are left alone).
+
+Designed to run against a large, live, unindexed record_compute_history table (no
+index on `status` - filtering it is a sequential scan) without holding the full
+candidate set in memory: a single producer process walks the table once, in id
+order, and streams batches of candidate ids to a bounded queue; worker processes
+pull batches off that queue and do the actual read/decompress/update/commit work.
+Ordering by id with a strictly-advancing cursor is what guarantees every row is
+visited exactly once over the life of a run, regardless of whether it's actually
+fixable (a plain, non-procedure failure never gains a stdout output, so it would
+match the candidate filter forever if that filter were naively requeried).
 """
 
 import argparse
@@ -16,7 +26,7 @@ import multiprocessing
 from queue import Empty
 
 import tqdm
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload, undefer
 
 from qcfractal.components.record_db_models import RecordComputeHistoryORM, OutputStoreORM
@@ -26,30 +36,29 @@ from qcfractal.config import read_configuration
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcportal.record_models import OutputTypeEnum, RecordStatusEnum
 
-BATCH_SIZE = 50
+# How many pending batches may sit in the queue before the producer blocks. Bounds
+# memory to roughly queue_maxsize * batch_size ids in flight, instead of the whole
+# candidate set.
+QUEUE_MAXSIZE = 4
 
 
-def _candidates_stmt():
-    # history rows that errored, have an error output (so there's something to mine),
-    # but no stdout output yet (so we don't touch rows the normal code path already handled).
-    #
-    # NOTE: this is only a coarse pre-filter. Not every row matching it actually has a
-    # nested failed_result to extract (eg a plain program failure, as opposed to a
-    # procedure like geomeTRIC/optking wrapping one) - those rows will never gain a
-    # stdout output and so would ALWAYS match this filter again. Callers must not
-    # requery this filter in a loop expecting it to eventually come back empty;
-    # instead, the candidate id list is snapshotted once (see __main__) and each
-    # id is visited exactly one time.
-    return (
+def _candidates_page_stmt(after_id, batch_size):
+    """
+    One page of candidate history ids, ordered by id, starting strictly after `after_id`.
+    """
+    stmt = (
         select(RecordComputeHistoryORM.id)
         .where(RecordComputeHistoryORM.status == RecordStatusEnum.error)
         .where(RecordComputeHistoryORM.outputs.any(OutputStoreORM.output_type == OutputTypeEnum.error))
         .where(~RecordComputeHistoryORM.outputs.any(OutputStoreORM.output_type == OutputTypeEnum.stdout))
     )
+    if after_id is not None:
+        stmt = stmt.where(RecordComputeHistoryORM.id > after_id)
+    return stmt.order_by(RecordComputeHistoryORM.id).limit(batch_size)
 
 
 def _process_batch(session, history_ids, dry_run) -> int:
-    """Examines one batch of (already snapshotted) history ids. Returns how many were
+    """Examines one batch of (already paged) history ids. Returns how many were
     actually updated. Never called twice for the same id within a run."""
 
     stmt = (
@@ -72,7 +81,8 @@ def _process_batch(session, history_ids, dry_run) -> int:
         stderr_parts = _collect_nested_outputs(extras, "stderr")
 
         # Nothing nested to extract - this row will never gain a stdout output, but that's
-        # fine: we snapshotted the candidate list up front, so we simply won't revisit it.
+        # fine: the producer's cursor has already moved past it, so it won't be revisited
+        # within this run.
         if not stdout_parts and not stderr_parts:
             continue
 
@@ -96,23 +106,54 @@ def _process_batch(session, history_ids, dry_run) -> int:
     return n_updated
 
 
-def worker_process(fractal_config, history_ids, dry_run, done_queue):
-    """Processes a fixed, disjoint slice of history ids exactly once each."""
+def producer_process(fractal_config, batch_size, nproc, task_queue):
+    """
+    Walks the whole table exactly once, in id order, pushing batches of candidate ids
+    to task_queue. Never holds more than one page's worth of ids in memory at a time.
+    """
 
     socket = SQLAlchemySocket(fractal_config)
     session = socket.Session()
 
-    for i in range(0, len(history_ids), BATCH_SIZE):
-        chunk = history_ids[i : i + BATCH_SIZE]
-        _process_batch(session, chunk, dry_run)
-        done_queue.put(len(chunk))
+    after_id = None
+    while True:
+        page = session.execute(_candidates_page_stmt(after_id, batch_size)).scalars().all()
+
+        if not page:
+            break
+
+        task_queue.put(page)
+        after_id = page[-1]
+
+    # Tell every worker there's no more work coming.
+    for _ in range(nproc):
+        task_queue.put(None)
+
+
+def worker_process(fractal_config, dry_run, task_queue, done_queue):
+    socket = SQLAlchemySocket(fractal_config)
+    session = socket.Session()
+
+    while True:
+        batch = task_queue.get()
+        if batch is None:
+            break
+
+        _process_batch(session, batch, dry_run)
+        done_queue.put(len(batch))
 
 
 if __name__ == "__main__":
 
     argparser = argparse.ArgumentParser(prog="QCFractal Nested Error Stdout Backfill")
     argparser.add_argument("config", help="Path to the qcfractal configuration file")
-    argparser.add_argument("--nproc", type=int, default=1, help="Number of processes to use")
+    argparser.add_argument("--nproc", type=int, default=1, help="Number of worker processes to use")
+    argparser.add_argument(
+        "--batch-size",
+        type=int,
+        default=1000,
+        help="Number of history rows fetched/committed per database round trip",
+    )
     argparser.add_argument(
         "--dry-run",
         action="store_true",
@@ -121,40 +162,34 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
     fractal_config = read_configuration([args.config])
-    socket = SQLAlchemySocket(fractal_config)
-
-    session = socket.Session()
-
-    # Snapshot the full candidate list once. Every id in this list is visited exactly one
-    # time below, regardless of whether it turns out to actually be fixable - that's what
-    # guarantees this script terminates.
-    all_ids = session.execute(_candidates_stmt()).scalars().all()
-
-    print(f"{len(all_ids)} compute-history entries are candidates for a stdout/stderr backfill (exact)")
-
-    if len(all_ids) == 0:
-        raise SystemExit(0)
-
     nproc = max(1, args.nproc)
-    id_chunks = [all_ids[i::nproc] for i in range(nproc)]
-    id_chunks = [c for c in id_chunks if c]
 
-    proc_pool = []
+    task_queue = multiprocessing.Queue(maxsize=QUEUE_MAXSIZE)
     done_queue = multiprocessing.Queue()
 
-    for chunk in id_chunks:
-        proc = multiprocessing.Process(
-            target=worker_process, args=(fractal_config, chunk, args.dry_run, done_queue)
-        )
-        proc.start()
-        proc_pool.append(proc)
+    producer = multiprocessing.Process(
+        target=producer_process, args=(fractal_config, args.batch_size, nproc, task_queue)
+    )
+    producer.start()
 
-    with tqdm.tqdm(total=len(all_ids)) as pbar:
-        while any(x.is_alive() for x in proc_pool):
+    workers = [
+        multiprocessing.Process(target=worker_process, args=(fractal_config, args.dry_run, task_queue, done_queue))
+        for _ in range(nproc)
+    ]
+    for w in workers:
+        w.start()
+
+    # We deliberately don't compute an upfront total: on a large, unindexed table that
+    # would mean doing the same expensive full scan twice. Progress is reported as a
+    # running count/rate instead of a percentage.
+    all_procs = [producer] + workers
+    with tqdm.tqdm(unit="row") as pbar:
+        while any(p.is_alive() for p in all_procs):
             try:
                 done_count = done_queue.get(timeout=1)
                 pbar.update(done_count)
             except Empty:
                 pass
 
-    [p.join() for p in proc_pool]
+    producer.join()
+    [w.join() for w in workers]
