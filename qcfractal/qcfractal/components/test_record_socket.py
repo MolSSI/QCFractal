@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from qcfractal.components.record_db_models import BaseRecordORM
-from qcfractal.components.record_socket import _collect_nested_outputs
+from qcfractal.components.record_socket import _collect_nested_outputs, _join_outputs, _NESTED_OUTPUT_SEPARATOR
 from qcfractal.components.singlepoint.testing_helpers import submit_procedure_data as submit_sp_procedure_data
 from qcfractal.testing_helpers import mname1
 from qcfractalcompute.compress import compress_result
@@ -51,6 +51,22 @@ def test_collect_nested_outputs_multi_level():
     }
 
     assert _collect_nested_outputs(extras, "stdout") == ["outer log", "inner log"]
+
+
+def test_join_outputs():
+    # single part passes through unchanged, whatever its type - matches the historical
+    # behavior of storing input_data stdout/stderr verbatim
+    assert _join_outputs(["a log"]) == "a log"
+    assert _join_outputs([""]) == ""
+    weird = {"unexpected": "value"}
+    assert _join_outputs([weird]) is weird
+
+    # multiple parts are joined with the separator; empty strings are dropped first
+    assert _join_outputs(["outer", "inner"]) == "outer" + _NESTED_OUTPUT_SEPARATOR + "inner"
+    assert _join_outputs(["", "inner"]) == "inner"
+
+    # non-string parts must never raise (a TypeError here would mask the original failure)
+    assert _join_outputs(["outer", 42]) == "outer" + _NESTED_OUTPUT_SEPARATOR + "42"
 
 
 def test_record_socket_update_failed_task_nested_stdout(storage_socket: SQLAlchemySocket):

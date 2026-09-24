@@ -90,6 +90,23 @@ def _collect_nested_outputs(error_extras: Optional[Dict[str, Any]], key: str) ->
     return found
 
 
+def _join_outputs(parts: List[Any]) -> Any:
+    """
+    Joins collected stdout/stderr parts into a single storable value.
+
+    A single part is passed through unchanged (whatever its type - matching the historical
+    behavior of storing input_data stdout/stderr verbatim). Multiple parts are joined with a
+    labeled separator, coercing to str so an unexpected non-string value can never raise and
+    thereby mask the original failure.
+    """
+
+    if len(parts) > 1:
+        parts = [p for p in parts if p != ""] or [""]
+    if len(parts) == 1:
+        return parts[0]
+    return _NESTED_OUTPUT_SEPARATOR.join(str(p) for p in parts)
+
+
 class RecordSocket:
     """
     Root socket for all record sockets
@@ -603,9 +620,9 @@ class RecordSocket:
             top_stdout = failed_result.input_data.get("stdout", None)
             top_stderr = failed_result.input_data.get("stderr", None)
 
-            if top_stdout:
+            if top_stdout is not None:
                 stdout_parts.append(top_stdout)
-            if top_stderr:
+            if top_stderr is not None:
                 stderr_parts.append(top_stderr)
 
         # Some procedures (eg geomeTRIC, optking) don't put stdout/stderr on input_data. Instead, they
@@ -614,11 +631,9 @@ class RecordSocket:
         stderr_parts.extend(_collect_nested_outputs(error.extras, "stderr"))
 
         if stdout_parts:
-            stdout_orm = create_output_orm(OutputTypeEnum.stdout, _NESTED_OUTPUT_SEPARATOR.join(stdout_parts))
-            all_outputs[OutputTypeEnum.stdout] = stdout_orm
+            all_outputs[OutputTypeEnum.stdout] = create_output_orm(OutputTypeEnum.stdout, _join_outputs(stdout_parts))
         if stderr_parts:
-            stderr_orm = create_output_orm(OutputTypeEnum.stderr, _NESTED_OUTPUT_SEPARATOR.join(stderr_parts))
-            all_outputs[OutputTypeEnum.stderr] = stderr_orm
+            all_outputs[OutputTypeEnum.stderr] = create_output_orm(OutputTypeEnum.stderr, _join_outputs(stderr_parts))
 
         # Build the history orm
         history_orm = RecordComputeHistoryORM()
