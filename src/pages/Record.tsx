@@ -27,6 +27,7 @@ import { FavoriteButton } from "../components/FavoriteButton.tsx";
 import { ViewOutputButton } from "../components/ViewOutputDialog.tsx";
 import { TaskServiceButton } from "../components/TaskServiceDialog.tsx";
 import { ResetRecordButton } from "../components/record_components/ResetRecordDialog.tsx";
+import { RecordActionsMenu } from "../components/record_components/RecordActionsMenu.tsx";
 import { dateStringToLocalTime } from "../Utils.ts";
 
 interface RecordHeaderProps {
@@ -64,6 +65,12 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
           {/* Record actions */}
           <Box sx={{ mt: 1 }}>
             <ResetRecordButton
+              recordId={recordData.id}
+              status={recordData.status}
+            />
+          </Box>
+          <Box sx={{ mt: 1 }}>
+            <RecordActionsMenu
               recordId={recordData.id}
               status={recordData.status}
             />
@@ -198,8 +205,8 @@ function Record() {
     enabled: validRecordId,
   });
 
-  const pageTitle = recordData ?
-    `Record ${recordData.id}${recordData.name ? ": " + recordData.name.trim() : ""}`
+  const pageTitle = recordData
+    ? `Record ${recordData.id}${recordData.name ? ": " + recordData.name.trim() : ""}`
     : `Record ${parsedRecordId}`;
   usePageTitle(pageTitle);
 

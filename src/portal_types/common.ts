@@ -242,11 +242,35 @@ export type RecordModifyBody = {
   comment?: string;
 };
 
+// Body for POST api/v1/records/revert. revert_status is the status being
+// *undone* - so uncancelling sends "cancelled". The record goes back to
+// whatever status it held before, not necessarily waiting.
+export type RecordRevertBody = {
+  record_ids: number[];
+  revert_status: RecordStatus;
+};
+
+// Body for POST api/v1/records/bulkDelete. Deletion never goes through the
+// PATCH endpoint - sending status: "deleted" there 500s.
+export type RecordDeleteBody = {
+  record_ids: number[];
+  soft_delete: boolean;
+  delete_children: boolean;
+};
+
 // Returned by the bulk record modification endpoints. A rejected action still
 // comes back 200, with an empty updated_idx and the reason in errors.
 export type UpdateMetadata = {
   updated_idx: number[];
   n_children_updated: number;
+  errors: [number, string][];
+  error_description: string | null;
+};
+
+// Same shape as UpdateMetadata, returned by the bulkDelete endpoints.
+export type DeleteMetadata = {
+  deleted_idx: number[];
+  n_children_deleted: number;
   errors: [number, string][];
   error_description: string | null;
 };
