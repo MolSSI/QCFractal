@@ -121,11 +121,18 @@ export const ResetRecordButton: React.FC<ResetRecordButtonProps> = ({
   const canReset = status === "error";
   const canModify = has_permission("records", "modify");
 
+  // A running record is the one people most expect to reset, so say why that
+  // is not on offer rather than repeating the generic message
+  const whyDisabled =
+    status === "running"
+      ? "A running record cannot be reset - if its manager goes away the server puts it back in the queue on its own."
+      : `Only errored records can be reset, and this one is currently in the ${status} status.`;
+
   const tooltip = !canModify
-    ? "You do not have permission to modify records"
+    ? "You do not have permission to modify records."
     : canReset
-      ? "Reset this record back to waiting so that it will run again"
-      : "Only records in the error status can be reset";
+      ? "Put this record back in the compute queue so that it runs again"
+      : whyDisabled;
 
   return (
     <>
