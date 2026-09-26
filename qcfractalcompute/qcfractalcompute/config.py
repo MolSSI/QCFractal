@@ -78,6 +78,8 @@ class ExecutorConfig(QCFComputeConfigBase):
 
     cores_per_worker: int
     memory_per_worker: float
+    qcengine_memory_per_worker: float | None = None
+    """Memory in GiB made available to QCEngine tasks. Defaults to memory_per_worker."""
 
     extra_executor_options: dict[str, Any] = {}
 
