@@ -245,6 +245,8 @@ class InternalJobSocket:
         if query_data.scheduled_after is not None:
             and_query.append(InternalJobORM.scheduled_date > query_data.scheduled_after)
         if query_data.user:
+            # Joining on the user id map is 1:1, so this does not produce duplicate rows.
+            # If a join that can produce duplicates is added, results will need to be de-duplicated
             stmt = stmt.join(UserIDMapSubquery)
 
             int_ids = {x for x in query_data.user if isinstance(x, int) or x.isdecimal()}
@@ -261,7 +263,6 @@ class InternalJobSocket:
 
             stmt = stmt.order_by(InternalJobORM.id.desc())
             stmt = stmt.limit(query_data.limit)
-            stmt = stmt.distinct(InternalJobORM.id)
 
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]

@@ -5,6 +5,7 @@ import os
 import pathlib
 import re
 import secrets
+import shlex
 import shutil
 import subprocess
 import time
@@ -12,6 +13,7 @@ from typing import TYPE_CHECKING
 
 import psycopg2
 import tabulate
+from psycopg2 import sql
 from psycopg2.errors import OperationalError, ObjectInUse
 
 from .config import DatabaseConfig
@@ -19,8 +21,19 @@ from .db_socket.socket import SQLAlchemySocket
 from .port_util import find_open_port, is_port_inuse
 
 if TYPE_CHECKING:
-    from typing import Any, List, Optional, Tuple, Dict
+    from typing import Any, List, Optional, Sequence, Tuple, Dict
     import psycopg2.extensions
+
+
+def socket_dir_usable(sock_dir: str) -> bool:
+    """
+    Determines if a directory is short enough to hold a postgres socket file
+
+    There is a limit of ~103 bytes for the path to a socket file. Postgres puts extra
+    after sock_dir, so this is conservative.
+    """
+
+    return len(os.fsencode(sock_dir)) < 80
 
 
 class PostgresHarness:
@@ -125,7 +138,11 @@ class PostgresHarness:
         return tool_path
 
     def _run_subprocess(
-        self, command: List[str], env: Optional[Dict[str, Any]] = None, shell: bool = False
+        self,
+        command: List[str],
+        env: Optional[Dict[str, Any]] = None,
+        shell: bool = False,
+        log_command: Optional[List[str]] = None,
     ) -> Tuple[int, str, str]:
         """
         Runs a command using subprocess, and output stdout into the logger
@@ -134,6 +151,12 @@ class PostgresHarness:
         ----------
         command
             Command to run as a list of strings (see documentation for subprocess)
+        env
+            Additional environment variables to set
+        shell
+            If true, run the command through a shell (bash)
+        log_command
+            What to log as the command (for example, with any passwords removed). Defaults to command
 
         Returns
         -------
@@ -146,7 +169,7 @@ class PostgresHarness:
         if env is not None:
             full_env.update(env)
 
-        self._logger.debug("Running subprocess: " + str(command))
+        self._logger.debug("Running subprocess: " + str(log_command if log_command is not None else command))
         if shell:
             proc = subprocess.run(
                 " ".join(command),
@@ -249,7 +272,12 @@ class PostgresHarness:
         self._logger.info(f"Postgres instance serving uri {self.config.safe_uri} appears to be up and running")
 
     def sql_command(
-        self, statement: str, use_maintenance_db: bool = False, autocommit: bool = True, returns=True
+        self,
+        statement: str | sql.Composable,
+        use_maintenance_db: bool = False,
+        autocommit: bool = True,
+        returns=True,
+        params: Optional[Sequence[Any]] = None,
     ) -> Any:
         """Runs a single SQL query or statement string and returns the output
 
@@ -264,6 +292,8 @@ class PostgresHarness:
         returns
             If true, fetch the results and return them. Set to False for commands that
             don't return anything.
+        params
+            Parameters to pass along with the statement (for %s placeholders)
         """
 
         if use_maintenance_db:
@@ -278,7 +308,7 @@ class PostgresHarness:
 
         try:
             self._logger.debug(f"Executing SQL: {statement}")
-            cursor.execute(statement)
+            cursor.execute(statement, params)
             if returns:
                 return cursor.fetchall()
         finally:
@@ -341,12 +371,12 @@ class PostgresHarness:
 
         try:
             # Now we can search the pg_catalog to see if the database we want exists yet
-            cursor.execute(f"SELECT 1 FROM pg_catalog.pg_database WHERE datname = '{self.config.database_name}'")
+            cursor.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = %s", (self.config.database_name,))
             exists = cursor.fetchone()
 
             if not exists:
                 self._logger.info(f"Creating database {self.config.database_name}...")
-                cursor.execute(f"CREATE DATABASE {self.config.database_name}")
+                cursor.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(self.config.database_name)))
                 self._logger.info(f"Database {self.config.database_name} created")
 
                 if create_tables:
@@ -378,7 +408,7 @@ class PostgresHarness:
         self._logger.info(f"Deleting/Dropping database {self.config.database_name}")
 
         try:
-            cursor.execute(f"DROP DATABASE IF EXISTS {self.config.database_name}")
+            cursor.execute(sql.SQL("DROP DATABASE IF EXISTS {}").format(sql.Identifier(self.config.database_name)))
         except (OperationalError, ObjectInUse) as e:
             err = f"Could not delete database. Was it still open somewhere?\nError: {str(e)}\n"
             cursor.execute("SELECT pid,state,query_start,wait_event_type,wait_event,query FROM pg_stat_activity")
@@ -483,6 +513,10 @@ class PostgresHarness:
         if not self.config.username or not self.config.password:
             raise RuntimeError("Username or password are not given")
 
+        # The data directory is written into postgresql.conf, which can't represent newlines
+        if "\n" in self.config.data_directory or "\r" in self.config.data_directory:
+            raise RuntimeError(f"Data directory path cannot contain newlines: {self.config.data_directory!r}")
+
         self._logger.info("Initializing the Postgresql database")
 
         # Is the specified port open? Stop early if in use
@@ -496,13 +530,15 @@ class PostgresHarness:
 
         initdb_path = self._get_tool("initdb")
 
-        cmd = [initdb_path, "-D", self.config.data_directory, "--auth", "scram-sha-256"]
+        # This is run through a shell, so arguments must be quoted
+        cmd = [shlex.quote(initdb_path), "-D", shlex.quote(self.config.data_directory), "--auth", "scram-sha-256"]
         if self.config.username is not None:
-            cmd += ["--username", self.config.username]
+            cmd += ["--username", shlex.quote(self.config.username)]
 
         # Initdb requires passwords come from a file
+        # (quoted, so passwords with spaces or glob characters are passed through unchanged)
         env = {"PG_SUPER_PASSWORD": self.config.password}
-        cmd += ['--pwfile=<(printf "%s\n" ${PG_SUPER_PASSWORD})']
+        cmd += ['--pwfile=<(printf "%s\n" "${PG_SUPER_PASSWORD}")']
 
         retcode, stdout, stderr = self._run_subprocess(cmd, env=env, shell=True)
 
@@ -522,12 +558,13 @@ class PostgresHarness:
         sock_dir = os.path.join(self.config.data_directory, "sock")
         os.makedirs(sock_dir, exist_ok=True)
 
-        # Only use sockets if the sock_dir path would be less than 103 bytes
-        # More is put after the directory, so leave some margin there
-        if len(sock_dir) < 80:
+        # Only use sockets if the sock_dir path is short enough
+        if socket_dir_usable(sock_dir):
+            # Single quotes and backslashes must be escaped in postgresql.conf string values
+            sock_dir_conf = sock_dir.replace("\\", "\\\\").replace("'", "''")
             psql_conf = re.sub(
                 r"#?unix_socket_directories =.*",
-                f"unix_socket_directories = '{sock_dir}'",
+                lambda _: f"unix_socket_directories = '{sock_dir_conf}'",
                 psql_conf,
                 flags=re.MULTILINE,
             )
@@ -568,8 +605,10 @@ class PostgresHarness:
             filepath,
         ]
 
-        self._logger.debug(f"pg_backup command: {'  '.join(cmds)}")
-        retcode, stdout, stderr = self._run_subprocess(cmds)
+        # Don't log the dsn - it contains the password
+        log_cmds = [self.config.safe_uri if x == self.database_dsn else x for x in cmds]
+        self._logger.debug(f"pg_backup command: {'  '.join(log_cmds)}")
+        retcode, stdout, stderr = self._run_subprocess(cmds, log_command=log_cmds)
 
         if retcode != 0:
             err_msg = f"Error backing up the database\noutput:\n{stdout}\nstderr:\n{stderr}"
@@ -593,8 +632,10 @@ class PostgresHarness:
             filepath,
         ]
 
-        self._logger.debug(f"pg_restore command: {'  '.join(cmds)}")
-        retcode, stdout, stderr = self._run_subprocess(cmds)
+        # Don't log the dsn - it contains the password
+        log_cmds = [self.config.safe_uri if x == self.database_dsn else x for x in cmds]
+        self._logger.debug(f"pg_restore command: {'  '.join(log_cmds)}")
+        retcode, stdout, stderr = self._run_subprocess(cmds, log_command=log_cmds)
 
         if retcode != 0:
             err_msg = f"Error restoring the database\noutput:\n{stdout}\nstderr:\n{stderr}"
@@ -606,7 +647,7 @@ class PostgresHarness:
         """
 
         # sql_command returns a list of tuples
-        return self.sql_command(f"SELECT pg_database_size('{self.config.database_name}');")[0][0]
+        return self.sql_command("SELECT pg_database_size(%s);", params=(self.config.database_name,))[0][0]
 
 
 def create_snowflake_postgres(host: str, data_dir: str) -> PostgresHarness:
@@ -622,10 +663,8 @@ def create_snowflake_postgres(host: str, data_dir: str) -> PostgresHarness:
 
     sock_dir = os.path.join(data_dir, "sock")
 
-    # There is a limit of 103 bytes for a path to a socket file
-    # There's extra put after sock_dir, so be conservative and if it's too long,
-    # use the regular host
-    if len(sock_dir) < 80:
+    # If the socket path would be too long, use the regular host
+    if socket_dir_usable(sock_dir):
         db_host = sock_dir
     else:
         db_host = host

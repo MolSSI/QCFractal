@@ -476,7 +476,7 @@ class BaseRecordSocket:
             return {x: y for x, y in res}
 
     def get_children_errors(self, record_id: int, *, session: Optional[Session] = None) -> List[int]:
-        stmt = select(RecordDirectChildrenView.c.child_id).distinct(RecordDirectChildrenView.c.child_id)
+        stmt = select(RecordDirectChildrenView.c.child_id).distinct()
         stmt = stmt.join(BaseRecordORM, BaseRecordORM.id == RecordDirectChildrenView.c.child_id)
         stmt = stmt.where(RecordDirectChildrenView.c.parent_id == record_id)
         stmt = stmt.where(BaseRecordORM.status == RecordStatusEnum.error)

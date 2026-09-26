@@ -275,7 +275,6 @@ class ManagerSocket:
 
             stmt = stmt.order_by(ComputeManagerORM.id.desc())
             stmt = stmt.limit(query_data.limit)
-            stmt = stmt.distinct(ComputeManagerORM.id)
 
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]

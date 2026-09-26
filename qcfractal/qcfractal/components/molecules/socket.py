@@ -269,7 +269,7 @@ class MoleculeSocket:
 
             stmt = stmt.order_by(MoleculeORM.id.desc())
             stmt = stmt.limit(query_data.limit)
-            stmt = stmt.distinct(MoleculeORM.id)
+            stmt = stmt.distinct()
             molecule_ids = session.execute(stmt).scalars().all()
 
         return molecule_ids

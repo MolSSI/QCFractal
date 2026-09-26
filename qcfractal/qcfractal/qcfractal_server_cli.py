@@ -9,6 +9,7 @@ import atexit
 import logging
 import multiprocessing
 import os
+import shlex
 import shutil
 import signal
 import sys
@@ -356,7 +357,8 @@ def server_info(category: str, config: FractalConfig) -> None:
     elif category == "alembic":
         print(f"Displaying QCFractal Alembic CLI configuration:\n")
         alembic_commands = SQLAlchemySocket.alembic_commands(config.database)
-        print(" ".join(alembic_commands))
+        # Quote for the shell, since the uri may contain characters like & or spaces
+        print(shlex.join(alembic_commands))
 
 
 def setup_logging(config, logger: Logger):

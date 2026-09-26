@@ -7,12 +7,13 @@ import os
 import secrets
 import tempfile
 from typing import Any, Annotated
+from urllib.parse import quote
 
 import yaml
 from psycopg2.extensions import make_dsn, parse_dsn
 from pydantic import BaseModel, Field, field_validator, model_validator, ValidationError, ConfigDict, StringConstraints
 from pydantic_settings import BaseSettings, SettingsConfigDict, PydanticBaseSettingsSource
-from sqlalchemy.engine.url import URL, make_url
+from sqlalchemy.engine.url import URL
 
 from qcfractal.port_util import find_open_port
 from qcportal.utils import duration_to_seconds, update_nested_dict
@@ -43,18 +44,71 @@ def make_uri_string(
     dbname: str | None,
     query: dict[str, str] | None,
 ) -> str:
-    username = username if username is not None else ""
-    password = ":" + password if password is not None else ""
+    # All components must be percent-encoded, since they may contain characters
+    # that are special in URIs (@, :, /, %, &, spaces, etc). '*' is left as-is in the username/password
+    # (it is valid in the userinfo part of a URI), which keeps the masked password in safe_uri readable.
+    # '/' and ',' are left as-is in query values (valid there), which keeps socket paths and host lists readable
+    username = quote(username, safe="*") if username is not None else ""
+    password = ":" + quote(password, safe="*") if password is not None else ""
     sep = "@" if username != "" or password != "" else ""
-    query_str = "" if query is None else "&".join(f"{k}={v}" for k, v in query.items())
+    dbname = quote(dbname, safe="") if dbname is not None else ""
 
-    # If this is a socket file, move the host to the query params
-    if host.startswith("/"):
-        query_str = "&" + query_str if query_str != "" else ""
-        return f"postgresql://{username}{password}{sep}:{port}/{dbname}?host={host}{query_str}"
-    else:
-        query_str = "?" + query_str if query_str != "" else ""
-        return f"postgresql://{username}{password}{sep}{host}:{port}/{dbname}{query_str}"
+    query = {} if query is None else dict(query)
+
+    # Host and port are optional (libpq will use defaults)
+    host = host if host is not None else ""
+    port = str(port) if port is not None else ""
+
+    if "," in port:
+        # Multiple ports (for multiple hosts) must go in the query params
+        query = {"port": port, **query}
+        port = ""
+
+    if host.startswith("/") or "," in host:
+        # If this is a socket file or multiple hosts, move the host to the query params
+        query = {"host": host, **query}
+        host = ""
+    elif ":" in host and not host.startswith("["):
+        # IPv6 addresses must be enclosed in brackets. Any '%' (zone id) must be encoded
+        host = "[" + host.replace("%", "%25") + "]"
+
+    port = ":" + port if port != "" else ""
+    query_str = "&".join(f"{quote(str(k), safe='')}={quote(str(v), safe='/,')}" for k, v in query.items())
+    query_str = "?" + query_str if query_str != "" else ""
+    return f"postgresql://{username}{password}{sep}{host}{port}/{dbname}{query_str}"
+
+
+def make_sqlalchemy_url(uri: str) -> URL:
+    """
+    Creates an SQLAlchemy URL (using the psycopg2 driver) from a PostgreSQL connection URI or DSN
+
+    The URI is parsed by libpq rather than SQLAlchemy. SQLAlchemy 2.0 does not percent-decode the
+    database name in URL strings (2.1 does), so building the URL from its components is the only
+    way to get consistent behavior.
+    """
+
+    dsn = parse_dsn(uri)
+
+    host = dsn.pop("host", None)
+    port = dsn.pop("port", None)
+
+    # Socket directories and multiple hosts/ports are passed through to psycopg2 as query parameters
+    if host is not None and (host.startswith("/") or "," in host):
+        dsn["host"] = host
+        host = None
+    if port is not None and "," in port:
+        dsn["port"] = port
+        port = None
+
+    return URL.create(
+        "postgresql+psycopg2",
+        username=dsn.pop("user", None),
+        password=dsn.pop("password", None),
+        host=host,
+        port=int(port) if port is not None else None,
+        database=dsn.pop("dbname", None),
+        query=dsn,
+    )
 
 
 class QCFConfigBase(BaseModel):
@@ -152,8 +206,7 @@ class DatabaseConfig(QCFConfigBase):
     def sqlalchemy_url(self) -> URL:
         """Returns the SQLAlchemy URL for this database"""
 
-        url = make_url(self.database_uri)
-        return url.set(drivername="postgresql+psycopg2")
+        return make_sqlalchemy_url(self.database_uri)
 
     @property
     def psycopg2_dsn(self) -> str:
@@ -177,11 +230,11 @@ class DatabaseConfig(QCFConfigBase):
 
         dsn = parse_dsn(self.database_uri)
 
-        host = dsn.pop("host")
+        host = dsn.pop("host", None)
         port = dsn.pop("port", None)
         user = dsn.pop("user", None)
         password = dsn.pop("password", None)
-        dbname = dsn.pop("dbname")
+        dbname = dsn.pop("dbname", None)
 
         # SQLAlchemy render_string has some problems sometimes, so use our own
         return make_uri_string(
