@@ -31,7 +31,11 @@ def qcengine_conda_app(
         scratch_directory = None
 
     qcengine_options = {}
-    qcengine_options["memory"] = executor_config.memory_per_worker
+    qcengine_options["memory"] = (
+            executor_config.qcengine_memory_per_worker
+            if executor_config.qcengine_memory_per_worker is not None
+            else executor_config.memory_per_worker
+    )
     qcengine_options["ncores"] = executor_config.cores_per_worker
     qcengine_options["scratch_directory"] = scratch_directory
 
