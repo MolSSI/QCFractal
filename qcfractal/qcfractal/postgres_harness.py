@@ -50,6 +50,13 @@ class PostgresHarness:
 
         # Own the database, but no tool directory specified
         if config.own and config.pg_tool_dir is None:
+            # Prefer the pg_ctl directly available on PATH to keep all tools in one bin directory.
+            # This avoids mixed-version tool resolution when pg_config comes from a different install.
+            pg_ctl_path = shutil.which("pg_ctl")
+            if pg_ctl_path is not None:
+                self._tool_dir = os.path.dirname(pg_ctl_path)
+                self._logger.info(f"Using Postgres tools from PATH in {self._tool_dir}")
+
             # Find pg_config. However, we should try all the possible pg_config available in the PATH.
             # We depend on libpq, which will install pg_config but none of the other tools
             env_path = os.environ.get("PATH", None)
@@ -59,27 +66,28 @@ class PostgresHarness:
 
             # Go through all the path directories, finding pg_config
             # Then, after running pg_config --bindir, test that path for pg_ctl
-            for search_dir in search_dirs:
-                self._logger.debug(f"Searching for pg_config in path {search_dir}")
-                pg_config_path = shutil.which("pg_config", path=search_dir)
-                if pg_config_path is None:
-                    continue
+            if self._tool_dir is None:
+                for search_dir in search_dirs:
+                    self._logger.debug(f"Searching for pg_config in path {search_dir}")
+                    pg_config_path = shutil.which("pg_config", path=search_dir)
+                    if pg_config_path is None:
+                        continue
 
-                self._logger.debug(f"Found pg_config in path {search_dir}")
+                    self._logger.debug(f"Found pg_config in path {search_dir}")
 
-                # Run pg_config to get the path
-                ret, stdout, _ = self._run_subprocess([pg_config_path, "--bindir"])
-                if ret != 0:
-                    self._logger.error(f"pg_config returned non-zero error code: {ret}")
-                else:
-                    possible_path = stdout.strip()
+                    # Run pg_config to get the path
+                    ret, stdout, _ = self._run_subprocess([pg_config_path, "--bindir"])
+                    if ret != 0:
+                        self._logger.error(f"pg_config returned non-zero error code: {ret}")
+                    else:
+                        possible_path = stdout.strip()
 
-                    # Does pg_ctl exist there?
-                    pg_ctl_path = shutil.which("pg_ctl", path=possible_path)
-                    if pg_ctl_path is not None:
-                        self._logger.info(f"Using Postgres tools found via pg_config located in {possible_path}")
-                        self._tool_dir = possible_path
-                        break
+                        # Does pg_ctl exist there?
+                        pg_ctl_path = shutil.which("pg_ctl", path=possible_path)
+                        if pg_ctl_path is not None:
+                            self._logger.info(f"Using Postgres tools found via pg_config located in {possible_path}")
+                            self._tool_dir = possible_path
+                            break
 
             # If the tool dir is still None, that is a problem (when own = True)
             if self._tool_dir is None:
@@ -285,7 +293,7 @@ class PostgresHarness:
             cursor.close()
             conn.close()
 
-    def pg_ctl(self, cmds: List[str]) -> Tuple[int, str, str]:
+    def pg_ctl(self, cmds: List[str], env: Optional[Dict[str, Any]] = None) -> Tuple[int, str, str]:
         """Runs a pg_ctl command and returns its output
 
         Parameters
@@ -306,7 +314,36 @@ class PostgresHarness:
         pg_ctl = self._get_tool("pg_ctl")
         all_cmds = [pg_ctl, "-l", self.config.logfile, "-D", self.config.data_directory]
         all_cmds.extend(cmds)
-        return self._run_subprocess(all_cmds)
+        return self._run_subprocess(all_cmds, env=env)
+
+    @staticmethod
+    def _is_locale_startup_failure(log_tail: str) -> bool:
+        """Return True if postgres startup failed due to invalid locale environment."""
+
+        return (
+            "postmaster became multithreaded during startup" in log_tail
+            or "Set the LC_ALL environment variable to a valid locale." in log_tail
+        )
+
+    def _log_tail(self, lines: int = 40) -> str:
+        """Return the tail of the postgres logfile for easier error diagnosis."""
+
+        logfile = self.config.logfile
+        if logfile is None:
+            return "<no logfile configured>"
+
+        try:
+            with open(logfile, "r") as f:
+                contents = f.read().splitlines()
+        except FileNotFoundError:
+            return f"<log file not found: {logfile}>"
+        except Exception as e:
+            return f"<unable to read log file {logfile}: {e}>"
+
+        if not contents:
+            return "<log file is empty>"
+
+        return "\n".join(contents[-lines:])
 
     def get_postgres_version(self) -> str:
         """Returns the version of the postgres instance"""
@@ -415,7 +452,28 @@ class PostgresHarness:
         else:
             retcode, stdout, stderr = self.pg_ctl(["start"])
 
-            err_msg = f"Error starting PostgreSQL. Did you remember to initialize it (qcfractal-server init)?\noutput:\n{stdout}\nstderr:\n{stderr}"
+            # Retry once with a safe locale only if we detect the known locale startup failure.
+            retry_note = ""
+            if retcode != 0:
+                initial_log_tail = self._log_tail()
+                if self._is_locale_startup_failure(initial_log_tail):
+                    self._logger.warning(
+                        "Detected locale-related PostgreSQL startup failure; retrying pg_ctl start with LC_ALL=C"
+                    )
+                    retcode, stdout, stderr = self.pg_ctl(["start"], env={"LC_ALL": "C", "LANG": "C"})
+                    retry_note = (
+                        "\nretry: pg_ctl start re-run with LC_ALL=C LANG=C after locale-related startup failure"
+                    )
+
+            logfile = self.config.logfile
+            log_tail = self._log_tail()
+            err_msg = (
+                "Error starting PostgreSQL. Did you remember to initialize it (qcfractal-server init)?"
+                f"\noutput:\n{stdout}\nstderr:\n{stderr}"
+                f"\nlogfile: {logfile}"
+                f"{retry_note}"
+                f"\nlog tail:\n{log_tail}"
+            )
 
             if retcode != 0:
                 raise RuntimeError(err_msg)
