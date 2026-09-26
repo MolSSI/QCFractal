@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 from qcfractal.config import DatabaseConfig
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.port_util import find_open_port
-from qcfractal.postgres_harness import PostgresHarness
+from qcfractal.postgres_harness import PostgresHarness, socket_dir_usable
 
 
 @pytest.mark.parametrize(
@@ -237,6 +237,48 @@ def test_db_connection_newline_data_dir(tmp_path):
     assert not data_dir.exists()
 
 
+@pytest.mark.parametrize(
+    "full_uri,host,port",
+    [
+        ("postgresql://u:secret@h1:5432,h2:5433/qcf", "h1,h2", "5432,5433"),
+        ("postgresql://u:secret@[::1]:5432,[::2]:5433/qcf", "::1,::2", "5432,5433"),
+        ("postgresql://u:secret@h1,h2:5432/qcf", "h1,h2", ",5432"),  # h1 uses the default port
+    ],
+)
+def test_db_connection_uri_multihost(full_uri, host, port):
+    db_config = DatabaseConfig(base_folder="/tmp/fakedir", own=False, full_uri=full_uri, username="x", password="x")
+
+    # safe_uri must round-trip the host/port lists
+    safe = parse_dsn(db_config.safe_uri)
+    assert (safe["host"], safe["port"], safe["dbname"]) == (host, port, "qcf")
+    assert "secret" not in db_config.safe_uri
+
+    sa_url = db_config.sqlalchemy_url
+    assert sa_url.host is None
+    assert sa_url.query["host"] == host
+
+
+def test_db_connection_uri_ipv6_zone():
+    db_config = DatabaseConfig(
+        base_folder="/tmp/fakedir", own=False, host="fe80::1%eth0", port=5432, username="u", password="p"
+    )
+
+    assert "@[fe80::1%25eth0]:5432/" in db_config.database_uri
+    assert parse_dsn(db_config.database_uri)["host"] == "fe80::1%eth0"
+    assert parse_dsn(db_config.safe_uri)["host"] == "fe80::1%eth0"
+    assert db_config.sqlalchemy_url.host == "fe80::1%eth0"
+
+
+def test_db_connection_socket_dir_usable():
+    assert socket_dir_usable("/tmp/" + "a" * 70)
+    assert not socket_dir_usable("/tmp/" + "a" * 80)
+
+    # Limit is in bytes, not characters
+    path = "/tmp/" + "\u00e9" * 40  # 45 characters, 85 bytes
+    assert len(path) < 80
+    assert not socket_dir_usable(path)
+
+
 def _check_engine_connect(db_config: DatabaseConfig):
     # Connect via SQLAlchemy, making sure the connection is closed afterwards
     engine = create_engine(db_config.sqlalchemy_url)
@@ -332,7 +374,7 @@ def test_db_connection_hosts(tmp_path):
 
         # Sockets are only enabled by the harness if the path is short enough
         sock_path = os.path.join(db_config.data_directory, "sock")
-        if len(sock_path) < 80:
+        if socket_dir_usable(sock_path):
             test_hosts.append(sock_path)
 
         for test_host in test_hosts:
@@ -393,5 +435,5 @@ def test_db_connection_full_uri(tmp_path):
 
     ## Socket file?
     sock_path = os.path.join(db_config.data_directory, "sock")
-    if len(sock_path) < 80:
+    if socket_dir_usable(sock_path):
         can_connect(f"postgresql://{username}:{password}@:{port}/{dbname}?host={sock_path}")

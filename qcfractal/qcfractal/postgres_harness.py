@@ -25,6 +25,17 @@ if TYPE_CHECKING:
     import psycopg2.extensions
 
 
+def socket_dir_usable(sock_dir: str) -> bool:
+    """
+    Determines if a directory is short enough to hold a postgres socket file
+
+    There is a limit of ~103 bytes for the path to a socket file. Postgres puts extra
+    after sock_dir, so this is conservative.
+    """
+
+    return len(os.fsencode(sock_dir)) < 80
+
+
 class PostgresHarness:
     def __init__(self, config: DatabaseConfig):
         """A manager for postgres server instances
@@ -547,9 +558,8 @@ class PostgresHarness:
         sock_dir = os.path.join(self.config.data_directory, "sock")
         os.makedirs(sock_dir, exist_ok=True)
 
-        # Only use sockets if the sock_dir path would be less than 103 bytes
-        # More is put after the directory, so leave some margin there
-        if len(sock_dir) < 80:
+        # Only use sockets if the sock_dir path is short enough
+        if socket_dir_usable(sock_dir):
             # Single quotes and backslashes must be escaped in postgresql.conf string values
             sock_dir_conf = sock_dir.replace("\\", "\\\\").replace("'", "''")
             psql_conf = re.sub(
@@ -653,10 +663,8 @@ def create_snowflake_postgres(host: str, data_dir: str) -> PostgresHarness:
 
     sock_dir = os.path.join(data_dir, "sock")
 
-    # There is a limit of 103 bytes for a path to a socket file
-    # There's extra put after sock_dir, so be conservative and if it's too long,
-    # use the regular host
-    if len(sock_dir) < 80:
+    # If the socket path would be too long, use the regular host
+    if socket_dir_usable(sock_dir):
         db_host = sock_dir
     else:
         db_host = host

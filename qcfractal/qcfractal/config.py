@@ -47,7 +47,7 @@ def make_uri_string(
     # All components must be percent-encoded, since they may contain characters
     # that are special in URIs (@, :, /, %, &, spaces, etc). '*' is left as-is in the username/password
     # (it is valid in the userinfo part of a URI), which keeps the masked password in safe_uri readable.
-    # '/' is left as-is in query values (valid there), which keeps socket paths readable
+    # '/' and ',' are left as-is in query values (valid there), which keeps socket paths and host lists readable
     username = quote(username, safe="*") if username is not None else ""
     password = ":" + quote(password, safe="*") if password is not None else ""
     sep = "@" if username != "" or password != "" else ""
@@ -57,17 +57,23 @@ def make_uri_string(
 
     # Host and port are optional (libpq will use defaults)
     host = host if host is not None else ""
-    port = f":{port}" if port is not None and port != "" else ""
+    port = str(port) if port is not None else ""
 
-    if host.startswith("/"):
-        # If this is a socket file, move the host to the query params
+    if "," in port:
+        # Multiple ports (for multiple hosts) must go in the query params
+        query = {"port": port, **query}
+        port = ""
+
+    if host.startswith("/") or "," in host:
+        # If this is a socket file or multiple hosts, move the host to the query params
         query = {"host": host, **query}
         host = ""
     elif ":" in host and not host.startswith("["):
-        # IPv6 addresses must be enclosed in brackets
-        host = f"[{host}]"
+        # IPv6 addresses must be enclosed in brackets. Any '%' (zone id) must be encoded
+        host = "[" + host.replace("%", "%25") + "]"
 
-    query_str = "&".join(f"{quote(str(k), safe='')}={quote(str(v), safe='/')}" for k, v in query.items())
+    port = ":" + port if port != "" else ""
+    query_str = "&".join(f"{quote(str(k), safe='')}={quote(str(v), safe='/,')}" for k, v in query.items())
     query_str = "?" + query_str if query_str != "" else ""
     return f"postgresql://{username}{password}{sep}{host}{port}/{dbname}{query_str}"
 
