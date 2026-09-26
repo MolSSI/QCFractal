@@ -165,7 +165,11 @@ class SQLAlchemySocket:
 
         # Tell alembic to not set up logging. We already did that
         alembic_cfg.set_main_option("skip_logging", "True")
-        alembic_cfg.set_main_option("sqlalchemy.url", db_config.database_uri)
+
+        # Use the sqlalchemy url, which pins the driver (psycopg2). Escape '%' since alembic
+        # config is a ConfigParser, and the rendered url may contain percent-encoded characters
+        db_url = db_config.sqlalchemy_url.render_as_string(hide_password=False)
+        alembic_cfg.set_main_option("sqlalchemy.url", db_url.replace("%", "%%"))
 
         return alembic_cfg
 
