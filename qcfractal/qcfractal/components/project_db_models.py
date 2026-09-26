@@ -37,7 +37,7 @@ class ProjectORM(BaseORM):
     id = Column(Integer, primary_key=True)
 
     name = Column(String(100), nullable=False)
-    lname = Column(String(100), Computed("LOWER(name)"), nullable=False)
+    lname = Column(String(100), Computed("LOWER(name)", persisted=True), nullable=False)
 
     description = Column(String, nullable=False)
     tagline = Column(String, nullable=False)
@@ -87,7 +87,7 @@ class ProjectRecordORM(BaseORM):
     record_id = Column(Integer, ForeignKey("base_record.id"), nullable=False)
 
     name = Column(String, nullable=False)
-    lname = Column(String(100), Computed("LOWER(name)"), primary_key=True)
+    lname = Column(String(100), Computed("LOWER(name)", persisted=True), primary_key=True)
     description = Column(String, nullable=False)
     tags = Column(JSON, nullable=False)
 
@@ -101,7 +101,7 @@ class ProjectDatasetORM(BaseORM):
     dataset_id = Column(Integer, ForeignKey("base_dataset.id"), nullable=False)
 
     name = Column(String, nullable=False)
-    lname = Column(String(100), Computed("LOWER(name)"), primary_key=True)
+    lname = Column(String(100), Computed("LOWER(name)", persisted=True), primary_key=True)
     description = Column(String, nullable=False)
     tagline = Column(String, nullable=False)
     tags = Column(JSON, nullable=False)
