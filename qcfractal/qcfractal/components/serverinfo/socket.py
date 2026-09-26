@@ -418,6 +418,8 @@ class ServerInfoSocket:
             and_query.append(AccessLogORM.timestamp >= query_data.after)
 
         if query_data.user:
+            # Joining on the user id map is 1:1, so this does not produce duplicate rows.
+            # If a join that can produce duplicates is added, results will need to be de-duplicated
             stmt = stmt.join(UserIDMapSubquery)
 
             int_ids = {x for x in query_data.user if isinstance(x, int) or x.isdecimal()}
@@ -434,7 +436,6 @@ class ServerInfoSocket:
 
             stmt = stmt.order_by(AccessLogORM.id.desc())
             stmt = stmt.limit(query_data.limit)
-            stmt = stmt.distinct(AccessLogORM.id)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in sorted(results, key=lambda x: x.timestamp, reverse=True)]
 
@@ -577,6 +578,8 @@ class ServerInfoSocket:
         if query_data.after:
             and_query.append(InternalErrorLogORM.error_date >= query_data.after)
         if query_data.user:
+            # Joining on the user id map is 1:1, so this does not produce duplicate rows.
+            # If a join that can produce duplicates is added, results will need to be de-duplicated
             stmt = stmt.join(UserIDMapSubquery)
 
             int_ids = {x for x in query_data.user if isinstance(x, int) or x.isdecimal()}
@@ -592,7 +595,6 @@ class ServerInfoSocket:
 
             stmt = stmt.order_by(InternalErrorLogORM.id.desc())
             stmt = stmt.limit(query_data.limit)
-            stmt = stmt.distinct(InternalErrorLogORM.id)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in sorted(results, key=lambda x: x.error_date, reverse=True)]
 

@@ -14,6 +14,11 @@ from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, DeleteMetadata
 from qcportal.utils import chunk_iterable
 
+try:
+    from sqlalchemy.dialects.postgresql import distinct_on as _pg_distinct_on
+except ImportError:  # SQLAlchemy < 2.1
+    _pg_distinct_on = None
+
 if TYPE_CHECKING:
     from sqlalchemy.orm.attributes import InstrumentedAttribute
     from sqlalchemy.schema import Table
@@ -45,6 +50,20 @@ lazy_opts = {"select", "raise", "write_only"}
 batchsize = 200
 
 logger = logging.getLogger(__name__)
+
+
+def apply_distinct_on(stmt, *cols):
+    """
+    Applies a PostgreSQL DISTINCT ON (cols) to a select statement or (legacy) query
+
+    SQLAlchemy 2.1 deprecated passing expressions to .distinct() in favor of the
+    postgresql.distinct_on extension, which does not exist in SQLAlchemy 2.0.
+    This can be replaced with stmt.ext(distinct_on(...)) once 2.1 is the minimum version.
+    """
+
+    if _pg_distinct_on is None:
+        return stmt.distinct(*cols)
+    return stmt.ext(_pg_distinct_on(*cols))
 
 
 @dataclasses.dataclass
@@ -673,7 +692,7 @@ def _insert_general_batch(
     query = query.filter(query_filter)
 
     # Needed in case of duplicates
-    query = query.distinct(*search_cols)
+    query = apply_distinct_on(query, *search_cols)
 
     query_results = query.all()
 
