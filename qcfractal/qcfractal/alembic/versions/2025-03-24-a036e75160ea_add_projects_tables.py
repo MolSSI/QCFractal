@@ -27,6 +27,7 @@ def upgrade():
             sa.String(length=100),
             sa.Computed(
                 "LOWER(name)",
+                persisted=True,
             ),
             nullable=False,
         ),
@@ -96,6 +97,7 @@ def upgrade():
             sa.String(length=100),
             sa.Computed(
                 "LOWER(name)",
+                persisted=True,
             ),
             nullable=False,
         ),
@@ -119,6 +121,7 @@ def upgrade():
             sa.String(length=100),
             sa.Computed(
                 "LOWER(name)",
+                persisted=True,
             ),
             nullable=False,
         ),

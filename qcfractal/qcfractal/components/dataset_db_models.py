@@ -33,7 +33,7 @@ class BaseDatasetORM(BaseORM):
     id = Column(Integer, primary_key=True)
     dataset_type = Column(String, nullable=False)
 
-    lname = Column(String(100), Computed("LOWER(name)"), nullable=False)
+    lname = Column(String(100), Computed("LOWER(name)", persisted=True), nullable=False)
     name = Column(String(100), nullable=False)
 
     tags = Column(JSON, nullable=False)
