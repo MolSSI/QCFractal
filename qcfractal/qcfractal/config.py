@@ -7,6 +7,7 @@ import os
 import secrets
 import tempfile
 from typing import Any, Annotated
+from urllib.parse import quote
 
 import yaml
 from psycopg2.extensions import make_dsn, parse_dsn
@@ -43,8 +44,11 @@ def make_uri_string(
     dbname: str | None,
     query: dict[str, str] | None,
 ) -> str:
-    username = username if username is not None else ""
-    password = ":" + password if password is not None else ""
+    # Username and password must be percent-encoded, since they may contain characters
+    # that are special in URIs (@, :, /, %, etc). '*' is left as-is (it is valid in the userinfo
+    # part of a URI), which keeps the masked password in safe_uri readable
+    username = quote(username, safe="*") if username is not None else ""
+    password = ":" + quote(password, safe="*") if password is not None else ""
     sep = "@" if username != "" or password != "" else ""
     query_str = "" if query is None else "&".join(f"{k}={v}" for k, v in query.items())
 

@@ -5,6 +5,7 @@ import os
 import pathlib
 import re
 import secrets
+import shlex
 import shutil
 import subprocess
 import time
@@ -496,13 +497,15 @@ class PostgresHarness:
 
         initdb_path = self._get_tool("initdb")
 
-        cmd = [initdb_path, "-D", self.config.data_directory, "--auth", "scram-sha-256"]
+        # This is run through a shell, so arguments must be quoted
+        cmd = [shlex.quote(initdb_path), "-D", shlex.quote(self.config.data_directory), "--auth", "scram-sha-256"]
         if self.config.username is not None:
-            cmd += ["--username", self.config.username]
+            cmd += ["--username", shlex.quote(self.config.username)]
 
         # Initdb requires passwords come from a file
+        # (quoted, so passwords with spaces or glob characters are passed through unchanged)
         env = {"PG_SUPER_PASSWORD": self.config.password}
-        cmd += ['--pwfile=<(printf "%s\n" ${PG_SUPER_PASSWORD})']
+        cmd += ['--pwfile=<(printf "%s\n" "${PG_SUPER_PASSWORD}")']
 
         retcode, stdout, stderr = self._run_subprocess(cmd, env=env, shell=True)
 
