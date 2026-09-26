@@ -2,6 +2,7 @@ from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
+from sqlalchemy.engine import make_url
 
 from qcfractal.db_socket import BaseORM
 from qcfractal.components import register_all  # noqa
@@ -34,7 +35,13 @@ transaction_per_migration = True
 # This allows you to pass in the uri on the command line
 uri = context.get_x_argument(as_dictionary=True).get("uri", None)
 if uri is not None:
-    config.set_main_option("sqlalchemy.url", uri)
+    # Pin the driver if not specified. SQLAlchemy 2.1 changed the default driver to psycopg (v3)
+    url = make_url(uri)
+    if url.drivername == "postgresql":
+        uri = url.set(drivername="postgresql+psycopg2").render_as_string(hide_password=False)
+
+    # Escape '%' since alembic config is a ConfigParser, and the url may contain percent-encoded characters
+    config.set_main_option("sqlalchemy.url", uri.replace("%", "%%"))
 
 
 def run_migrations_offline():

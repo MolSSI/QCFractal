@@ -149,7 +149,7 @@ class SQLAlchemySocket:
             "-c",
             alembic_ini,
             "-x",
-            "uri=" + db_config.database_uri,
+            "uri=" + db_config.sqlalchemy_url.render_as_string(hide_password=False),
         ]
 
     @staticmethod
