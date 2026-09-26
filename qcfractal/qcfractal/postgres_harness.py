@@ -306,7 +306,26 @@ class PostgresHarness:
         pg_ctl = self._get_tool("pg_ctl")
         all_cmds = [pg_ctl, "-l", self.config.logfile, "-D", self.config.data_directory]
         all_cmds.extend(cmds)
-        return self._run_subprocess(all_cmds)
+        return self._run_subprocess(all_cmds, env=self._pg_ctl_env())
+
+    @staticmethod
+    def _pg_ctl_env() -> Optional[Dict[str, str]]:
+        """
+        Extra environment variables to use when running pg_ctl (and therefore the postgres server)
+
+        On macOS, if no locale environment variables are set, libintl will query CoreFoundation
+        for the locale, which makes the process multithreaded. The postmaster then refuses to
+        start ("postmaster became multithreaded during startup"). This commonly happens when
+        running from Jupyter or other applications started from the GUI.
+
+        Setting LC_ALL for the server is harmless - the collation/ctype of each database are
+        stored in the database, and the lc_* settings come from postgresql.conf. This is not
+        done for initdb, which uses the environment to determine the defaults for the cluster.
+        """
+
+        if not os.environ.get("LC_ALL") and not os.environ.get("LANG"):
+            return {"LC_ALL": "C"}
+        return None
 
     def get_postgres_version(self) -> str:
         """Returns the version of the postgres instance"""
