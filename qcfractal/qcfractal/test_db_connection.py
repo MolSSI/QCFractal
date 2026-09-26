@@ -161,8 +161,14 @@ def test_db_connection_hosts(tmp_path):
         new_pg_harness = PostgresHarness(new_db_config)
         assert new_pg_harness.can_connect() is False
 
+        test_hosts = ["localhost", "127.0.0.1"]
+
+        # Sockets are only enabled by the harness if the path is short enough
         sock_path = os.path.join(db_config.data_directory, "sock")
-        for test_host in ["localhost", "127.0.0.1", sock_path]:
+        if len(sock_path) < 80:
+            test_hosts.append(sock_path)
+
+        for test_host in test_hosts:
             new_db_config = db_config.model_copy(update={"host": test_host})
             assert PostgresHarness(new_db_config).can_connect()
             assert create_engine(new_db_config.sqlalchemy_url).connect()
