@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=cdaa2eff"></script>
+    <script src="../../_static/documentation_options.js?v=c72c23a3"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Server administration via client and API" href="../monitoring.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post85+g218982c54" />
+  <meta name="docsearch:version" content="0.70.post87+g91e58bb6a" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -647,17 +647,22 @@ The configuration keys available for each <code class="docutils literal notransl
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.ExecutorConfig.scratch_directory" title="qcfractalcompute.config.ExecutorConfig.scratch_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scratch_directory</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.ExecutorConfig.qcengine_memory_per_worker" title="qcfractalcompute.config.ExecutorConfig.qcengine_memory_per_worker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">qcengine_memory_per_worker</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.ExecutorConfig.scratch_directory" title="qcfractalcompute.config.ExecutorConfig.scratch_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scratch_directory</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.ExecutorConfig.type" title="qcfractalcompute.config.ExecutorConfig.type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.ExecutorConfig.type" title="qcfractalcompute.config.ExecutorConfig.type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.ExecutorConfig.worker_init" title="qcfractalcompute.config.ExecutorConfig.worker_init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">worker_init</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.ExecutorConfig.worker_init" title="qcfractalcompute.config.ExecutorConfig.worker_init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">worker_init</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
@@ -699,6 +704,12 @@ The configuration keys available for each <code class="docutils literal notransl
 <dt class="sig sig-object py" id="qcfractalcompute.config.ExecutorConfig.memory_per_worker">
 <span class="sig-name descname"><span class="pre">memory_per_worker</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#qcfractalcompute.config.ExecutorConfig.memory_per_worker" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcfractalcompute.config.ExecutorConfig.qcengine_memory_per_worker">
+<span class="sig-name descname"><span class="pre">qcengine_memory_per_worker</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcfractalcompute.config.ExecutorConfig.qcengine_memory_per_worker" title="Link to this definition">#</a></dt>
+<dd><p>Memory in GiB made available to QCEngine tasks. Defaults to memory_per_worker.</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcfractalcompute.config.ExecutorConfig.extra_executor_options">
@@ -831,32 +842,37 @@ direct appropriate calculations to them.</p>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.scheduler_options" title="qcfractalcompute.config.SlurmExecutorConfig.scheduler_options"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scheduler_options</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.qcengine_memory_per_worker" title="qcfractalcompute.config.SlurmExecutorConfig.qcengine_memory_per_worker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">qcengine_memory_per_worker</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.scheduler_options" title="qcfractalcompute.config.SlurmExecutorConfig.scheduler_options"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scheduler_options</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.scratch_directory" title="qcfractalcompute.config.SlurmExecutorConfig.scratch_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scratch_directory</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.scratch_directory" title="qcfractalcompute.config.SlurmExecutorConfig.scratch_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scratch_directory</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.type" title="qcfractalcompute.config.SlurmExecutorConfig.type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.type" title="qcfractalcompute.config.SlurmExecutorConfig.type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Literal</span></code></a>[‘slurm’]</p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'slurm'</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.walltime" title="qcfractalcompute.config.SlurmExecutorConfig.walltime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">walltime</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.walltime" title="qcfractalcompute.config.SlurmExecutorConfig.walltime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">walltime</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.worker_init" title="qcfractalcompute.config.SlurmExecutorConfig.worker_init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">worker_init</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.worker_init" title="qcfractalcompute.config.SlurmExecutorConfig.worker_init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">worker_init</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.workers_per_node" title="qcfractalcompute.config.SlurmExecutorConfig.workers_per_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">workers_per_node</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.SlurmExecutorConfig.workers_per_node" title="qcfractalcompute.config.SlurmExecutorConfig.workers_per_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">workers_per_node</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
@@ -935,6 +951,12 @@ direct appropriate calculations to them.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.qcengine_memory_per_worker">
+<span class="sig-name descname"><span class="pre">qcengine_memory_per_worker</span></span><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.qcengine_memory_per_worker" title="Link to this definition">#</a></dt>
+<dd><p>Memory in GiB made available to QCEngine tasks. Defaults to memory_per_worker.</p>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcfractalcompute.config.SlurmExecutorConfig.extra_executor_options">
 <span class="sig-name descname"><span class="pre">extra_executor_options</span></span><a class="headerlink" href="#qcfractalcompute.config.SlurmExecutorConfig.extra_executor_options" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -1000,37 +1022,42 @@ direct appropriate calculations to them.</p>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.queue" title="qcfractalcompute.config.TorqueExecutorConfig.queue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">queue</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.qcengine_memory_per_worker" title="qcfractalcompute.config.TorqueExecutorConfig.qcengine_memory_per_worker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">qcengine_memory_per_worker</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.queue" title="qcfractalcompute.config.TorqueExecutorConfig.queue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">queue</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.scheduler_options" title="qcfractalcompute.config.TorqueExecutorConfig.scheduler_options"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scheduler_options</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.scheduler_options" title="qcfractalcompute.config.TorqueExecutorConfig.scheduler_options"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scheduler_options</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.scratch_directory" title="qcfractalcompute.config.TorqueExecutorConfig.scratch_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scratch_directory</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.scratch_directory" title="qcfractalcompute.config.TorqueExecutorConfig.scratch_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scratch_directory</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.type" title="qcfractalcompute.config.TorqueExecutorConfig.type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.type" title="qcfractalcompute.config.TorqueExecutorConfig.type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Literal</span></code></a>[‘torque’]</p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'torque'</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.walltime" title="qcfractalcompute.config.TorqueExecutorConfig.walltime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">walltime</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.walltime" title="qcfractalcompute.config.TorqueExecutorConfig.walltime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">walltime</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.worker_init" title="qcfractalcompute.config.TorqueExecutorConfig.worker_init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">worker_init</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.worker_init" title="qcfractalcompute.config.TorqueExecutorConfig.worker_init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">worker_init</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.workers_per_node" title="qcfractalcompute.config.TorqueExecutorConfig.workers_per_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">workers_per_node</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.TorqueExecutorConfig.workers_per_node" title="qcfractalcompute.config.TorqueExecutorConfig.workers_per_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">workers_per_node</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
@@ -1104,6 +1131,12 @@ direct appropriate calculations to them.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.qcengine_memory_per_worker">
+<span class="sig-name descname"><span class="pre">qcengine_memory_per_worker</span></span><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.qcengine_memory_per_worker" title="Link to this definition">#</a></dt>
+<dd><p>Memory in GiB made available to QCEngine tasks. Defaults to memory_per_worker.</p>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcfractalcompute.config.TorqueExecutorConfig.extra_executor_options">
 <span class="sig-name descname"><span class="pre">extra_executor_options</span></span><a class="headerlink" href="#qcfractalcompute.config.TorqueExecutorConfig.extra_executor_options" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -1174,42 +1207,47 @@ direct appropriate calculations to them.</p>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.queue" title="qcfractalcompute.config.LSFExecutorConfig.queue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">queue</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.qcengine_memory_per_worker" title="qcfractalcompute.config.LSFExecutorConfig.qcengine_memory_per_worker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">qcengine_memory_per_worker</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.queue" title="qcfractalcompute.config.LSFExecutorConfig.queue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">queue</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.request_by_nodes" title="qcfractalcompute.config.LSFExecutorConfig.request_by_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">request_by_nodes</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.request_by_nodes" title="qcfractalcompute.config.LSFExecutorConfig.request_by_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">request_by_nodes</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.scheduler_options" title="qcfractalcompute.config.LSFExecutorConfig.scheduler_options"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scheduler_options</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.scheduler_options" title="qcfractalcompute.config.LSFExecutorConfig.scheduler_options"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scheduler_options</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.scratch_directory" title="qcfractalcompute.config.LSFExecutorConfig.scratch_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scratch_directory</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.scratch_directory" title="qcfractalcompute.config.LSFExecutorConfig.scratch_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scratch_directory</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.type" title="qcfractalcompute.config.LSFExecutorConfig.type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.type" title="qcfractalcompute.config.LSFExecutorConfig.type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Literal</span></code></a>[‘lsf’]</p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'lsf'</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.walltime" title="qcfractalcompute.config.LSFExecutorConfig.walltime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">walltime</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.walltime" title="qcfractalcompute.config.LSFExecutorConfig.walltime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">walltime</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.worker_init" title="qcfractalcompute.config.LSFExecutorConfig.worker_init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">worker_init</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.worker_init" title="qcfractalcompute.config.LSFExecutorConfig.worker_init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">worker_init</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.workers_per_node" title="qcfractalcompute.config.LSFExecutorConfig.workers_per_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">workers_per_node</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.LSFExecutorConfig.workers_per_node" title="qcfractalcompute.config.LSFExecutorConfig.workers_per_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">workers_per_node</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
@@ -1291,6 +1329,12 @@ direct appropriate calculations to them.</p>
 <dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.memory_per_worker">
 <span class="sig-name descname"><span class="pre">memory_per_worker</span></span><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.memory_per_worker" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.qcengine_memory_per_worker">
+<span class="sig-name descname"><span class="pre">qcengine_memory_per_worker</span></span><a class="headerlink" href="#qcfractalcompute.config.LSFExecutorConfig.qcengine_memory_per_worker" title="Link to this definition">#</a></dt>
+<dd><p>Memory in GiB made available to QCEngine tasks. Defaults to memory_per_worker.</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcfractalcompute.config.LSFExecutorConfig.extra_executor_options">
@@ -1378,17 +1422,22 @@ You can then manually submit jobs using this script as needed to complete tasks 
 <td><p>Yes</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.LocalExecutorConfig.scratch_directory" title="qcfractalcompute.config.LocalExecutorConfig.scratch_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scratch_directory</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.LocalExecutorConfig.qcengine_memory_per_worker" title="qcfractalcompute.config.LocalExecutorConfig.qcengine_memory_per_worker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">qcengine_memory_per_worker</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.LocalExecutorConfig.scratch_directory" title="qcfractalcompute.config.LocalExecutorConfig.scratch_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scratch_directory</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.LocalExecutorConfig.type" title="qcfractalcompute.config.LocalExecutorConfig.type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.LocalExecutorConfig.type" title="qcfractalcompute.config.LocalExecutorConfig.type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Literal</span></code></a>[‘local’]</p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'local'</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcfractalcompute.config.LocalExecutorConfig.worker_init" title="qcfractalcompute.config.LocalExecutorConfig.worker_init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">worker_init</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcfractalcompute.config.LocalExecutorConfig.worker_init" title="qcfractalcompute.config.LocalExecutorConfig.worker_init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">worker_init</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
@@ -1435,6 +1484,12 @@ You can then manually submit jobs using this script as needed to complete tasks 
 <dt class="sig sig-object py" id="qcfractalcompute.config.LocalExecutorConfig.memory_per_worker">
 <span class="sig-name descname"><span class="pre">memory_per_worker</span></span><a class="headerlink" href="#qcfractalcompute.config.LocalExecutorConfig.memory_per_worker" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcfractalcompute.config.LocalExecutorConfig.qcengine_memory_per_worker">
+<span class="sig-name descname"><span class="pre">qcengine_memory_per_worker</span></span><a class="headerlink" href="#qcfractalcompute.config.LocalExecutorConfig.qcengine_memory_per_worker" title="Link to this definition">#</a></dt>
+<dd><p>Memory in GiB made available to QCEngine tasks. Defaults to memory_per_worker.</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcfractalcompute.config.LocalExecutorConfig.extra_executor_options">
@@ -1508,6 +1563,7 @@ You can then manually submit jobs using this script as needed to complete tasks 
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.ExecutorConfig.bind_address"><code class="docutils literal notranslate"><span class="pre">ExecutorConfig.bind_address</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.ExecutorConfig.cores_per_worker"><code class="docutils literal notranslate"><span class="pre">ExecutorConfig.cores_per_worker</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.ExecutorConfig.memory_per_worker"><code class="docutils literal notranslate"><span class="pre">ExecutorConfig.memory_per_worker</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.ExecutorConfig.qcengine_memory_per_worker"><code class="docutils literal notranslate"><span class="pre">ExecutorConfig.qcengine_memory_per_worker</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.ExecutorConfig.extra_executor_options"><code class="docutils literal notranslate"><span class="pre">ExecutorConfig.extra_executor_options</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.ExecutorConfig.environments"><code class="docutils literal notranslate"><span class="pre">ExecutorConfig.environments</span></code></a></li>
 </ul>
@@ -1533,6 +1589,7 @@ You can then manually submit jobs using this script as needed to complete tasks 
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.bind_address"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.bind_address</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.cores_per_worker"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.cores_per_worker</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.memory_per_worker"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.memory_per_worker</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.qcengine_memory_per_worker"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.qcengine_memory_per_worker</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.extra_executor_options"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.extra_executor_options</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.SlurmExecutorConfig.environments"><code class="docutils literal notranslate"><span class="pre">SlurmExecutorConfig.environments</span></code></a></li>
 </ul>
@@ -1551,6 +1608,7 @@ You can then manually submit jobs using this script as needed to complete tasks 
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.bind_address"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.bind_address</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.cores_per_worker"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.cores_per_worker</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.memory_per_worker"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.memory_per_worker</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.qcengine_memory_per_worker"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.qcengine_memory_per_worker</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.extra_executor_options"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.extra_executor_options</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.TorqueExecutorConfig.environments"><code class="docutils literal notranslate"><span class="pre">TorqueExecutorConfig.environments</span></code></a></li>
 </ul>
@@ -1571,6 +1629,7 @@ You can then manually submit jobs using this script as needed to complete tasks 
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.bind_address"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.bind_address</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.cores_per_worker"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.cores_per_worker</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.memory_per_worker"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.memory_per_worker</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.qcengine_memory_per_worker"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.qcengine_memory_per_worker</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.extra_executor_options"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.extra_executor_options</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LSFExecutorConfig.environments"><code class="docutils literal notranslate"><span class="pre">LSFExecutorConfig.environments</span></code></a></li>
 </ul>
@@ -1587,6 +1646,7 @@ You can then manually submit jobs using this script as needed to complete tasks 
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.bind_address"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.bind_address</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.cores_per_worker"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.cores_per_worker</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.memory_per_worker"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.memory_per_worker</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.qcengine_memory_per_worker"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.qcengine_memory_per_worker</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.extra_executor_options"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.extra_executor_options</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractalcompute.config.LocalExecutorConfig.environments"><code class="docutils literal notranslate"><span class="pre">LocalExecutorConfig.environments</span></code></a></li>
 </ul>
