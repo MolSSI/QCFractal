@@ -502,6 +502,10 @@ class PostgresHarness:
         if not self.config.username or not self.config.password:
             raise RuntimeError("Username or password are not given")
 
+        # The data directory is written into postgresql.conf, which can't represent newlines
+        if "\n" in self.config.data_directory or "\r" in self.config.data_directory:
+            raise RuntimeError(f"Data directory path cannot contain newlines: {self.config.data_directory!r}")
+
         self._logger.info("Initializing the Postgresql database")
 
         # Is the specified port open? Stop early if in use
@@ -546,9 +550,6 @@ class PostgresHarness:
         # Only use sockets if the sock_dir path would be less than 103 bytes
         # More is put after the directory, so leave some margin there
         if len(sock_dir) < 80:
-            if "\n" in sock_dir or "\r" in sock_dir:
-                raise RuntimeError(f"Data directory path cannot contain newlines: {sock_dir!r}")
-
             # Single quotes and backslashes must be escaped in postgresql.conf string values
             sock_dir_conf = sock_dir.replace("\\", "\\\\").replace("'", "''")
             psql_conf = re.sub(

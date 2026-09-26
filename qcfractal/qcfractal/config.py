@@ -55,14 +55,21 @@ def make_uri_string(
 
     query = {} if query is None else dict(query)
 
-    # If this is a socket file, move the host to the query params
+    # Host and port are optional (libpq will use defaults)
+    host = host if host is not None else ""
+    port = f":{port}" if port is not None and port != "" else ""
+
     if host.startswith("/"):
+        # If this is a socket file, move the host to the query params
         query = {"host": host, **query}
         host = ""
+    elif ":" in host and not host.startswith("["):
+        # IPv6 addresses must be enclosed in brackets
+        host = f"[{host}]"
 
     query_str = "&".join(f"{quote(str(k), safe='')}={quote(str(v), safe='/')}" for k, v in query.items())
     query_str = "?" + query_str if query_str != "" else ""
-    return f"postgresql://{username}{password}{sep}{host}:{port}/{dbname}{query_str}"
+    return f"postgresql://{username}{password}{sep}{host}{port}/{dbname}{query_str}"
 
 
 def make_sqlalchemy_url(uri: str) -> URL:
@@ -217,11 +224,11 @@ class DatabaseConfig(QCFConfigBase):
 
         dsn = parse_dsn(self.database_uri)
 
-        host = dsn.pop("host")
+        host = dsn.pop("host", None)
         port = dsn.pop("port", None)
         user = dsn.pop("user", None)
         password = dsn.pop("password", None)
-        dbname = dsn.pop("dbname")
+        dbname = dsn.pop("dbname", None)
 
         # SQLAlchemy render_string has some problems sometimes, so use our own
         return make_uri_string(

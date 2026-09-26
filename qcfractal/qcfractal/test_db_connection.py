@@ -183,6 +183,60 @@ def test_db_connection_uri_special_chars(host):
     assert parse_dsn(db_config.safe_uri)["host"] == host
 
 
+def test_db_connection_uri_ipv6():
+    db_config = DatabaseConfig(
+        base_folder="/tmp/fakedir", own=False, host="::1", port=5433, username="u", password="p", database_name="d"
+    )
+
+    assert "@[::1]:5433/" in db_config.database_uri
+    parsed = parse_dsn(db_config.database_uri)
+    assert parsed["host"] == "::1"
+    assert parsed["port"] == "5433"
+
+    assert db_config.sqlalchemy_url.host == "::1"
+    assert db_config.sqlalchemy_url.port == 5433
+    assert parse_dsn(db_config.safe_uri)["host"] == "::1"
+
+
+@pytest.mark.parametrize(
+    "full_uri",
+    [
+        "dbname=qcf user=alice password=secret",  # no host or port (libpq defaults)
+        "postgresql://alice:secret@localhost/qcf",  # no port
+        "postgresql:///qcf?user=alice&password=secret",  # no host or port
+    ],
+)
+def test_db_connection_full_uri_defaults(full_uri):
+    db_config = DatabaseConfig(base_folder="/tmp/fakedir", own=False, full_uri=full_uri, username="x", password="x")
+
+    safe = parse_dsn(db_config.safe_uri)
+    assert "secret" not in db_config.safe_uri
+    assert safe["dbname"] == "qcf"
+    assert safe["user"] == "alice"
+    assert "port" not in safe
+
+    sa_url = db_config.sqlalchemy_url
+    assert (sa_url.username, sa_url.password, sa_url.database, sa_url.port) == ("alice", "secret", "qcf", None)
+
+
+def test_db_connection_newline_data_dir(tmp_path):
+    data_dir = tmp_path / "bad\ndir"
+    db_config = DatabaseConfig(
+        port=find_open_port(),
+        data_directory=str(data_dir),
+        base_folder=str(tmp_path),
+        username="u",
+        password="p",
+        own=True,
+    )
+
+    with pytest.raises(RuntimeError, match="newlines"):
+        PostgresHarness(db_config).initialize_postgres()
+
+    # Nothing should have been initialized
+    assert not data_dir.exists()
+
+
 def _check_engine_connect(db_config: DatabaseConfig):
     # Connect via SQLAlchemy, making sure the connection is closed afterwards
     engine = create_engine(db_config.sqlalchemy_url)
