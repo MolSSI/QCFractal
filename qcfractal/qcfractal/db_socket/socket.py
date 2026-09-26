@@ -149,7 +149,7 @@ class SQLAlchemySocket:
             "-c",
             alembic_ini,
             "-x",
-            "uri=" + db_config.sqlalchemy_url.render_as_string(hide_password=False),
+            "uri=" + db_config.database_uri,
         ]
 
     @staticmethod
@@ -166,7 +166,11 @@ class SQLAlchemySocket:
         # Tell alembic to not set up logging. We already did that
         alembic_cfg.set_main_option("skip_logging", "True")
 
-        # Use the sqlalchemy url, which pins the driver (psycopg2). Escape '%' since alembic
+        # Pass the sqlalchemy URL object (which pins the driver to psycopg2) directly to env.py.
+        # Round-tripping through a string is lossy in SQLAlchemy 2.0 (the database name is not decoded)
+        alembic_cfg.attributes["sqlalchemy_url"] = db_config.sqlalchemy_url
+
+        # Also set it as a string (for offline mode). Escape '%' since alembic
         # config is a ConfigParser, and the rendered url may contain percent-encoded characters
         db_url = db_config.sqlalchemy_url.render_as_string(hide_password=False)
         alembic_cfg.set_main_option("sqlalchemy.url", db_url.replace("%", "%%"))

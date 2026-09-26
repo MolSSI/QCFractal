@@ -1,8 +1,10 @@
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, engine_from_config, pool
 from sqlalchemy.engine import make_url
+
+from qcfractal.config import make_sqlalchemy_url
 
 from qcfractal.db_socket import BaseORM
 from qcfractal.components import register_all  # noqa
@@ -31,17 +33,24 @@ compare_type = True
 # ... etc.
 transaction_per_migration = True
 
+# A SQLAlchemy URL object may be passed in when run programmatically (see SQLAlchemySocket.get_alembic_config)
+sqlalchemy_url = config.attributes.get("sqlalchemy_url", None)
+
 # Overwrite the ini-file sqlalchemy.url path
 # This allows you to pass in the uri on the command line
 uri = context.get_x_argument(as_dictionary=True).get("uri", None)
 if uri is not None:
-    # Pin the driver if not specified. SQLAlchemy 2.1 changed the default driver to psycopg (v3)
-    url = make_url(uri)
-    if url.drivername == "postgresql":
-        uri = url.set(drivername="postgresql+psycopg2").render_as_string(hide_password=False)
+    if uri.startswith(("postgresql://", "postgres://")) or "://" not in uri:
+        # A plain PostgreSQL URI or key=value DSN. Parse with libpq semantics and pin the driver
+        # (SQLAlchemy 2.1 changed the default driver to psycopg (v3))
+        sqlalchemy_url = make_sqlalchemy_url(uri)
+    else:
+        # A SQLAlchemy url with an explicit driver
+        sqlalchemy_url = make_url(uri)
 
+if sqlalchemy_url is not None:
     # Escape '%' since alembic config is a ConfigParser, and the url may contain percent-encoded characters
-    config.set_main_option("sqlalchemy.url", uri.replace("%", "%%"))
+    config.set_main_option("sqlalchemy.url", sqlalchemy_url.render_as_string(hide_password=False).replace("%", "%%"))
 
 
 def run_migrations_offline():
@@ -76,9 +85,12 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section), prefix="sqlalchemy.", poolclass=pool.NullPool, future=True
-    )
+    if sqlalchemy_url is not None:
+        connectable = create_engine(sqlalchemy_url, poolclass=pool.NullPool)
+    else:
+        connectable = engine_from_config(
+            config.get_section(config.config_ini_section), prefix="sqlalchemy.", poolclass=pool.NullPool, future=True
+        )
 
     with connectable.connect() as connection:
         context.configure(

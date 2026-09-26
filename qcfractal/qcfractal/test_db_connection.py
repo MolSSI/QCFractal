@@ -1,4 +1,6 @@
 import os
+import shutil
+import tempfile
 
 import pytest
 from psycopg2.extensions import parse_dsn
@@ -131,12 +133,14 @@ def test_db_connection_uri_convert(host, port, username, password, dbname, mdbna
         assert s in db_config.sqlalchemy_url.render_as_string(True)
 
 
-@pytest.mark.parametrize("host", ["localhost", "/var/run/postgresql"])
+@pytest.mark.parametrize("host", ["localhost", "/var/run/postgresql", "/tmp/sock dir&x=1"])
 def test_db_connection_uri_special_chars(host):
-    # Usernames and passwords with characters that are special in URIs must be
+    # Components with characters that are special in URIs must be
     # percent-encoded, and decode back to the original everywhere
     username = "test_user@example.com"
     password = "p@ss:w/rd%20#?&= *x"
+    dbname = "test db?#%&/x"
+    query = {"application_name": "qc archive & more+", "connect_timeout": 10}
 
     db_config = DatabaseConfig(
         base_folder="/tmp/fakedir",  # not used in this test
@@ -145,8 +149,9 @@ def test_db_connection_uri_special_chars(host):
         port=5432,
         username=username,
         password=password,
-        database_name="testing_db",
+        database_name=dbname,
         maintenance_db="testing_db_maint",
+        query=query,
     )
 
     for dsn in (db_config.database_uri, db_config.psycopg2_dsn, db_config.psycopg2_maintenance_dsn):
@@ -154,20 +159,47 @@ def test_db_connection_uri_special_chars(host):
         assert parsed["user"] == username
         assert parsed["password"] == password
         assert parsed["host"] == host
+        assert parsed["application_name"] == query["application_name"]
+        assert parsed["connect_timeout"] == "10"
 
-    assert db_config.sqlalchemy_url.username == username
-    assert db_config.sqlalchemy_url.password == password
+    assert parse_dsn(db_config.database_uri)["dbname"] == dbname
+    assert parse_dsn(db_config.psycopg2_dsn)["dbname"] == dbname
+    assert parse_dsn(db_config.psycopg2_maintenance_dsn)["dbname"] == "testing_db_maint"
+
+    sa_url = db_config.sqlalchemy_url
+    assert sa_url.username == username
+    assert sa_url.password == password
+    assert sa_url.database == dbname
+    assert sa_url.query["application_name"] == query["application_name"]
+    if host.startswith("/"):
+        assert sa_url.query["host"] == host
+    else:
+        assert sa_url.host == host
 
     assert password not in db_config.safe_uri
     assert parse_dsn(db_config.safe_uri)["password"] == "********"
     assert parse_dsn(db_config.safe_uri)["user"] == username
+    assert parse_dsn(db_config.safe_uri)["dbname"] == dbname
+    assert parse_dsn(db_config.safe_uri)["host"] == host
+
+
+def _check_engine_connect(db_config: DatabaseConfig):
+    # Connect via SQLAlchemy, making sure the connection is closed afterwards
+    engine = create_engine(db_config.sqlalchemy_url)
+    try:
+        with engine.connect():
+            pass
+    finally:
+        engine.dispose()
 
 
 def test_db_connection_special_chars_password(tmp_path):
     base_path = tmp_path / "basefolder"
-    db_path = tmp_path / "db_data"
     base_path.mkdir()
-    db_path.mkdir()
+
+    # Short path (so sockets are enabled) with characters that need quoting in
+    # shell commands and postgresql.conf
+    db_path = tempfile.mkdtemp(prefix="qcf'x\\ y")
 
     # Put a file in the base folder, to catch unquoted globs in shell commands
     (base_path / "glob_target").touch()
@@ -175,11 +207,11 @@ def test_db_connection_special_chars_password(tmp_path):
     port = find_open_port()
     db_config = DatabaseConfig(
         port=port,
-        data_directory=str(db_path),
+        data_directory=db_path,
         base_folder=str(base_path),
         username="test_connstr_user",
         password="p@ss:w/rd%20#?&= *x",
-        database_name="testing_db_connstr",
+        database_name="Testing-DB ?#%&'x",
         query={"connect_timeout": 10},
         own=True,
     )
@@ -190,13 +222,25 @@ def test_db_connection_special_chars_password(tmp_path):
     try:
         pg_harness.create_database(create_tables=True)
         assert pg_harness.can_connect()
-        assert create_engine(db_config.sqlalchemy_url).connect()
+        _check_engine_connect(db_config)
         SQLAlchemySocket.upgrade_database(db_config)
+
+        assert pg_harness.database_size() > 0
+
+        # Also connect via the socket
+        sock_path = os.path.join(db_path, "sock")
+        sock_config = db_config.model_copy(update={"host": sock_path})
+        assert PostgresHarness(sock_config).can_connect()
+        _check_engine_connect(sock_config)
 
         new_db_config = db_config.model_copy(update={"password": "p@ss:w/rd%20#?&= *"})
         assert PostgresHarness(new_db_config).can_connect() is False
+
+        pg_harness.delete_database()
+        assert pg_harness.can_connect() is False
     finally:
         pg_harness.shutdown()
+        shutil.rmtree(db_path, ignore_errors=True)
 
 
 def test_db_connection_hosts(tmp_path):
