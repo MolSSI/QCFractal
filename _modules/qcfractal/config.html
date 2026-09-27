@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=c72c23a3"></script>
+    <script src="../../_static/documentation_options.js?v=669622a6"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post87+g91e58bb6a" />
+  <meta name="docsearch:version" content="0.70.post104+ga32b9df86" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -464,12 +464,13 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">secrets</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Annotated</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">quote</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">psycopg2.extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_dsn</span><span class="p">,</span> <span class="n">parse_dsn</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">field_validator</span><span class="p">,</span> <span class="n">model_validator</span><span class="p">,</span> <span class="n">ValidationError</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">StringConstraints</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic_settings</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseSettings</span><span class="p">,</span> <span class="n">SettingsConfigDict</span><span class="p">,</span> <span class="n">PydanticBaseSettingsSource</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.engine.url</span><span class="w"> </span><span class="kn">import</span> <span class="n">URL</span><span class="p">,</span> <span class="n">make_url</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.engine.url</span><span class="w"> </span><span class="kn">import</span> <span class="n">URL</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcfractal.port_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_open_port</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qcportal.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">duration_to_seconds</span><span class="p">,</span> <span class="n">update_nested_dict</span>
@@ -500,18 +501,71 @@
     <span class="n">dbname</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">query</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="n">username</span> <span class="o">=</span> <span class="n">username</span> <span class="k">if</span> <span class="n">username</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
-    <span class="n">password</span> <span class="o">=</span> <span class="s2">":"</span> <span class="o">+</span> <span class="n">password</span> <span class="k">if</span> <span class="n">password</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="c1"># All components must be percent-encoded, since they may contain characters</span>
+    <span class="c1"># that are special in URIs (@, :, /, %, &amp;, spaces, etc). '*' is left as-is in the username/password</span>
+    <span class="c1"># (it is valid in the userinfo part of a URI), which keeps the masked password in safe_uri readable.</span>
+    <span class="c1"># '/' and ',' are left as-is in query values (valid there), which keeps socket paths and host lists readable</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">quote</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="s2">"*"</span><span class="p">)</span> <span class="k">if</span> <span class="n">username</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="s2">":"</span> <span class="o">+</span> <span class="n">quote</span><span class="p">(</span><span class="n">password</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="s2">"*"</span><span class="p">)</span> <span class="k">if</span> <span class="n">password</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
     <span class="n">sep</span> <span class="o">=</span> <span class="s2">"@"</span> <span class="k">if</span> <span class="n">username</span> <span class="o">!=</span> <span class="s2">""</span> <span class="ow">or</span> <span class="n">password</span> <span class="o">!=</span> <span class="s2">""</span> <span class="k">else</span> <span class="s2">""</span>
-    <span class="n">query_str</span> <span class="o">=</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">query</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"&amp;"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">query</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="n">dbname</span> <span class="o">=</span> <span class="n">quote</span><span class="p">(</span><span class="n">dbname</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span> <span class="k">if</span> <span class="n">dbname</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
 
-    <span class="c1"># If this is a socket file, move the host to the query params</span>
-    <span class="k">if</span> <span class="n">host</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"/"</span><span class="p">):</span>
-        <span class="n">query_str</span> <span class="o">=</span> <span class="s2">"&amp;"</span> <span class="o">+</span> <span class="n">query_str</span> <span class="k">if</span> <span class="n">query_str</span> <span class="o">!=</span> <span class="s2">""</span> <span class="k">else</span> <span class="s2">""</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">"postgresql://</span><span class="si">{</span><span class="n">username</span><span class="si">}{</span><span class="n">password</span><span class="si">}{</span><span class="n">sep</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">dbname</span><span class="si">}</span><span class="s2">?host=</span><span class="si">{</span><span class="n">host</span><span class="si">}{</span><span class="n">query_str</span><span class="si">}</span><span class="s2">"</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">query_str</span> <span class="o">=</span> <span class="s2">"?"</span> <span class="o">+</span> <span class="n">query_str</span> <span class="k">if</span> <span class="n">query_str</span> <span class="o">!=</span> <span class="s2">""</span> <span class="k">else</span> <span class="s2">""</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">"postgresql://</span><span class="si">{</span><span class="n">username</span><span class="si">}{</span><span class="n">password</span><span class="si">}{</span><span class="n">sep</span><span class="si">}{</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">dbname</span><span class="si">}{</span><span class="n">query_str</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">query</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">dict</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+
+    <span class="c1"># Host and port are optional (libpq will use defaults)</span>
+    <span class="n">host</span> <span class="o">=</span> <span class="n">host</span> <span class="k">if</span> <span class="n">host</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="n">port</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">port</span><span class="p">)</span> <span class="k">if</span> <span class="n">port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
+
+    <span class="k">if</span> <span class="s2">","</span> <span class="ow">in</span> <span class="n">port</span><span class="p">:</span>
+        <span class="c1"># Multiple ports (for multiple hosts) must go in the query params</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"port"</span><span class="p">:</span> <span class="n">port</span><span class="p">,</span> <span class="o">**</span><span class="n">query</span><span class="p">}</span>
+        <span class="n">port</span> <span class="o">=</span> <span class="s2">""</span>
+
+    <span class="k">if</span> <span class="n">host</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">","</span> <span class="ow">in</span> <span class="n">host</span><span class="p">:</span>
+        <span class="c1"># If this is a socket file or multiple hosts, move the host to the query params</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"host"</span><span class="p">:</span> <span class="n">host</span><span class="p">,</span> <span class="o">**</span><span class="n">query</span><span class="p">}</span>
+        <span class="n">host</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="k">elif</span> <span class="s2">":"</span> <span class="ow">in</span> <span class="n">host</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">host</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"["</span><span class="p">):</span>
+        <span class="c1"># IPv6 addresses must be enclosed in brackets. Any '%' (zone id) must be encoded</span>
+        <span class="n">host</span> <span class="o">=</span> <span class="s2">"["</span> <span class="o">+</span> <span class="n">host</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"%"</span><span class="p">,</span> <span class="s2">"%25"</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"]"</span>
+
+    <span class="n">port</span> <span class="o">=</span> <span class="s2">":"</span> <span class="o">+</span> <span class="n">port</span> <span class="k">if</span> <span class="n">port</span> <span class="o">!=</span> <span class="s2">""</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="n">query_str</span> <span class="o">=</span> <span class="s2">"&amp;"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">quote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">),</span><span class="w"> </span><span class="n">safe</span><span class="o">=</span><span class="s1">''</span><span class="p">)</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">quote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">),</span><span class="w"> </span><span class="n">safe</span><span class="o">=</span><span class="s1">'/,'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">query</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="n">query_str</span> <span class="o">=</span> <span class="s2">"?"</span> <span class="o">+</span> <span class="n">query_str</span> <span class="k">if</span> <span class="n">query_str</span> <span class="o">!=</span> <span class="s2">""</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"postgresql://</span><span class="si">{</span><span class="n">username</span><span class="si">}{</span><span class="n">password</span><span class="si">}{</span><span class="n">sep</span><span class="si">}{</span><span class="n">host</span><span class="si">}{</span><span class="n">port</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">dbname</span><span class="si">}{</span><span class="n">query_str</span><span class="si">}</span><span class="s2">"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">make_sqlalchemy_url</span><span class="p">(</span><span class="n">uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">URL</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Creates an SQLAlchemy URL (using the psycopg2 driver) from a PostgreSQL connection URI or DSN</span>
+
+<span class="sd">    The URI is parsed by libpq rather than SQLAlchemy. SQLAlchemy 2.0 does not percent-decode the</span>
+<span class="sd">    database name in URL strings (2.1 does), so building the URL from its components is the only</span>
+<span class="sd">    way to get consistent behavior.</span>
+<span class="sd">    """</span>
+
+    <span class="n">dsn</span> <span class="o">=</span> <span class="n">parse_dsn</span><span class="p">(</span><span class="n">uri</span><span class="p">)</span>
+
+    <span class="n">host</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"host"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">port</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"port"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="c1"># Socket directories and multiple hosts/ports are passed through to psycopg2 as query parameters</span>
+    <span class="k">if</span> <span class="n">host</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">host</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">","</span> <span class="ow">in</span> <span class="n">host</span><span class="p">):</span>
+        <span class="n">dsn</span><span class="p">[</span><span class="s2">"host"</span><span class="p">]</span> <span class="o">=</span> <span class="n">host</span>
+        <span class="n">host</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">","</span> <span class="ow">in</span> <span class="n">port</span><span class="p">:</span>
+        <span class="n">dsn</span><span class="p">[</span><span class="s2">"port"</span><span class="p">]</span> <span class="o">=</span> <span class="n">port</span>
+        <span class="n">port</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">URL</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+        <span class="s2">"postgresql+psycopg2"</span><span class="p">,</span>
+        <span class="n">username</span><span class="o">=</span><span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"user"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="n">password</span><span class="o">=</span><span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"password"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span>
+        <span class="n">port</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">port</span><span class="p">)</span> <span class="k">if</span> <span class="n">port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">database</span><span class="o">=</span><span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"dbname"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="n">query</span><span class="o">=</span><span class="n">dsn</span><span class="p">,</span>
+    <span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">QCFConfigBase</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
@@ -611,8 +665,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">sqlalchemy_url</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">URL</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Returns the SQLAlchemy URL for this database"""</span>
 
-        <span class="n">url</span> <span class="o">=</span> <span class="n">make_url</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database_uri</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">url</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">drivername</span><span class="o">=</span><span class="s2">"postgresql+psycopg2"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">make_sqlalchemy_url</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database_uri</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">psycopg2_dsn</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -636,11 +689,11 @@
 
         <span class="n">dsn</span> <span class="o">=</span> <span class="n">parse_dsn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database_uri</span><span class="p">)</span>
 
-        <span class="n">host</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"host"</span><span class="p">)</span>
+        <span class="n">host</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"host"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">port</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"port"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">user</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"user"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">password</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"password"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">dbname</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"dbname"</span><span class="p">)</span>
+        <span class="n">dbname</span> <span class="o">=</span> <span class="n">dsn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"dbname"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="c1"># SQLAlchemy render_string has some problems sometimes, so use our own</span>
         <span class="k">return</span> <span class="n">make_uri_string</span><span class="p">(</span>
