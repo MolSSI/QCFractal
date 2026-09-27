@@ -29,6 +29,7 @@ from qcfractal.components.optimization.record_db_models import (
 )
 from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM
+from qcfractal.db_socket.helpers import apply_distinct_on
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable
@@ -118,13 +119,15 @@ class TorsiondriveSpecificationORM(BaseORM):
 # CTE for a table with minimimum optimizations. Has columns torsiondrive_id, key, and (minimum) optimization_id
 # Chooses the optimization with the lowest energy, and if there are multiple, the one with the lowest id
 _minopt_cte = (
-    select(
-        TorsiondriveOptimizationORM.torsiondrive_id.label("torsiondrive_id"),
-        TorsiondriveOptimizationORM.key.label("key"),
-        TorsiondriveOptimizationORM.optimization_id.label("optimization_id"),
+    apply_distinct_on(
+        select(
+            TorsiondriveOptimizationORM.torsiondrive_id.label("torsiondrive_id"),
+            TorsiondriveOptimizationORM.key.label("key"),
+            TorsiondriveOptimizationORM.optimization_id.label("optimization_id"),
+        ).join(OptimizationRecordORM, TorsiondriveOptimizationORM.optimization_id == OptimizationRecordORM.id),
+        TorsiondriveOptimizationORM.torsiondrive_id,
+        TorsiondriveOptimizationORM.key,
     )
-    .join(OptimizationRecordORM, TorsiondriveOptimizationORM.optimization_id == OptimizationRecordORM.id)
-    .distinct(TorsiondriveOptimizationORM.torsiondrive_id, TorsiondriveOptimizationORM.key)
     .order_by(
         TorsiondriveOptimizationORM.torsiondrive_id,
         TorsiondriveOptimizationORM.key,

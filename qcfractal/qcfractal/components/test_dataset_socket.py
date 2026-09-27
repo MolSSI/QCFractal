@@ -90,3 +90,27 @@ def test_dataset_socket_submit_defaults(
     assert tag == "different_tag"
     assert priority == PriorityEnum.normal
     assert user_id == default_user_id
+
+
+@pytest.mark.parametrize("creator_user", [None, "admin_user", "submit_user"])
+def test_dataset_socket_clone_creator(secure_snowflake: QCATestingSnowflake, creator_user: Optional[str]):
+    storage_socket = secure_snowflake.get_storage_socket()
+
+    ds_id = storage_socket.datasets.singlepoint.add(
+        name="Test SP Dataset",
+        description="",
+        tagline="",
+        tags=[],
+        provenance={},
+        default_compute_tag="*",
+        default_compute_priority=PriorityEnum.normal,
+        extras={},
+        creator_user=creator_user,
+        existing_ok=False,
+    )
+
+    new_ds_id = storage_socket.datasets.singlepoint.clone(ds_id, "Cloned SP Dataset")
+    assert new_ds_id != ds_id
+
+    ds = storage_socket.datasets.get(new_ds_id)
+    assert ds["owner_user"] == creator_user

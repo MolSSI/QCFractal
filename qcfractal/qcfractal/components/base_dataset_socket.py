@@ -7,7 +7,7 @@ import pydantic_core
 from sqlalchemy import select, func, text, delete, and_, literal
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, lazyload, joinedload, load_only, noload
+from sqlalchemy.orm import Session, lazyload, joinedload, load_only, raiseload
 from sqlalchemy.orm.attributes import flag_modified
 
 from qcfractal.components.dataset_db_models import BaseDatasetORM, DatasetInternalJobORM, DatasetRecordCountORM
@@ -1977,7 +1977,7 @@ class BaseDatasetSocket:
 
         with self.root_socket.optional_session(session) as session:
             stmt = select(self.dataset_orm).where(BaseDatasetORM.id == source_dataset_id)
-            stmt = stmt.options(noload("*"))
+            stmt = stmt.options(raiseload("*"))
             source_orm = session.execute(stmt).scalar_one_or_none()
 
             if source_orm is None:
@@ -1993,7 +1993,7 @@ class BaseDatasetSocket:
                 default_compute_tag=source_orm.default_compute_tag,
                 default_compute_priority=source_orm.default_compute_priority,
                 extras=source_orm.extras,
-                creator_user=source_orm.creator_user,
+                creator_user=source_orm.creator_user_id,
                 existing_ok=False,
             )
 

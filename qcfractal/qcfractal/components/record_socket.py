@@ -329,7 +329,7 @@ class RecordSocket:
 
             stmt = stmt.order_by(orm_type.id.desc())
             stmt = stmt.limit(query_data.limit)
-            stmt = stmt.distinct(orm_type.id)
+            stmt = stmt.distinct()
             record_ids = session.execute(stmt).scalars().all()
 
         return record_ids
