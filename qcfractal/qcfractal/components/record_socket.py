@@ -1194,13 +1194,6 @@ class RecordSocket:
 
         return self._revert_common(record_ids, applicable_status=[RecordStatusEnum.error], session=session)
 
-    def reset_running(self, record_ids: Sequence[int], *, session: Optional[Session] = None):
-        """
-        Resets running records to be waiting again
-        """
-
-        return self._revert_common(record_ids, applicable_status=[RecordStatusEnum.running], session=session)
-
     def delete(
         self,
         record_ids: Sequence[int],

@@ -61,8 +61,14 @@ def test_record_client_reset_error_service(snowflake: QCATestingSnowflake, proce
 
     run_service(storage_socket, activated_manager_name, svc_id, keygen, result_data, 1)
 
-    # Make initial check for waiting service work
-    storage_socket.records.reset_running([svc_id])
+    # Put the service into an error state so that the loop below exercises the supported
+    # reset path (client reset only applies to errored records). Every dependency is returned
+    # as failed, so the service cannot complete here.
+    run_service(storage_socket, activated_manager_name, svc_id, keygen, failed_data, 200)
+
+    with storage_socket.session_scope() as session:
+        rec = session.get(BaseRecordORM, svc_id)
+        assert rec.status == RecordStatusEnum.error
 
     while True:
         snowflake_client.reset_records([svc_id])
