@@ -27,6 +27,19 @@ interface ChangelogEntry {
 // skip purely internal refactors.
 const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-09-28",
+    items: [
+      {
+        kind: "Fixed",
+        text: "Filtering dataset records by status, and clicking a count in the dataset status table, no longer load indefinitely on large datasets",
+      },
+      {
+        kind: "Improved",
+        text: "Dataset records now load progressively, with a progress indicator, instead of waiting for the whole search to finish",
+      },
+    ],
+  },
+  {
     date: "2026-09-15",
     items: [
       { kind: "Added", text: "Edit dataset name and metadata" },

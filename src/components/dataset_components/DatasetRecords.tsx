@@ -53,11 +53,24 @@ type DiscoveredDatasetRecordRow = {
   status: qcpTypes.RecordStatus;
 };
 
-type DatasetRecordCursor = {
+
+type ScanCursor = {
+  kind: "scan";
   specIndex: number;
   entryOffset: number;
   scannedCount: number;
 };
+
+type StatusCursor = {
+  kind: "status";
+  // Last record id of the previous page; records/query resumes after it.
+  recordCursor?: number;
+  scannedCount: number;
+  // Rows seen for the selected specs so far, to tell when every match is found.
+  matchedCount: number;
+};
+
+type DatasetRecordCursor = ScanCursor | StatusCursor;
 
 type DatasetRecordDiscoveryPage = {
   rows: DiscoveredDatasetRecordRow[];
@@ -68,10 +81,20 @@ type DatasetRecordDiscoveryPage = {
 
 const PREFETCH_PAGE_COUNT = 3;
 const UNKNOWN_TOTAL_COUNT = -1;
-const INITIAL_CURSOR: DatasetRecordCursor = {
+// Capped per query page so rows and progress appear while the scan advances.
+const MAX_SCAN_REQUESTS_PER_PAGE = 5;
+
+const INITIAL_SCAN_CURSOR: ScanCursor = {
+  kind: "scan",
   specIndex: 0,
   entryOffset: 0,
   scannedCount: 0,
+};
+
+const INITIAL_STATUS_CURSOR: StatusCursor = {
+  kind: "status",
+  scannedCount: 0,
+  matchedCount: 0,
 };
 
 export default function DatasetRecords({
@@ -106,13 +129,28 @@ export default function DatasetRecords({
     );
   }, [entryNames, entryFilter]);
 
-  const filteredSpecs = React.useMemo(() => {
-    if (specFilter === "all") {
-      return specifications;
-    }
+  // Only built when there is a filter; a dataset can have 100k+ entries.
+  const filteredEntrySet = React.useMemo(
+    () => (entryFilter ? new Set(filteredEntries) : null),
+    [entryFilter, filteredEntries],
+  );
 
-    return specifications.filter((specification) => specification === specFilter);
-  }, [specifications, specFilter]);
+  const filteredSpecs = React.useMemo(() => {
+    const selected =
+      specFilter === "all"
+        ? specifications
+        : specifications.filter(
+            (specification) => specification === specFilter,
+          );
+
+    // An empty spec still costs a full pass over every entry to discover that.
+    return selected.filter((specification) => {
+      const counts = datasetStatus[specification];
+      return (
+        !!counts && Object.values(counts).some((statusCount) => statusCount > 0)
+      );
+    });
+  }, [datasetStatus, specifications, specFilter]);
 
   const totalCombinationCount = filteredEntries.length * filteredSpecs.length;
   const matchingEntryCount = filteredEntries.length;
@@ -121,6 +159,38 @@ export default function DatasetRecords({
     Math.min(serverInfo.api_limits.get_records || 1, 200)
   );
   const discoveryChunkSize = rowsPerPage * PREFETCH_PAGE_COUNT;
+  // These return ids and names rather than full records, so the batch is larger.
+  const statusQueryPageSize = Math.max(
+    1,
+    Math.min(serverInfo.api_limits.get_records || 500, 500),
+  );
+
+  const totalDatasetStatuses = React.useMemo(
+    () => calculateTotalStatusCounts(datasetStatus),
+    [datasetStatus],
+  );
+
+  // Pagination count, and the point at which the status query can stop.
+  const selectedSpecificationRecordCount = React.useMemo(() => {
+    return filteredSpecs.reduce((total, specificationName) => {
+      const specificationStatuses = datasetStatus[specificationName];
+      if (!specificationStatuses) {
+        return total;
+      }
+
+      if (statusFilter !== "all") {
+        return total + (specificationStatuses[statusFilter] || 0);
+      }
+
+      return (
+        total +
+        Object.values(specificationStatuses).reduce(
+          (specificationTotal, statusCount) => specificationTotal + statusCount,
+          0,
+        )
+      );
+    }, 0);
+  }, [datasetStatus, filteredSpecs, statusFilter]);
 
   const discoveryQueryKey = React.useMemo(
     () => [
@@ -146,132 +216,273 @@ export default function DatasetRecords({
     !!datasetId &&
     !!datasetType &&
     filteredEntries.length > 0 &&
-    filteredSpecs.length > 0;
+    filteredSpecs.length > 0 &&
+    // Nothing to find, so don't page through the rest of the dataset for it.
+    (statusFilter === "all" || selectedSpecificationRecordCount > 0);
+
+  // Walks entry/spec combinations. bulkFetch filters by status server-side.
+  const fetchScanPage = async (
+    cursor: ScanCursor,
+    status: "all" | qcpTypes.RecordStatus,
+  ): Promise<DatasetRecordDiscoveryPage> => {
+    const rows: Omit<DiscoveredDatasetRecordRow, "status">[] = [];
+    let specIndex = cursor.specIndex;
+    let entryOffset = cursor.entryOffset;
+    let scannedCount = cursor.scannedCount;
+    let requestCount = 0;
+
+    const withinBudget = () =>
+      rows.length < discoveryChunkSize &&
+      requestCount < MAX_SCAN_REQUESTS_PER_PAGE;
+
+    while (specIndex < filteredSpecs.length && withinBudget()) {
+      const specificationName = filteredSpecs[specIndex];
+
+      while (entryOffset < filteredEntries.length && withinBudget()) {
+        const entryBatch = filteredEntries.slice(
+          entryOffset,
+          entryOffset + maxRecordsPerRequest,
+        );
+
+        const batch = await makeRequest<[string, string, number][]>(
+          "POST",
+          `api/v1/datasets/${datasetType}/${datasetId}/records/bulkFetch`,
+          {
+            entry_names: entryBatch,
+            specification_names: [specificationName],
+            status: status === "all" ? undefined : [status],
+          },
+        );
+        requestCount += 1;
+
+        const recordIdByEntry = new Map(
+          batch.map(([entryName, , recordId]) => [entryName, recordId]),
+        );
+
+        for (const entryName of entryBatch) {
+          const recordId = recordIdByEntry.get(entryName);
+          if (recordId !== undefined) {
+            rows.push({
+              entry_name: entryName,
+              specification_name: specificationName,
+              record_id: recordId,
+            });
+          }
+        }
+
+        entryOffset += entryBatch.length;
+        scannedCount += entryBatch.length;
+      }
+
+      if (entryOffset >= filteredEntries.length) {
+        specIndex += 1;
+        entryOffset = 0;
+      }
+    }
+
+    const exhausted = specIndex >= filteredSpecs.length;
+    const nextCursor: ScanCursor | undefined = exhausted
+      ? undefined
+      : {
+          kind: "scan",
+          specIndex,
+          entryOffset,
+          scannedCount,
+        };
+
+    if (rows.length === 0) {
+      return { rows: [], exhausted, scannedCount, nextCursor };
+    }
+
+    // bulkFetch already filtered by status.
+    if (status !== "all") {
+      return {
+        rows: rows.map((row) => ({ ...row, status })),
+        exhausted,
+        scannedCount,
+        nextCursor,
+      };
+    }
+
+    const statusByRecordId: Record<number, qcpTypes.RecordStatus> = {};
+    const recordIds = rows.map((row) => row.record_id);
+
+    for (let i = 0; i < recordIds.length; i += maxRecordsPerRequest) {
+      const recordIdBatch = recordIds.slice(i, i + maxRecordsPerRequest);
+      const recordsBatch = await makeRequest<qcpTypes.BaseRecord[]>(
+        "POST",
+        "api/v1/records/bulkGet",
+        {
+          ids: recordIdBatch,
+          include: ["status"],
+        },
+      );
+
+      recordsBatch.forEach((record) => {
+        statusByRecordId[record.id] = record.status;
+      });
+    }
+
+    return {
+      rows: rows.map((row) => {
+        const status = statusByRecordId[row.record_id];
+        if (!status) {
+          throw new Error(`Missing status for record ${row.record_id}`);
+        }
+
+        return {
+          ...row,
+          status,
+        };
+      }),
+      exhausted,
+      scannedCount,
+      nextCursor,
+    };
+  };
+
+  // Server-side status filter, then resolve each record's entry/spec names.
+  const fetchStatusPage = async (
+    cursor: StatusCursor,
+    status: qcpTypes.RecordStatus,
+  ): Promise<DatasetRecordDiscoveryPage> => {
+    const queryBody: {
+      dataset_id: number[];
+      status: qcpTypes.RecordStatus[];
+      limit: number;
+      cursor?: number;
+    } = {
+      dataset_id: [datasetId],
+      status: [status],
+      limit: statusQueryPageSize,
+    };
+
+    if (cursor.recordCursor !== undefined) {
+      queryBody.cursor = cursor.recordCursor;
+    }
+
+    const recordIds = await makeRequest<number[]>(
+      "POST",
+      "api/v1/records/query",
+      queryBody,
+    );
+
+    const scannedCount = cursor.scannedCount + recordIds.length;
+
+    if (recordIds.length === 0) {
+      return { rows: [], exhausted: true, scannedCount };
+    }
+
+    const locations = await makeRequest<qcpTypes.DatasetRecordLocation[]>(
+      "POST",
+      "api/v1/datasets/queryrecords",
+      { record_id: recordIds },
+    );
+
+    // A record can belong to more than one dataset.
+    const locationByRecordId = new Map(
+      locations
+        .filter((location) => location.dataset_id === datasetId)
+        .map((location) => [location.record_id, location]),
+    );
+
+    const selectedSpecs = new Set(filteredSpecs);
+    const rows: DiscoveredDatasetRecordRow[] = [];
+    let matchedCount = cursor.matchedCount;
+
+    // Iterate ids, not locations, to keep the server's order (newest first).
+    for (const recordId of recordIds) {
+      const location = locationByRecordId.get(recordId);
+      if (!location || !selectedSpecs.has(location.specification_name)) {
+        continue;
+      }
+
+      matchedCount += 1;
+
+      if (filteredEntrySet && !filteredEntrySet.has(location.entry_name)) {
+        continue;
+      }
+
+      rows.push({
+        entry_name: location.entry_name,
+        specification_name: location.specification_name,
+        record_id: recordId,
+        status,
+      });
+    }
+
+    const exhausted =
+      recordIds.length < statusQueryPageSize ||
+      matchedCount >= selectedSpecificationRecordCount;
+
+    return {
+      rows,
+      exhausted,
+      scannedCount,
+      nextCursor: exhausted
+        ? undefined
+        : {
+            kind: "status",
+            recordCursor: recordIds[recordIds.length - 1],
+            scannedCount,
+            matchedCount,
+          },
+    };
+  };
+
+  // Pick whichever strategy fills one page in fewer requests, by hit rate.
+  const scanHitRate =
+    totalCombinationCount > 0
+      ? Math.min(1, selectedSpecificationRecordCount / totalCombinationCount)
+      : 0;
+  const statusRecordCount =
+    statusFilter === "all"
+      ? 0
+      : totalDatasetStatuses[statusFilter] || 0;
+  const entrySelectivity =
+    entryNames.length > 0 ? filteredEntries.length / entryNames.length : 1;
+  const statusHitRate =
+    statusRecordCount > 0
+      ? (selectedSpecificationRecordCount / statusRecordCount) *
+        entrySelectivity
+      : 0;
+
+  // Neither can cost more than walking everything it would look at.
+  const fullScanRequests =
+    Math.ceil(filteredEntries.length / maxRecordsPerRequest) *
+    filteredSpecs.length;
+  const fullStatusRequests = 2 * Math.ceil(statusRecordCount / statusQueryPageSize);
+
+  const scanCost =
+    scanHitRate > 0
+      ? Math.min(
+          Math.ceil(discoveryChunkSize / (maxRecordsPerRequest * scanHitRate)),
+          fullScanRequests,
+        )
+      : fullScanRequests;
+  // Two requests per round trip: records/query, then queryrecords.
+  const statusCost =
+    statusHitRate > 0
+      ? Math.min(
+          2 * Math.ceil(discoveryChunkSize / (statusQueryPageSize * statusHitRate)),
+          fullStatusRequests,
+        )
+      : Number.POSITIVE_INFINITY;
+
+  const useStatusQuery = statusFilter !== "all" && statusCost < scanCost;
+
+  const initialPageParam: DatasetRecordCursor = useStatusQuery
+    ? INITIAL_STATUS_CURSOR
+    : INITIAL_SCAN_CURSOR;
 
   const discoveryQuery = useInfiniteQuery({
     queryKey: discoveryQueryKey,
-    initialPageParam: INITIAL_CURSOR,
+    initialPageParam,
     enabled: discoveryEnabled,
-    queryFn: async ({
-      pageParam,
-    }): Promise<DatasetRecordDiscoveryPage> => {
-      const statuses =
-        statusFilter === "all" ? undefined : [statusFilter];
-
-      const rows: Omit<DiscoveredDatasetRecordRow, "status">[] = [];
-      let specIndex = pageParam.specIndex;
-      let entryOffset = pageParam.entryOffset;
-      let scannedCount = pageParam.scannedCount;
-
-      while (
-        specIndex < filteredSpecs.length &&
-        rows.length < discoveryChunkSize
-      ) {
-        const specificationName = filteredSpecs[specIndex];
-
-        while (
-          entryOffset < filteredEntries.length &&
-          rows.length < discoveryChunkSize
-        ) {
-          const entryBatch = filteredEntries.slice(
-            entryOffset,
-            entryOffset + maxRecordsPerRequest,
-          );
-
-          const batch = await makeRequest<[string, string, number][]>(
-            "POST",
-            `api/v1/datasets/${datasetType}/${datasetId}/records/bulkFetch`,
-            {
-              entry_names: entryBatch,
-              specification_names: [specificationName],
-              status: statuses,
-            },
-          );
-
-          const recordIdByEntry = new Map(
-            batch.map(([entryName, , recordId]) => [entryName, recordId]),
-          );
-
-          for (const entryName of entryBatch) {
-            const recordId = recordIdByEntry.get(entryName);
-            if (recordId !== undefined) {
-              rows.push({
-                entry_name: entryName,
-                specification_name: specificationName,
-                record_id: recordId,
-              });
-            }
-          }
-
-          entryOffset += entryBatch.length;
-          scannedCount += entryBatch.length;
-        }
-
-        if (entryOffset >= filteredEntries.length) {
-          specIndex += 1;
-          entryOffset = 0;
-        }
-      }
-
-      const exhausted = specIndex >= filteredSpecs.length;
-
-      if (rows.length === 0) {
-        return {
-          rows: [],
-          exhausted,
-          scannedCount,
-          nextCursor: exhausted
-            ? undefined
-            : {
-                specIndex,
-                entryOffset,
-                scannedCount,
-              },
-        };
-      }
-
-      const statusByRecordId: Record<number, qcpTypes.RecordStatus> = {};
-      const recordIds = rows.map((row) => row.record_id);
-
-      for (let i = 0; i < recordIds.length; i += maxRecordsPerRequest) {
-        const recordIdBatch = recordIds.slice(i, i + maxRecordsPerRequest);
-        const recordsBatch = await makeRequest<qcpTypes.BaseRecord[]>(
-          "POST",
-          "api/v1/records/bulkGet",
-          {
-            ids: recordIdBatch,
-            include: ["status"],
-          },
-        );
-
-        recordsBatch.forEach((record) => {
-          statusByRecordId[record.id] = record.status;
-        });
-      }
-
-      return {
-        rows: rows.map((row) => {
-          const status = statusByRecordId[row.record_id];
-          if (!status) {
-            throw new Error(`Missing status for record ${row.record_id}`);
-          }
-
-          return {
-            ...row,
-            status,
-          };
-        }),
-        exhausted,
-        scannedCount,
-        nextCursor: exhausted
-          ? undefined
-          : {
-              specIndex,
-              entryOffset,
-              scannedCount,
-            },
-      };
-    },
+    queryFn: ({ pageParam }): Promise<DatasetRecordDiscoveryPage> =>
+      pageParam.kind === "status"
+        ? fetchStatusPage(pageParam, statusFilter as qcpTypes.RecordStatus)
+        : fetchScanPage(pageParam, statusFilter),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
 
@@ -283,7 +494,7 @@ export default function DatasetRecords({
   const lastDiscoveryPage = discoveryQuery.data?.pages[
     discoveryQuery.data.pages.length - 1
   ];
-  const isExhausted = lastDiscoveryPage?.exhausted ?? totalCombinationCount === 0;
+  const isExhausted = lastDiscoveryPage?.exhausted ?? !discoveryEnabled;
   const scannedCount = lastDiscoveryPage?.scannedCount ?? 0;
   const targetDiscoveredRows = (page + PREFETCH_PAGE_COUNT) * rowsPerPage;
 
@@ -324,32 +535,6 @@ export default function DatasetRecords({
     const start = page * rowsPerPage;
     return discoveredRows.slice(start, start + rowsPerPage);
   }, [discoveredRows, page, rowsPerPage]);
-
-  const totalDatasetStatuses = React.useMemo(
-    () => calculateTotalStatusCounts(datasetStatus),
-    [datasetStatus],
-  );
-
-  const selectedSpecificationRecordCount = React.useMemo(() => {
-    return filteredSpecs.reduce((total, specificationName) => {
-      const specificationStatuses = datasetStatus[specificationName];
-      if (!specificationStatuses) {
-        return total;
-      }
-
-      if (statusFilter !== "all") {
-        return total + (specificationStatuses[statusFilter] || 0);
-      }
-
-      return (
-        total +
-        Object.values(specificationStatuses).reduce(
-          (specificationTotal, statusCount) => specificationTotal + statusCount,
-          0,
-        )
-      );
-    }, 0);
-  }, [datasetStatus, filteredSpecs, statusFilter]);
 
   const rowCount = React.useMemo(() => {
     if (totalCombinationCount === 0) {
@@ -392,10 +577,16 @@ export default function DatasetRecords({
   const isLoadingVisiblePage =
     !isExhausted && discoveredRows.length < page * rowsPerPage + rowsPerPage;
 
+  // Report whichever walk is in progress.
+  const scanTotal = useStatusQuery
+    ? totalDatasetStatuses[statusFilter as qcpTypes.RecordStatus] || 0
+    : totalCombinationCount;
+  const scanLabel = useStatusQuery
+    ? `Searched ${scannedCount} / ${scanTotal} ${statusFilter} records`
+    : `Scanned ${scannedCount} / ${scanTotal} combinations`;
+
   const progressValue =
-    totalCombinationCount > 0
-      ? Math.min(100, (scannedCount / totalCombinationCount) * 100)
-      : 0;
+    scanTotal > 0 ? Math.min(100, (scannedCount / scanTotal) * 100) : 0;
 
   return (
     <Box>
@@ -459,7 +650,7 @@ export default function DatasetRecords({
         </FormControl>
 
         {(discoveryQuery.isFetching || discoveryQuery.isFetchingNextPage) &&
-          totalCombinationCount > 0 && (
+          scanTotal > 0 && (
             <Box sx={{ flexGrow: 1, minWidth: 260 }}>
               <Box
                 sx={{
@@ -469,7 +660,7 @@ export default function DatasetRecords({
                 }}
               >
                 <Typography variant="caption" color="text.secondary">
-                  Scanned {scannedCount} / {totalCombinationCount} combinations
+                  {scanLabel}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   {discoveredRows.length} records discovered
