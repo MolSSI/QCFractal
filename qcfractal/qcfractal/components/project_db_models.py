@@ -17,7 +17,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from qcfractal.components.auth.db_models import UserIDMapSubquery, UserORM
+from qcfractal.components.auth.db_models import GroupORM, UserIDMapSubquery, UserORM
 from qcfractal.components.external_files.db_models import ExternalFileORM
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.db_socket import BaseORM
@@ -25,6 +25,17 @@ from qcportal.project_models import ProjectAttachmentType
 from qcfractal.db_socket.db_views import view
 from qcfractal.components.dataset_db_views import DatasetDirectRecordsView
 from qcfractal.components.record_db_views import RecordChildrenView
+
+
+class ProjectGroupORM(BaseORM):
+    """
+    Table for storing which groups own a project
+    """
+
+    __tablename__ = "project_group"
+
+    project_id = Column(Integer, ForeignKey("project.id", ondelete="cascade"), primary_key=True)
+    group_id = Column(Integer, ForeignKey(GroupORM.id), primary_key=True)
 
 
 class ProjectORM(BaseORM):
@@ -71,6 +82,8 @@ class ProjectORM(BaseORM):
         viewonly=True,
     )
 
+    owner_groups = relationship(GroupORM, secondary=ProjectGroupORM.__tablename__)
+
     attachments = relationship(
         "ProjectAttachmentORM",
         cascade="all, delete-orphan",
@@ -90,6 +103,7 @@ class ProjectORM(BaseORM):
         d = BaseORM.model_dict(self, exclude)
 
         d["owner_user"] = self.owner_user.username if self.owner_user is not None else None
+        d["owner_groups"] = [x.groupname for x in self.owner_groups]
 
         return d
 

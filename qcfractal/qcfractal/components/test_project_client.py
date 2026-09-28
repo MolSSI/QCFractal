@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pydantic_core
 import pytest
 
 from qcarchivetesting.helpers import read_record_data
 from qcfractal.components.project_db_models import ProjectORM
 from qcfractal.components.singlepoint.testing_helpers import load_procedure_data, run_procedure_data
 from qcportal import PortalRequestError
+from qcportal.auth import GroupInfo
 from qcportal.compare_records import compare_records
+from qcportal.project_models import ProjectAddBody
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, record_from_dict
 from qcportal.serialization import deserialize
 from qcportal.singlepoint import SinglepointInput
@@ -75,6 +78,37 @@ def test_project_client_add_get(submitter_client: PortalClient, secure_snowflake
     r = submitter_client._request("get", f"api/v1/projects/{proj.id}")
     raw_proj = deserialize(r.content, r.headers["Content-Type"], dict)
     assert "creator_user" not in raw_proj
+
+
+def test_project_client_add_owner_groups(secure_snowflake: QCATestingSnowflake):
+    admin_client = secure_snowflake.user_client("admin_user")
+    submit_client = secure_snowflake.user_client("submit_user")
+
+    admin_client.add_group(GroupInfo(groupname="group_a"))
+    admin_client.add_group(GroupInfo(groupname="group_b"))
+    group_b_id = admin_client.get_group("group_b").id
+
+    proj = submit_client.add_project("proj no groups")
+    assert proj.owner_groups == []
+
+    # Groups may be given by name or id. Duplicates are ignored
+    proj = submit_client.add_project("proj groups", owner_groups=["group_a", str(group_b_id), "group_b", "group_a"])
+    assert sorted(proj.owner_groups) == ["group_a", "group_b"]
+
+    with pytest.raises(PortalRequestError, match=r"does not exist"):
+        submit_client.add_project("proj bad group", owner_groups=["group_a", "no_such_group"])
+
+    # Unset owner_groups is not sent, so older servers still accept the body
+    body = ProjectAddBody(
+        name="p",
+        description="",
+        tagline="",
+        tags=[],
+        default_compute_tag="*",
+        default_compute_priority=PriorityEnum.normal,
+        extras={},
+    )
+    assert "owner_groups" not in pydantic_core.to_jsonable_python(body)
 
 
 def test_project_client_add_get_records_datasets(snowflake_client: PortalClient):

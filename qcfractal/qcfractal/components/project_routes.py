@@ -93,6 +93,7 @@ def add_project_v1(body_data: ProjectAddBody) -> int:
         extras=body_data.extras,
         creator_user=g.username,
         existing_ok=body_data.existing_ok,
+        owner_groups=body_data.owner_groups,
     )
 
 

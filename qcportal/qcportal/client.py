@@ -290,6 +290,7 @@ class PortalClient(PortalClientBase):
         default_compute_priority: PriorityEnum = PriorityEnum.normal,
         extras: dict[str, Any] | None = None,
         existing_ok: bool = False,
+        owner_groups: list[str] | None = None,
     ) -> Project:
         """
         Creates a new project on the server
@@ -316,6 +317,8 @@ class PortalClient(PortalClientBase):
         existing_ok
             If True, return the existing project if one already exists with this name, rather
             than raising an exception
+        owner_groups
+            Optional list of group names to be given ownership of the project
 
         Returns
         -------
@@ -341,6 +344,7 @@ class PortalClient(PortalClientBase):
             default_compute_priority=default_compute_priority,
             extras=extras,
             existing_ok=existing_ok,
+            owner_groups=owner_groups,
         )
 
         proj_id = self.make_request("post", f"api/v1/projects", int, body=body)

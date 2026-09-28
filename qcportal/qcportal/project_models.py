@@ -64,6 +64,8 @@ class ProjectAddBody(RestModelBase):
     default_compute_priority: PriorityEnum
     extras: dict[str, Any]
     existing_ok: bool = False
+    # Omitted when unset so that older servers (which forbid unknown fields) still accept the body
+    owner_groups: list[str] | None = Field(None, exclude_if=lambda v: v is None)
 
 
 class ProjectModifyMetadata(RestModelBase):
@@ -199,6 +201,7 @@ class Project(BaseModel):
     default_compute_priority: PriorityEnum
 
     owner_user: str | None
+    owner_groups: list[str] | None = None
 
     # Not currently sent by the server - see ProjectORM.creator_user_id
     creator_user: str | None = None
