@@ -27,6 +27,27 @@ interface ChangelogEntry {
 // skip purely internal refactors.
 const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-09-28",
+    items: [
+      {
+        kind: "Added",
+        text: "Reset button on the record page, for records in the error status",
+      },
+      {
+        kind: "Added",
+        text: "Record actions menu — cancel, invalidate, soft delete, and revert to undo the last of those",
+      },
+      {
+        kind: "Added",
+        text: "Modify option to add a comment or change a record's compute tag and priority",
+      },
+      {
+        kind: "Improved",
+        text: "Actions that do not apply to a record stay visible but disabled, with a hover note explaining why, and every action confirms before it is applied",
+      },
+    ],
+  },
+  {
     date: "2026-09-15",
     items: [
       { kind: "Added", text: "Edit dataset name and metadata" },
