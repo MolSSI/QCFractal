@@ -46,6 +46,7 @@ def test_dataset_client_add_get(submitter_client: PortalClient, dataset_type: st
     assert ds.extras == {"meta_key_1": "meta_value_1"}
 
     assert ds.owner_user == submitter_client.username
+    assert ds.creator_user == submitter_client.username
 
     # creator_user is not (yet) part of the wire format
     r = submitter_client._request("get", f"api/v1/datasets/{ds.id}")
@@ -409,6 +410,7 @@ def test_dataset_client_clone_owner(secure_snowflake: QCATestingSnowflake):
 
     # The user doing the cloning owns (and created) the clone
     assert ds_clone.owner_user == "admin_user"
+    assert ds_clone.creator_user == "admin_user"
 
     storage_socket = secure_snowflake.get_storage_socket()
     with storage_socket.session_scope() as session:

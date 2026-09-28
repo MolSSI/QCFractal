@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pydantic_core
 import pytest
 
 from qcarchivetesting.helpers import read_record_data
@@ -11,7 +10,6 @@ from qcfractal.components.singlepoint.testing_helpers import load_procedure_data
 from qcportal import PortalRequestError
 from qcportal.auth import GroupInfo
 from qcportal.compare_records import compare_records
-from qcportal.project_models import ProjectAddBody
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, record_from_dict
 from qcportal.serialization import deserialize
 from qcportal.singlepoint import SinglepointInput
@@ -52,6 +50,7 @@ def test_project_client_add_get(submitter_client: PortalClient, secure_snowflake
     assert proj.extras == {"meta_key_1": "meta_value_1"}
 
     assert proj.owner_user == submitter_client.username
+    assert proj.creator_user == submitter_client.username
 
     # case insensitive
     proj2 = submitter_client.get_project("TEST PrOJECT")
@@ -97,18 +96,6 @@ def test_project_client_add_owner_groups(secure_snowflake: QCATestingSnowflake):
 
     with pytest.raises(PortalRequestError, match=r"does not exist"):
         submit_client.add_project("proj bad group", owner_groups=["group_a", "no_such_group"])
-
-    # Unset owner_groups is not sent, so older servers still accept the body
-    body = ProjectAddBody(
-        name="p",
-        description="",
-        tagline="",
-        tags=[],
-        default_compute_tag="*",
-        default_compute_priority=PriorityEnum.normal,
-        extras={},
-    )
-    assert "owner_groups" not in pydantic_core.to_jsonable_python(body)
 
 
 def test_project_client_add_get_records_datasets(snowflake_client: PortalClient):
@@ -537,6 +524,7 @@ def test_project_client_import_records(secure_snowflake: QCATestingSnowflake):
         test_r = test_data[rm.name]
         compare_records(server_r, test_r)
         assert server_r.owner_user == "submit_user"
+        assert server_r.creator_user == "submit_user"
 
 
 def test_project_client_query_records(snowflake_client: PortalClient):

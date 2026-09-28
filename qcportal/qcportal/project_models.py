@@ -64,8 +64,7 @@ class ProjectAddBody(RestModelBase):
     default_compute_priority: PriorityEnum
     extras: dict[str, Any]
     existing_ok: bool = False
-    # Omitted when unset so that older servers (which forbid unknown fields) still accept the body
-    owner_groups: list[str] | None = Field(None, exclude_if=lambda v: v is None)
+    owner_groups: list[str] | None = None
 
 
 class ProjectModifyMetadata(RestModelBase):

@@ -281,5 +281,7 @@ def test_gridoptimization_socket_insert_full_qcportal_record(secure_snowflake: Q
         compare_gridoptimization_records(rec_1, initial_record)
 
         assert rec_1.owner_user == "submit_user"
+        assert rec_1.creator_user == "submit_user"
         for opt in rec_1.optimizations.values():
             assert opt.owner_user == "submit_user"
+            assert opt.creator_user == "submit_user"

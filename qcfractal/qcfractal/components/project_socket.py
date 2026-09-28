@@ -56,9 +56,9 @@ class ProjectSocket:
         default_compute_priority: PriorityEnum,
         extras: Dict[str, Any],
         creator_user: Optional[Union[int, str]],
+        owner_groups: Optional[Iterable[Union[int, str]]],
         existing_ok: bool,
         *,
-        owner_groups: Optional[Iterable[Union[int, str]]] = None,
         session: Optional[Session] = None,
     ) -> int:
         """
@@ -98,10 +98,9 @@ class ProjectSocket:
             proj_orm.owner_user_id = creator_user_id
             proj_orm.creator_user_id = creator_user_id
 
-            if owner_groups is not None:
-                # A group may be given more than once (possibly by both name and id)
-                groups = [self.root_socket.groups._get_internal(session, g) for g in owner_groups]
-                proj_orm.owner_groups = list(dict.fromkeys(groups))
+            # A group may be given more than once (possibly by both name and id)
+            groups = [self.root_socket.groups._get_internal(session, g) for g in (owner_groups or [])]
+            proj_orm.owner_groups = list(dict.fromkeys(groups))
 
             session.add(proj_orm)
             session.commit()

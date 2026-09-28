@@ -306,11 +306,15 @@ def test_neb_socket_insert_full_qcportal_record(secure_snowflake: QCATestingSnow
         compare_neb_records(rec_1, initial_record)
 
         assert rec_1.owner_user == "submit_user"
+        assert rec_1.creator_user == "submit_user"
         for sps in rec_1.singlepoints.values():
             for sp in sps:
                 assert sp.owner_user == "submit_user"
+                assert sp.creator_user == "submit_user"
         for opt in rec_1.optimizations.values():
             assert opt.owner_user == "submit_user"
+            assert opt.creator_user == "submit_user"
 
         if rec_1.ts_hessian:
             assert rec_1.ts_hessian.owner_user == "submit_user"
+            assert rec_1.ts_hessian.creator_user == "submit_user"
