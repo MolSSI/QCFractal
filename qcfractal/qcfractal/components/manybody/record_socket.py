@@ -226,7 +226,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
                 spec_map[mc_level].singlepoint_specification_id,
                 service_orm.compute_tag,
                 service_orm.compute_priority,
-                mb_orm.creator_user_id,
+                mb_orm.owner_user_id,
                 service_orm.find_existing,
                 session=session,
             )
@@ -632,6 +632,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
                     specification_id=mb_spec_id,
                     initial_molecule_id=mid,
                     status=RecordStatusEnum.waiting,
+                    owner_user_id=creator_user_id,
                     creator_user_id=creator_user_id,
                 )
 

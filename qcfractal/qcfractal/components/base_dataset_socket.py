@@ -413,6 +413,7 @@ class BaseDatasetSocket:
                         f"Dataset with type='{self.dataset_type}' and name='{name}' already exists"
                     )
 
+            ds_orm.owner_user_id = creator_user_id
             ds_orm.creator_user_id = creator_user_id
 
             session.add(ds_orm)
@@ -1955,6 +1956,7 @@ class BaseDatasetSocket:
         self,
         source_dataset_id: int,
         new_dataset_name: str,
+        creator_user: Optional[Union[int, str]],
         *,
         session: Optional[Session] = None,
     ):
@@ -1970,6 +1972,8 @@ class BaseDatasetSocket:
             ID of the dataset to clone
         new_dataset_name
             Name of the new, cloned dataset
+        creator_user
+            Name or ID of the user who is cloning the dataset. This user will own the new dataset
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -1993,7 +1997,7 @@ class BaseDatasetSocket:
                 default_compute_tag=source_orm.default_compute_tag,
                 default_compute_priority=source_orm.default_compute_priority,
                 extras=source_orm.extras,
-                creator_user=source_orm.creator_user_id,
+                creator_user=creator_user,
                 existing_ok=False,
             )
 

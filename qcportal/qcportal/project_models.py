@@ -64,6 +64,7 @@ class ProjectAddBody(RestModelBase):
     default_compute_priority: PriorityEnum
     extras: dict[str, Any]
     existing_ok: bool = False
+    owner_groups: list[str] | None = None
 
 
 class ProjectModifyMetadata(RestModelBase):
@@ -199,6 +200,10 @@ class Project(BaseModel):
     default_compute_priority: PriorityEnum
 
     owner_user: str | None
+    owner_groups: list[str] | None = None
+
+    # Not currently sent by the server - see ProjectORM.creator_user_id
+    creator_user: str | None = None
 
     extras: dict[str, Any]
 
@@ -233,6 +238,10 @@ class Project(BaseModel):
             raise RuntimeError("Project is not connected to a QCFractal server")
 
     def __init__(self, client: PortalClient | None = None, **kwargs):
+        # Owner and creator are currently always the same user
+        if kwargs.get("creator_user") is None and "owner_user" in kwargs:
+            kwargs["creator_user"] = kwargs["owner_user"]
+
         BaseModel.__init__(self, **kwargs)
 
         # Calls derived class propagate_client

@@ -290,6 +290,7 @@ class PortalClient(PortalClientBase):
         default_compute_priority: PriorityEnum = PriorityEnum.normal,
         extras: dict[str, Any] | None = None,
         existing_ok: bool = False,
+        owner_groups: list[str] | None = None,
     ) -> Project:
         """
         Creates a new project on the server
@@ -316,6 +317,8 @@ class PortalClient(PortalClientBase):
         existing_ok
             If True, return the existing project if one already exists with this name, rather
             than raising an exception
+        owner_groups
+            Optional list of group names to be given ownership of the project
 
         Returns
         -------
@@ -341,6 +344,7 @@ class PortalClient(PortalClientBase):
             default_compute_priority=default_compute_priority,
             extras=extras,
             existing_ok=existing_ok,
+            owner_groups=owner_groups,
         )
 
         proj_id = self.make_request("post", f"api/v1/projects", int, body=body)
@@ -1363,6 +1367,7 @@ class PortalClient(PortalClientBase):
         created_after: datetime | str | None = None,
         modified_before: datetime | str | None = None,
         modified_after: datetime | str | None = None,
+        owner_user: int | str | Iterable[int | str] | None = None,
         creator_user: int | str | Iterable[int | str] | None = None,
         limit: int | None = None,
         include: Iterable[str] | None = None,
@@ -1403,8 +1408,11 @@ class PortalClient(PortalClientBase):
             Query records that were modified before the given date/time
         modified_after
             Query records that were modified after the given date/time
+        owner_user
+            Query records owned by a user in the given list (usernames or IDs)
         creator_user
-            Query records created by a user in the given list (usernames or IDs)
+            Query records whose creator is in the given list (usernames or IDs). The creator
+            is currently always the same as the owner
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -1430,6 +1438,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
             "creator_user": make_list(creator_user),
             "limit": limit,
         }
@@ -1885,6 +1894,7 @@ class PortalClient(PortalClientBase):
         basis: str | Iterable[str | None] | None = None,
         keywords: dict[str, Any] | Iterable[dict[str, Any]] | None = None,
         molecule_id: int | Iterable[int] | None = None,
+        owner_user: int | str | Iterable[int | str] | None = None,
         creator_user: int | str | Iterable[int | str] | None = None,
         limit: int | None = None,
         include: Iterable[str] | None = None,
@@ -1930,8 +1940,11 @@ class PortalClient(PortalClientBase):
             Query records with these keywords (exact match)
         molecule_id
             Query records whose molecule (id) is in the given list
+        owner_user
+            Query records owned by a user in the given list
         creator_user
-            Query records created by a user in the given list
+            Query records whose creator is in the given list (usernames or IDs). The creator
+            is currently always the same as the owner
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -1962,6 +1975,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
             "creator_user": make_list(creator_user),
             "limit": limit,
         }
@@ -2140,6 +2154,7 @@ class PortalClient(PortalClientBase):
         qc_basis: str | Iterable[str | None] | None = None,
         initial_molecule_id: int | Iterable[int] | None = None,
         final_molecule_id: int | Iterable[int] | None = None,
+        owner_user: int | str | Iterable[int | str] | None = None,
         creator_user: int | str | Iterable[int | str] | None = None,
         limit: int | None = None,
         include: Iterable[str] | None = None,
@@ -2187,8 +2202,11 @@ class PortalClient(PortalClientBase):
             Query records whose initial molecule (id) is in the given list
         final_molecule_id
             Query records whose final molecule (id) is in the given list
+        owner_user
+            Query records owned by a user in the given list
         creator_user
-            Query records created by a user in the given list
+            Query records whose creator is in the given list (usernames or IDs). The creator
+            is currently always the same as the owner
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -2219,6 +2237,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
             "creator_user": make_list(creator_user),
             "limit": limit,
         }
@@ -2387,6 +2406,7 @@ class PortalClient(PortalClientBase):
         qc_method: str | Iterable[str] | None = None,
         qc_basis: str | Iterable[str] | None = None,
         initial_molecule_id: int | Iterable[int] | None = None,
+        owner_user: int | str | Iterable[int | str] | None = None,
         creator_user: int | str | Iterable[int | str] | None = None,
         limit: int | None = None,
         include: Iterable[str] | None = None,
@@ -2434,8 +2454,11 @@ class PortalClient(PortalClientBase):
             Query records whose basis is in the given list
         initial_molecule_id
             Query records whose initial molecule (id) is in the given list
+        owner_user
+            Query records owned by a user in the given list
         creator_user
-            Query records created by a user in the given list
+            Query records whose creator is in the given list (usernames or IDs). The creator
+            is currently always the same as the owner
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -2466,6 +2489,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
             "creator_user": make_list(creator_user),
             "limit": limit,
         }
@@ -2634,6 +2658,7 @@ class PortalClient(PortalClientBase):
         qc_method: str | Iterable[str] | None = None,
         qc_basis: str | Iterable[str | None] | None = None,
         initial_molecule_id: int | Iterable[int] | None = None,
+        owner_user: int | str | Iterable[int | str] | None = None,
         creator_user: int | str | Iterable[int | str] | None = None,
         limit: int | None = None,
         include: Iterable[str] | None = None,
@@ -2681,8 +2706,11 @@ class PortalClient(PortalClientBase):
             Query records whose basis is in the given list
         initial_molecule_id
             Query records whose initial molecule (id) is in the given list
+        owner_user
+            Query records owned by a user in the given list
         creator_user
-            Query records created by a user in the given list
+            Query records whose creator is in the given list (usernames or IDs). The creator
+            is currently always the same as the owner
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -2713,6 +2741,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
             "creator_user": make_list(creator_user),
             "limit": limit,
         }
@@ -2889,6 +2918,7 @@ class PortalClient(PortalClientBase):
         qc_method: str | Iterable[str] | None = None,
         qc_basis: str | Iterable[str] | None = None,
         molecule_id: int | Iterable[int] | None = None,
+        owner_user: int | str | Iterable[int | str] | None = None,
         creator_user: int | str | Iterable[int | str] | None = None,
         limit: int | None = None,
         include: Iterable[str] | None = None,
@@ -2936,8 +2966,11 @@ class PortalClient(PortalClientBase):
             Query records whose basis is in the given list
         molecule_id
             Query reactions that contain a molecule (id) is in the given list
+        owner_user
+            Query records owned by a user in the given list
         creator_user
-            Query records created by a user in the given list
+            Query records whose creator is in the given list (usernames or IDs). The creator
+            is currently always the same as the owner
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -2968,6 +3001,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
             "creator_user": make_list(creator_user),
             "limit": limit,
         }
@@ -3139,6 +3173,7 @@ class PortalClient(PortalClientBase):
         qc_method: str | Iterable[str] | None = None,
         qc_basis: str | Iterable[str] | None = None,
         initial_molecule_id: int | Iterable[int] | None = None,
+        owner_user: int | str | Iterable[int | str] | None = None,
         creator_user: int | str | Iterable[int | str] | None = None,
         limit: int | None = None,
         include: Iterable[str] | None = None,
@@ -3184,8 +3219,11 @@ class PortalClient(PortalClientBase):
             Query records whose qc basis is in the given list
         initial_molecule_id
             Query manybody calculations that contain an initial molecule (id) is in the given list
+        owner_user
+            Query records owned by a user in the given list
         creator_user
-            Query records created by a user in the given list
+            Query records whose creator is in the given list (usernames or IDs). The creator
+            is currently always the same as the owner
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -3215,6 +3253,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
             "creator_user": make_list(creator_user),
             "limit": limit,
         }
@@ -3391,6 +3430,7 @@ class PortalClient(PortalClientBase):
         qc_method: str | Iterable[str] | None = None,
         qc_basis: str | Iterable[str] | None = None,
         molecule_id: int | Iterable[int] | None = None,
+        owner_user: int | str | Iterable[int | str] | None = None,
         creator_user: int | str | Iterable[int | str] | None = None,
         limit: int | None = None,
         include: Iterable[str] | None = None,
@@ -3436,8 +3476,11 @@ class PortalClient(PortalClientBase):
             Query records whose basis is in the given list
         molecule_id
             Query records whose initial chains contain a molecule (id) that is in the given list
+        owner_user
+            Query records owned by a user in the given list
         creator_user
-            Query records created by a user in the given list
+            Query records whose creator is in the given list (usernames or IDs). The creator
+            is currently always the same as the owner
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -3467,6 +3510,7 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
             "creator_user": make_list(creator_user),
             "limit": limit,
         }
@@ -4175,9 +4219,7 @@ class PortalClient(PortalClientBase):
         body = APITokenCreateBody(name=name, expires_at=expires_at, scope=scope)
 
         if username_or_id is None:
-            return self.make_request(
-                "post", "api/v1/me/tokens", NewAPIToken, body_model=APITokenCreateBody, body=body
-            )
+            return self.make_request("post", "api/v1/me/tokens", NewAPIToken, body_model=APITokenCreateBody, body=body)
 
         if not isinstance(username_or_id, int):
             is_valid_username(username_or_id)

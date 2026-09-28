@@ -427,7 +427,10 @@ class BaseRecord(BaseModel):
     created_on: datetime
     modified_on: datetime
 
-    creator_user: str | None
+    owner_user: str | None
+
+    # Not currently sent by the server - see BaseRecordORM.creator_user_id
+    creator_user: str | None = None
 
     ######################################################
     # Fields not always included when fetching the record
@@ -452,11 +455,15 @@ class BaseRecord(BaseModel):
     _cache_dirty: bool = PrivateAttr(False)
 
     def __init__(self, client=None, base_url_prefix: str | None = None, **kwargs):
-        # TODO - DEPRECATED - REMOVE EVENTUALLY
-        if "owner_user" in kwargs:
-            kwargs["creator_user"] = kwargs.pop("owner_user")
+        # TODO - DEPRECATED - remove eventually
         if "owner_group" in kwargs:
             del kwargs["owner_group"]
+
+        # Older data may have only one of these. They are currently always the same user
+        if "owner_user" not in kwargs and "creator_user" in kwargs:
+            kwargs["owner_user"] = kwargs["creator_user"]
+        if kwargs.get("creator_user") is None and "owner_user" in kwargs:
+            kwargs["creator_user"] = kwargs["owner_user"]
 
         BaseModel.__init__(self, **kwargs)
 
@@ -850,6 +857,10 @@ class RecordQueryFilters(QueryModelBase):
     created_after: datetime | None = None
     modified_before: datetime | None = None
     modified_after: datetime | None = None
+    # owner_user searches strictly by owner, creator_user strictly by creator (these currently
+    # always mirror each other). owner_user is omitted when unset so that older servers
+    # (which only know creator_user) still accept the query
+    owner_user: list[int | str] | None = Field(None, exclude_if=lambda v: v is None)
     creator_user: list[int | str] | None = None
 
     # TODO - DEPRECATED - remove at some point
@@ -857,8 +868,6 @@ class RecordQueryFilters(QueryModelBase):
     @classmethod
     def _rm_deprecated(cls, values):
         if isinstance(values, dict):
-            if "owner_user" in values:
-                values["creator_user"] = values.pop("owner_user")
             values.pop("owner_group", None)
         return values
 

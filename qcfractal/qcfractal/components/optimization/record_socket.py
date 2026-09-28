@@ -124,7 +124,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
 
         # Insert the trajectory
         # Get the ID of the parent_record
-        stmt = select(OptimizationRecordORM.creator_user_id).where(OptimizationRecordORM.id == record_id)
+        stmt = select(OptimizationRecordORM.owner_user_id).where(OptimizationRecordORM.id == record_id)
         creator_user_id = session.execute(stmt).scalar_one()
 
         traj_ids = self.root_socket.records.insert_full_schema_v1(session, result.trajectory, creator_user_id)
@@ -517,6 +517,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
                     specification_id=opt_spec_id,
                     initial_molecule_id=mol_data["id"],
                     status=RecordStatusEnum.waiting,
+                    owner_user_id=creator_user_id,
                     creator_user_id=creator_user_id,
                 )
 

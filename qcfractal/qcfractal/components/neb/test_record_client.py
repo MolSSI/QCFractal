@@ -85,7 +85,7 @@ def test_neb_client_add_get(submitter_client: PortalClient, spec: NEBSpecificati
         assert r.service.compute_tag == "tag1"
         assert r.service.compute_priority == PriorityEnum.low
 
-        assert r.creator_user == submitter_client.username
+        assert r.owner_user == submitter_client.username
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1

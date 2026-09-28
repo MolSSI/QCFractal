@@ -434,6 +434,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                     specification_id=qc_spec_id,
                     molecule_id=mid,
                     status=RecordStatusEnum.waiting,
+                    owner_user_id=creator_user_id,
                     creator_user_id=creator_user_id,
                 )
 

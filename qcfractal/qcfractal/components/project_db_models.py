@@ -17,7 +17,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from qcfractal.components.auth.db_models import UserIDMapSubquery, UserORM
+from qcfractal.components.auth.db_models import GroupORM, UserIDMapSubquery, UserORM
 from qcfractal.components.external_files.db_models import ExternalFileORM
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.db_socket import BaseORM
@@ -25,6 +25,17 @@ from qcportal.project_models import ProjectAttachmentType
 from qcfractal.db_socket.db_views import view
 from qcfractal.components.dataset_db_views import DatasetDirectRecordsView
 from qcfractal.components.record_db_views import RecordChildrenView
+
+
+class ProjectGroupORM(BaseORM):
+    """
+    Table for storing which groups own a project
+    """
+
+    __tablename__ = "project_group"
+
+    project_id = Column(Integer, ForeignKey("project.id", ondelete="cascade"), primary_key=True)
+    group_id = Column(Integer, ForeignKey(GroupORM.id), primary_key=True)
 
 
 class ProjectORM(BaseORM):
@@ -59,6 +70,20 @@ class ProjectORM(BaseORM):
         viewonly=True,
     )
 
+    # Who originally created this project. Unlike owner_user, this is immutable - set once at
+    # insert time and never changed afterward. Not part of the qcportal wire model output yet.
+    creator_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
+
+    creator_user = relationship(
+        UserIDMapSubquery,
+        foreign_keys=[creator_user_id],
+        primaryjoin="ProjectORM.creator_user_id == UserIDMapSubquery.id",
+        lazy="selectin",
+        viewonly=True,
+    )
+
+    owner_groups = relationship(GroupORM, secondary=ProjectGroupORM.__tablename__)
+
     attachments = relationship(
         "ProjectAttachmentORM",
         cascade="all, delete-orphan",
@@ -68,14 +93,17 @@ class ProjectORM(BaseORM):
     __table_args__ = (
         UniqueConstraint("lname", name="ux_project_project_type_lname"),
         Index("ix_project_owner_user_id", "owner_user_id"),
+        Index("ix_project_creator_user_id", "creator_user_id"),
     )
 
-    _qcportal_model_excludes = ["lname", "owner_user_id"]
+    # creator_user_id/creator_user not part of the wire model yet - see comment on the column
+    _qcportal_model_excludes = ["lname", "owner_user_id", "creator_user_id", "creator_user"]
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
 
         d["owner_user"] = self.owner_user.username if self.owner_user is not None else None
+        d["owner_groups"] = [x.groupname for x in self.owner_groups]
 
         return d
 

@@ -205,7 +205,20 @@ class BaseRecordORM(BaseORM):
     created_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
     modified_on = Column(TIMESTAMP(timezone=True), default=now_at_utc, nullable=False)
 
-    # Who created this record
+    # Who owns this record
+    owner_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
+
+    owner_user = relationship(
+        UserIDMapSubquery,
+        foreign_keys=[owner_user_id],
+        primaryjoin="BaseRecordORM.owner_user_id == UserIDMapSubquery.id",
+        lazy="selectin",
+        viewonly=True,
+    )
+
+    # Who originally created this record. Unlike owner_user, this is immutable - set once at
+    # insert time and never changed afterward (owner_user may change later, e.g. via an
+    # ownership-transfer feature). Not part of the qcportal wire model output yet.
     creator_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
 
     creator_user = relationship(
@@ -258,6 +271,7 @@ class BaseRecordORM(BaseORM):
         Index("ix_base_record_status", "status"),
         Index("ix_base_record_record_type", "record_type"),
         Index("ix_base_record_manager_name", "manager_name"),
+        Index("ix_base_record_owner_user_id", "owner_user_id"),
         Index("ix_base_record_creator_user_id", "creator_user_id"),
         Index("ix_base_record_created_on", "created_on"),
         Index("ix_base_record_modified_on", "modified_on"),
@@ -267,14 +281,13 @@ class BaseRecordORM(BaseORM):
 
     # strip user/group ids
     # info_backup is also never part of models
-    _qcportal_model_excludes = ["creator_user_id", "info_backup"]
+    # creator_user_id/creator_user not part of the wire model yet - see comment on the column
+    _qcportal_model_excludes = ["owner_user_id", "creator_user_id", "creator_user", "info_backup"]
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
 
-        # TODO - DEPRECATED - REMOVE EVENTUALLY
-        d["owner_user"] = self.creator_user.username if self.creator_user is not None else None
-        d.pop("creator_user", None)
+        d["owner_user"] = self.owner_user.username if self.owner_user is not None else None
         d["owner_group"] = None
 
         return d

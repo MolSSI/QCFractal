@@ -86,7 +86,7 @@ def test_optimization_client_add_get(submitter_client: PortalClient, spec: Optim
         assert r.task.compute_tag == "tag1"
         assert r.task.compute_priority == PriorityEnum.low
 
-        assert r.creator_user == submitter_client.username
+        assert r.owner_user == submitter_client.username
 
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1

@@ -140,7 +140,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                 opt_spec_id,
                 service_orm.compute_tag,
                 service_orm.compute_priority,
-                rxn_orm.creator_user_id,
+                rxn_orm.owner_user_id,
                 service_orm.find_existing,
                 session=session,
             )
@@ -175,7 +175,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                 qc_spec_id,
                 service_orm.compute_tag,
                 service_orm.compute_priority,
-                rxn_orm.creator_user_id,
+                rxn_orm.owner_user_id,
                 service_orm.find_existing,
                 session=session,
             )
@@ -663,6 +663,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                             specification_id=rxn_spec_id,
                             components=component_orm,
                             status=RecordStatusEnum.waiting,
+                            owner_user_id=creator_user_id,
                             creator_user_id=creator_user_id,
                         )
 
@@ -691,6 +692,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                         specification_id=rxn_spec_id,
                         components=component_orm,
                         status=RecordStatusEnum.waiting,
+                        owner_user_id=creator_user_id,
                         creator_user_id=creator_user_id,
                     )
 

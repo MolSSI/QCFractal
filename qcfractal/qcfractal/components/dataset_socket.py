@@ -236,7 +236,7 @@ class DatasetSocket:
                 UserORM.username,
             )
             stmt = stmt.join(DatasetRecordCountORM, DatasetRecordCountORM.dataset_id == BaseDatasetORM.id, isouter=True)
-            stmt = stmt.join(UserORM, UserORM.id == BaseDatasetORM.creator_user_id, isouter=True)
+            stmt = stmt.join(UserORM, UserORM.id == BaseDatasetORM.owner_user_id, isouter=True)
             stmt = stmt.order_by(BaseDatasetORM.id.asc())
             r = session.execute(stmt).all()
 
@@ -249,8 +249,8 @@ class DatasetSocket:
                     "tags": x[4],
                     "description": x[5],
                     "record_count": x[6],
-                    "creator_user": x[7],
-                    "owner_user": x[7],  # Same as creator_user for now
+                    "owner_user": x[7],
+                    "creator_user": x[7],  # Same as owner_user for now
                 }
                 for x in r
             ]
