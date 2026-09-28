@@ -21,6 +21,7 @@ from qcfractal.components.torsiondrive.testing_helpers import submit_procedure_d
 from qcportal import PortalRequestError
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.serialization import deserialize
 from qcportal.utils import now_at_utc
 
 
@@ -314,10 +315,60 @@ def test_record_client_query_owner(secure_snowflake: QCATestingSnowflake):
     _, ids_3 = admin_client.add_singlepoints(m, "prog3", "energy", "b3lyp", "sto-3g", {})
     _, ids_4 = admin_client.add_singlepoints(m, "prog4", "energy", "b3lyp", "sto-3g", {})
 
-    query_res = admin_client.query_records(creator_user="submit_user")
+    query_res = admin_client.query_records(owner_user="submit_user")
     query_res_l = list(query_res)
     assert len(query_res_l) == 2
 
-    query_res = admin_client.query_records(creator_user=[submit_uid])
+    query_res = admin_client.query_records(owner_user=[submit_uid])
     query_res_l = list(query_res)
     assert len(query_res_l) == 2
+
+    # creator_user searches strictly by creator, which currently always matches the owner
+    query_res = admin_client.query_records(creator_user="submit_user")
+    assert sorted(r.id for r in query_res) == sorted(ids_1 + ids_2)
+    query_res = admin_client.query_singlepoints(creator_user=[submit_uid])
+    assert sorted(r.id for r in query_res) == sorted(ids_1 + ids_2)
+
+    # Specifying both applies both filters
+    query_res = admin_client.query_records(owner_user="submit_user", creator_user=[submit_uid])
+    assert sorted(r.id for r in query_res) == sorted(ids_1 + ids_2)
+    query_res = admin_client.query_records(owner_user="submit_user", creator_user="admin_user")
+    assert list(query_res) == []
+
+    # Older clients send only creator_user in the query body
+    rec_ids = admin_client.make_request(
+        "post", "api/v1/records/query", list[int], body={"creator_user": ["submit_user"]}
+    )
+    assert sorted(rec_ids) == sorted(ids_1 + ids_2)
+
+
+def test_record_client_creator_user(secure_snowflake: QCATestingSnowflake):
+    storage_socket = secure_snowflake.get_storage_socket()
+    submit_client = secure_snowflake.user_client("submit_user")
+
+    m = Molecule(symbols=["h"], geometry=[0, 0, 0])
+    _, ids = submit_client.add_singlepoints(m, "prog1", "energy", "b3lyp", "sto-3g", {})
+    record_id = ids[0]
+
+    # creator_user_id is set (immutably) at creation time, mirroring owner_user_id, but is
+    # not part of the REST wire format (yet - it's a placeholder for a future API version)
+    with storage_socket.session_scope() as session:
+        rec_orm = session.get(BaseRecordORM, record_id)
+        assert rec_orm.creator_user_id is not None
+        assert rec_orm.creator_user_id == rec_orm.owner_user_id
+        assert rec_orm.creator_user.username == "submit_user"
+
+    r = submit_client._request("get", f"api/v1/records/{record_id}")
+    raw_rec = deserialize(r.content, r.headers["Content-Type"], dict)
+    assert "creator_user" not in raw_rec
+
+    # The client model fills creator_user in from owner_user
+    rec = submit_client.get_records(record_id)
+    assert rec.owner_user == "submit_user"
+    assert rec.creator_user == "submit_user"
+
+    # Modifying the record afterward must not touch creator_user_id
+    submit_client.modify_records(record_id, new_compute_tag="new_tag")
+    with storage_socket.session_scope() as session:
+        rec_orm = session.get(BaseRecordORM, record_id)
+        assert rec_orm.creator_user_id == rec_orm.owner_user_id

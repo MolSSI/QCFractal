@@ -335,8 +335,8 @@ def test_optimization_socket_insert_full_schema_v1(secure_snowflake: QCATestingS
             rec_1 = session.get(OptimizationRecordORM, ins_id_1)
             rec_2 = session.get(OptimizationRecordORM, ins_id_2)
 
-            assert rec_1.creator_user_id == user_id
-            assert rec_2.creator_user_id == user_id
+            assert rec_1.owner_user_id == user_id
+            assert rec_2.owner_user_id == user_id
 
             _compare_record_with_schema(rec_1, plain_schema)
             _compare_record_with_schema(rec_2, plain_schema)
@@ -368,6 +368,6 @@ def test_optimization_socket_insert_full_qcportal_record(secure_snowflake: QCATe
 
         compare_optimization_records(rec_1, initial_record)
 
-        assert rec_1.creator_user == "submit_user"
+        assert rec_1.owner_user == "submit_user"
         for sp in rec_1.trajectory:
-            assert sp.creator_user == "submit_user"
+            assert sp.owner_user == "submit_user"

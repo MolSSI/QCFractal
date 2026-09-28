@@ -91,7 +91,7 @@ def add_project_v1(body_data: ProjectAddBody) -> int:
         default_compute_tag=body_data.default_compute_tag,
         default_compute_priority=body_data.default_compute_priority,
         extras=body_data.extras,
-        owner_user=g.username,
+        creator_user=g.username,
         existing_ok=body_data.existing_ok,
     )
 

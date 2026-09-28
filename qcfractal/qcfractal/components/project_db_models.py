@@ -59,6 +59,18 @@ class ProjectORM(BaseORM):
         viewonly=True,
     )
 
+    # Who originally created this project. Unlike owner_user, this is immutable - set once at
+    # insert time and never changed afterward. Not part of the qcportal wire model output yet.
+    creator_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
+
+    creator_user = relationship(
+        UserIDMapSubquery,
+        foreign_keys=[creator_user_id],
+        primaryjoin="ProjectORM.creator_user_id == UserIDMapSubquery.id",
+        lazy="selectin",
+        viewonly=True,
+    )
+
     attachments = relationship(
         "ProjectAttachmentORM",
         cascade="all, delete-orphan",
@@ -68,9 +80,11 @@ class ProjectORM(BaseORM):
     __table_args__ = (
         UniqueConstraint("lname", name="ux_project_project_type_lname"),
         Index("ix_project_owner_user_id", "owner_user_id"),
+        Index("ix_project_creator_user_id", "creator_user_id"),
     )
 
-    _qcportal_model_excludes = ["lname", "owner_user_id"]
+    # creator_user_id/creator_user not part of the wire model yet - see comment on the column
+    _qcportal_model_excludes = ["lname", "owner_user_id", "creator_user_id", "creator_user"]
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)

@@ -223,10 +223,10 @@ def test_reaction_socket_insert_full_qcportal_record(secure_snowflake: QCATestin
         rec_1.fetch_children(include=["**"], force_fetch=True)
         compare_reaction_records(rec_1, initial_record)
 
-        assert rec_1.creator_user == "submit_user"
+        assert rec_1.owner_user == "submit_user"
 
         for c in rec_1.components:
             if c.singlepoint_record is not None:
-                assert c.singlepoint_record.creator_user == "submit_user"
+                assert c.singlepoint_record.owner_user == "submit_user"
             if c.optimization_record is not None:
-                assert c.optimization_record.creator_user == "submit_user"
+                assert c.optimization_record.owner_user == "submit_user"

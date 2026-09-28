@@ -35,7 +35,7 @@ def test_external_file_socket_delete(storage_socket: SQLAlchemySocket):
         default_compute_tag="test_tag",
         default_compute_priority=PriorityEnum.low,
         extras={},
-        owner_user=None,
+        creator_user=None,
         existing_ok=False,
     )
 

@@ -285,7 +285,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 OptimizationSpecification(**opt_spec2),
                 service_orm.compute_tag,
                 service_orm.compute_priority,
-                td_orm.creator_user_id,
+                td_orm.owner_user_id,
                 service_orm.find_existing,
                 session=session,
             )
@@ -664,6 +664,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                             is_service=as_service,
                             specification_id=td_spec_id,
                             status=RecordStatusEnum.waiting,
+                            owner_user_id=creator_user_id,
                             creator_user_id=creator_user_id,
                         )
 
@@ -692,6 +693,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                         is_service=as_service,
                         specification_id=td_spec_id,
                         status=RecordStatusEnum.waiting,
+                        owner_user_id=creator_user_id,
                         creator_user_id=creator_user_id,
                     )
 

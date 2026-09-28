@@ -451,6 +451,7 @@ class ServiceSubtaskRecordSocket(BaseRecordSocket):
                     function_kwargs=kw,
                     required_programs=required_programs,
                     status=RecordStatusEnum.waiting,
+                    owner_user_id=creator_user_id,
                     creator_user_id=creator_user_id,
                 )
 

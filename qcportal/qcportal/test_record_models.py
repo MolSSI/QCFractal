@@ -11,7 +11,7 @@ from qcfractal.components.singlepoint.testing_helpers import (
 )
 from qcfractal.components.torsiondrive.testing_helpers import submit_procedure_data as submit_td_procedure_data
 from qcportal.compression import decompress
-from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.record_models import RecordStatusEnum, PriorityEnum, RecordQueryFilters, record_from_dict
 from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
@@ -153,3 +153,49 @@ def test_base_record_model_service(snowflake: QCATestingSnowflake, includes: Opt
     assert record.service.compute_priority == PriorityEnum.low
 
     assert record.task is None
+
+
+def test_base_record_model_owner_creator_compat(snowflake: QCATestingSnowflake):
+    storage_socket = snowflake.get_storage_socket()
+    activated_manager_name, _ = snowflake.activate_manager()
+    rec_id = run_sp_procedure_data(storage_socket, activated_manager_name, "sp_psi4_h2_b3lyp_nativefiles")
+
+    rec_dict = snowflake.client().get_records(rec_id).model_dump()
+    del rec_dict["owner_user"]
+    del rec_dict["creator_user"]
+
+    # Older saved data only has creator_user
+    rec = record_from_dict({**rec_dict, "creator_user": "user_a"})
+    assert rec.owner_user == "user_a"
+    assert rec.creator_user == "user_a"
+
+    rec = record_from_dict({**rec_dict, "owner_user": "user_a"})
+    assert rec.owner_user == "user_a"
+    assert rec.creator_user == "user_a"
+
+    rec = record_from_dict({**rec_dict, "owner_user": "user_a", "creator_user": "user_b"})
+    assert rec.owner_user == "user_a"
+    assert rec.creator_user == "user_b"
+
+    # Round trip
+    rec2 = record_from_dict(rec.model_dump())
+    assert rec2.owner_user == "user_a"
+    assert rec2.creator_user == "user_b"
+
+
+def test_record_query_filters_owner_creator():
+    import pydantic_core
+
+    # owner_user and creator_user are strict, independent filters
+    f = RecordQueryFilters(creator_user=["user_a"])
+    assert f.creator_user == ["user_a"]
+    assert f.owner_user is None
+
+    f = RecordQueryFilters(owner_user=["user_a"], creator_user=["user_b"])
+    assert f.owner_user == ["user_a"]
+    assert f.creator_user == ["user_b"]
+
+    # owner_user is omitted from the serialized body when unset, so older servers
+    # (which only know creator_user) still accept queries from newer clients
+    assert "owner_user" not in pydantic_core.to_jsonable_python(RecordQueryFilters(creator_user=["user_a"]))
+    assert pydantic_core.to_jsonable_python(RecordQueryFilters(owner_user=["user_a"]))["owner_user"] == ["user_a"]

@@ -496,7 +496,7 @@ def clone_dataset_v1(body_data: DatasetCloneBody) -> int:
     with storage_socket.session_scope(True) as session:
         ds_type = storage_socket.datasets.lookup_type(body_data.source_dataset_id, session=session)
         ds_socket = storage_socket.datasets.get_socket(ds_type)
-        return ds_socket.clone(body_data.source_dataset_id, body_data.new_dataset_name, session=session)
+        return ds_socket.clone(body_data.source_dataset_id, body_data.new_dataset_name, g.username, session=session)
 
 
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/copy_from", methods=["POST"])

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 
 import pytest
 
+from qcfractal.components.dataset_db_models import BaseDatasetORM
 from qcportal.record_models import PriorityEnum
 
 if TYPE_CHECKING:
@@ -47,6 +48,15 @@ def test_dataset_socket_submit_defaults(
     assert ds["default_tag"] == default_tag.lower()
     assert ds["default_priority"] == default_priority
     assert ds["owner_user"] == default_user
+
+    # creator_user is not part of the wire model output (yet)
+    assert "creator_user" not in ds
+
+    # but creator_user_id is set at the ORM level, immutably mirroring owner_user_id
+    with storage_socket.session_scope() as session:
+        ds_orm = session.get(BaseDatasetORM, ds_id)
+        assert ds_orm.creator_user_id == default_user_id
+        assert ds_orm.creator_user_id == ds_orm.owner_user_id
 
     tag, priority = storage_socket.datasets.singlepoint.get_submit_defaults(ds_id)
     assert tag == default_tag.lower()
@@ -105,12 +115,16 @@ def test_dataset_socket_clone_creator(secure_snowflake: QCATestingSnowflake, cre
         default_compute_tag="*",
         default_compute_priority=PriorityEnum.normal,
         extras={},
-        creator_user=creator_user,
+        creator_user="submit_user",
         existing_ok=False,
     )
 
-    new_ds_id = storage_socket.datasets.singlepoint.clone(ds_id, "Cloned SP Dataset")
+    new_ds_id = storage_socket.datasets.singlepoint.clone(ds_id, "Cloned SP Dataset", creator_user)
     assert new_ds_id != ds_id
 
+    # The clone is created (and owned) by the user doing the cloning, not the source's creator
     ds = storage_socket.datasets.get(new_ds_id)
     assert ds["owner_user"] == creator_user
+
+    source_ds = storage_socket.datasets.get(ds_id)
+    assert source_ds["owner_user"] == "submit_user"

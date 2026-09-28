@@ -4,10 +4,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcfractal.components.dataset_db_models import BaseDatasetORM
 from qcfractal.components.singlepoint.testing_helpers import load_procedure_data, run_procedure_data
 from qcportal import PortalRequestError
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.serialization import deserialize
 from qcportal.singlepoint import SinglepointDataset
 
 if TYPE_CHECKING:
@@ -43,7 +45,20 @@ def test_dataset_client_add_get(submitter_client: PortalClient, dataset_type: st
     assert ds.default_compute_priority == PriorityEnum.low
     assert ds.extras == {"meta_key_1": "meta_value_1"}
 
+    assert ds.owner_user == submitter_client.username
+
+    # creator_user is not (yet) part of the wire format
+    r = submitter_client._request("get", f"api/v1/datasets/{ds.id}")
+    raw_ds = deserialize(r.content, r.headers["Content-Type"], dict)
+    assert "creator_user" not in raw_ds
+
+    # The client model fills creator_user in from owner_user
     assert ds.creator_user == submitter_client.username
+
+    # List summaries have always included creator_user
+    ds_list = submitter_client.list_datasets()
+    assert ds_list[0]["owner_user"] == submitter_client.username
+    assert ds_list[0]["creator_user"] == submitter_client.username
 
     # case insensitive
     ds2 = submitter_client.get_dataset(dataset_type, "test DATASET")
@@ -383,3 +398,20 @@ def test_dataset_client_copy_from_incompatible(snowflake_client: PortalClient):
 
     with pytest.raises(PortalRequestError, match="does not match destination type"):
         ds_2.copy_records_from(ds_1.id)
+
+
+def test_dataset_client_clone_owner(secure_snowflake: QCATestingSnowflake):
+    submit_client = secure_snowflake.user_client("submit_user")
+    admin_client = secure_snowflake.user_client("admin_user")
+
+    ds = submit_client.add_dataset("singlepoint", "Test dataset")
+    ds_clone = admin_client.clone_dataset(ds.id, "Cloned dataset")
+
+    # The user doing the cloning owns (and created) the clone
+    assert ds_clone.owner_user == "admin_user"
+
+    storage_socket = secure_snowflake.get_storage_socket()
+    with storage_socket.session_scope() as session:
+        clone_orm = session.get(BaseDatasetORM, ds_clone.id)
+        assert clone_orm.owner_user.username == "admin_user"
+        assert clone_orm.creator_user.username == "admin_user"

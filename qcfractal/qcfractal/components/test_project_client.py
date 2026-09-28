@@ -5,10 +5,12 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcarchivetesting.helpers import read_record_data
+from qcfractal.components.project_db_models import ProjectORM
 from qcfractal.components.singlepoint.testing_helpers import load_procedure_data, run_procedure_data
 from qcportal import PortalRequestError
 from qcportal.compare_records import compare_records
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, record_from_dict
+from qcportal.serialization import deserialize
 from qcportal.singlepoint import SinglepointInput
 
 if TYPE_CHECKING:
@@ -27,7 +29,7 @@ test_inp_1 = SinglepointInput(
 )
 
 
-def test_project_client_add_get(submitter_client: PortalClient):
+def test_project_client_add_get(submitter_client: PortalClient, secure_snowflake: QCATestingSnowflake):
     proj = submitter_client.add_project(
         "test project",
         "Test Description",
@@ -58,6 +60,21 @@ def test_project_client_add_get(submitter_client: PortalClient):
     assert plist[0]["tagline"] == proj.tagline
     assert plist[0]["tags"] == proj.tags
     assert plist[0]["owner_user"] == proj.owner_user
+    assert plist[0]["creator_user"] == proj.owner_user
+    assert proj.creator_user == proj.owner_user
+
+    # creator_user_id is set (immutably) at creation time, mirroring owner_user_id, but is
+    # not part of the REST wire format (yet - it's a placeholder for a future API version)
+    storage_socket = secure_snowflake.get_storage_socket()
+    with storage_socket.session_scope() as session:
+        proj_orm = session.get(ProjectORM, proj.id)
+        assert proj_orm.creator_user_id is not None
+        assert proj_orm.creator_user_id == proj_orm.owner_user_id
+        assert proj_orm.creator_user.username == submitter_client.username
+
+    r = submitter_client._request("get", f"api/v1/projects/{proj.id}")
+    raw_proj = deserialize(r.content, r.headers["Content-Type"], dict)
+    assert "creator_user" not in raw_proj
 
 
 def test_project_client_add_get_records_datasets(snowflake_client: PortalClient):
@@ -485,7 +502,7 @@ def test_project_client_import_records(secure_snowflake: QCATestingSnowflake):
 
         test_r = test_data[rm.name]
         compare_records(server_r, test_r)
-        assert server_r.creator_user == "submit_user"
+        assert server_r.owner_user == "submit_user"
 
 
 def test_project_client_query_records(snowflake_client: PortalClient):

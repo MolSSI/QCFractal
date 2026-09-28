@@ -55,7 +55,7 @@ class ProjectSocket:
         default_compute_tag: str,
         default_compute_priority: PriorityEnum,
         extras: Dict[str, Any],
-        owner_user: Optional[Union[int, str]],
+        creator_user: Optional[Union[int, str]],
         existing_ok: bool,
         *,
         session: Optional[Session] = None,
@@ -82,7 +82,7 @@ class ProjectSocket:
         )
 
         with self.root_socket.optional_session(session) as session:
-            owner_user_id = self.root_socket.users.get_optional_user_id(owner_user)
+            creator_user_id = self.root_socket.users.get_optional_user_id(creator_user)
 
             stmt = select(ProjectORM.id)
             stmt = stmt.where(ProjectORM.lname == name.lower())
@@ -94,7 +94,8 @@ class ProjectSocket:
                 else:
                     raise AlreadyExistsError(f"Project with name='{name}' already exists")
 
-            proj_orm.owner_user_id = owner_user_id
+            proj_orm.owner_user_id = creator_user_id
+            proj_orm.creator_user_id = creator_user_id
 
             session.add(proj_orm)
             session.commit()
@@ -253,8 +254,8 @@ class ProjectSocket:
                     "description": x[4],
                     "record_count": x[5],
                     "dataset_count": x[6],
-                    "creator_user": x[7],  # Same as owner_user for now
                     "owner_user": x[7],
+                    "creator_user": x[7],  # Same as owner_user for now
                 }
                 for x in r
             ]
