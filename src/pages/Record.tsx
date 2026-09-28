@@ -63,18 +63,18 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
           </Stack>
 
           {/* Record actions */}
-          <Box sx={{ mt: 1 }}>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
             <ResetRecordButton
               recordId={recordData.id}
               status={recordData.status}
             />
-          </Box>
-          <Box sx={{ mt: 1 }}>
             <RecordActionsMenu
               recordId={recordData.id}
+              recordType={recordData.record_type}
+              isService={recordData.is_service}
               status={recordData.status}
             />
-          </Box>
+          </Stack>
 
           {/* Description */}
           {recordData.description && (

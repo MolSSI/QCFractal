@@ -176,26 +176,32 @@ export type ServiceDependency = {
   extras: object;
 };
 
-export type RecordService = {
+// Note the asymmetry, the same one the dataset defaults have: the server
+// returns these as tag/priority, while the PATCH body takes compute_tag/
+// compute_priority. Newer servers send the compute_ spelling, so read both.
+type ComputeQueueFields = {
+  tag?: string;
+  priority?: number;
+  compute_tag?: string;
+  compute_priority?: number;
+};
+
+export type RecordService = ComputeQueueFields & {
   id: number;
   record_id: string;
 
-  compute_tag: string;
-  compute_priority: number;
   find_existing: boolean;
 
   service_state: object | null;
   dependencies: Array<ServiceDependency>;
 };
 
-export type RecordTask = {
+export type RecordTask = ComputeQueueFields & {
   id: number;
   record_id: string;
 
   function: string | null;
 
-  compute_tag: string;
-  compute_priority: number;
   required_program: string[];
 };
 

@@ -7,14 +7,15 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Divider,
   ListItemIcon,
   ListItemText,
   Menu,
   MenuItem,
-  Stack,
   Tooltip,
 } from "@mui/material";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import EditIcon from "@mui/icons-material/Edit";
 import BlockIcon from "@mui/icons-material/Block";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -24,6 +25,7 @@ import * as qcpTypes from "../../PortalTypes";
 import { usePortalClient } from "../../PortalClient.tsx";
 import { useAuth } from "../../Auth.tsx";
 import ErrorIndicator from "../ErrorIndicator.tsx";
+import { ModifyRecordDialog } from "./ModifyRecordDialog.tsx";
 
 type ActionKind = "cancel" | "invalidate" | "delete" | "revert";
 
@@ -143,11 +145,15 @@ const REVERT_UNAVAILABLE =
 
 export interface RecordActionsMenuProps {
   recordId: number;
+  recordType: string;
+  isService: boolean;
   status: qcpTypes.RecordStatus;
 }
 
 export const RecordActionsMenu: React.FC<RecordActionsMenuProps> = ({
   recordId,
+  recordType,
+  isService,
   status,
 }) => {
   const { makeRequest } = usePortalClient();
@@ -158,6 +164,7 @@ export const RecordActionsMenu: React.FC<RecordActionsMenuProps> = ({
   const [pendingAction, setPendingAction] = React.useState<ActionKind | null>(
     null,
   );
+  const [modifyOpen, setModifyOpen] = React.useState(false);
 
   const revert = REVERTIBLE[status];
 
@@ -253,6 +260,17 @@ export const RecordActionsMenu: React.FC<RecordActionsMenuProps> = ({
     };
   };
 
+  // Modify is not status-gated the way the state changes are - a comment can go
+  // on any record - but editing one that is hidden from every listing is not
+  // useful, so deleted records have to be restored first
+  const canModifyAttributes =
+    has_permission("records", "modify") && status !== "deleted";
+  const modifyTooltip = !has_permission("records", "modify")
+    ? "You do not have permission to modify records."
+    : status === "deleted"
+      ? "Undelete this record before changing its comments, tag, or priority."
+      : "Add a comment, or change the compute tag and priority";
+
   const canRevert = has_permission("records", "modify") && revert !== undefined;
   const revertTooltip = !has_permission("records", "modify")
     ? "You do not have permission to modify records."
@@ -282,38 +300,38 @@ export const RecordActionsMenu: React.FC<RecordActionsMenuProps> = ({
 
   return (
     <>
-      <Stack direction="row" spacing={1}>
-        <Button
-          variant="outlined"
-          size="small"
-          endIcon={<ArrowDropDownIcon />}
-          onClick={(e) => {
-            e.stopPropagation();
-            setAnchorEl(e.currentTarget);
-          }}
-        >
-          Actions
-        </Button>
-
-        <Tooltip title={revertTooltip}>
-          <span>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<UndoIcon />}
-              disabled={!canRevert}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleSelect("revert");
-              }}
-            >
-              Revert
-            </Button>
-          </span>
-        </Tooltip>
-      </Stack>
+      <Button
+        variant="outlined"
+        size="small"
+        endIcon={<ArrowDropDownIcon />}
+        onClick={(e) => {
+          e.stopPropagation();
+          setAnchorEl(e.currentTarget);
+        }}
+      >
+        Actions
+      </Button>
 
       <Menu anchorEl={anchorEl} open={anchorEl !== null} onClose={closeMenu}>
+        <Tooltip title={modifyTooltip} placement="right">
+          <span style={{ display: "block" }}>
+            <MenuItem
+              disabled={!canModifyAttributes}
+              onClick={() => {
+                closeMenu();
+                setModifyOpen(true);
+              }}
+            >
+              <ListItemIcon>
+                <EditIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Modify...</ListItemText>
+            </MenuItem>
+          </span>
+        </Tooltip>
+
+        <Divider />
+
         {(["cancel", "invalidate", "delete"] as const).map((kind) => {
           const { action, enabled, tooltip } = describe(kind);
           return (
@@ -339,7 +357,31 @@ export const RecordActionsMenu: React.FC<RecordActionsMenuProps> = ({
             </Tooltip>
           );
         })}
+
+        <Divider />
+
+        <Tooltip title={revertTooltip} placement="right">
+          <span style={{ display: "block" }}>
+            <MenuItem
+              disabled={!canRevert}
+              onClick={() => handleSelect("revert")}
+            >
+              <ListItemIcon>
+                <UndoIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Revert</ListItemText>
+            </MenuItem>
+          </span>
+        </Tooltip>
       </Menu>
+
+      <ModifyRecordDialog
+        recordId={recordId}
+        recordType={recordType}
+        isService={isService}
+        open={modifyOpen}
+        onClose={() => setModifyOpen(false)}
+      />
 
       <Dialog open={dialogCopy !== null} onClose={handleCloseDialog}>
         <DialogTitle>{dialogCopy?.title}</DialogTitle>
