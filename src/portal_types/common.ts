@@ -273,6 +273,29 @@ export type Session = {
   last_used: string;
 };
 
+export type APIToken = {
+  id: number;
+  user_id: number;
+  token_prefix: string;
+  name: string;
+  scope?: string;
+  created_at: string;
+  expires_at?: string | null;
+  last_used_at?: string | null;
+};
+
+export type APITokenCreateBody = {
+  name: string;
+  scope?: string;
+  expires_at?: string | null;
+};
+
+// The plaintext token is only ever present here, in the create response
+export type NewAPIToken = {
+  token: string;
+  info: APIToken;
+};
+
 export type UserPreferences = Record<string, any>;
 
 export type DatasetQueryModel = {

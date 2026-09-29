@@ -18,6 +18,7 @@ const ServerStats = lazy(() => import("./pages/ServerStats.tsx"));
 const Dataset = lazy(() => import("./pages/Dataset.tsx"));
 const DatasetList = lazy(() => import("./pages/DatasetList.tsx"));
 const ApiInfo = lazy(() => import("./pages/./APIInfo"));
+const ApiKeys = lazy(() => import("./pages/ApiKeys.tsx"));
 const UserProfile = lazy(() =>
   import("./pages/UserProfile.tsx").then((m) => ({ default: m.UserProfile })),
 );
@@ -68,6 +69,7 @@ function App() {
                           element={<ThemePlaygroundPage />}
                         />
                         <Route path="/me" element={<UserProfile />} />
+                        <Route path="/me/api_keys" element={<ApiKeys />} />
                         <Route path="/users" element={<UserList />} />
                         <Route
                           path="/users/:userName"
