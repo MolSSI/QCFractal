@@ -182,7 +182,9 @@ const CreateTokenDialog: React.FC<{
               />
               <TextField
                 label="Expiration"
-                value={expirationDays === null ? "never" : String(expirationDays)}
+                value={
+                  expirationDays === null ? "never" : String(expirationDays)
+                }
                 onChange={(e) =>
                   setExpirationDays(
                     e.target.value === "never" ? null : Number(e.target.value),
@@ -218,9 +220,7 @@ const CreateTokenDialog: React.FC<{
             <Button
               variant="contained"
               onClick={handleCreate}
-              disabled={
-                !trimmedName || !!nameError || createMutation.isPending
-              }
+              disabled={!trimmedName || !!nameError || createMutation.isPending}
             >
               {createMutation.isPending ? (
                 <CircularProgress size={16} />
@@ -279,9 +279,8 @@ const DeleteTokenDialog: React.FC<{
       <DialogTitle>Delete API key?</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          <strong>{token?.name}</strong> will stop working immediately.
-          Anything still using it will fail to authenticate. This cannot be
-          undone.
+          <strong>{token?.name}</strong> will stop working immediately. Anything
+          still using it will fail to authenticate. This cannot be undone.
         </DialogContentText>
         {deleteMutation.isError && (
           <Alert severity="error" sx={{ mt: 2 }}>
