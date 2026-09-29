@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcarchivetesting import wait_until
 from qcfractalcompute.compute_manager import ComputeManager
 from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
 from qcfractalcompute.testing_helpers import QCATestingComputeThread, populate_db
@@ -76,11 +77,18 @@ def test_manager_tags(snowflake: QCATestingSnowflake, tmp_path):
     compute = ComputeManager(compute_config)
     compute_thread = threading.Thread(target=compute.start)
     compute_thread.start()
-    time.sleep(2)
-    compute.stop()
-    compute_thread.join()
 
-    managers = storage_socket.managers.query(ManagerQueryFilters())
+    try:
+        # Starting up (parsl in particular) can take a while on a loaded machine
+        managers = wait_until(
+            lambda: storage_socket.managers.query(ManagerQueryFilters()),
+            timeout=60,
+            message="Manager never registered with the server",
+        )
+    finally:
+        compute.stop()
+        compute_thread.join()
+
     assert len(managers) == 1
     assert set(managers[0]["tags"]) == {"tag1", "tag2", "tag3", "tag4", "*"}
 
@@ -154,10 +162,11 @@ def test_manager_claim_inactive(snowflake: QCATestingSnowflake):
     storage_socket.managers.deactivate([manager_name])
 
     # Next update should kill the process
-    time.sleep(compute._compute._compute_config.update_frequency + 2)
-
-    # Should have killed the manager process
-    assert compute.is_alive() is False
+    wait_until(
+        lambda: not compute.is_alive(),
+        timeout=compute._compute._compute_config.update_frequency + 60,
+        message="Manager was not shut down after being deactivated",
+    )
 
 
 def test_manager_claim_return(snowflake: QCATestingSnowflake):
@@ -263,10 +272,12 @@ def test_manager_idle_shutdown_5(snowflake: QCATestingSnowflake):
     compute_thread = QCATestingComputeThread(snowflake._qcf_config, additional_manager_config=add_config)
     compute_thread.start(manual_updates=False)
 
+    # Submit the work straight away. Anything we do before this counts against max_idle_time,
+    # and the manager starts its idle timer the moment it starts up
+    all_id, _ = populate_db(storage_socket)
+
     time.sleep(2)
     assert compute_thread.is_alive()
-
-    all_id, _ = populate_db(storage_socket)
 
     # The manager must stay alive for as long as it has work to do. How long that takes is not
     # something we can predict (the mock executor runs the tasks one at a time, and CI machines

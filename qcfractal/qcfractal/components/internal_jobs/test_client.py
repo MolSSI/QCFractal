@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcarchivetesting import wait_until
 from qcfractal.components.internal_jobs.socket import InternalJobSocket
 from qcportal import PortalRequestError
 from qcportal.internal_jobs import InternalJobStatusEnum
@@ -38,6 +39,20 @@ setattr(InternalJobSocket, "client_dummy_job", dummmy_internal_job)
 setattr(InternalJobSocket, "client_dummy_job_error", dummmy_internal_job_error)
 
 
+def _wait_for_job(client, job_id: int, condition, timeout: float = 60.0):
+    """
+    Polls an internal job through the client until `condition` holds, returning the job
+    """
+
+    def _check():
+        job = client.get_internal_job(job_id)
+        return job if condition(job) else None
+
+    return wait_until(
+        _check, timeout=timeout, message=f"Job {job_id} did not reach the expected state within {timeout} seconds"
+    )
+
+
 def test_internal_jobs_client_error(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake_client = snowflake.client()
@@ -53,13 +68,15 @@ def test_internal_jobs_client_error(snowflake: QCATestingSnowflake):
     end_event = threading.Event()
     th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
-    time.sleep(3)
-    time_1 = now_at_utc()
-    end_event.set()
-    th.join()
 
-    job_1 = snowflake_client.get_internal_job(id_1)
-    assert job_1.status == InternalJobStatusEnum.error
+    try:
+        job_1 = _wait_for_job(snowflake_client, id_1, lambda j: j.status == InternalJobStatusEnum.error)
+    finally:
+        end_event.set()
+        th.join()
+
+    time_1 = now_at_utc()
+
     assert job_1.progress < 100
     assert time_0 < job_1.ended_date < time_1
     assert time_0 < job_1.last_updated < time_1
@@ -97,18 +114,13 @@ def test_internal_jobs_client_cancel_running(snowflake: QCATestingSnowflake):
     end_event = threading.Event()
     th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
-    time.sleep(4)
 
     try:
-        job_1 = snowflake_client.get_internal_job(id_1)
-        assert job_1.status == InternalJobStatusEnum.running
-        assert job_1.progress > 10
+        _wait_for_job(snowflake_client, id_1, lambda j: j.status == InternalJobStatusEnum.running and j.progress > 10)
 
         snowflake_client.cancel_internal_job(id_1)
-        time.sleep(6)
 
-        job_1 = snowflake_client.get_internal_job(id_1)
-        assert job_1.status == InternalJobStatusEnum.cancelled
+        job_1 = _wait_for_job(snowflake_client, id_1, lambda j: j.status == InternalJobStatusEnum.cancelled)
         assert job_1.progress < 70
         assert job_1.result is None
 
@@ -145,15 +157,20 @@ def test_internal_jobs_client_delete_running(snowflake: QCATestingSnowflake):
     end_event = threading.Event()
     th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
-    time.sleep(4)
 
     try:
-        job_1 = snowflake_client.get_internal_job(id_1)
-        assert job_1.status == InternalJobStatusEnum.running
-        assert job_1.progress > 10
+        _wait_for_job(snowflake_client, id_1, lambda j: j.status == InternalJobStatusEnum.running and j.progress > 10)
 
         snowflake_client.delete_internal_job(id_1)
-        time.sleep(6)
+
+        def _is_gone():
+            try:
+                snowflake_client.get_internal_job(id_1)
+            except PortalRequestError as ex:
+                return "not found" in str(ex)
+            return False
+
+        wait_until(_is_gone, message=f"Internal job {id_1} was not deleted")
 
         with pytest.raises(PortalRequestError, match="Internal job.*not found"):
             snowflake_client.get_internal_job(id_1)
@@ -186,16 +203,14 @@ def test_internal_jobs_client_query(secure_snowflake: QCATestingSnowflake):
     end_event = threading.Event()
     th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
-    time.sleep(4)
-    time_2 = now_at_utc()
 
     try:
-        job_1 = client.get_internal_job(id_1)
-        assert job_1.status == InternalJobStatusEnum.complete
-
+        _wait_for_job(client, id_1, lambda j: j.status == InternalJobStatusEnum.complete)
     finally:
         end_event.set()
         th.join()
+
+    time_2 = now_at_utc()
 
     # Add one that will be waiting
     id_2 = storage_socket.internal_jobs.add(
