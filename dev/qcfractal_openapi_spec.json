@@ -1,6 +1,129 @@
 {
   "components": {
     "schemas": {
+      "APIToken": {
+        "additionalProperties": false,
+        "description": "Metadata about a long-lived API token. This never contains the token itself. The plaintext token is shown exactly once, when the token is created (see NewAPIToken); afterwards only this metadata is available.",
+        "properties": {
+          "created_at": {
+            "description": "When the token was created",
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When the token expires, or null if it never expires",
+            "title": "Expires At"
+          },
+          "id": {
+            "description": "The id of the token (used to revoke it)",
+            "title": "Id",
+            "type": "integer"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Approximate time the token was last presented on a request, or null if never used",
+            "title": "Last Used At"
+          },
+          "name": {
+            "description": "The name given to the token when it was created (unique among the user's tokens)",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "scope": {
+            "default": "unlimited",
+            "description": "What the token is allowed to do (see APITokenScopeEnum). Deliberately a plain string here, like UserInfo.role, so an older client can still parse listings from a newer server that has scopes this client does not know about",
+            "title": "Scope",
+            "type": "string"
+          },
+          "token_prefix": {
+            "description": "The first few characters of the token, for identifying it in a listing",
+            "title": "Token Prefix",
+            "type": "string"
+          },
+          "user_id": {
+            "description": "The id of the user the token authenticates as",
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "token_prefix",
+          "name",
+          "created_at"
+        ],
+        "title": "APIToken",
+        "type": "object"
+      },
+      "APITokenCreateBody": {
+        "additionalProperties": false,
+        "description": "Options for creating a new API token",
+        "properties": {
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When the token should expire. Must be timezone-aware. Null requests a non-expiring token, subject to the server's api_token_default_lifetime and api_token_max_lifetime policy",
+            "title": "Expires At"
+          },
+          "name": {
+            "description": "A name to identify the token. Must be unique among the user's tokens.",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "scope": {
+            "default": "unlimited",
+            "description": "What the token should be allowed to do. Currently only \"unlimited\" (the owner's full role) exists. A plain (but validated) string, so the public schema never changes when new scopes are added; a scope this server does not recognize is rejected",
+            "title": "Scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "APITokenCreateBody",
+        "type": "object"
+      },
+      "APITokenScopeEnum": {
+        "description": "Named scopes for API tokens. A token's scope is what it is allowed to do, relative to its owner's role - the effective permission can only ever be a restriction of the role, never an extension. The \"everything\" scope is always the explicit named value \"unlimited\" - a null or empty scope must never be interpreted as unlimited access.",
+        "enum": [
+          "unlimited"
+        ],
+        "title": "APITokenScopeEnum",
+        "type": "string"
+      },
       "AtomicResult": {
         "$schema": "http://json-schema.org/draft-04/schema#",
         "additionalProperties": false,
@@ -2706,6 +2829,31 @@
         ],
         "title": "NativeFilesProtocolEnum",
         "type": "string"
+      },
+      "NewAPIToken": {
+        "additionalProperties": false,
+        "description": "A newly-created API token, including the plaintext token. The plaintext token is only available here, in the response to creating the token. It is not stored and cannot be retrieved later.",
+        "properties": {
+          "info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/APIToken"
+              }
+            ],
+            "description": "Metadata about the token"
+          },
+          "token": {
+            "description": "The plaintext token. Paste this into a client's Authorization header. Store it securely - it cannot be retrieved again",
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "info"
+        ],
+        "title": "NewAPIToken",
+        "type": "object"
       },
       "OptimizationDatasetNewEntry": {
         "additionalProperties": false,
@@ -11665,6 +11813,107 @@
         ]
       }
     },
+    "/api/v1/me/tokens": {
+      "get": {
+        "description": "Lists the logged-in user's own API tokens. Never includes the plaintext token or its hash.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/APIToken"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "list_my_api_tokens_v1",
+        "tags": [
+          "me"
+        ]
+      },
+      "post": {
+        "description": "Creates an API token for the logged-in user. The plaintext token is returned only in this response and cannot be retrieved again. Cannot be called while authenticated with an API token.",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/APITokenCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewAPIToken"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "create_my_api_token_v1",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/me/tokens/{token_id}": {
+      "delete": {
+        "description": "Revokes one of the logged-in user's own API tokens. Always constrained to the caller, so one user cannot revoke another's token via /me. Cannot be called while authenticated with an API token.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "null"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "delete_my_api_token_v1",
+        "tags": [
+          "me"
+        ]
+      }
+    },
     "/api/v1/molecules/bulkCreate": {
       "post": {
         "parameters": [],
@@ -19499,6 +19748,36 @@
         ]
       }
     },
+    "/api/v1/tokens": {
+      "get": {
+        "description": "Lists every API token on the server. Requires \"users\" read permission. Never includes the plaintext token or its hash.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/APIToken"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "list_all_api_tokens_v1",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/api/v1/users": {
       "get": {
         "parameters": [],
@@ -19922,6 +20201,133 @@
           }
         ],
         "summary": "list_user_sessions_v1",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{username_or_id}/tokens": {
+      "get": {
+        "description": "Lists the API tokens belonging to a user. Requires \"users\" read permission.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "username_or_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/APIToken"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "list_user_api_tokens_v1",
+        "tags": [
+          "users"
+        ]
+      },
+      "post": {
+        "description": "Creates an API token for another user. Requires \"users\" modify permission. The plaintext token is returned only in this response. Cannot be called while authenticated with an API token.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "username_or_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/APITokenCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewAPIToken"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "create_user_api_token_v1",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{username_or_id}/tokens/{token_id}": {
+      "delete": {
+        "description": "Revokes a single API token belonging to the named user. Requires \"users\" modify permission. The delete is always constrained to that user, so a token cannot be revoked by guessing its id. Cannot be called while authenticated with an API token.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "username_or_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "token_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "null"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "delete_user_api_token_v1",
         "tags": [
           "users"
         ]
