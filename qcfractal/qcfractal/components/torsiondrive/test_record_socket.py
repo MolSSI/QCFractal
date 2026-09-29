@@ -325,6 +325,13 @@ def test_torsiondrive_socket_run(
 
     assert len(rec.optimizations) == n_optimizations
 
+    # Child optimizations created by the service carry the owner/creator of the parent
+    assert rec.owner_user.username == "submit_user"
+    assert rec.creator_user.username == "submit_user"
+    for td_opt in rec.optimizations:
+        assert td_opt.optimization_record.owner_user_id == rec.owner_user_id
+        assert td_opt.optimization_record.creator_user_id == rec.creator_user_id
+
 
 def test_torsiondrive_socket_run_duplicate(
     storage_socket: SQLAlchemySocket,
