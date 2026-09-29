@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcarchivetesting import load_molecule_data
+from qcfractalcompute.compress import compress_result
 from qcfractal.components.optimization.record_db_models import OptimizationRecordORM
 from qcfractal.components.optimization.testing_helpers import (
     test_specs,
@@ -14,6 +15,7 @@ from qcfractal.components.optimization.testing_helpers import (
 )
 from qcfractal.components.testing_helpers import convert_to_plain_qcschema_result
 from qcportal.managers import ManagerName
+from qcportal.auth import UserInfo
 from qcportal.molecules import Molecule
 from qcportal.optimization import (
     compare_optimization_records,
@@ -292,6 +294,37 @@ def test_optimization_socket_run(
 
         plain_result = convert_to_plain_qcschema_result(result)
         _compare_record_with_schema(record, plain_result)
+
+
+def test_optimization_socket_run_trajectory_owner(
+    storage_socket: SQLAlchemySocket, session: Session, activated_manager_name: ManagerName
+):
+    storage_socket.users.add(UserInfo(username="submit_user", role="submit", enabled=True))
+
+    input_spec, molecule, result = load_procedure_data("opt_psi4_benzene")
+    meta, ids = storage_socket.records.optimization.add(
+        [molecule], input_spec, "*", PriorityEnum.normal, "submit_user", True
+    )
+    assert meta.success
+    record_id = ids[0]
+
+    manager_programs = storage_socket.managers.get([activated_manager_name.fullname])[0]["programs"]
+    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, manager_programs, ["*"], limit=10)
+    assert len(tasks) == 1
+    storage_socket.tasks.update_finished(
+        activated_manager_name.fullname, {tasks[0]["id"]: compress_result(result.model_dump())}
+    )
+
+    # Trajectory singlepoints created from the result carry the owner/creator of the parent
+    record = session.get(OptimizationRecordORM, record_id)
+    assert record.status == RecordStatusEnum.complete
+    assert record.owner_user.username == "submit_user"
+    assert record.creator_user.username == "submit_user"
+
+    assert len(record.trajectory) > 0
+    for traj in record.trajectory:
+        assert traj.singlepoint_record.owner_user_id == record.owner_user_id
+        assert traj.singlepoint_record.creator_user_id == record.creator_user_id
 
 
 def test_optimization_socket_insert_full_schema_v1(secure_snowflake: QCATestingSnowflake):
