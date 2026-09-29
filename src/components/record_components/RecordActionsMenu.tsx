@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  Alert,
   Box,
   Button,
   Dialog,
@@ -46,7 +47,15 @@ type ActionDefinition = {
   confirmLabel: string;
   pendingLabel: string;
   destructive?: boolean;
+  /** Which other records the change reaches, warned about in the dialog */
+  reach: string;
 };
+
+const REACHES_RELATIVES =
+  "This does not stop at this record. The change follows the links up to the " +
+  "records that own this one and back down through everything they own, step " +
+  "after step, so siblings and more distant relatives are affected too. Check " +
+  "Relationships first if you are not sure what is connected.";
 
 // Source statuses come from record_socket.py - see .claude/record-actions-api.md.
 // Sending an action from any other status is accepted with a 200 and quietly
@@ -61,9 +70,10 @@ const ACTIONS: Record<Exclude<ActionKind, "revert">, ActionDefinition> = {
       "Only records that are waiting, running, or errored can be cancelled.",
     available: "Take this record out of the compute queue without deleting it",
     consequence:
-      "Cancelling takes this record out of the compute queue so it will not run, " +
-      "and cancels every child record it owns. Any work currently in progress on a " +
-      "manager is discarded. You can undo this later with Revert.",
+      "Cancelling takes this record out of the compute queue so it will not run. " +
+      "Any work currently in progress on a manager is discarded. You can undo " +
+      "this later with Revert.",
+    reach: `${REACHES_RELATIVES} Of those, only the ones that are waiting, running, or errored are cancelled.`,
     confirmLabel: "Cancel record",
     pendingLabel: "Cancelling...",
   },
@@ -76,8 +86,13 @@ const ACTIONS: Record<Exclude<ActionKind, "revert">, ActionDefinition> = {
     available: "Mark this completed record as untrustworthy",
     consequence:
       "Invalidating marks this completed record as untrustworthy, so its results " +
-      "are treated as unusable wherever it appears. The computed data is kept and " +
-      "child records are left alone. You can undo this later with Revert.",
+      "are treated as unusable wherever it appears. The computed data is kept. " +
+      "You can undo this later with Revert.",
+    reach:
+      "This also invalidates the records that own this one, and the records " +
+      "that own those, all the way up - a result built on this one cannot be " +
+      "trusted either. Children and siblings are left alone, and only completed " +
+      "records are marked.",
     confirmLabel: "Invalidate",
     pendingLabel: "Invalidating...",
   },
@@ -96,10 +111,10 @@ const ACTIONS: Record<Exclude<ActionKind, "revert">, ActionDefinition> = {
     unavailable: "This record has already been deleted.",
     available: "Remove this record and its children from the server listings",
     consequence:
-      "Deleting removes this record, and every child record it owns, from dataset " +
-      "and project listings. This is a soft delete - the data stays on the server " +
-      "and you can undo it with Revert - but anything referencing the record will " +
-      "stop showing it.",
+      "Deleting removes this record from dataset and project listings. This is a " +
+      "soft delete - the data stays on the server and you can undo it with " +
+      "Revert - but anything referencing the record will stop showing it.",
+    reach: `${REACHES_RELATIVES} Every one of them that is not already deleted is deleted as well.`,
     confirmLabel: "Delete",
     pendingLabel: "Deleting...",
     destructive: true,
@@ -142,6 +157,12 @@ const REVERTIBLE: Partial<
 
 const REVERT_UNAVAILABLE =
   "There is no cancellation, invalidation, or deletion on this record to undo.";
+
+const REVERT_REACH =
+  "Undoing does not reach as far as the action it undoes: it goes down to this " +
+  "record's children, but never up to the records that own it. Relatives that " +
+  "were changed through a shared parent stay as they are, and have to be " +
+  "reverted from their own pages.";
 
 export interface RecordActionsMenuProps {
   recordId: number;
@@ -286,6 +307,8 @@ export const RecordActionsMenu: React.FC<RecordActionsMenuProps> = ({
         ? {
             title: `${revert?.verb ?? "Revert"} Record`,
             consequence: revert?.consequence ?? "",
+            reach: REVERT_REACH,
+            severity: "info" as const,
             confirmLabel: revert?.verb ?? "Revert",
             pendingLabel: "Reverting...",
             destructive: false,
@@ -293,6 +316,8 @@ export const RecordActionsMenu: React.FC<RecordActionsMenuProps> = ({
         : {
             title: `${ACTIONS[pendingAction].label} Record`,
             consequence: ACTIONS[pendingAction].consequence,
+            reach: ACTIONS[pendingAction].reach,
+            severity: "warning" as const,
             confirmLabel: ACTIONS[pendingAction].confirmLabel,
             pendingLabel: ACTIONS[pendingAction].pendingLabel,
             destructive: ACTIONS[pendingAction].destructive ?? false,
@@ -390,6 +415,11 @@ export const RecordActionsMenu: React.FC<RecordActionsMenuProps> = ({
             Record {recordId} is currently in the {status} status.{" "}
             {dialogCopy?.consequence}
           </DialogContentText>
+          {dialogCopy && (
+            <Alert severity={dialogCopy.severity} sx={{ mt: 2 }}>
+              {dialogCopy.reach}
+            </Alert>
+          )}
           {actionMutation.isError && (
             <Box sx={{ mt: 2 }}>
               <ErrorIndicator
