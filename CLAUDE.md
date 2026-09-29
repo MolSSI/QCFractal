@@ -26,7 +26,7 @@ VITE_QCFRACTAL_URI=http://localhost:7777
 
 ## Backend API Reference
 
-`@dev/qcfractal_openapi_spec.json` contains the full OpenAPI spec for the QCFractal backend. Use this to look up available endpoints, request/response schemas, and query parameters. This file is gitignored and local-only.
+`@dev/qcfractal_openapi_spec.json` contains the full OpenAPI spec for the QCFractal backend. Use this to look up available endpoints, request/response schemas, and query parameters. It is checked in, not local-only, so keep it updated when backend endpoints change.
 
 ## Architecture
 
