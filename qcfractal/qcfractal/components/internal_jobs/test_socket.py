@@ -46,6 +46,24 @@ setattr(InternalJobSocket, "dummy_job", dummy_internal_job)
 setattr(InternalJobSocket, "dummy_job_2", dummy_internal_job_2)
 
 
+def _wait_for_job(session, job_id: int, condition, timeout: float = 60.0) -> InternalJobORM:
+    """
+    Polls an internal job until `condition` holds, returning the (refreshed) ORM object
+
+    Raises an AssertionError if the condition is not met within `timeout` seconds
+    """
+
+    deadline = time.monotonic() + timeout
+    while True:
+        session.expire_all()
+        job = session.get(InternalJobORM, job_id)
+        if job is not None and condition(job):
+            return job
+
+        assert time.monotonic() < deadline, f"Job {job_id} did not reach the expected state within {timeout} seconds"
+        time.sleep(0.2)
+
+
 def test_internal_jobs_socket_add_unique(storage_socket: SQLAlchemySocket):
     id_1 = storage_socket.internal_jobs.add(
         "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 10}, None, unique_name=True
@@ -173,13 +191,20 @@ def test_internal_jobs_socket_runnerstop(storage_socket: SQLAlchemySocket, sessi
     end_event = threading.Event()
     th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
-    time.sleep(3)
 
-    # Cancel/close the job runner
-    end_event.set()
+    try:
+        # Wait until the dummy job is actually running and has made some progress. The runner
+        # may have other (periodic) jobs queued ahead of this one, so how long that takes is
+        # not predictable - especially on a loaded CI machine
+        _wait_for_job(session, id_1, lambda j: j.status == InternalJobStatusEnum.running and j.progress > 0)
+    finally:
+        # Cancel/close the job runner
+        end_event.set()
+
     th.join(20)
     assert not th.is_alive()
 
+    session.expire_all()
     job_1 = session.get(InternalJobORM, id_1)
     assert job_1.status == InternalJobStatusEnum.waiting
     assert job_1.progress == 0

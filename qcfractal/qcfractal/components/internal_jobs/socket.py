@@ -358,7 +358,13 @@ class InternalJobSocket:
 
             # Run the desired function
             # Raises an exception if cancelled
-            result = func(**job_orm.kwargs, **add_kwargs)
+            try:
+                result = func(**job_orm.kwargs, **add_kwargs)
+            finally:
+                # Stop the progress-updating thread before writing the final state of the job below.
+                # That thread writes to the same row through its own session, so leaving it running
+                # would race with (and silently overwrite) the fields we are about to set
+                job_progress.stop()
 
             job_orm.status = InternalJobStatusEnum.complete
             job_orm.progress = 100
@@ -640,7 +646,8 @@ class InternalJobSocket:
             job_progress = JobProgress(job_orm.id, runner_uuid, session_status, self._update_frequency, end_event)
             self._run_single(session_main, job_orm, logger, job_progress=job_progress)
 
-            # Stop the updating thread and cleanup
+            # Stop the updating thread and cleanup. Normally already stopped inside _run_single;
+            # this catches the paths that never got as far as calling the job function. Idempotent.
             job_progress.stop()
 
         session_main.close()
