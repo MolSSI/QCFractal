@@ -66,6 +66,7 @@ from .auth import (
     APIToken,
     NewAPIToken,
     APITokenCreateBody,
+    APITokenModifyBody,
     APITokenScopeEnum,
     is_valid_username,
     is_valid_password,
@@ -4183,6 +4184,44 @@ class PortalClient(PortalClientBase):
             is_valid_username(username_or_id)
         return self.make_request(
             "post", f"api/v1/users/{username_or_id}/tokens", NewAPIToken, body_model=APITokenCreateBody, body=body
+        )
+
+    def rename_api_token(self, token_id: int, name: str, username_or_id: int | str | None = None) -> APIToken:
+        """
+        Rename an API token
+
+        The name is the only property of a token that can be changed after it is created.
+
+        Parameters
+        ----------
+        token_id
+            The id of the token to rename
+        name
+            The new name for the token. Must be unique among the user's tokens.
+        username_or_id
+            The owner of the token. If None, renames one of the current user's own tokens.
+
+        Returns
+        -------
+        :
+            The updated token metadata
+        """
+
+        body = APITokenModifyBody(name=name)
+
+        if username_or_id is None:
+            return self.make_request(
+                "patch", f"api/v1/me/tokens/{token_id}", APIToken, body_model=APITokenModifyBody, body=body
+            )
+
+        if not isinstance(username_or_id, int):
+            is_valid_username(username_or_id)
+        return self.make_request(
+            "patch",
+            f"api/v1/users/{username_or_id}/tokens/{token_id}",
+            APIToken,
+            body_model=APITokenModifyBody,
+            body=body,
         )
 
     def delete_api_token(self, token_id: int, username_or_id: int | str | None = None) -> None:

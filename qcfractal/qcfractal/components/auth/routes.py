@@ -4,7 +4,7 @@ from flask import g
 from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.api_v1.blueprint import api_v1
 from qcfractal.flask_app.decorators import check_permissions, serialization, deny_api_token_auth
-from qcportal.auth import UserInfo, GroupInfo, APIToken, NewAPIToken, APITokenCreateBody
+from qcportal.auth import UserInfo, GroupInfo, APIToken, NewAPIToken, APITokenCreateBody, APITokenModifyBody
 from qcportal.exceptions import (
     UserManagementError,
     AuthorizationFailure,
@@ -222,8 +222,8 @@ def list_my_sessions_v1() -> list[dict[str, Any]]:
 #########################
 # API tokens are long-lived bearer credentials that inherit the owner's role. Listing/creating for
 # another user requires user-management permission ("users"); a user manages their own via "me".
-# Deleting is always constrained to the owning user, so a user can never revoke another's token
-# through /me, and an admin revokes another user's token only via the explicit /users/<x> route.
+# Renaming and deleting are always constrained to the owning user, so a user can never touch another's
+# token through /me, and an admin changes another user's token only via the explicit /users/<x> route.
 @api_v1.route("/tokens", methods=["GET"])
 @check_permissions("users", "read", True)
 @serialization()
@@ -235,8 +235,7 @@ def list_all_api_tokens_v1() -> list[dict[str, Any]]:
 @check_permissions("users", "read", True)
 @serialization()
 def list_user_api_tokens_v1(username_or_id: int | str) -> list[dict[str, Any]]:
-    user_id = storage_socket.users.get_optional_user_id(username_or_id)
-    return storage_socket.auth.list_api_tokens(user_id)
+    return storage_socket.auth.list_api_tokens(username_or_id)
 
 
 @api_v1.route("/users/<username_or_id>/tokens", methods=["POST"])
@@ -244,11 +243,18 @@ def list_user_api_tokens_v1(username_or_id: int | str) -> list[dict[str, Any]]:
 @deny_api_token_auth()
 @serialization()
 def create_user_api_token_v1(username_or_id: int | str, body_data: APITokenCreateBody) -> NewAPIToken:
-    user_id = storage_socket.users.get_optional_user_id(username_or_id)
     raw_token, info = storage_socket.auth.create_api_token(
-        user_id, name=body_data.name, expires_at=body_data.expires_at, scope=body_data.scope
+        username_or_id, name=body_data.name, expires_at=body_data.expires_at, scope=body_data.scope
     )
     return NewAPIToken(token=raw_token, info=APIToken(**info))
+
+
+@api_v1.route("/users/<username_or_id>/tokens/<int:token_id>", methods=["PATCH"])
+@check_permissions("users", "modify", True)
+@deny_api_token_auth()
+@serialization()
+def rename_user_api_token_v1(username_or_id: int | str, token_id: int, body_data: APITokenModifyBody) -> APIToken:
+    return APIToken(**storage_socket.auth.rename_api_token(token_id, username_or_id, body_data.name))
 
 
 @api_v1.route("/users/<username_or_id>/tokens/<int:token_id>", methods=["DELETE"])
@@ -256,8 +262,7 @@ def create_user_api_token_v1(username_or_id: int | str, body_data: APITokenCreat
 @deny_api_token_auth()
 @serialization()
 def delete_user_api_token_v1(username_or_id: int | str, token_id: int) -> None:
-    user_id = storage_socket.users.get_optional_user_id(username_or_id)
-    return storage_socket.auth.delete_api_token(token_id, user_id)
+    return storage_socket.auth.delete_api_token(token_id, username_or_id)
 
 
 @api_v1.route("/me/tokens", methods=["GET"])
@@ -276,6 +281,15 @@ def create_my_api_token_v1(body_data: APITokenCreateBody) -> NewAPIToken:
         g.user_id, name=body_data.name, expires_at=body_data.expires_at, scope=body_data.scope
     )
     return NewAPIToken(token=raw_token, info=APIToken(**info))
+
+
+@api_v1.route("/me/tokens/<int:token_id>", methods=["PATCH"])
+@check_permissions("me", "modify", True)
+@deny_api_token_auth()
+@serialization()
+def rename_my_api_token_v1(token_id: int, body_data: APITokenModifyBody) -> APIToken:
+    # Always constrained to the caller, so one user cannot rename another's token via /me
+    return APIToken(**storage_socket.auth.rename_api_token(token_id, g.user_id, body_data.name))
 
 
 @api_v1.route("/me/tokens/<int:token_id>", methods=["DELETE"])

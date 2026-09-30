@@ -112,14 +112,16 @@ disabling the account, changes what the token can do (within a few seconds; see 
 
 **A token cannot manage credentials or accounts.** Several actions are refused when a request
 is authenticated by a token, and require a username/password (or browser) login instead:
-creating or deleting API tokens, changing the account password, and creating, modifying, or
+creating, renaming, or deleting API tokens, changing the account password, and creating, modifying, or
 deleting users. This keeps revocation meaningful - a leaked token cannot mint fresh tokens,
 create a new account, or lock the owner out to outlive the token you revoke. (A token can
 still *list* tokens.) This matches platforms such as GitHub, where tokens and accounts are
 managed only through an interactive login.
 
 **A token has a name.** Each token is created with a name that must be unique among your
-tokens (``laptop``, ``ci``). It identifies the token in a listing and when revoking.
+tokens (``laptop``, ``ci``). It identifies the token in a listing and when revoking. The name
+is the only thing about a token that can be changed after it is created; to change anything
+else (such as its expiration), create a new token and delete the old one.
 
 **The token is shown once.** Creating a token returns the plaintext exactly once; the server
 stores only a hash and can never show it again. If it is lost, revoke it and create another.
@@ -139,7 +141,8 @@ Optionally, a server can require tokens to expire, via ``api_token_default_lifet
 
 Manage tokens through :class:`~qcportal.client.PortalClient`:
 :meth:`~qcportal.client.PortalClient.create_api_token`,
-:meth:`~qcportal.client.PortalClient.list_api_tokens`, and
+:meth:`~qcportal.client.PortalClient.list_api_tokens`,
+:meth:`~qcportal.client.PortalClient.rename_api_token`, and
 :meth:`~qcportal.client.PortalClient.delete_api_token`. With no ``username_or_id`` these act
 on your own account (any logged-in user may manage their own tokens); an administrator may
 pass another user's name to manage theirs.
@@ -153,6 +156,9 @@ pass another user's name to manage theirs.
       >>> new_token = client.create_api_token("my laptop")
       >>> new_token.token          # the plaintext - store it now, it is not shown again
       'qcf_...'
+
+      >>> client.rename_api_token(new_token.info.id, "old laptop").name
+      'old laptop'
 
       >>> # Use it from another client
       >>> from qcportal import PortalClient
