@@ -330,7 +330,9 @@ class InternalJobSocket:
         with self.root_socket.optional_session(session) as session:
             session.execute(stmt)
 
-    def _run_single(self, session: Session, job_orm: InternalJobORM, logger, job_progress: JobProgress):
+    def _run_single(
+        self, session: Session, job_orm: InternalJobORM, logger, job_progress: JobProgress, runner_uuid: str
+    ):
         """
         Runs a single job
         """
@@ -409,13 +411,29 @@ class InternalJobSocket:
         # (SQLAlchemy raises StaleDataError, which would otherwise kill the whole runner)
         with session.no_autoflush:
             current = session.execute(
-                select(InternalJobORM.status).where(InternalJobORM.id == job_id).with_for_update()
+                select(InternalJobORM.status, InternalJobORM.runner_uuid)
+                .where(InternalJobORM.id == job_id)
+                .with_for_update()
             ).one_or_none()
 
         if current is None:
             # Row does not exist anymore
             logger.info(f"Job {job_id} was deleted while it was running")
             session.expunge(job_orm)
+        elif current[1] != runner_uuid:
+            # Another runner decided this one was dead (see cond2 in run_loop) and took the job
+            # over. That runner owns the row now, so leave it completely alone - anything written
+            # here would clobber its work.
+            #
+            # Roll back as well: had this runner really died, the database would have rolled its
+            # transaction back, and the new runner would be redoing the work from scratch. Do the
+            # same thing here rather than half-applying it
+            logger.warning(
+                f"Job {job_id} was taken over by runner {current[1]} - discarding the result from this runner"
+            )
+            session.rollback()
+            session.expunge(job_orm)
+            return
         else:
             # Cancelled after the last time the updating thread looked at it. Handle it the same
             # way as if that thread had noticed, rather than writing over the cancellation
@@ -665,7 +683,7 @@ class InternalJobSocket:
                 continue
 
             job_progress = JobProgress(job_orm.id, runner_uuid, session_status, self._update_frequency, end_event)
-            self._run_single(session_main, job_orm, logger, job_progress=job_progress)
+            self._run_single(session_main, job_orm, logger, job_progress=job_progress, runner_uuid=runner_uuid)
 
             # Stop the updating thread and cleanup. Already stopped inside _run_single;
             # this is a backstop in case that ever changes. Idempotent (weakref.finalize).

@@ -308,6 +308,71 @@ def test_internal_jobs_socket_delete_while_running(storage_socket: SQLAlchemySoc
     assert not runner_error, f"Runner thread died: {runner_error[0]!r}"
 
 
+def test_internal_jobs_socket_taken_over_while_running(storage_socket: SQLAlchemySocket, session: Session):
+    # If another runner decides this one is dead and takes its job over, this runner must not
+    # write anything to the row when the job finishes - the new owner's work would be clobbered
+    _job_gates["taken_over"] = threading.Event()
+
+    id_1 = storage_socket.internal_jobs.add(
+        "gated_job", now_at_utc(), "internal_jobs.gated_job", {"gate_name": "taken_over"}, None, unique_name=False
+    )
+
+    # Runs after the one above, and is only reached if the runner survives losing the first job
+    id_2 = storage_socket.internal_jobs.add(
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job_2", {"iterations": 1}, None, unique_name=False
+    )
+
+    storage_socket.internal_jobs._update_frequency = 30
+
+    runner_error = []
+
+    def _run_loop():
+        try:
+            storage_socket.internal_jobs.run_loop(end_event)
+        except BaseException as ex:
+            runner_error.append(ex)
+
+    end_event = threading.Event()
+    th = threading.Thread(target=_run_loop)
+    th.start()
+
+    try:
+        job_1 = _wait_for_job(session, id_1, lambda j: j.status == InternalJobStatusEnum.running)
+        claimed_at = job_1.last_updated
+
+        # Wait for the updating thread's first poll, so the takeover below lands after it
+        _wait_for_job(session, id_1, lambda j: j.last_updated != claimed_at)
+
+        # Stand in for another runner claiming the job out from under this one
+        other_uuid = str(uuid.uuid4())
+        job_1 = session.get(InternalJobORM, id_1)
+        job_1.runner_uuid = other_uuid
+        job_1.progress = 42
+        session.commit()
+
+        # Let the job finish. Its result must be thrown away
+        _job_gates["taken_over"].set()
+
+        # The runner should drop the job and carry on to the next one
+        _wait_for_job(session, id_2, lambda j: j.status == InternalJobStatusEnum.complete)
+
+        session.expire_all()
+        job_1 = session.get(InternalJobORM, id_1)
+        assert job_1.runner_uuid == other_uuid
+        assert job_1.status == InternalJobStatusEnum.running
+        assert job_1.progress == 42
+        assert job_1.ended_date is None
+        assert job_1.result is None
+
+    finally:
+        _job_gates["taken_over"].set()
+        end_event.set()
+        th.join(30)
+
+    assert not th.is_alive()
+    assert not runner_error, f"Runner thread died: {runner_error[0]!r}"
+
+
 def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket, session: Session):
     id_1 = storage_socket.internal_jobs.add(
         "dummy_job", now_at_utc(), "internal_jobs.dummy_job", {"iterations": 5}, None, unique_name=False
