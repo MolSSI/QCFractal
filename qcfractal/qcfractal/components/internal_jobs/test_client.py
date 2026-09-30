@@ -120,7 +120,13 @@ def test_internal_jobs_client_cancel_running(snowflake: QCATestingSnowflake):
 
         snowflake_client.cancel_internal_job(id_1)
 
-        job_1 = _wait_for_job(snowflake_client, id_1, lambda j: j.status == InternalJobStatusEnum.cancelled)
+        # cancel() sets the status itself, so that alone says nothing about the runner having
+        # noticed. ended_date is only set when _run_single finalizes the job, so wait on that
+        job_1 = _wait_for_job(
+            snowflake_client,
+            id_1,
+            lambda j: j.status == InternalJobStatusEnum.cancelled and j.ended_date is not None,
+        )
         assert job_1.progress < 70
         assert job_1.result is None
 
@@ -177,7 +183,11 @@ def test_internal_jobs_client_delete_running(snowflake: QCATestingSnowflake):
 
     finally:
         end_event.set()
-        th.join()
+
+        # The runner should notice the row is gone and abandon the job, rather than getting
+        # stuck on it (the join below has no timeout of its own)
+        th.join(60)
+        assert not th.is_alive(), "Runner did not stop after its job was deleted"
 
 
 def test_internal_jobs_client_query(secure_snowflake: QCATestingSnowflake):

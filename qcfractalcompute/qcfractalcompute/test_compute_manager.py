@@ -269,12 +269,13 @@ def test_manager_idle_shutdown_5(snowflake: QCATestingSnowflake):
 
     max_idle_time = 5
     add_config = {"max_idle_time": max_idle_time}
+    # Submit the work before the manager starts. The manager starts its idle timer the moment it
+    # starts up, so anything done between startup and the first claimable task counts against
+    # max_idle_time - populate_db is not fast enough to rely on winning that race
+    all_id, _ = populate_db(storage_socket)
+
     compute_thread = QCATestingComputeThread(snowflake._qcf_config, additional_manager_config=add_config)
     compute_thread.start(manual_updates=False)
-
-    # Submit the work straight away. Anything we do before this counts against max_idle_time,
-    # and the manager starts its idle timer the moment it starts up
-    all_id, _ = populate_db(storage_socket)
 
     time.sleep(2)
     assert compute_thread.is_alive()

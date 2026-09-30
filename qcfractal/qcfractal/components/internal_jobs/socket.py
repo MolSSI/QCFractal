@@ -339,31 +339,32 @@ class InternalJobSocket:
         job_id = job_orm.id
 
         try:
-            func_attr = attrgetter(job_orm.function)
-
-            # Function must be part of the sockets
-            func = func_attr(self.root_socket)
-
-            # We need to determine the parameters of this function
-            func_params = inspect.signature(func).parameters
-
-            add_kwargs = {}
-
-            # If the function has a "job_progress" and/or "session" args, pass those in
-            if "job_progress" in func_params:
-                add_kwargs["job_progress"] = job_progress
-
-            if "session" in func_params:
-                add_kwargs["session"] = session
-
-            # Run the desired function
-            # Raises an exception if cancelled
+            # Everything that can fail before the job's final state is written goes in here, so that
+            # the progress-updating thread is stopped before any of the handlers below touch job_orm.
+            # That thread writes to the same row through its own session, so leaving it running would
+            # race with (and silently overwrite) the fields those handlers set
             try:
+                func_attr = attrgetter(job_orm.function)
+
+                # Function must be part of the sockets
+                func = func_attr(self.root_socket)
+
+                # We need to determine the parameters of this function
+                func_params = inspect.signature(func).parameters
+
+                add_kwargs = {}
+
+                # If the function has a "job_progress" and/or "session" args, pass those in
+                if "job_progress" in func_params:
+                    add_kwargs["job_progress"] = job_progress
+
+                if "session" in func_params:
+                    add_kwargs["session"] = session
+
+                # Run the desired function
+                # Raises an exception if cancelled
                 result = func(**job_orm.kwargs, **add_kwargs)
             finally:
-                # Stop the progress-updating thread before writing the final state of the job below.
-                # That thread writes to the same row through its own session, so leaving it running
-                # would race with (and silently overwrite) the fields we are about to set
                 job_progress.stop()
 
             job_orm.status = InternalJobStatusEnum.complete
@@ -646,8 +647,8 @@ class InternalJobSocket:
             job_progress = JobProgress(job_orm.id, runner_uuid, session_status, self._update_frequency, end_event)
             self._run_single(session_main, job_orm, logger, job_progress=job_progress)
 
-            # Stop the updating thread and cleanup. Normally already stopped inside _run_single;
-            # this catches the paths that never got as far as calling the job function. Idempotent.
+            # Stop the updating thread and cleanup. Already stopped inside _run_single;
+            # this is a backstop in case that ever changes. Idempotent (weakref.finalize).
             job_progress.stop()
 
         session_main.close()
