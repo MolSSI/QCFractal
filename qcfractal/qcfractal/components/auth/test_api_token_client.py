@@ -30,6 +30,49 @@ def test_api_token_client_crud_me(secure_snowflake):
     assert client.list_api_tokens() == []
 
 
+def test_api_token_client_rename(secure_snowflake):
+    client = secure_snowflake.user_client("admin_user")
+    new_token = client.create_api_token(name="laptop")
+
+    renamed = client.rename_api_token(new_token.info.id, "desktop")
+    assert renamed.name == "desktop"
+    assert renamed.id == new_token.info.id
+    assert renamed.token_prefix == new_token.info.token_prefix
+    assert [t.name for t in client.list_api_tokens()] == ["desktop"]
+
+    client.create_api_token(name="ci")
+    with pytest.raises(PortalRequestError, match="already exists"):
+        client.rename_api_token(new_token.info.id, "ci")
+
+    # Rejected client-side before a request is made
+    with pytest.raises(ValueError):
+        client.rename_api_token(new_token.info.id, "")
+
+    # The renamed token still authenticates
+    token_client = secure_snowflake.client(api_token=new_token.token)
+    assert token_client.username == "admin_user"
+
+
+def test_api_token_client_rename_other_user(secure_snowflake):
+    admin = secure_snowflake.user_client("admin_user")
+    new_token = admin.create_api_token(name="on behalf", username_or_id="read_user")
+
+    renamed = admin.rename_api_token(new_token.info.id, "renamed", username_or_id="read_user")
+    assert renamed.name == "renamed"
+    assert [t.name for t in admin.list_api_tokens("read_user")] == ["renamed"]
+
+    # A non-admin cannot rename another user's token via /users/<x> ...
+    maintain = secure_snowflake.user_client("maintain_user")
+    with pytest.raises(PortalRequestError, match="not authorized|Forbidden"):
+        maintain.rename_api_token(new_token.info.id, "x", username_or_id="read_user")
+
+    # ... nor via their own /me endpoint
+    with pytest.raises(PortalRequestError, match="not found"):
+        maintain.rename_api_token(new_token.info.id, "x")
+
+    assert [t.name for t in admin.list_api_tokens("read_user")] == ["renamed"]
+
+
 def test_api_token_client_connect(secure_snowflake):
     admin = secure_snowflake.user_client("admin_user")
     new_token = admin.create_api_token(name="for connecting")

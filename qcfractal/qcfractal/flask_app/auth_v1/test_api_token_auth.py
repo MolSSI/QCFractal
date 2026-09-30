@@ -324,6 +324,49 @@ def test_api_token_can_list_but_not_delete(secure_snowflake):
     assert r.status_code == 403
 
 
+def test_api_token_cannot_rename_token(secure_snowflake):
+    # Token management is interactive-login only, so a token cannot rename tokens either
+    uri = secure_snowflake.get_uri()
+    raw, info = _mint_token(secure_snowflake, "admin_user")
+
+    r = requests.patch(
+        f"{uri}/api/v1/me/tokens/{info['id']}",
+        headers={**_auth(raw), "Content-Type": "application/json"},
+        data='{"name": "renamed"}',
+    )
+    assert r.status_code == 403
+    assert "API token" in r.json()["msg"]
+
+    other_raw, other_info = _mint_token(secure_snowflake, "read_user")
+    r = requests.patch(
+        f"{uri}/api/v1/users/read_user/tokens/{other_info['id']}",
+        headers={**_auth(raw), "Content-Type": "application/json"},
+        data='{"name": "renamed"}',
+    )
+    assert r.status_code == 403
+
+
+def test_rename_token_only_name_modifiable(secure_snowflake):
+    # The rename body accepts only a name; attempts to change anything else are rejected outright
+    uri = secure_snowflake.get_uri()
+    _, info = _mint_token(secure_snowflake, "admin_user")
+
+    r = requests.post(
+        f"{uri}/auth/v1/login",
+        json={"username": "admin_user", "password": test_users["admin_user"]["pw"]},
+    )
+    jwt = r.json()["access_token"]
+    headers = {"Authorization": f"Bearer {jwt}", "Content-Type": "application/json"}
+
+    for body in ('{"name": "x", "expires_at": null}', '{"name": "x", "scope": "unlimited"}', '{"user_id": 1}'):
+        r = requests.patch(f"{uri}/api/v1/me/tokens/{info['id']}", headers=headers, data=body)
+        assert r.status_code == 400, body
+
+    r = requests.patch(f"{uri}/api/v1/me/tokens/{info['id']}", headers=headers, data='{"name": "x"}')
+    assert r.status_code == 200
+    assert r.json()["name"] == "x"
+
+
 def test_password_auth_can_still_create_token(secure_snowflake):
     # The block is specific to token auth: a JWT (password) client creates tokens normally
     uri = secure_snowflake.get_uri()

@@ -342,3 +342,17 @@ class APITokenCreateBody(BaseModel):
             return validate_api_token_scope(v)
         except Exception as e:
             raise ValueError(str(e))
+
+
+class APITokenModifyBody(BaseModel):
+    """
+    Changes to an existing API token
+
+    Only the name may be changed. Everything else about a token (its secret, owner, scope, and
+    expiration) is fixed at creation; to change those, create a new token and delete the old one.
+    """
+
+    name: str = Field(..., min_length=1, max_length=MAX_API_TOKEN_NAME_LENGTH)
+    """The new name for the token. Must be unique among the user's tokens."""
+
+    model_config = ConfigDict(extra="forbid", use_attribute_docstrings=True)
