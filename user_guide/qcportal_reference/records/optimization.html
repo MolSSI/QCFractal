@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../../_static/documentation_options.js?v=24f74f56"></script>
+    <script src="../../../_static/documentation_options.js?v=d1fa19e1"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Singlepoint Records" href="singlepoint.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post115+g232456857" />
+  <meta name="docsearch:version" content="0.70.post123+g318acab08" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -728,8 +728,8 @@
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.creator_user" title="qcportal.optimization.record_models.OptimizationRecord.creator_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">creator_user</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
-<td><p>Yes</p></td>
-<td></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.description" title="qcportal.optimization.record_models.OptimizationRecord.description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">description</span></code></a></p></td>
@@ -810,55 +810,61 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">native_files</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.properties" title="qcportal.optimization.record_models.OptimizationRecord.properties"><code class="xref py py-obj docutils literal notranslate"><span class="pre">properties</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.owner_user" title="qcportal.optimization.record_models.OptimizationRecord.owner_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_user</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.properties" title="qcportal.optimization.record_models.OptimizationRecord.properties"><code class="xref py py-obj docutils literal notranslate"><span class="pre">properties</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.record_type" title="qcportal.optimization.record_models.OptimizationRecord.record_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_type</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.record_type" title="qcportal.optimization.record_models.OptimizationRecord.record_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_type</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Literal</span></code></a>[‘optimization’]</p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'optimization'</span></code></p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.service_" title="qcportal.optimization.record_models.OptimizationRecord.service_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">service_</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.service_" title="qcportal.optimization.record_models.OptimizationRecord.service_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">service_</span></code></a></p></td>
 <td><p><a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordService" title="qcportal.record_models.RecordService"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordService</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">service</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.specification" title="qcportal.optimization.record_models.OptimizationRecord.specification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">specification</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.specification" title="qcportal.optimization.record_models.OptimizationRecord.specification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">specification</span></code></a></p></td>
 <td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationSpecification" title="qcportal.optimization.record_models.OptimizationSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationSpecification</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.status" title="qcportal.optimization.record_models.OptimizationRecord.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.status" title="qcportal.optimization.record_models.OptimizationRecord.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span></code></a></p></td>
 <td><p><a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordStatusEnum</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.tags" title="qcportal.optimization.record_models.OptimizationRecord.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.tags" title="qcportal.optimization.record_models.OptimizationRecord.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.task_" title="qcportal.optimization.record_models.OptimizationRecord.task_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">task_</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.task_" title="qcportal.optimization.record_models.OptimizationRecord.task_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">task_</span></code></a></p></td>
 <td><p><a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordTask" title="qcportal.record_models.RecordTask"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordTask</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">task</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory_ids_" title="qcportal.optimization.record_models.OptimizationRecord.trajectory_ids_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trajectory_ids_</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory_ids_" title="qcportal.optimization.record_models.OptimizationRecord.trajectory_ids_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trajectory_ids_</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">trajectory_ids</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory_records_" title="qcportal.optimization.record_models.OptimizationRecord.trajectory_records_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trajectory_records_</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationRecord.trajectory_records_" title="qcportal.optimization.record_models.OptimizationRecord.trajectory_records_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trajectory_records_</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="singlepoint.html#qcportal.singlepoint.record_models.SinglepointRecord" title="qcportal.singlepoint.record_models.SinglepointRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">SinglepointRecord</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
@@ -1194,6 +1200,11 @@ that can span multiple records</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.owner_user">
+<span class="sig-name descname"><span class="pre">owner_user</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.owner_user" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationRecord.creator_user">
 <span class="sig-name descname"><span class="pre">creator_user</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationRecord.creator_user" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -1304,47 +1315,52 @@ that can span multiple records</p>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.parent_id" title="qcportal.optimization.record_models.OptimizationQueryFilters.parent_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parent_id</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.owner_user" title="qcportal.optimization.record_models.OptimizationQueryFilters.owner_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_user</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.parent_id" title="qcportal.optimization.record_models.OptimizationQueryFilters.parent_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parent_id</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.program" title="qcportal.optimization.record_models.OptimizationQueryFilters.program"><code class="xref py py-obj docutils literal notranslate"><span class="pre">program</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.program" title="qcportal.optimization.record_models.OptimizationQueryFilters.program"><code class="xref py py-obj docutils literal notranslate"><span class="pre">program</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.project_id" title="qcportal.optimization.record_models.OptimizationQueryFilters.project_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">project_id</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.project_id" title="qcportal.optimization.record_models.OptimizationQueryFilters.project_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">project_id</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.qc_basis" title="qcportal.optimization.record_models.OptimizationQueryFilters.qc_basis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">qc_basis</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.qc_basis" title="qcportal.optimization.record_models.OptimizationQueryFilters.qc_basis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">qc_basis</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Annotated</span></code>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringConstraints</span></code></a>(strip_whitespace=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, to_upper=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, to_lower=True, strict=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, min_length=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, max_length=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, pattern=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, ascii_only=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>)] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.qc_method" title="qcportal.optimization.record_models.OptimizationQueryFilters.qc_method"><code class="xref py py-obj docutils literal notranslate"><span class="pre">qc_method</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.qc_method" title="qcportal.optimization.record_models.OptimizationQueryFilters.qc_method"><code class="xref py py-obj docutils literal notranslate"><span class="pre">qc_method</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Annotated</span></code>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringConstraints</span></code></a>(strip_whitespace=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, to_upper=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, to_lower=True, strict=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, min_length=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, max_length=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, pattern=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, ascii_only=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>)]] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.qc_program" title="qcportal.optimization.record_models.OptimizationQueryFilters.qc_program"><code class="xref py py-obj docutils literal notranslate"><span class="pre">qc_program</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.qc_program" title="qcportal.optimization.record_models.OptimizationQueryFilters.qc_program"><code class="xref py py-obj docutils literal notranslate"><span class="pre">qc_program</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Annotated</span></code>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringConstraints</span></code></a>(strip_whitespace=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, to_upper=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, to_lower=True, strict=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, min_length=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, max_length=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, pattern=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, ascii_only=<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>)]] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.record_id" title="qcportal.optimization.record_models.OptimizationQueryFilters.record_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_id</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.record_id" title="qcportal.optimization.record_models.OptimizationQueryFilters.record_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_id</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.record_type" title="qcportal.optimization.record_models.OptimizationQueryFilters.record_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_type</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.record_type" title="qcportal.optimization.record_models.OptimizationQueryFilters.record_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_type</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.status" title="qcportal.optimization.record_models.OptimizationQueryFilters.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.record_models.OptimizationQueryFilters.status" title="qcportal.optimization.record_models.OptimizationQueryFilters.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordStatusEnum</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
@@ -1475,6 +1491,11 @@ that can span multiple records</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationQueryFilters.modified_after">
 <span class="sig-name descname"><span class="pre">modified_after</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.modified_after" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.optimization.record_models.OptimizationQueryFilters.owner_user">
+<span class="sig-name descname"><span class="pre">owner_user</span></span><a class="headerlink" href="#qcportal.optimization.record_models.OptimizationQueryFilters.owner_user" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -1945,8 +1966,8 @@ that can span multiple records</p>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.dataset_models.OptimizationDataset.creator_user" title="qcportal.optimization.dataset_models.OptimizationDataset.creator_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">creator_user</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
-<td><p>Yes</p></td>
-<td></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.dataset_models.OptimizationDataset.dataset_type" title="qcportal.optimization.dataset_models.OptimizationDataset.dataset_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataset_type</span></code></a></p></td>
@@ -1991,19 +2012,25 @@ that can span multiple records</p>
 <td></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.dataset_models.OptimizationDataset.provenance" title="qcportal.optimization.dataset_models.OptimizationDataset.provenance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">provenance</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.dataset_models.OptimizationDataset.owner_user" title="qcportal.optimization.dataset_models.OptimizationDataset.owner_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_user</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p>Yes</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.dataset_models.OptimizationDataset.provenance" title="qcportal.optimization.dataset_models.OptimizationDataset.provenance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">provenance</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code></a>]</p></td>
 <td><p>Yes</p></td>
 <td></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.dataset_models.OptimizationDataset.tagline" title="qcportal.optimization.dataset_models.OptimizationDataset.tagline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tagline</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.dataset_models.OptimizationDataset.tagline" title="qcportal.optimization.dataset_models.OptimizationDataset.tagline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tagline</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.optimization.dataset_models.OptimizationDataset.tags" title="qcportal.optimization.dataset_models.OptimizationDataset.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#qcportal.optimization.dataset_models.OptimizationDataset.tags" title="qcportal.optimization.dataset_models.OptimizationDataset.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span></code></a></p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
 <td><p>Yes</p></td>
 <td></td>
@@ -3222,6 +3249,11 @@ records created for those that don’t match. If False, new records will always 
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDataset.owner_user">
+<span class="sig-name descname"><span class="pre">owner_user</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.owner_user" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.optimization.dataset_models.OptimizationDataset.creator_user">
 <span class="sig-name descname"><span class="pre">creator_user</span></span><a class="headerlink" href="#qcportal.optimization.dataset_models.OptimizationDataset.creator_user" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -3359,6 +3391,7 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.manager_name"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.manager_name</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.created_on"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.created_on</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.modified_on"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.modified_on</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.owner_user"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.owner_user</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.creator_user"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.creator_user</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.compute_history_"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.compute_history_</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationRecord.task_"><code class="docutils literal notranslate"><span class="pre">OptimizationRecord.task_</span></code></a></li>
@@ -3389,6 +3422,7 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.created_after"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.created_after</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.modified_before"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.modified_before</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.modified_after"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.modified_after</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.owner_user"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.owner_user</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.creator_user"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.creator_user</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.limit"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.limit</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.record_models.OptimizationQueryFilters.cursor"><code class="docutils literal notranslate"><span class="pre">OptimizationQueryFilters.cursor</span></code></a></li>
@@ -3538,6 +3572,7 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.extras"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.extras</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.default_compute_tag"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.default_compute_tag</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.default_compute_priority"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.default_compute_priority</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.owner_user"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.owner_user</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.creator_user"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.creator_user</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.contributed_values_"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.contributed_values_</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.optimization.dataset_models.OptimizationDataset.attachments_"><code class="docutils literal notranslate"><span class="pre">OptimizationDataset.attachments_</span></code></a></li>

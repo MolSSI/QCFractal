@@ -158,11 +158,11 @@ project.
       >>> print(r.status)
       RecordStatusEnum.complete
 
-      >>> print(r.creator_user)
+      >>> print(r.owner_user)
       ben
 
 The imported record is a normal record on this server afterwards, with a new ID. The importing
-user becomes its ``creator_user``.
+user becomes its ``owner_user`` (and ``creator_user``).
 
 .. note::
 
