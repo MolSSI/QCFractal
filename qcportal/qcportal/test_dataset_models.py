@@ -6,6 +6,7 @@ import pytest
 
 from qcfractal.components.singlepoint.testing_helpers import load_procedure_data, run_procedure_data
 from qcportal import PortalRequestError
+from qcportal.dataset_models import dataset_from_dict
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import SinglepointDatasetNewEntry, SinglepointDataset
@@ -38,7 +39,7 @@ def test_dataset_model_basic(submitter_client: PortalClient):
     assert ds.default_compute_tag == "def_tag"
     assert ds.default_compute_priority == PriorityEnum.low
 
-    assert ds.creator_user == submitter_client.username
+    assert ds.owner_user == submitter_client.username
 
     assert ds.entry_names == []
 
@@ -159,3 +160,22 @@ def test_dataset_model_add_submit_many(snowflake_client: PortalClient):
     assert meta.n_existing == 0
 
     assert ds.record_count == test_count * 2
+
+
+def test_dataset_model_owner_creator_compat(submitter_client: PortalClient):
+    ds = submitter_client.add_dataset("singlepoint", "Test dataset")
+    assert ds.owner_user == submitter_client.username
+    assert ds.creator_user == submitter_client.username
+
+    ds_dict = ds.model_dump(by_alias=True)
+    del ds_dict["owner_user"]
+    del ds_dict["creator_user"]
+
+    # Older saved data (and dataset views) only have creator_user
+    ds2 = dataset_from_dict({**ds_dict, "creator_user": "user_a"}, submitter_client, "api/v1")
+    assert ds2.owner_user == "user_a"
+    assert ds2.creator_user == "user_a"
+
+    ds2 = dataset_from_dict({**ds_dict, "owner_user": "user_a", "creator_user": "user_b"}, submitter_client, "api/v1")
+    assert ds2.owner_user == "user_a"
+    assert ds2.creator_user == "user_b"

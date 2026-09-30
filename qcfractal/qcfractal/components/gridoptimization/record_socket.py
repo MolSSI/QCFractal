@@ -345,7 +345,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     OptimizationSpecification(**opt_spec2),
                     service_orm.compute_tag,
                     service_orm.compute_priority,
-                    go_orm.creator_user_id,
+                    go_orm.owner_user_id,
                     service_orm.find_existing,
                     session=session,
                 )
@@ -378,7 +378,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     OptimizationSpecification(**opt_spec2),
                     service_orm.compute_tag,
                     service_orm.compute_priority,
-                    go_orm.creator_user_id,
+                    go_orm.owner_user_id,
                     service_orm.find_existing,
                     session=session,
                 )
@@ -701,6 +701,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     specification_id=go_spec_id,
                     initial_molecule_id=mid,
                     status=RecordStatusEnum.waiting,
+                    owner_user_id=creator_user_id,
                     creator_user_id=creator_user_id,
                 )
 

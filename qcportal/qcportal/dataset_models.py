@@ -96,7 +96,10 @@ class BaseDataset(BaseModel):
     default_compute_tag: str
     default_compute_priority: PriorityEnum
 
-    creator_user: str | None
+    owner_user: str | None
+
+    # Not currently sent by the server - see BaseDatasetORM.creator_user_id
+    creator_user: str | None = None
 
     ########################################
     # Caches of information
@@ -152,10 +155,14 @@ class BaseDataset(BaseModel):
             kwargs["default_compute_tag"] = kwargs.pop("default_tag")
         if "default_priority" in kwargs:
             kwargs["default_compute_priority"] = kwargs.pop("default_priority")
-        if "owner_user" in kwargs:
-            kwargs["creator_user"] = kwargs.pop("owner_user")
         if "owner_group" in kwargs:
             del kwargs["owner_group"]
+
+        # Older data may have only one of these. They are currently always the same user
+        if "owner_user" not in kwargs and "creator_user" in kwargs:
+            kwargs["owner_user"] = kwargs["creator_user"]
+        if kwargs.get("creator_user") is None and "owner_user" in kwargs:
+            kwargs["creator_user"] = kwargs["owner_user"]
 
         BaseModel.__init__(self, **kwargs)
 

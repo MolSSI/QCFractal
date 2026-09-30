@@ -26,7 +26,7 @@ least six characters. Both are rejected by the server rather than silently alter
 
 Disabling a user is the reversible alternative to deleting one: a disabled user still exists
 and still owns whatever they created, but cannot log in. Records and datasets record the
-user who created them in their ``creator_user`` field, so deleting a user is not something
+user who created them in their ``owner_user`` field, so deleting a user is not something
 to do casually.
 
 .. note::

@@ -43,7 +43,7 @@ take a list or other sequence of IDs, and returns a list of records in the same 
            "manager_name": null,
            "modified_on": "2019-03-07T19:45:27.745000",
            "molecule_id": 37,
-           "creator_user": null,
+           "owner_user": null,
            ...
         },
         {
@@ -54,7 +54,7 @@ take a list or other sequence of IDs, and returns a list of records in the same 
            "manager_name": null,
            "modified_on": "2019-03-07T19:45:42.748000",
            "molecule_id": 38,
-           "creator_user": null,
+           "owner_user": null,
            ...
         }
       ]
@@ -90,7 +90,7 @@ If a single ID is specified rather than a list, then just that record is returne
          "manager_name": null,
          "modified_on": "2019-03-07T19:45:27.745000",
          "molecule_id": 37,
-         "creator_user": null,
+         "owner_user": null,
          ...
       }
 
@@ -133,7 +133,7 @@ case missing records are returned as ``None``
            "manager_name": null,
            "modified_on": "2019-03-07T19:45:27.745000",
            "molecule_id": 37,
-           "creator_user": null,
+           "owner_user": null,
            ...
         },
         null,
@@ -145,7 +145,7 @@ case missing records are returned as ``None``
            "manager_name": null,
            "modified_on": "2019-03-07T19:45:42.748000",
            "molecule_id": 38,
-           "creator_user": null,
+           "owner_user": null,
            ...
         }
       ]

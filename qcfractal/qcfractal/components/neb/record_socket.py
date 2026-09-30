@@ -347,7 +347,7 @@ class NEBRecordSocket(BaseRecordSocket):
             opt_spec,
             service_orm.compute_tag,
             service_orm.compute_priority,
-            neb_orm.creator_user_id,
+            neb_orm.owner_user_id,
             service_orm.find_existing,
             session=session,
         )
@@ -390,7 +390,7 @@ class NEBRecordSocket(BaseRecordSocket):
             QCSpecification(**qc_spec),
             service_orm.compute_tag,
             service_orm.compute_priority,
-            neb_orm.creator_user_id,
+            neb_orm.owner_user_id,
             service_orm.find_existing,
             session=session,
         )
@@ -430,7 +430,7 @@ class NEBRecordSocket(BaseRecordSocket):
             [{"info_dict": service_state.nebinfo}],
             service_orm.compute_tag,
             service_orm.compute_priority,
-            neb_orm.creator_user_id,
+            neb_orm.owner_user_id,
             session=session,
         )
 
@@ -809,6 +809,7 @@ class NEBRecordSocket(BaseRecordSocket):
                             is_service=True,
                             specification_id=neb_spec_id,
                             status=RecordStatusEnum.waiting,
+                            owner_user_id=creator_user_id,
                             creator_user_id=creator_user_id,
                         )
 
@@ -834,6 +835,7 @@ class NEBRecordSocket(BaseRecordSocket):
                         is_service=True,
                         specification_id=neb_spec_id,
                         status=RecordStatusEnum.waiting,
+                        owner_user_id=creator_user_id,
                         creator_user_id=creator_user_id,
                     )
 

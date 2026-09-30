@@ -153,8 +153,10 @@ The project's metadata is available as attributes.
 
 .. note::
 
-  Projects use ``owner_user`` for the user that created them. This is unlike records and
-  datasets, where the equivalent field was renamed to ``creator_user`` in 0.61 (:pr:`931`).
+  Projects, records, and datasets all have an ``owner_user`` and a ``creator_user``. These are
+  currently always the same user. Groups can also be made owners of a project when it is
+  created, using the ``owner_groups`` argument of
+  :meth:`~qcportal.client.PortalClient.add_project`; they are listed in ``proj.owner_groups``.
 
 
 .. _project_listing:

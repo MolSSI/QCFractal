@@ -325,6 +325,13 @@ def test_torsiondrive_socket_run(
 
     assert len(rec.optimizations) == n_optimizations
 
+    # Child optimizations created by the service carry the owner/creator of the parent
+    assert rec.owner_user.username == "submit_user"
+    assert rec.creator_user.username == "submit_user"
+    for td_opt in rec.optimizations:
+        assert td_opt.optimization_record.owner_user_id == rec.owner_user_id
+        assert td_opt.optimization_record.creator_user_id == rec.creator_user_id
+
 
 def test_torsiondrive_socket_run_duplicate(
     storage_socket: SQLAlchemySocket,
@@ -387,7 +394,9 @@ def test_torsiondrive_socket_insert_full_qcportal_record(secure_snowflake: QCATe
         rec_1.fetch_children(include=["**"], force_fetch=True)
         compare_torsiondrive_records(rec_1, initial_record)
 
+        assert rec_1.owner_user == "submit_user"
         assert rec_1.creator_user == "submit_user"
         for opts in rec_1.optimizations.values():
             for opt in opts:
+                assert opt.owner_user == "submit_user"
                 assert opt.creator_user == "submit_user"

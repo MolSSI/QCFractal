@@ -54,7 +54,7 @@ def run_service(
         rec = session.get(BaseRecordORM, record_id)
         assert rec.status in [RecordStatusEnum.waiting, RecordStatusEnum.running]
 
-        creator_user = rec.creator_user.username if rec.creator_user is not None else None
+        owner_user = rec.owner_user.username if rec.owner_user is not None else None
 
         tag = rec.service.compute_tag
         priority = rec.service.compute_priority
@@ -115,8 +115,8 @@ def run_service(
 
         with storage_socket.session_scope() as session:
             recs = [session.get(BaseRecordORM, i) for i in ids]
-            all_usernames = [x.creator_user.username if x.creator_user is not None else None for x in recs]
-            assert all(x == creator_user for x in all_usernames)
+            all_usernames = [x.owner_user.username if x.owner_user is not None else None for x in recs]
+            assert all(x == owner_user for x in all_usernames)
             assert all(x.task.compute_priority == priority for x in recs)
             assert all(x.task.compute_tag == tag for x in recs)
 

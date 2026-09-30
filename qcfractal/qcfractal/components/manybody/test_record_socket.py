@@ -208,6 +208,8 @@ def test_manybody_socket_insert_full_qcportal_record(secure_snowflake: QCATestin
         rec_1.fetch_children(include=["**"], force_fetch=True)
         compare_manybody_records(rec_1, initial_record)
 
+        assert rec_1.owner_user == "submit_user"
         assert rec_1.creator_user == "submit_user"
         for cl in rec_1.cluster_records_:
+            assert cl.singlepoint_record.owner_user == "submit_user"
             assert cl.singlepoint_record.creator_user == "submit_user"

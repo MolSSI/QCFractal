@@ -40,7 +40,19 @@ class BaseDatasetORM(BaseORM):
     tagline = Column(String, nullable=False)
     description = Column(String, nullable=False)
 
-    # Who created this dataset
+    # Who owns this dataset
+    owner_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
+
+    owner_user = relationship(
+        UserIDMapSubquery,
+        foreign_keys=[owner_user_id],
+        primaryjoin="BaseDatasetORM.owner_user_id == UserIDMapSubquery.id",
+        lazy="selectin",
+        viewonly=True,
+    )
+
+    # Who originally created this dataset. Unlike owner_user, this is immutable - set once at
+    # insert time and never changed afterward. Not part of the qcportal wire model output yet.
     creator_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
 
     creator_user = relationship(
@@ -73,12 +85,14 @@ class BaseDatasetORM(BaseORM):
     __table_args__ = (
         UniqueConstraint("dataset_type", "lname", name="ux_base_dataset_dataset_type_lname"),
         Index("ix_base_dataset_dataset_type", "dataset_type"),
+        Index("ix_base_dataset_owner_user_id", "owner_user_id"),
         Index("ix_base_dataset_creator_user_id", "creator_user_id"),
     )
 
     __mapper_args__ = {"polymorphic_on": "dataset_type"}
 
-    _qcportal_model_excludes = ["lname", "creator_user_id"]
+    # creator_user_id/creator_user not part of the wire model yet - see comment on the column
+    _qcportal_model_excludes = ["lname", "owner_user_id", "creator_user_id", "creator_user"]
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
@@ -94,8 +108,7 @@ class BaseDatasetORM(BaseORM):
         if "default_compute_priority" in d:
             d["default_priority"] = d.pop("default_compute_priority")
 
-        d["owner_user"] = self.creator_user.username if self.creator_user is not None else None
-        d.pop("creator_user", None)
+        d["owner_user"] = self.owner_user.username if self.owner_user is not None else None
         d["owner_group"] = None
 
         return d

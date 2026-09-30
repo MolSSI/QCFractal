@@ -72,7 +72,7 @@ def test_singlepoint_client_add_get(submitter_client: PortalClient, spec: QCSpec
         assert r.task.function is None
         assert r.task.compute_tag == "tag1"
         assert r.task.compute_priority == PriorityEnum.high
-        assert r.creator_user == submitter_client.username
+        assert r.owner_user == submitter_client.username
         assert time_0 < r.created_on < time_1
         assert time_0 < r.modified_on < time_1
 

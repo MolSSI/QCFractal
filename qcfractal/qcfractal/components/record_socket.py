@@ -334,13 +334,26 @@ class RecordSocket:
             stmt = stmt.join(RecordComputeHistoryORM, RecordComputeHistoryORM.record_id == orm_type.id, isouter=True)
             and_query.append(RecordComputeHistoryORM.manager_name.in_(query_data.history_manager_name))
 
+        # Owner and creator are searched strictly (owner_user only searches the owner,
+        # creator_user only the creator), although the two currently always mirror each other.
+        # The user map is aliased since both may be specified at once
+        if query_data.owner_user is not None:
+            owner_map = aliased(UserIDMapSubquery)
+            stmt = stmt.join(owner_map, owner_map.id == orm_type.owner_user_id)
+
+            int_ids = {x for x in query_data.owner_user if isinstance(x, int) or x.isdecimal()}
+            str_names = set(query_data.owner_user) - int_ids
+
+            and_query.append(or_(owner_map.username.in_(str_names), owner_map.id.in_(int_ids)))
+
         if query_data.creator_user is not None:
-            stmt = stmt.join(UserIDMapSubquery)
+            creator_map = aliased(UserIDMapSubquery)
+            stmt = stmt.join(creator_map, creator_map.id == orm_type.creator_user_id)
 
             int_ids = {x for x in query_data.creator_user if isinstance(x, int) or x.isdecimal()}
             str_names = set(query_data.creator_user) - int_ids
 
-            and_query.append(or_(UserIDMapSubquery.username.in_(str_names), UserIDMapSubquery.id.in_(int_ids)))
+            and_query.append(or_(creator_map.username.in_(str_names), creator_map.id.in_(int_ids)))
 
         if query_data.parent_id is not None:
             # We alias the cte because we might join on it twice
@@ -825,6 +838,7 @@ class RecordSocket:
             for record_orm, history_orm, native_files_orm, (idx, type_record) in zip(
                 record_orms, history_orms, native_files_orms, idx_records
             ):
+                record_orm.owner_user_id = creator_user_id
                 record_orm.creator_user_id = creator_user_id
                 record_orm.is_service = type_record.is_service
 
@@ -904,6 +918,7 @@ class RecordSocket:
             for record_orm, history_orm, native_files_orm, (idx, type_result) in zip(
                 record_orms, history_orms, native_files_orms, idx_results
             ):
+                record_orm.owner_user_id = creator_user_id
                 record_orm.creator_user_id = creator_user_id
                 record_orm.is_service = False
 
