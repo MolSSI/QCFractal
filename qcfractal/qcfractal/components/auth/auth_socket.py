@@ -565,6 +565,45 @@ class AuthSocket:
             token_orms = session.execute(stmt).scalars().all()
             return [t.public_dict() for t in token_orms]
 
+    def rename_api_token(
+        self, token_id: int, user_id: int, name: str, *, session: Optional[Session] = None
+    ) -> Dict[str, Any]:
+        """
+        Renames a single API token, returning its updated metadata (the public_dict)
+
+        The name is the only mutable property of a token. As with delete_api_token, the user_id is
+        required and always constrains the update, so a token can only be renamed by (or on behalf
+        of) its owner.
+
+        Raises UserManagementError if the name is missing/too long or already used by another of the
+        user's tokens, or if no such token exists for that user (the same error whether the token
+        does not exist or belongs to someone else).
+        """
+
+        if not name:
+            raise UserManagementError("An API token name is required")
+        if len(name) > MAX_API_TOKEN_NAME_LENGTH:
+            raise UserManagementError(f"API token name must be at most {MAX_API_TOKEN_NAME_LENGTH} characters")
+
+        with self.root_socket.optional_session(session) as session:
+            stmt = select(UserAPITokenORM).where(
+                UserAPITokenORM.id == token_id,
+                UserAPITokenORM.user_id == user_id,
+            )
+            token_orm = session.execute(stmt).scalar_one_or_none()
+
+            if token_orm is None:
+                raise UserManagementError("API token not found")
+
+            token_orm.name = name
+            try:
+                session.flush()
+            except IntegrityError:
+                # The (user_id, name) unique constraint - another of the user's tokens has this name
+                raise UserManagementError(f"An API token named '{name}' already exists for this user")
+
+            return token_orm.public_dict()
+
     def delete_api_token(self, token_id: int, user_id: int, *, session: Optional[Session] = None) -> None:
         """
         Deletes (revokes) a single API token

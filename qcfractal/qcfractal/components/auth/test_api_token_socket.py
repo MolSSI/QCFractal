@@ -159,6 +159,60 @@ def test_api_token_socket_delete_nonexistent(storage_socket: SQLAlchemySocket):
         storage_socket.auth.delete_api_token(999999, user_id)
 
 
+def test_api_token_socket_rename(storage_socket: SQLAlchemySocket):
+    user_id = _add_user(storage_socket)
+    raw, info = storage_socket.auth.create_api_token(user_id, "laptop")
+
+    renamed = storage_socket.auth.rename_api_token(info["id"], user_id, "desktop")
+    assert renamed["name"] == "desktop"
+    assert "token_hash" not in renamed
+
+    # Only the name changed
+    for k in ("id", "user_id", "token_prefix", "scope", "created_at", "expires_at"):
+        assert renamed[k] == info[k]
+    assert [t["name"] for t in storage_socket.auth.list_api_tokens(user_id)] == ["desktop"]
+
+    # The token still authenticates
+    got_user_id, got_token_id = storage_socket.auth.verify_api_token(raw)
+    assert (got_user_id, got_token_id) == (user_id, info["id"])
+
+    # Renaming to its current name is fine
+    storage_socket.auth.rename_api_token(info["id"], user_id, "desktop")
+
+    # The old name is free for reuse
+    storage_socket.auth.create_api_token(user_id, "laptop")
+
+
+def test_api_token_socket_rename_bad_name(storage_socket: SQLAlchemySocket):
+    user_id = _add_user(storage_socket)
+    _, info = storage_socket.auth.create_api_token(user_id, "laptop")
+    storage_socket.auth.create_api_token(user_id, "ci")
+
+    with pytest.raises(UserManagementError, match="name is required"):
+        storage_socket.auth.rename_api_token(info["id"], user_id, "")
+    with pytest.raises(UserManagementError, match="name must be at most"):
+        storage_socket.auth.rename_api_token(info["id"], user_id, "x" * (MAX_API_TOKEN_NAME_LENGTH + 1))
+    with pytest.raises(UserManagementError, match="already exists"):
+        storage_socket.auth.rename_api_token(info["id"], user_id, "ci")
+
+    assert sorted(t["name"] for t in storage_socket.auth.list_api_tokens(user_id)) == ["ci", "laptop"]
+
+
+def test_api_token_socket_rename_wrong_user(storage_socket: SQLAlchemySocket):
+    user_a = _add_user(storage_socket, "user_a")
+    user_b = _add_user(storage_socket, "user_b")
+
+    _, info = storage_socket.auth.create_api_token(user_a, "t")
+
+    # user_b cannot rename user_a's token, and gets the same error as for a nonexistent token
+    with pytest.raises(UserManagementError, match="not found"):
+        storage_socket.auth.rename_api_token(info["id"], user_b, "mine now")
+    with pytest.raises(UserManagementError, match="not found"):
+        storage_socket.auth.rename_api_token(999999, user_a, "x")
+
+    assert storage_socket.auth.list_api_tokens(user_a)[0]["name"] == "t"
+
+
 def test_api_token_socket_user_delete_cascade(storage_socket: SQLAlchemySocket):
     user_id = _add_user(storage_socket)
     storage_socket.auth.create_api_token(user_id, "t")

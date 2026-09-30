@@ -5,6 +5,7 @@ from .models import (
     APIToken,
     NewAPIToken,
     APITokenCreateBody,
+    APITokenModifyBody,
     APITokenScopeEnum,
     API_TOKEN_PREFIX,
     MAX_API_TOKEN_NAME_LENGTH,
