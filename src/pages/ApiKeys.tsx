@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import { useQuery } from "@tanstack/react-query";
 import * as qcpTypes from "../PortalTypes";
 import { usePortalClient } from "../PortalClient.tsx";
@@ -28,6 +29,7 @@ import ErrorIndicator from "../components/ErrorIndicator";
 import {
   CreateApiKeyDialog,
   DeleteApiKeyDialog,
+  RenameApiKeyDialog,
   isExpired,
 } from "../components/ApiKeyDialogs.tsx";
 
@@ -39,6 +41,9 @@ const ApiKeys: React.FC = () => {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [tokenToDelete, setTokenToDelete] = useState<qcpTypes.APIToken | null>(
+    null,
+  );
+  const [tokenToRename, setTokenToRename] = useState<qcpTypes.APIToken | null>(
     null,
   );
 
@@ -143,6 +148,14 @@ const ApiKeys: React.FC = () => {
                         {dateStringToLocalTime(token.last_used_at) ?? "Never"}
                       </TableCell>
                       <TableCell align="right">
+                        <Tooltip title="Rename">
+                          <IconButton
+                            size="small"
+                            onClick={() => setTokenToRename(token)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                         <Tooltip title="Delete">
                           <IconButton
                             size="small"
@@ -165,6 +178,12 @@ const ApiKeys: React.FC = () => {
         onClose={() => setCreateOpen(false)}
         queryKey={TOKENS_QUERY_KEY}
         existingNamesFor={() => (tokens ?? []).map((t) => t.name)}
+      />
+      <RenameApiKeyDialog
+        token={tokenToRename}
+        onClose={() => setTokenToRename(null)}
+        queryKey={TOKENS_QUERY_KEY}
+        existingNames={(tokens ?? []).map((t) => t.name)}
       />
       <DeleteApiKeyDialog
         token={tokenToDelete}

@@ -116,6 +116,24 @@
         "title": "APITokenCreateBody",
         "type": "object"
       },
+      "APITokenModifyBody": {
+        "additionalProperties": false,
+        "description": "Changes to an existing API token. Only the name may be changed. Everything else about a token (its secret, owner, scope, and expiration) is fixed at creation; to change those, create a new token and delete the old one.",
+        "properties": {
+          "name": {
+            "description": "The new name for the token. Must be unique among the user's tokens.",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "APITokenModifyBody",
+        "type": "object"
+      },
       "APITokenScopeEnum": {
         "description": "Named scopes for API tokens. A token's scope is what it is allowed to do, relative to its owner's role - the effective permission can only ever be a restriction of the role, never an extension. The \"everything\" scope is always the explicit named value \"unlimited\" - a null or empty scope must never be interpreted as unlimited access.",
         "enum": [
@@ -11912,6 +11930,50 @@
         "tags": [
           "me"
         ]
+      },
+      "patch": {
+        "description": "Renames one of the logged-in user's own API tokens. The name is the only part of a token that can be changed; its secret, owner, scope and expiration are fixed at creation. Always constrained to the caller, so one user cannot rename another's token via /me. Cannot be called while authenticated with an API token.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/APITokenModifyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIToken"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "rename_my_api_token_v1",
+        "tags": [
+          "me"
+        ]
       }
     },
     "/api/v1/molecules/bulkCreate": {
@@ -20328,6 +20390,58 @@
           }
         ],
         "summary": "delete_user_api_token_v1",
+        "tags": [
+          "users"
+        ]
+      },
+      "patch": {
+        "description": "Renames a single API token belonging to the named user. Requires \"users\" modify permission. The name is the only part of a token that can be changed; its secret, owner, scope and expiration are fixed at creation. The rename is always constrained to that user, so a token cannot be renamed by guessing its id. Cannot be called while authenticated with an API token.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "username_or_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "token_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/APITokenModifyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIToken"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "rename_user_api_token_v1",
         "tags": [
           "users"
         ]

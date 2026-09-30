@@ -290,6 +290,11 @@ export type APITokenCreateBody = {
   expires_at?: string | null;
 };
 
+// Name is the only mutable property of a token
+export type APITokenModifyBody = {
+  name: string;
+};
+
 // The plaintext token is only ever present here, in the create response
 export type NewAPIToken = {
   token: string;

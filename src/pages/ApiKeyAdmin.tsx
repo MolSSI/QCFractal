@@ -23,6 +23,7 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import SearchIcon from "@mui/icons-material/Search";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -40,6 +41,7 @@ import ErrorIndicator from "../components/ErrorIndicator";
 import {
   CreateApiKeyDialog,
   DeleteApiKeyDialog,
+  RenameApiKeyDialog,
   isExpired,
 } from "../components/ApiKeyDialogs.tsx";
 
@@ -57,6 +59,9 @@ const ApiKeyAdmin: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [createOpen, setCreateOpen] = useState(false);
   const [tokenToRevoke, setTokenToRevoke] = useState<qcpTypes.APIToken | null>(
+    null,
+  );
+  const [tokenToRename, setTokenToRename] = useState<qcpTypes.APIToken | null>(
     null,
   );
 
@@ -101,6 +106,7 @@ const ApiKeyAdmin: React.FC = () => {
   );
 
   const revokeOwner = tokenToRevoke && usernameById.get(tokenToRevoke.user_id);
+  const renameOwner = tokenToRename && usernameById.get(tokenToRename.user_id);
 
   return (
     <Box width="100%" sx={{ p: 2 }}>
@@ -270,6 +276,23 @@ const ApiKeyAdmin: React.FC = () => {
                               <Tooltip
                                 title={
                                   username
+                                    ? "Rename"
+                                    : "Cannot rename: owner unknown"
+                                }
+                              >
+                                <span>
+                                  <IconButton
+                                    size="small"
+                                    disabled={!username}
+                                    onClick={() => setTokenToRename(token)}
+                                  >
+                                    <EditIcon fontSize="small" />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                              <Tooltip
+                                title={
+                                  username
                                     ? "Revoke"
                                     : "Cannot revoke: owner unknown"
                                 }
@@ -320,6 +343,15 @@ const ApiKeyAdmin: React.FC = () => {
                 .filter((t) => user?.id !== undefined && t.user_id === user.id)
                 .map((t) => t.name)
             }
+          />
+          <RenameApiKeyDialog
+            token={tokenToRename}
+            onClose={() => setTokenToRename(null)}
+            queryKey={ALL_TOKENS_QUERY_KEY}
+            username={renameOwner ?? undefined}
+            existingNames={(tokens ?? [])
+              .filter((t) => t.user_id === tokenToRename?.user_id)
+              .map((t) => t.name)}
           />
           <DeleteApiKeyDialog
             token={tokenToRevoke}

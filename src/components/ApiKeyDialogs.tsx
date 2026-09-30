@@ -294,6 +294,111 @@ export const CreateApiKeyDialog: React.FC<CreateApiKeyDialogProps> = ({
   );
 };
 
+export interface RenameApiKeyDialogProps {
+  token: qcpTypes.APIToken | null;
+  onClose: () => void;
+  queryKey: unknown[];
+  /** Owner of the key, for the admin endpoint; omitted to rename via /me. */
+  username?: string;
+  /** The owner's other key names, so a clash is caught before the server rejects it. */
+  existingNames: string[];
+}
+
+export const RenameApiKeyDialog: React.FC<RenameApiKeyDialogProps> = ({
+  token,
+  onClose,
+  queryKey,
+  username,
+  existingNames,
+}) => {
+  const { makeRequest } = usePortalClient();
+  const queryClient = useQueryClient();
+
+  const [name, setName] = useState("");
+
+  React.useEffect(() => {
+    if (token) setName(token.name);
+  }, [token]);
+
+  const trimmedName = name.trim();
+  const unchanged = trimmedName === token?.name;
+  const nameError =
+    !unchanged && existingNames.includes(trimmedName)
+      ? username
+        ? "This user already has a key with this name"
+        : "You already have a key with this name"
+      : undefined;
+
+  const renameMutation = useMutation<
+    qcpTypes.APIToken,
+    Error,
+    qcpTypes.APITokenModifyBody
+  >({
+    mutationFn: (body) =>
+      makeRequest<qcpTypes.APIToken>(
+        "PATCH",
+        `${tokenBasePath(username)}/${token?.id}`,
+        body,
+      ),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey });
+      onClose();
+      setTimeout(() => renameMutation.reset(), 200);
+    },
+  });
+
+  const handleClose = () => {
+    if (renameMutation.isPending) return;
+    onClose();
+    setTimeout(() => renameMutation.reset(), 200);
+  };
+
+  return (
+    <Dialog open={!!token} onClose={handleClose} maxWidth="xs" fullWidth>
+      <DialogTitle>Rename API key</DialogTitle>
+      <DialogContent>
+        <DialogContentText sx={{ mb: 2 }}>
+          The name is the only part of a key that can be changed. Its secret,
+          owner, scope and expiration are fixed when the key is created.
+        </DialogContentText>
+        <TextField
+          label="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          size="small"
+          fullWidth
+          autoFocus
+          error={!!nameError}
+          helperText={nameError ?? " "}
+          slotProps={{ htmlInput: { maxLength: 128 } }}
+        />
+        {renameMutation.isError && (
+          <Alert severity="error" sx={{ mt: 1 }}>
+            {describeRequestError(
+              renameMutation.error,
+              "Failed to rename API key",
+            )}
+          </Alert>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose} disabled={renameMutation.isPending}>
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          onClick={() => renameMutation.mutate({ name: trimmedName })}
+          disabled={
+            !trimmedName || !!nameError || unchanged || renameMutation.isPending
+          }
+        >
+          {renameMutation.isPending ? <CircularProgress size={16} /> : "Rename"}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
 export interface DeleteApiKeyDialogProps {
   token: qcpTypes.APIToken | null;
   onClose: () => void;
