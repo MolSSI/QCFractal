@@ -235,8 +235,7 @@ def list_all_api_tokens_v1() -> list[dict[str, Any]]:
 @check_permissions("users", "read", True)
 @serialization()
 def list_user_api_tokens_v1(username_or_id: int | str) -> list[dict[str, Any]]:
-    user_id = storage_socket.users.get_optional_user_id(username_or_id)
-    return storage_socket.auth.list_api_tokens(user_id)
+    return storage_socket.auth.list_api_tokens(username_or_id)
 
 
 @api_v1.route("/users/<username_or_id>/tokens", methods=["POST"])
@@ -244,9 +243,8 @@ def list_user_api_tokens_v1(username_or_id: int | str) -> list[dict[str, Any]]:
 @deny_api_token_auth()
 @serialization()
 def create_user_api_token_v1(username_or_id: int | str, body_data: APITokenCreateBody) -> NewAPIToken:
-    user_id = storage_socket.users.get_optional_user_id(username_or_id)
     raw_token, info = storage_socket.auth.create_api_token(
-        user_id, name=body_data.name, expires_at=body_data.expires_at, scope=body_data.scope
+        username_or_id, name=body_data.name, expires_at=body_data.expires_at, scope=body_data.scope
     )
     return NewAPIToken(token=raw_token, info=APIToken(**info))
 
@@ -256,8 +254,7 @@ def create_user_api_token_v1(username_or_id: int | str, body_data: APITokenCreat
 @deny_api_token_auth()
 @serialization()
 def rename_user_api_token_v1(username_or_id: int | str, token_id: int, body_data: APITokenModifyBody) -> APIToken:
-    user_id = storage_socket.users.get_optional_user_id(username_or_id)
-    return APIToken(**storage_socket.auth.rename_api_token(token_id, user_id, body_data.name))
+    return APIToken(**storage_socket.auth.rename_api_token(token_id, username_or_id, body_data.name))
 
 
 @api_v1.route("/users/<username_or_id>/tokens/<int:token_id>", methods=["DELETE"])
@@ -265,8 +262,7 @@ def rename_user_api_token_v1(username_or_id: int | str, token_id: int, body_data
 @deny_api_token_auth()
 @serialization()
 def delete_user_api_token_v1(username_or_id: int | str, token_id: int) -> None:
-    user_id = storage_socket.users.get_optional_user_id(username_or_id)
-    return storage_socket.auth.delete_api_token(token_id, user_id)
+    return storage_socket.auth.delete_api_token(token_id, username_or_id)
 
 
 @api_v1.route("/me/tokens", methods=["GET"])

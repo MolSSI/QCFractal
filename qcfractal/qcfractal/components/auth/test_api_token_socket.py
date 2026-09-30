@@ -283,8 +283,26 @@ def test_api_token_socket_last_used_throttled(storage_socket: SQLAlchemySocket):
 
 
 def test_api_token_socket_create_nonexistent_user(storage_socket: SQLAlchemySocket):
-    with pytest.raises(UserManagementError, match="does not exist"):
+    with pytest.raises(UserManagementError, match="not found"):
         storage_socket.auth.create_api_token(999999, "t")
+    with pytest.raises(UserManagementError, match="not found"):
+        storage_socket.auth.create_api_token("no_such_user", "t")
+
+
+def test_api_token_socket_by_username(storage_socket: SQLAlchemySocket):
+    user_id = _add_user(storage_socket, "user_a")
+
+    _, info = storage_socket.auth.create_api_token("user_a", "t")
+    assert info["user_id"] == user_id
+    assert [t["id"] for t in storage_socket.auth.list_api_tokens("user_a")] == [info["id"]]
+
+    assert storage_socket.auth.rename_api_token(info["id"], "user_a", "t2")["name"] == "t2"
+
+    storage_socket.auth.delete_api_token(info["id"], "user_a")
+    assert storage_socket.auth.list_api_tokens(user_id) == []
+
+    with pytest.raises(UserManagementError, match="not found"):
+        storage_socket.auth.list_api_tokens("no_such_user")
 
 
 def _with_lifetimes(storage_socket, default, maximum):

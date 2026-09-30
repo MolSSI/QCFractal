@@ -409,7 +409,7 @@ class AuthSocket:
 
     def create_api_token(
         self,
-        user_id: int,
+        username_or_id: Union[int, str],
         name: str,
         expires_at: Optional[datetime.datetime] = None,
         scope: Union[str, APITokenScopeEnum] = APITokenScopeEnum.unlimited,
@@ -419,13 +419,13 @@ class AuthSocket:
         """
         Creates a new API token for a user
 
-        The name is required and must be unique among the user's tokens. Returns a tuple of
+        The user may be given by username or id. The name is required and must be unique among the user's tokens. Returns a tuple of
         (plaintext token, token metadata). The plaintext token is not stored and cannot be recovered
         afterwards - only its hash is kept. The metadata is the public_dict of the new token (never
         including the hash).
 
-        Raises UserManagementError if the name is missing/too long or already in use, if the
-        requested expiration violates the server policy, or if the user already has the maximum
+        Raises UserManagementError if the user does not exist, if the name is missing/too long or
+        already in use, if the requested expiration violates the server policy, or if the user already has the maximum
         number of tokens.
         """
 
@@ -449,13 +449,11 @@ class AuthSocket:
         token_prefix = raw_token[:_API_TOKEN_PREFIX_LENGTH]
 
         with self.root_socket.optional_session(session) as session:
+            user_id = self.root_socket.users.get_optional_user_id(username_or_id, session=session)
+
             # Lock the owning user row so a concurrent create cannot also pass the count check and
-            # push the user over the limit. This also confirms the user exists.
-            user_exists = session.execute(
-                select(UserORM.id).where(UserORM.id == user_id).with_for_update()
-            ).scalar_one_or_none()
-            if user_exists is None:
-                raise UserManagementError(f"User with id {user_id} does not exist")
+            # push the user over the limit
+            session.execute(select(UserORM.id).where(UserORM.id == user_id).with_for_update())
 
             count = session.execute(
                 select(func.count()).select_from(UserAPITokenORM).where(UserAPITokenORM.user_id == user_id)
@@ -544,12 +542,17 @@ class AuthSocket:
 
             return user_id, token_id
 
-    def list_api_tokens(self, user_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
+    def list_api_tokens(
+        self, username_or_id: Union[int, str], *, session: Optional[Session] = None
+    ) -> List[Dict[str, Any]]:
         """
         Lists all API tokens belonging to a single user (never including the token hash)
+
+        The user may be given by username or id. Raises UserManagementError if the user does not exist.
         """
 
         with self.root_socket.optional_session(session, True) as session:
+            user_id = self.root_socket.users.get_optional_user_id(username_or_id, session=session)
             stmt = select(UserAPITokenORM).where(UserAPITokenORM.user_id == user_id)
             stmt = stmt.order_by(UserAPITokenORM.id)
             token_orms = session.execute(stmt).scalars().all()
@@ -566,17 +569,17 @@ class AuthSocket:
             return [t.public_dict() for t in token_orms]
 
     def rename_api_token(
-        self, token_id: int, user_id: int, name: str, *, session: Optional[Session] = None
+        self, token_id: int, username_or_id: Union[int, str], name: str, *, session: Optional[Session] = None
     ) -> Dict[str, Any]:
         """
         Renames a single API token, returning its updated metadata (the public_dict)
 
-        The name is the only mutable property of a token. As with delete_api_token, the user_id is
-        required and always constrains the update, so a token can only be renamed by (or on behalf
-        of) its owner.
+        The name is the only mutable property of a token. As with delete_api_token, the owning user
+        is required and always constrains the update, so a token can only be renamed by (or on behalf
+        of) its owner. The owner may be given by username or id.
 
-        Raises UserManagementError if the name is missing/too long or already used by another of the
-        user's tokens, or if no such token exists for that user (the same error whether the token
+        Raises UserManagementError if the user does not exist, if the name is missing/too long or
+        already used by another of the user's tokens, or if no such token exists for that user (the same error whether the token
         does not exist or belongs to someone else).
         """
 
@@ -586,6 +589,8 @@ class AuthSocket:
             raise UserManagementError(f"API token name must be at most {MAX_API_TOKEN_NAME_LENGTH} characters")
 
         with self.root_socket.optional_session(session) as session:
+            user_id = self.root_socket.users.get_optional_user_id(username_or_id, session=session)
+
             stmt = select(UserAPITokenORM).where(
                 UserAPITokenORM.id == token_id,
                 UserAPITokenORM.user_id == user_id,
@@ -604,17 +609,22 @@ class AuthSocket:
 
             return token_orm.public_dict()
 
-    def delete_api_token(self, token_id: int, user_id: int, *, session: Optional[Session] = None) -> None:
+    def delete_api_token(
+        self, token_id: int, username_or_id: Union[int, str], *, session: Optional[Session] = None
+    ) -> None:
         """
         Deletes (revokes) a single API token
 
-        The user_id is required and always constrains the delete, so that a token can only ever be
-        revoked by (or on behalf of) its owner - a caller cannot revoke another user's token by
-        guessing its id. Raises UserManagementError if no such token exists for that user (the same
-        error whether the token does not exist or belongs to someone else).
+        The owning user (by username or id) is required and always constrains the delete, so that a
+        token can only ever be revoked by (or on behalf of) its owner - a caller cannot revoke another
+        user's token by guessing its id. Raises UserManagementError if the user does not exist, or if
+        no such token exists for that user (the same error whether the token does not exist or
+        belongs to someone else).
         """
 
         with self.root_socket.optional_session(session) as session:
+            user_id = self.root_socket.users.get_optional_user_id(username_or_id, session=session)
+
             stmt = delete(UserAPITokenORM).where(
                 UserAPITokenORM.id == token_id,
                 UserAPITokenORM.user_id == user_id,
