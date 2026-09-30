@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=b31a4f68"></script>
+    <script src="../../_static/documentation_options.js?v=24f74f56"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="QCPortal API Reference" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post111+g51daeea05" />
+  <meta name="docsearch:version" content="0.70.post115+g232456857" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -3073,6 +3073,28 @@ full role) exists; this is a placeholder for future restricted scopes.</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qcportal.client.PortalClient.rename_api_token">
+<span class="sig-name descname"><span class="pre">rename_api_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username_or_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/client.html#PortalClient.rename_api_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.rename_api_token" title="Link to this definition">#</a></dt>
+<dd><p>Rename an API token</p>
+<p>The name is the only property of a token that can be changed after it is created.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>token_id</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – The id of the token to rename</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – The new name for the token. Must be unique among the user’s tokens.</p></li>
+<li><p><strong>username_or_id</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – The owner of the token. If None, renames one of the current user’s own tokens.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The updated token metadata</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="auth.html#qcportal.auth.models.APIToken" title="qcportal.auth.models.APIToken"><em>APIToken</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qcportal.client.PortalClient.delete_api_token">
 <span class="sig-name descname"><span class="pre">delete_api_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username_or_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/client.html#PortalClient.delete_api_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.delete_api_token" title="Link to this definition">#</a></dt>
 <dd><p>Delete (revoke) an API token</p>
@@ -4220,6 +4242,7 @@ regardless of whether they are in the cache</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.delete_user"><code class="docutils literal notranslate"><span class="pre">PortalClient.delete_user()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.list_api_tokens"><code class="docutils literal notranslate"><span class="pre">PortalClient.list_api_tokens()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.create_api_token"><code class="docutils literal notranslate"><span class="pre">PortalClient.create_api_token()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.rename_api_token"><code class="docutils literal notranslate"><span class="pre">PortalClient.rename_api_token()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.client.PortalClient.delete_api_token"><code class="docutils literal notranslate"><span class="pre">PortalClient.delete_api_token()</span></code></a></li>
 </ul>
 </li>

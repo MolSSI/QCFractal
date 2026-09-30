@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=b31a4f68"></script>
+    <script src="../_static/documentation_options.js?v=24f74f56"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Internal Jobs" href="internal_jobs.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post111+g51daeea05" />
+  <meta name="docsearch:version" content="0.70.post115+g232456857" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -584,13 +584,15 @@ time each request is made - there is no per-token scoping. Changing the user’s
 disabling the account, changes what the token can do (within a few seconds; see below).</p>
 <p><strong>A token cannot manage credentials or accounts.</strong> Several actions are refused when a request
 is authenticated by a token, and require a username/password (or browser) login instead:
-creating or deleting API tokens, changing the account password, and creating, modifying, or
+creating, renaming, or deleting API tokens, changing the account password, and creating, modifying, or
 deleting users. This keeps revocation meaningful - a leaked token cannot mint fresh tokens,
 create a new account, or lock the owner out to outlive the token you revoke. (A token can
 still <em>list</em> tokens.) This matches platforms such as GitHub, where tokens and accounts are
 managed only through an interactive login.</p>
 <p><strong>A token has a name.</strong> Each token is created with a name that must be unique among your
-tokens (<code class="docutils literal notranslate"><span class="pre">laptop</span></code>, <code class="docutils literal notranslate"><span class="pre">ci</span></code>). It identifies the token in a listing and when revoking.</p>
+tokens (<code class="docutils literal notranslate"><span class="pre">laptop</span></code>, <code class="docutils literal notranslate"><span class="pre">ci</span></code>). It identifies the token in a listing and when revoking. The name
+is the only thing about a token that can be changed after it is created; to change anything
+else (such as its expiration), create a new token and delete the old one.</p>
 <p><strong>The token is shown once.</strong> Creating a token returns the plaintext exactly once; the server
 stores only a hash and can never show it again. If it is lost, revoke it and create another.</p>
 <p><strong>Revocation and other changes take effect within a few seconds.</strong> Deleting a token, disabling
@@ -605,7 +607,8 @@ JavaScript has no such protection.</p>
 <code class="docutils literal notranslate"><span class="pre">api_token_max_lifetime</span></code> (see <a class="reference internal" href="../admin_guide/configuration.html#server-configuration"><span class="std std-ref">Server Configuration</span></a>). By default tokens do not expire.</p>
 <p>Manage tokens through <a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a>:
 <a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.create_api_token" title="qcportal.client.PortalClient.create_api_token"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_api_token()</span></code></a>,
-<a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_api_tokens" title="qcportal.client.PortalClient.list_api_tokens"><code class="xref py py-meth docutils literal notranslate"><span class="pre">list_api_tokens()</span></code></a>, and
+<a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.list_api_tokens" title="qcportal.client.PortalClient.list_api_tokens"><code class="xref py py-meth docutils literal notranslate"><span class="pre">list_api_tokens()</span></code></a>,
+<a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.rename_api_token" title="qcportal.client.PortalClient.rename_api_token"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rename_api_token()</span></code></a>, and
 <a class="reference internal" href="../user_guide/qcportal_reference/clients.html#qcportal.client.PortalClient.delete_api_token" title="qcportal.client.PortalClient.delete_api_token"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_api_token()</span></code></a>. With no <code class="docutils literal notranslate"><span class="pre">username_or_id</span></code> these act
 on your own account (any logged-in user may manage their own tokens); an administrator may
 pass another user’s name to manage theirs.</p>
@@ -616,6 +619,9 @@ PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">new_token</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">create_api_token</span><span class="p">(</span><span class="s2">"my laptop"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">new_token</span><span class="o">.</span><span class="n">token</span>          <span class="c1"># the plaintext - store it now, it is not shown again</span>
 <span class="go">'qcf_...'</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">rename_api_token</span><span class="p">(</span><span class="n">new_token</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s2">"old laptop"</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+<span class="go">'old laptop'</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Use it from another client</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qcportal</span><span class="w"> </span><span class="kn">import</span> <span class="n">PortalClient</span>

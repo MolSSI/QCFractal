@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../../_static/documentation_options.js?v=b31a4f68"></script>
+    <script src="../../../_static/documentation_options.js?v=24f74f56"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post111+g51daeea05" />
+  <meta name="docsearch:version" content="0.70.post115+g232456857" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -834,6 +834,23 @@
             <span class="k">return</span> <span class="n">validate_api_token_scope</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="APITokenModifyBody">
+<a class="viewcode-back" href="../../../user_guide/qcportal_reference/auth.html#qcportal.auth.models.APITokenModifyBody">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">APITokenModifyBody</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Changes to an existing API token</span>
+
+<span class="sd">    Only the name may be changed. Everything else about a token (its secret, owner, scope, and</span>
+<span class="sd">    expiration) is fixed at creation; to change those, create a new token and delete the old one.</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="n">MAX_API_TOKEN_NAME_LENGTH</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""The new name for the token. Must be unique among the user's tokens."""</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">use_attribute_docstrings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 </pre></div>
 
