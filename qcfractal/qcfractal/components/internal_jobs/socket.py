@@ -400,10 +400,30 @@ class InternalJobSocket:
             logger.error(f"Job {job_id} failed with exception:\n{job_orm.result}")
             job_orm.status = InternalJobStatusEnum.error
 
-        if job_progress.deleted:
+        # The progress-updating thread has been stopped, and what it last saw can be up to one
+        # update period out of date - the job may have been deleted or cancelled since. Re-read
+        # the row here, and lock it so that it cannot change between now and the commit below.
+        #
+        # no_autoflush matters: job_orm already has the job's final state pending, and flushing
+        # that against a row someone else deleted is exactly what this is meant to prevent
+        # (SQLAlchemy raises StaleDataError, which would otherwise kill the whole runner)
+        with session.no_autoflush:
+            current = session.execute(
+                select(InternalJobORM.status).where(InternalJobORM.id == job_id).with_for_update()
+            ).one_or_none()
+
+        if current is None:
             # Row does not exist anymore
+            logger.info(f"Job {job_id} was deleted while it was running")
             session.expunge(job_orm)
         else:
+            # Cancelled after the last time the updating thread looked at it. Handle it the same
+            # way as if that thread had noticed, rather than writing over the cancellation
+            if current[0] == InternalJobStatusEnum.cancelled and job_orm.status != InternalJobStatusEnum.cancelled:
+                logger.info(f"Job {job_id} was cancelled while it was finishing up")
+                job_orm.status = InternalJobStatusEnum.cancelled
+                job_orm.result = None
+
             # If status is waiting, that means the runner itself is stopping or something
             if job_orm.status != InternalJobStatusEnum.waiting:
                 job_orm.ended_date = now_at_utc()

@@ -43,8 +43,19 @@ def dummy_internal_job_2(self, iterations: int):
     return "Internal job finished"
 
 
+# Blocks until the test releases it, so a test can control exactly when the job finishes.
+# Takes no job_progress, so (like dummy_job_2) it never checks for cancellation
+_job_gates: dict = {}
+
+
+def gated_internal_job(self, gate_name: str):
+    assert _job_gates[gate_name].wait(60), "test never released the job"
+    return "Internal job finished"
+
+
 setattr(InternalJobSocket, "dummy_job", dummy_internal_job)
 setattr(InternalJobSocket, "dummy_job_2", dummy_internal_job_2)
+setattr(InternalJobSocket, "gated_job", gated_internal_job)
 
 
 def _wait_for_job(session, job_id: int, condition, timeout: float = 60.0) -> InternalJobORM:
@@ -230,6 +241,71 @@ def test_internal_jobs_socket_runnerstop(storage_socket: SQLAlchemySocket, sessi
     finally:
         end_event.set()
         th.join()
+
+
+def test_internal_jobs_socket_delete_while_running(storage_socket: SQLAlchemySocket, session: Session):
+    # gated_job takes no job_progress, so it never checks for cancellation. Deleting its row while
+    # it runs used to leave _run_single flushing a row that no longer existed - SQLAlchemy raises
+    # StaleDataError, which propagated out of run_loop and killed the whole runner thread
+    _job_gates["delete_while_running"] = threading.Event()
+
+    id_1 = storage_socket.internal_jobs.add(
+        "gated_job",
+        now_at_utc(),
+        "internal_jobs.gated_job",
+        {"gate_name": "delete_while_running"},
+        None,
+        unique_name=False,
+    )
+
+    # Runs after the one above, and is only reached if the runner survives the deletion
+    id_2 = storage_socket.internal_jobs.add(
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job_2", {"iterations": 1}, None, unique_name=False
+    )
+
+    # A long update period, so that once the progress-updating thread has polled once it will not
+    # poll again for the rest of the test. That poll is the last chance it has to see the deletion
+    storage_socket.internal_jobs._update_frequency = 30
+
+    runner_error = []
+
+    def _run_loop():
+        try:
+            storage_socket.internal_jobs.run_loop(end_event)
+        except BaseException as ex:
+            runner_error.append(ex)
+
+    end_event = threading.Event()
+    th = threading.Thread(target=_run_loop)
+    th.start()
+
+    try:
+        job_1 = _wait_for_job(session, id_1, lambda j: j.status == InternalJobStatusEnum.running)
+        claimed_at = job_1.last_updated
+
+        # run_loop sets last_updated when it claims the job, and the updating thread sets it again
+        # on each poll. Waiting for it to change is how we know that thread has polled at least
+        # once, so that the deletion below lands after it rather than racing it
+        _wait_for_job(session, id_1, lambda j: j.last_updated != claimed_at)
+
+        storage_socket.internal_jobs.delete(id_1)
+
+        # Let the job finish. The runner now writes its final state believing the row still exists
+        _job_gates["delete_while_running"].set()
+
+        # It should notice the row is gone, drop the job, and carry on to the next one
+        _wait_for_job(session, id_2, lambda j: j.status == InternalJobStatusEnum.complete)
+
+        session.expire_all()
+        assert session.get(InternalJobORM, id_1) is None
+
+    finally:
+        _job_gates["delete_while_running"].set()
+        end_event.set()
+        th.join(30)
+
+    assert not th.is_alive()
+    assert not runner_error, f"Runner thread died: {runner_error[0]!r}"
 
 
 def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket, session: Session):
