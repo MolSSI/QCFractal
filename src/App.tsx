@@ -19,6 +19,7 @@ const Dataset = lazy(() => import("./pages/Dataset.tsx"));
 const DatasetList = lazy(() => import("./pages/DatasetList.tsx"));
 const ApiInfo = lazy(() => import("./pages/./APIInfo"));
 const ApiKeys = lazy(() => import("./pages/ApiKeys.tsx"));
+const ApiKeyAdmin = lazy(() => import("./pages/ApiKeyAdmin.tsx"));
 const UserProfile = lazy(() =>
   import("./pages/UserProfile.tsx").then((m) => ({ default: m.UserProfile })),
 );
@@ -71,6 +72,7 @@ function App() {
                         <Route path="/me" element={<UserProfile />} />
                         <Route path="/me/api_keys" element={<ApiKeys />} />
                         <Route path="/users" element={<UserList />} />
+                        <Route path="/api_keys" element={<ApiKeyAdmin />} />
                         <Route
                           path="/users/:userName"
                           element={<UserProfile />}

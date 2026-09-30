@@ -71,7 +71,7 @@ export default function OptionsMenu() {
             onClick={handleClose}
             sx={{ my: "2px" }}
           >
-            <ListItemText>API Key Management</ListItemText>
+            <ListItemText>API Keys</ListItemText>
           </MenuItem>
         )}
         <Divider />
