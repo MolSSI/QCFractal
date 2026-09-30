@@ -199,7 +199,9 @@ def test_internal_jobs_socket_runnerstop(storage_socket: SQLAlchemySocket, sessi
         # Wait until the dummy job is actually running and has made some progress. The runner
         # may have other (periodic) jobs queued ahead of this one, so how long that takes is
         # not predictable - especially on a loaded CI machine
-        _wait_for_job(session, id_1, lambda j: j.status == InternalJobStatusEnum.running and j.progress > 0)
+        job_1 = _wait_for_job(session, id_1, lambda j: j.status == InternalJobStatusEnum.running and j.progress > 0)
+        first_runner_uuid = job_1.runner_uuid
+        assert first_runner_uuid is not None
     finally:
         # Cancel/close the job runner
         end_event.set()
@@ -215,26 +217,16 @@ def test_internal_jobs_socket_runnerstop(storage_socket: SQLAlchemySocket, sessi
     assert job_1.last_updated is None
     assert job_1.runner_uuid is None
 
-    return
-    old_uuid = job_1.runner_uuid
-
-    # Change uuid
-    storage_socket.internal_jobs._uuid = str(uuid.uuid4())
-
-    # Job is now running but orphaned. Should be picked up next time
-    time.sleep(15)
+    # The job is back to waiting, so a new runner should pick it up and run it to completion
     end_event = threading.Event()
     th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
     th.start()
-    time.sleep(30)
 
     try:
-        session.expire(job_1)
-        job_1 = session.get(InternalJobORM, id_1)
-        assert job_1.status == InternalJobStatusEnum.complete
-        assert job_1.runner_uuid != old_uuid
+        job_1 = _wait_for_job(session, id_1, lambda j: j.status == InternalJobStatusEnum.complete)
         assert job_1.progress == 100
         assert job_1.result == "Internal job finished"
+        assert job_1.runner_uuid != first_runner_uuid
     finally:
         end_event.set()
         th.join()
