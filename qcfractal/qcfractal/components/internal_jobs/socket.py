@@ -70,8 +70,6 @@ class InternalJobSocket:
         kwargs: Dict[str, Any],
         user_id: Optional[int],
         unique_name: bool = False,
-        after_function: Optional[str] = None,
-        after_function_kwargs: Optional[Dict[str, Any]] = None,
         repeat_delay: Optional[int] = None,
         serial_group: Optional[str] = None,
         *,
@@ -96,10 +94,6 @@ class InternalJobSocket:
             The user making creating this job
         unique_name
             If true, do not add if a job with that name already exists in the job queue.
-        after_function
-            When this job is done, call this function
-        after_function_kwargs
-            Arguments to use when calling `after_function`
         repeat_delay
             If set, will submit a new, identical job to be run repeat_delay seconds after this one finishes
         serial_group
@@ -124,8 +118,6 @@ class InternalJobSocket:
                     scheduled_date=scheduled_date,
                     function=function,
                     kwargs=kwargs,
-                    after_function=after_function,
-                    after_function_kwargs=after_function_kwargs,
                     repeat_delay=repeat_delay,
                     serial_group=serial_group,
                     user_id=user_id,
@@ -133,8 +125,6 @@ class InternalJobSocket:
                 stmt = stmt.on_conflict_do_update(
                     constraint="ux_internal_jobs_unique_name",
                     set_={
-                        "after_function": after_function,
-                        "after_function_kwargs": after_function_kwargs,
                         "repeat_delay": repeat_delay,
                     },
                 )
@@ -156,8 +146,6 @@ class InternalJobSocket:
                     scheduled_date=scheduled_date,
                     function=function,
                     kwargs=kwargs,
-                    after_function=after_function,
-                    after_function_kwargs=after_function_kwargs,
                     repeat_delay=repeat_delay,
                     serial_group=serial_group,
                     user_id=user_id,
@@ -451,28 +439,9 @@ class InternalJobSocket:
                 has_unique_name = job_orm.unique_name is not None
                 job_orm.unique_name = None
 
-            # Flush but don't commit. This will prevent marking the task as finished
-            # before the after_func has been run, but allow new ones to be added
-            # with unique_name = True
+            # Flush (the commit comes below) so that the unique name cleared above is released,
+            # allowing the repeat of this job to be added under the same name
             session.flush()
-
-            # Run the function specified to be run after
-            if job_orm.status == InternalJobStatusEnum.complete and job_orm.after_function is not None:
-                try:
-                    after_func_attr = attrgetter(job_orm.after_function)
-                    after_func = after_func_attr(self.root_socket)
-
-                    after_func_params = inspect.signature(after_func).parameters
-                    add_after_kwargs = {}
-                    if "session" in after_func_params:
-                        add_after_kwargs["session"] = session
-                    after_func(**job_orm.after_function_kwargs, **add_after_kwargs)
-                except Exception:
-                    # Don't rollback? not sure what to do here
-                    result = traceback.format_exc()
-                    logger.error(f"Job {job_orm.id} failed with exception:\n{result}")
-
-                    job_orm.status = InternalJobStatusEnum.error
 
             if job_orm.status == InternalJobStatusEnum.complete and job_orm.repeat_delay is not None:
                 self.add(
@@ -482,8 +451,6 @@ class InternalJobSocket:
                     kwargs=job_orm.kwargs,
                     user_id=job_orm.user_id,
                     unique_name=has_unique_name,
-                    after_function=job_orm.after_function,
-                    after_function_kwargs=job_orm.after_function_kwargs,
                     repeat_delay=job_orm.repeat_delay,
                     session=session,
                 )

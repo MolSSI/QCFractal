@@ -4,14 +4,14 @@ import socket
 import threading
 import time
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
 from qcarchivetesting import wait_until
 from qcfractal.components.internal_jobs.socket import InternalJobSocket
 from qcportal import PortalRequestError
-from qcportal.internal_jobs import InternalJobStatusEnum
+from qcportal.internal_jobs import InternalJob, InternalJobStatusEnum
 from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
@@ -81,6 +81,34 @@ def test_internal_jobs_client_error(snowflake: QCATestingSnowflake):
     assert time_0 < job_1.ended_date < time_1
     assert time_0 < job_1.last_updated < time_1
     assert "Expected error" in job_1.result
+
+
+def test_internal_jobs_client_after_function_compat(snowflake: QCATestingSnowflake):
+    # after_function was removed from the server. It is still sent, as None, because older clients
+    # require it in their model; and the current model must still accept it from older servers
+    storage_socket = snowflake.get_storage_socket()
+    snowflake_client = snowflake.client()
+
+    id_1 = storage_socket.internal_jobs.add(
+        "client_dummy_job", now_at_utc(), "internal_jobs.client_dummy_job", {"iterations": 1}, None, unique_name=False
+    )
+
+    raw = snowflake_client.make_request("get", f"api/v1/internal_jobs/{id_1}", dict[str, Any])
+    assert "after_function" in raw and raw["after_function"] is None
+    assert "after_function_kwargs" in raw and raw["after_function_kwargs"] is None
+
+    queried = list(snowflake_client.query_internal_jobs(job_id=id_1))
+    assert len(queried) == 1
+    assert queried[0].after_function is None
+    assert queried[0].after_function_kwargs is None
+
+    # What an older server sends
+    old_server = dict(raw, after_function="some.function", after_function_kwargs={"a": 1})
+    assert InternalJob(**old_server).after_function == "some.function"
+
+    # And a server that stops sending the fields at all
+    no_fields = {k: v for k, v in raw.items() if not k.startswith("after_function")}
+    assert InternalJob(**no_fields).after_function is None
 
 
 def test_internal_jobs_client_cancel_waiting(snowflake: QCATestingSnowflake):

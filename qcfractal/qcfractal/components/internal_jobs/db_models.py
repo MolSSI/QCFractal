@@ -36,9 +36,6 @@ class InternalJobORM(BaseORM):
     function = Column(String, nullable=False)
     kwargs = Column(JSON, nullable=False)
 
-    after_function = Column(String, nullable=True)
-    after_function_kwargs = Column(JSON(none_as_null=True), nullable=True)
-
     repeat_delay = Column(Integer, nullable=True)
 
     result = Column(JSON)
@@ -82,6 +79,13 @@ class InternalJobORM(BaseORM):
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         d = BaseORM.model_dict(self, exclude)
         d["user"] = self.user.username if self.user is not None else None
+
+        # after_function/after_function_kwargs were removed, but older clients still require them
+        # in the model. Always send them (as None) unless they were explicitly excluded
+        for k in ("after_function", "after_function_kwargs"):
+            if exclude is None or k not in exclude:
+                d[k] = None
+
         return d
 
 
