@@ -54,9 +54,41 @@ def gated_internal_job(self, gate_name: str):
     return "Internal job finished"
 
 
+# Once released, keeps running until the progress-updating thread has polled and found the job is no
+# longer this runner's to update. That guarantees a poll happens after whatever the test did to the row
+def gated_watching_internal_job(self, gate_name: str, job_progress):
+    assert _job_gates[gate_name].wait(60), "test never released the job"
+
+    deadline = time.monotonic() + 60
+    while not job_progress.cancelled:
+        assert time.monotonic() < deadline, "progress-updating thread never noticed"
+        time.sleep(0.05)
+
+    return "Internal job finished"
+
+
+# Once released, does some (uncommitted) database work in the runner's session, then finishes
+def gated_working_internal_job(self, gate_name: str, session):
+    assert _job_gates[gate_name].wait(60), "test never released the job"
+
+    # Scheduled well into the future, so no runner ever picks it up
+    self.add(
+        f"{gate_name}_side_effect",
+        now_at_utc() + timedelta(days=1),
+        "internal_jobs.dummy_job_2",
+        {"iterations": 1},
+        None,
+        session=session,
+    )
+
+    return "Internal job finished"
+
+
 setattr(InternalJobSocket, "dummy_job", dummy_internal_job)
 setattr(InternalJobSocket, "dummy_job_2", dummy_internal_job_2)
 setattr(InternalJobSocket, "gated_job", gated_internal_job)
+setattr(InternalJobSocket, "gated_watching_job", gated_watching_internal_job)
+setattr(InternalJobSocket, "gated_working_job", gated_working_internal_job)
 
 
 def _wait_for_job(session, job_id: int, condition, timeout: float = 60.0) -> InternalJobORM:
@@ -346,12 +378,18 @@ def test_internal_jobs_socket_delete_while_running(storage_socket: SQLAlchemySoc
 
 
 def test_internal_jobs_socket_taken_over_while_running(storage_socket: SQLAlchemySocket, session: Session):
-    # If another runner decides this one is dead and takes its job over, this runner must not
-    # write anything to the row when the job finishes - the new owner's work would be clobbered
+    # If another runner decides this one is dead and takes its job over, this runner must not write
+    # to the row again - neither its progress-updating thread nor its final write when the job ends.
+    # Either would clobber the new owner's work
     _job_gates["taken_over"] = threading.Event()
 
     id_1 = storage_socket.internal_jobs.add(
-        "gated_job", now_at_utc(), "internal_jobs.gated_job", {"gate_name": "taken_over"}, None, unique_name=False
+        "gated_watching_job",
+        now_at_utc(),
+        "internal_jobs.gated_watching_job",
+        {"gate_name": "taken_over"},
+        None,
+        unique_name=False,
     )
 
     # Runs after the one above, and is only reached if the runner survives losing the first job
@@ -359,7 +397,8 @@ def test_internal_jobs_socket_taken_over_while_running(storage_socket: SQLAlchem
         "dummy_job", now_at_utc(), "internal_jobs.dummy_job_2", {"iterations": 1}, None, unique_name=False
     )
 
-    storage_socket.internal_jobs._update_frequency = 30
+    # Frequent polling, so the updating thread gets to run again after the takeover
+    storage_socket.internal_jobs._update_frequency = 1
 
     runner_error = []
 
@@ -380,14 +419,18 @@ def test_internal_jobs_socket_taken_over_while_running(storage_socket: SQLAlchem
         # Wait for the updating thread's first poll, so the takeover below lands after it
         _wait_for_job(session, id_1, lambda j: j.last_updated != claimed_at)
 
-        # Stand in for another runner claiming the job out from under this one
+        # Stand in for another runner claiming the job out from under this one. last_updated is in the
+        # future so that this runner's own dead-runner check never considers the new owner dead
         other_uuid = str(uuid.uuid4())
+        new_owner_updated = now_at_utc() + timedelta(hours=1)
         job_1 = session.get(InternalJobORM, id_1)
         job_1.runner_uuid = other_uuid
         job_1.progress = 42
+        job_1.progress_description = "new owner"
+        job_1.last_updated = new_owner_updated
         session.commit()
 
-        # Let the job finish. Its result must be thrown away
+        # Let the job go. It keeps running until the updating thread has polled again, then finishes
         _job_gates["taken_over"].set()
 
         # The runner should drop the job and carry on to the next one
@@ -398,6 +441,8 @@ def test_internal_jobs_socket_taken_over_while_running(storage_socket: SQLAlchem
         assert job_1.runner_uuid == other_uuid
         assert job_1.status == InternalJobStatusEnum.running
         assert job_1.progress == 42
+        assert job_1.progress_description == "new owner"
+        assert job_1.last_updated == new_owner_updated
         assert job_1.ended_date is None
         assert job_1.result is None
 
@@ -408,6 +453,61 @@ def test_internal_jobs_socket_taken_over_while_running(storage_socket: SQLAlchem
 
     assert not th.is_alive()
     assert not runner_error, f"Runner thread died: {runner_error[0]!r}"
+
+
+def test_internal_jobs_socket_cancelled_while_finishing(storage_socket: SQLAlchemySocket, session: Session):
+    # A job cancelled after the updating thread's last poll, but before the job function returned, must
+    # end up exactly as if the cancellation had been noticed: work it had not committed is discarded,
+    # and the job is cancelled rather than complete
+    _job_gates["late_cancel"] = threading.Event()
+
+    id_1 = storage_socket.internal_jobs.add(
+        "gated_working_job",
+        now_at_utc(),
+        "internal_jobs.gated_working_job",
+        {"gate_name": "late_cancel"},
+        None,
+        unique_name=False,
+    )
+
+    # Runs after the one above, and is only reached once the runner has finished with it
+    id_2 = storage_socket.internal_jobs.add(
+        "dummy_job", now_at_utc(), "internal_jobs.dummy_job_2", {"iterations": 1}, None, unique_name=False
+    )
+
+    # One poll when the job starts, then none for the rest of the test
+    storage_socket.internal_jobs._update_frequency = 30
+
+    end_event = threading.Event()
+    th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
+    th.start()
+
+    try:
+        job_1 = _wait_for_job(session, id_1, lambda j: j.status == InternalJobStatusEnum.running)
+        claimed_at = job_1.last_updated
+        _wait_for_job(session, id_1, lambda j: j.last_updated != claimed_at)
+
+        storage_socket.internal_jobs.cancel(id_1)
+        _job_gates["late_cancel"].set()
+
+        _wait_for_job(session, id_2, lambda j: j.status == InternalJobStatusEnum.complete)
+
+        session.expire_all()
+        job_1 = session.get(InternalJobORM, id_1)
+        assert job_1.status == InternalJobStatusEnum.cancelled
+        assert job_1.result is None
+        assert job_1.ended_date is not None
+        assert job_1.progress != 100
+        assert job_1.progress_description != "Complete"
+
+        # The job's own database work was not committed
+        stmt = select(InternalJobORM).where(InternalJobORM.name == "late_cancel_side_effect")
+        assert session.execute(stmt).scalars().all() == []
+
+    finally:
+        _job_gates["late_cancel"].set()
+        end_event.set()
+        th.join()
 
 
 def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket, session: Session):

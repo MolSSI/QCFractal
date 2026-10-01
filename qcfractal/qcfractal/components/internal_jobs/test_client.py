@@ -11,7 +11,7 @@ import pytest
 from qcarchivetesting import wait_until
 from qcfractal.components.internal_jobs.socket import InternalJobSocket
 from qcportal import PortalRequestError
-from qcportal.internal_jobs import InternalJob, InternalJobStatusEnum
+from qcportal.internal_jobs import InternalJob, InternalJobQueryFilters, InternalJobStatusEnum
 from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
@@ -101,6 +101,19 @@ def test_internal_jobs_client_after_function_compat(snowflake: QCATestingSnowfla
     assert len(queried) == 1
     assert queried[0].after_function is None
     assert queried[0].after_function_kwargs is None
+
+    # Query projections apply to them like any other field
+    def _raw_query(**proj):
+        filters = InternalJobQueryFilters(job_id=[id_1], **proj)
+        r = snowflake_client.make_request("post", "api/v1/internal_jobs/query", list[dict[str, Any]], body=filters)
+        assert len(r) == 1
+        return r[0]
+
+    assert "after_function" not in _raw_query(exclude=["after_function"])
+    assert "after_function_kwargs" in _raw_query(exclude=["after_function"])
+    assert "after_function" not in _raw_query(include=["id", "name"])
+    assert _raw_query(include=["id", "after_function"])["after_function"] is None
+    assert "after_function" in _raw_query(include=["*"], exclude=["name"])
 
     # What an older server sends
     old_server = dict(raw, after_function="some.function", after_function_kwargs={"a": 1})

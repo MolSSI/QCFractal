@@ -253,7 +253,16 @@ class InternalJobSocket:
             stmt = stmt.limit(query_data.limit)
 
             results = session.execute(stmt).scalars().all()
-            result_dicts = [x.model_dict() for x in results]
+
+            # after_function/after_function_kwargs are not columns any more (model_dict fills them in
+            # as None), so the projection above cannot remove them. Apply it to them the same way
+            include, exclude = query_data.include, query_data.exclude
+            not_projected = [
+                k
+                for k in ("after_function", "after_function_kwargs")
+                if (exclude and k in exclude) or (include and "*" not in include and k not in include)
+            ]
+            result_dicts = [x.model_dict(exclude=not_projected) for x in results]
 
         return result_dicts
 
@@ -397,12 +406,31 @@ class InternalJobSocket:
         # no_autoflush matters: job_orm already has the job's final state pending, and flushing
         # that against a row someone else deleted is exactly what this is meant to prevent
         # (SQLAlchemy raises StaleDataError, which would otherwise kill the whole runner)
-        with session.no_autoflush:
-            current = session.execute(
-                select(InternalJobORM.status, InternalJobORM.runner_uuid)
-                .where(InternalJobORM.id == job_id)
-                .with_for_update()
-            ).one_or_none()
+        def _lock_row():
+            with session.no_autoflush:
+                return session.execute(
+                    select(InternalJobORM.status, InternalJobORM.runner_uuid)
+                    .where(InternalJobORM.id == job_id)
+                    .with_for_update()
+                ).one_or_none()
+
+        current = _lock_row()
+
+        # Cancelled after the last time the updating thread looked at it. Cancellation wins, handled
+        # exactly as if that thread had noticed (see the CancelledJobException handler): throw away
+        # the job's uncommitted work along with whatever final state was staged above, and record it
+        # as cancelled. The rollback releases the row lock, so it has to be taken again
+        if (
+            current is not None
+            and current[1] == runner_uuid
+            and current[0] == InternalJobStatusEnum.cancelled
+            and job_orm.status != InternalJobStatusEnum.cancelled
+        ):
+            logger.info(f"Job {job_id} was cancelled while it was finishing up")
+            session.rollback()
+            job_orm.status = InternalJobStatusEnum.cancelled
+            job_orm.result = None
+            current = _lock_row()
 
         if current is None:
             # Row does not exist anymore
@@ -423,13 +451,6 @@ class InternalJobSocket:
             session.expunge(job_orm)
             return
         else:
-            # Cancelled after the last time the updating thread looked at it. Handle it the same
-            # way as if that thread had noticed, rather than writing over the cancellation
-            if current[0] == InternalJobStatusEnum.cancelled and job_orm.status != InternalJobStatusEnum.cancelled:
-                logger.info(f"Job {job_id} was cancelled while it was finishing up")
-                job_orm.status = InternalJobStatusEnum.cancelled
-                job_orm.result = None
-
             # If status is waiting, that means the runner itself is stopping or something
             if job_orm.status != InternalJobStatusEnum.waiting:
                 job_orm.ended_date = now_at_utc()
