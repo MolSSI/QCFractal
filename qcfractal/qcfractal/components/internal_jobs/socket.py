@@ -452,6 +452,7 @@ class InternalJobSocket:
                     user_id=job_orm.user_id,
                     unique_name=has_unique_name,
                     repeat_delay=job_orm.repeat_delay,
+                    serial_group=job_orm.serial_group,
                     session=session,
                 )
 

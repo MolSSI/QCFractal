@@ -7,6 +7,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 
 import pytest
+from sqlalchemy import select
 
 from qcarchivetesting import wait_until
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
@@ -192,6 +193,42 @@ def test_internal_jobs_socket_run_serial(storage_socket: SQLAlchemySocket, sessi
         th1.join()
         th2.join()
         th3.join()
+
+
+def test_internal_jobs_socket_repeat_keeps_serial_group(storage_socket: SQLAlchemySocket, session: Session):
+    # The repeat of a job must be an identical job - including its serial group, which the
+    # re-add used to leave out
+    id_1 = storage_socket.internal_jobs.add(
+        "repeating_serial_job",
+        now_at_utc(),
+        "internal_jobs.dummy_job_2",
+        {"iterations": 1},
+        None,
+        unique_name=False,
+        repeat_delay=3600,  # far enough out that the repeat never runs during the test
+        serial_group="repeat_test_group",
+    )
+
+    storage_socket.internal_jobs._update_frequency = 1
+
+    end_event = threading.Event()
+    th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
+    th.start()
+
+    try:
+        _wait_for_job(session, id_1, lambda j: j.status == InternalJobStatusEnum.complete)
+    finally:
+        end_event.set()
+        th.join()
+
+    session.expire_all()
+    stmt = select(InternalJobORM).where(InternalJobORM.name == "repeating_serial_job", InternalJobORM.id != id_1)
+    repeats = session.execute(stmt).scalars().all()
+
+    assert len(repeats) == 1
+    assert repeats[0].status == InternalJobStatusEnum.waiting
+    assert repeats[0].repeat_delay == 3600
+    assert repeats[0].serial_group == "repeat_test_group"
 
 
 def test_internal_jobs_socket_runnerstop(storage_socket: SQLAlchemySocket, session: Session):
