@@ -6,10 +6,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcarchivetesting import wait_until
 from qcfractalcompute.compute_manager import ComputeManager
 from qcfractalcompute.config import FractalComputeConfig, FractalServerSettings, LocalExecutorConfig
 from qcfractalcompute.testing_helpers import QCATestingComputeThread, populate_db
 from qcportal.managers import ManagerStatusEnum, ManagerQueryFilters
+from qcportal.record_models import RecordStatusEnum
 from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
@@ -75,11 +77,18 @@ def test_manager_tags(snowflake: QCATestingSnowflake, tmp_path):
     compute = ComputeManager(compute_config)
     compute_thread = threading.Thread(target=compute.start)
     compute_thread.start()
-    time.sleep(2)
-    compute.stop()
-    compute_thread.join()
 
-    managers = storage_socket.managers.query(ManagerQueryFilters())
+    try:
+        # Starting up (parsl in particular) can take a while on a loaded machine
+        managers = wait_until(
+            lambda: storage_socket.managers.query(ManagerQueryFilters()),
+            timeout=60,
+            message="Manager never registered with the server",
+        )
+    finally:
+        compute.stop()
+        compute_thread.join()
+
     assert len(managers) == 1
     assert set(managers[0]["tags"]) == {"tag1", "tag2", "tag3", "tag4", "*"}
 
@@ -153,10 +162,11 @@ def test_manager_claim_inactive(snowflake: QCATestingSnowflake):
     storage_socket.managers.deactivate([manager_name])
 
     # Next update should kill the process
-    time.sleep(compute._compute._compute_config.update_frequency + 2)
-
-    # Should have killed the manager process
-    assert compute.is_alive() is False
+    wait_until(
+        lambda: not compute.is_alive(),
+        timeout=compute._compute._compute_config.update_frequency + 60,
+        message="Manager was not shut down after being deactivated",
+    )
 
 
 def test_manager_claim_return(snowflake: QCATestingSnowflake):
@@ -257,20 +267,44 @@ def test_manager_idle_shutdown_0(snowflake: QCATestingSnowflake):
 def test_manager_idle_shutdown_5(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
 
-    add_config = {"max_idle_time": 5}
+    max_idle_time = 5
+    add_config = {"max_idle_time": max_idle_time}
+    # Submit the work before the manager starts. The manager starts its idle timer the moment it
+    # starts up, so anything done between startup and the first claimable task counts against
+    # max_idle_time - populate_db is not fast enough to rely on winning that race
+    all_id, _ = populate_db(storage_socket)
+
     compute_thread = QCATestingComputeThread(snowflake._qcf_config, additional_manager_config=add_config)
     compute_thread.start(manual_updates=False)
 
     time.sleep(2)
     assert compute_thread.is_alive()
 
-    populate_db(storage_socket)
+    # The manager must stay alive for as long as it has work to do. How long that takes is not
+    # something we can predict (the mock executor runs the tasks one at a time, and CI machines
+    # are slow and unevenly loaded), so poll instead of sleeping a fixed amount
+    deadline = time.monotonic() + 180
+    while True:
+        statuses = [r["status"] for r in storage_socket.records.get(all_id, include=["status"])]
+        if all(s in (RecordStatusEnum.complete, RecordStatusEnum.error, RecordStatusEnum.invalid) for s in statuses):
+            break
 
-    time.sleep(9)
-    assert compute_thread.is_alive()
+        assert compute_thread.is_alive(), "Manager shut down while it still had tasks to run"
+        assert time.monotonic() < deadline, f"Manager did not finish the tasks in time (statuses: {statuses})"
+        time.sleep(0.5)
 
-    time.sleep(10)
-    assert not compute_thread.is_alive()
+    work_done = time.monotonic()
+
+    # The manager only starts counting idle time once the last task is returned, so it must still
+    # be alive well before max_idle_time has elapsed from this point
+    time.sleep(max_idle_time / 2.0)
+    assert compute_thread.is_alive(), "Manager shut down before max_idle_time elapsed"
+
+    # ... and it must shut itself down shortly after
+    deadline = work_done + max_idle_time + 30
+    while compute_thread.is_alive():
+        assert time.monotonic() < deadline, "Manager did not shut down after being idle"
+        time.sleep(0.5)
 
     compute_thread._compute_thread.join(5)
     assert compute_thread.is_alive() is False

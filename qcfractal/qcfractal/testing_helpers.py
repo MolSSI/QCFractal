@@ -31,6 +31,9 @@ class DummyJobProgress:
     def update_progress(self, progress: int):
         pass
 
+    def stop(self):
+        pass
+
     def cancelled(self) -> bool:
         return False
 
@@ -80,8 +83,13 @@ def run_service(
             job_orm = session.execute(stmt).scalar_one_or_none()
 
             if job_orm is not None:
+                # Run it as whoever owns the row (nothing has claimed it, so that is nobody)
                 storage_socket.internal_jobs._run_single(
-                    session, job_orm, logging.getLogger("internal_job"), DummyJobProgress()
+                    session,
+                    job_orm,
+                    logging.getLogger("internal_job"),
+                    DummyJobProgress(),
+                    runner_uuid=job_orm.runner_uuid,
                 )
                 # The function that iterates a service returns True if it is finished
                 if job_orm.result is True:
