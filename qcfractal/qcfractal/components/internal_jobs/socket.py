@@ -70,8 +70,6 @@ class InternalJobSocket:
         kwargs: Dict[str, Any],
         user_id: Optional[int],
         unique_name: bool = False,
-        after_function: Optional[str] = None,
-        after_function_kwargs: Optional[Dict[str, Any]] = None,
         repeat_delay: Optional[int] = None,
         serial_group: Optional[str] = None,
         *,
@@ -96,10 +94,6 @@ class InternalJobSocket:
             The user making creating this job
         unique_name
             If true, do not add if a job with that name already exists in the job queue.
-        after_function
-            When this job is done, call this function
-        after_function_kwargs
-            Arguments to use when calling `after_function`
         repeat_delay
             If set, will submit a new, identical job to be run repeat_delay seconds after this one finishes
         serial_group
@@ -124,8 +118,6 @@ class InternalJobSocket:
                     scheduled_date=scheduled_date,
                     function=function,
                     kwargs=kwargs,
-                    after_function=after_function,
-                    after_function_kwargs=after_function_kwargs,
                     repeat_delay=repeat_delay,
                     serial_group=serial_group,
                     user_id=user_id,
@@ -133,8 +125,6 @@ class InternalJobSocket:
                 stmt = stmt.on_conflict_do_update(
                     constraint="ux_internal_jobs_unique_name",
                     set_={
-                        "after_function": after_function,
-                        "after_function_kwargs": after_function_kwargs,
                         "repeat_delay": repeat_delay,
                     },
                 )
@@ -156,8 +146,6 @@ class InternalJobSocket:
                     scheduled_date=scheduled_date,
                     function=function,
                     kwargs=kwargs,
-                    after_function=after_function,
-                    after_function_kwargs=after_function_kwargs,
                     repeat_delay=repeat_delay,
                     serial_group=serial_group,
                     user_id=user_id,
@@ -265,7 +253,16 @@ class InternalJobSocket:
             stmt = stmt.limit(query_data.limit)
 
             results = session.execute(stmt).scalars().all()
-            result_dicts = [x.model_dict() for x in results]
+
+            # after_function/after_function_kwargs are not columns any more (model_dict fills them in
+            # as None), so the projection above cannot remove them. Apply it to them the same way
+            include, exclude = query_data.include, query_data.exclude
+            not_projected = [
+                k
+                for k in ("after_function", "after_function_kwargs")
+                if (exclude and k in exclude) or (include and "*" not in include and k not in include)
+            ]
+            result_dicts = [x.model_dict(exclude=not_projected) for x in results]
 
         return result_dicts
 
@@ -330,7 +327,9 @@ class InternalJobSocket:
         with self.root_socket.optional_session(session) as session:
             session.execute(stmt)
 
-    def _run_single(self, session: Session, job_orm: InternalJobORM, logger, job_progress: JobProgress):
+    def _run_single(
+        self, session: Session, job_orm: InternalJobORM, logger, job_progress: JobProgress, runner_uuid: str
+    ):
         """
         Runs a single job
         """
@@ -339,26 +338,33 @@ class InternalJobSocket:
         job_id = job_orm.id
 
         try:
-            func_attr = attrgetter(job_orm.function)
+            # Everything that can fail before the job's final state is written goes in here, so that
+            # the progress-updating thread is stopped before any of the handlers below touch job_orm.
+            # That thread writes to the same row through its own session, so leaving it running would
+            # race with (and silently overwrite) the fields those handlers set
+            try:
+                func_attr = attrgetter(job_orm.function)
 
-            # Function must be part of the sockets
-            func = func_attr(self.root_socket)
+                # Function must be part of the sockets
+                func = func_attr(self.root_socket)
 
-            # We need to determine the parameters of this function
-            func_params = inspect.signature(func).parameters
+                # We need to determine the parameters of this function
+                func_params = inspect.signature(func).parameters
 
-            add_kwargs = {}
+                add_kwargs = {}
 
-            # If the function has a "job_progress" and/or "session" args, pass those in
-            if "job_progress" in func_params:
-                add_kwargs["job_progress"] = job_progress
+                # If the function has a "job_progress" and/or "session" args, pass those in
+                if "job_progress" in func_params:
+                    add_kwargs["job_progress"] = job_progress
 
-            if "session" in func_params:
-                add_kwargs["session"] = session
+                if "session" in func_params:
+                    add_kwargs["session"] = session
 
-            # Run the desired function
-            # Raises an exception if cancelled
-            result = func(**job_orm.kwargs, **add_kwargs)
+                # Run the desired function
+                # Raises an exception if cancelled
+                result = func(**job_orm.kwargs, **add_kwargs)
+            finally:
+                job_progress.stop()
 
             job_orm.status = InternalJobStatusEnum.complete
             job_orm.progress = 100
@@ -393,9 +399,57 @@ class InternalJobSocket:
             logger.error(f"Job {job_id} failed with exception:\n{job_orm.result}")
             job_orm.status = InternalJobStatusEnum.error
 
-        if job_progress.deleted:
+        # The progress-updating thread has been stopped, and what it last saw can be up to one
+        # update period out of date - the job may have been deleted or cancelled since. Re-read
+        # the row here, and lock it so that it cannot change between now and the commit below.
+        #
+        # no_autoflush matters: job_orm already has the job's final state pending, and flushing
+        # that against a row someone else deleted is exactly what this is meant to prevent
+        # (SQLAlchemy raises StaleDataError, which would otherwise kill the whole runner)
+        def _lock_row():
+            with session.no_autoflush:
+                return session.execute(
+                    select(InternalJobORM.status, InternalJobORM.runner_uuid)
+                    .where(InternalJobORM.id == job_id)
+                    .with_for_update()
+                ).one_or_none()
+
+        current = _lock_row()
+
+        # Cancelled after the last time the updating thread looked at it. Cancellation wins, handled
+        # exactly as if that thread had noticed (see the CancelledJobException handler): throw away
+        # the job's uncommitted work along with whatever final state was staged above, and record it
+        # as cancelled. The rollback releases the row lock, so it has to be taken again
+        if (
+            current is not None
+            and current[1] == runner_uuid
+            and current[0] == InternalJobStatusEnum.cancelled
+            and job_orm.status != InternalJobStatusEnum.cancelled
+        ):
+            logger.info(f"Job {job_id} was cancelled while it was finishing up")
+            session.rollback()
+            job_orm.status = InternalJobStatusEnum.cancelled
+            job_orm.result = None
+            current = _lock_row()
+
+        if current is None:
             # Row does not exist anymore
+            logger.info(f"Job {job_id} was deleted while it was running")
             session.expunge(job_orm)
+        elif current[1] != runner_uuid:
+            # Another runner decided this one was dead (see cond2 in run_loop) and took the job
+            # over. That runner owns the row now, so leave it completely alone - anything written
+            # here would clobber its work.
+            #
+            # Roll back as well: had this runner really died, the database would have rolled its
+            # transaction back, and the new runner would be redoing the work from scratch. Do the
+            # same thing here rather than half-applying it
+            logger.warning(
+                f"Job {job_id} was taken over by runner {current[1]} - discarding the result from this runner"
+            )
+            session.rollback()
+            session.expunge(job_orm)
+            return
         else:
             # If status is waiting, that means the runner itself is stopping or something
             if job_orm.status != InternalJobStatusEnum.waiting:
@@ -406,28 +460,9 @@ class InternalJobSocket:
                 has_unique_name = job_orm.unique_name is not None
                 job_orm.unique_name = None
 
-            # Flush but don't commit. This will prevent marking the task as finished
-            # before the after_func has been run, but allow new ones to be added
-            # with unique_name = True
+            # Flush (the commit comes below) so that the unique name cleared above is released,
+            # allowing the repeat of this job to be added under the same name
             session.flush()
-
-            # Run the function specified to be run after
-            if job_orm.status == InternalJobStatusEnum.complete and job_orm.after_function is not None:
-                try:
-                    after_func_attr = attrgetter(job_orm.after_function)
-                    after_func = after_func_attr(self.root_socket)
-
-                    after_func_params = inspect.signature(after_func).parameters
-                    add_after_kwargs = {}
-                    if "session" in after_func_params:
-                        add_after_kwargs["session"] = session
-                    after_func(**job_orm.after_function_kwargs, **add_after_kwargs)
-                except Exception:
-                    # Don't rollback? not sure what to do here
-                    result = traceback.format_exc()
-                    logger.error(f"Job {job_orm.id} failed with exception:\n{result}")
-
-                    job_orm.status = InternalJobStatusEnum.error
 
             if job_orm.status == InternalJobStatusEnum.complete and job_orm.repeat_delay is not None:
                 self.add(
@@ -437,9 +472,8 @@ class InternalJobSocket:
                     kwargs=job_orm.kwargs,
                     user_id=job_orm.user_id,
                     unique_name=has_unique_name,
-                    after_function=job_orm.after_function,
-                    after_function_kwargs=job_orm.after_function_kwargs,
                     repeat_delay=job_orm.repeat_delay,
+                    serial_group=job_orm.serial_group,
                     session=session,
                 )
 
@@ -638,9 +672,10 @@ class InternalJobSocket:
                 continue
 
             job_progress = JobProgress(job_orm.id, runner_uuid, session_status, self._update_frequency, end_event)
-            self._run_single(session_main, job_orm, logger, job_progress=job_progress)
+            self._run_single(session_main, job_orm, logger, job_progress=job_progress, runner_uuid=runner_uuid)
 
-            # Stop the updating thread and cleanup
+            # Stop the updating thread and cleanup. Already stopped inside _run_single;
+            # this is a backstop in case that ever changes. Idempotent (weakref.finalize).
             job_progress.stop()
 
         session_main.close()

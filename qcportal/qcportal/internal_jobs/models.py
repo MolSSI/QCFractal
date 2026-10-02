@@ -60,8 +60,10 @@ class InternalJob(BaseModel):
 
     function: str
     kwargs: dict[str, Any]
-    after_function: str | None
-    after_function_kwargs: dict[str, Any] | None
+    # No longer used by the server, which always sends None. Kept so this model still validates
+    # what older servers send (extra fields are forbidden)
+    after_function: str | None = None
+    after_function_kwargs: dict[str, Any] | None = None
     result: Any
     user: str | None
 

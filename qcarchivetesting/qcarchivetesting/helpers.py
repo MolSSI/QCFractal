@@ -9,7 +9,9 @@ import glob
 import json
 import lzma
 import os
+import time
 from contextlib import contextmanager
+from typing import Any, Callable, Optional
 
 from qcfractal.components.serverinfo.socket import geoip2_found
 from qcportal.molecules import Molecule
@@ -260,3 +262,32 @@ def compare_is_included(is_included, test_value, ref_value):
         assert (test_value is None) == (ref_value is None)
     else:
         assert test_value is None
+
+
+def wait_until(
+    condition: Callable[[], Any],
+    timeout: float = 60.0,
+    interval: float = 0.2,
+    message: Optional[str] = None,
+) -> Any:
+    """
+    Polls `condition` until it returns something truthy, and returns that value
+
+    Use this rather than a fixed `time.sleep()` when waiting on a background thread (the internal
+    job runner, a compute manager, ...) to reach some state. How long that takes is not something
+    a test can predict, particularly on a loaded CI machine.
+
+    Raises an AssertionError if the condition is not satisfied within `timeout` seconds.
+    """
+
+    deadline = time.monotonic() + timeout
+
+    while True:
+        ret = condition()
+        if ret:
+            return ret
+
+        if time.monotonic() >= deadline:
+            raise AssertionError(message or f"Condition was not satisfied within {timeout} seconds")
+
+        time.sleep(interval)

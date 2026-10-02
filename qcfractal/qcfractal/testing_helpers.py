@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, Any, Tuple, Callable
+import time
+from typing import Dict, Any, Tuple, Callable, Optional
 
 from sqlalchemy import select
 
@@ -10,12 +11,17 @@ from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractalcompute.compress import compress_result
 from qcportal.compression import decompress, CompressionEnum
+from qcportal.internal_jobs import InternalJobStatusEnum
 from qcportal.managers import ManagerName
 from qcportal.qcschema_v1 import Molecule
 from qcportal.record_models import RecordStatusEnum, RecordTask
+from qcportal.utils import now_at_utc
 
 mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
 mname2 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="2234-5678-1234-5678")
+
+# The runner uuid run_service claims internal jobs under
+_run_service_runner_uuid = "1234-5678-9101-1213"
 
 
 class DummyJobProgress:
@@ -26,9 +32,12 @@ class DummyJobProgress:
     """
 
     def __init__(self):
-        self._runner_uuid = "1234-5678-9101-1213"
+        self._runner_uuid = _run_service_runner_uuid
 
     def update_progress(self, progress: int):
+        pass
+
+    def stop(self):
         pass
 
     def cancelled(self) -> bool:
@@ -36,6 +45,63 @@ class DummyJobProgress:
 
     def deleted(self) -> bool:
         return False
+
+
+def _run_service_iteration_job(storage_socket: SQLAlchemySocket, session, jobname: str) -> Optional[Any]:
+    """
+    Runs the internal job that iterates a service, standing in for the internal job runner
+
+    Some tests also start a real job runner (for other background work), and its periodic
+    iterate_services queues and runs these same jobs. So claim the job the way a runner would,
+    so that exactly one of them runs it. If a real runner got there first, wait for it to finish
+    and use its result instead of iterating the service a second time.
+
+    Returns the job's result, or None if there was no such job
+    """
+
+    # Claim the job, exactly as run_loop does
+    stmt = select(InternalJobORM).where(
+        InternalJobORM.unique_name == jobname, InternalJobORM.status == InternalJobStatusEnum.waiting
+    )
+    job_orm = session.execute(stmt.with_for_update(skip_locked=True)).scalar_one_or_none()
+
+    if job_orm is not None:
+        job_id = job_orm.id
+        job_orm.status = InternalJobStatusEnum.running
+        job_orm.runner_uuid = _run_service_runner_uuid
+        job_orm.started_date = job_orm.last_updated = now_at_utc()
+        session.commit()
+
+        storage_socket.internal_jobs._run_single(
+            session,
+            job_orm,
+            logging.getLogger("internal_job"),
+            DummyJobProgress(),
+            runner_uuid=_run_service_runner_uuid,
+        )
+    else:
+        # Not claimable. Either there is no such job, or a real runner has it (or is claiming it right now)
+        job_id = session.execute(select(InternalJobORM.id).where(InternalJobORM.unique_name == jobname)).scalar()
+        session.rollback()
+        if job_id is None:
+            return None
+
+    # Read the outcome from the database rather than from job_orm: if anything other than this
+    # function ended up running the job, _run_single will have discarded this copy
+
+    finished = (InternalJobStatusEnum.complete, InternalJobStatusEnum.error, InternalJobStatusEnum.cancelled)
+    deadline = time.monotonic() + 120
+    while True:
+        with storage_socket.session_scope() as s:
+            status, result = s.execute(
+                select(InternalJobORM.status, InternalJobORM.result).where(InternalJobORM.id == job_id)
+            ).one()
+
+        if status in finished:
+            return result
+
+        assert time.monotonic() < deadline, f"Internal job {job_id} ({jobname}) never finished"
+        time.sleep(0.1)
 
 
 def run_service(
@@ -75,16 +141,11 @@ def run_service(
 
             # Kinda hacky...
             # Run any internal jobs that iterate_services added
-            jobname = f"iterate_service_{service_id}"
-            stmt = select(InternalJobORM).where(InternalJobORM.unique_name == jobname)
-            job_orm = session.execute(stmt).scalar_one_or_none()
+            job_result = _run_service_iteration_job(storage_socket, session, f"iterate_service_{service_id}")
 
-            if job_orm is not None:
-                storage_socket.internal_jobs._run_single(
-                    session, job_orm, logging.getLogger("internal_job"), DummyJobProgress()
-                )
+            if job_result is not None:
                 # The function that iterates a service returns True if it is finished
-                if job_orm.result is True:
+                if job_result is True:
                     rec: BaseRecordORM = session.get(BaseRecordORM, record_id)
 
                     if rec.status == RecordStatusEnum.error:

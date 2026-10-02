@@ -4,7 +4,7 @@ import threading
 import weakref
 from typing import Optional
 
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
@@ -29,11 +29,19 @@ class JobProgress:
         self._update_frequency = update_frequency
         self._job_id = job_id
         self._runner_uuid = runner_uuid
+        # Only ever write to the row while this runner still owns it and the job is still running.
+        # Once it has been cancelled, deleted, or taken over by another runner (which reports its own
+        # progress), this must not touch it - checking afterwards would be too late
         self._stmt = (
             update(InternalJobORM)
-            .where(InternalJobORM.id == self._job_id)
-            .returning(InternalJobORM.status, InternalJobORM.runner_uuid)
+            .where(
+                InternalJobORM.id == self._job_id,
+                InternalJobORM.runner_uuid == self._runner_uuid,
+                InternalJobORM.status == InternalJobStatusEnum.running,
+            )
+            .returning(InternalJobORM.id)
         )
+        self._exists_stmt = select(InternalJobORM.id).where(InternalJobORM.id == self._job_id)
         self._progress = 0
         self._description = None
 
@@ -64,15 +72,12 @@ class JobProgress:
             session.commit()
 
             if ret is None:
-                # Job was deleted
+                # No longer ours to update - deleted, cancelled, or taken over by another runner.
+                # There is nothing more for this thread to do, and it must not keep writing
+                self._deleted = session.execute(self._exists_stmt).one_or_none() is None
+                session.rollback()
                 self._cancelled = True
-                self._deleted = True
-            elif ret[0] != InternalJobStatusEnum.running:
-                # Job was cancelled or something
-                self._cancelled = True
-            elif ret[1] != self._runner_uuid:
-                # Job was stolen from us?
-                self._cancelled = True
+                break
 
             # Are we ending/cancelling because the runner is stopping/closing?
             if self._end_event.is_set():
