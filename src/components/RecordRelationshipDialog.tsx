@@ -63,7 +63,6 @@ const RecordRelationshipDialog: React.FC<RecordRelationshipDialogProps> = ({
       }),
     enabled: open,
   });
-  console.log("Projects query status:", { projects });
 
   // Query for parent records
   const {

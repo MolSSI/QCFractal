@@ -30,6 +30,21 @@ const CHANGELOG: ChangelogEntry[] = [
     date: "2026-09-28",
     items: [
       {
+        kind: "Added",
+        text: "Reset button on the record page, for records in the error status",
+      },
+      {
+        kind: "Added",
+        text: "Record actions menu — cancel, invalidate, soft delete, and revert to undo the last of those",
+      },
+      {
+        kind: "Added",
+        text: "Modify option to add a comment or change a record's compute tag and priority",
+      },
+      {
+        kind: "Improved",
+        text: "Actions that do not apply to a record stay visible but disabled, with a hover note explaining why, and every action confirms before it is applied",
+
         kind: "Fixed",
         text: "Filtering dataset records by status, and clicking a count in the dataset status table, no longer load indefinitely on large datasets",
       },

@@ -26,6 +26,8 @@ import ComputeHistory from "../components/ComputeHistory.tsx";
 import { FavoriteButton } from "../components/FavoriteButton.tsx";
 import { ViewOutputButton } from "../components/ViewOutputDialog.tsx";
 import { TaskServiceButton } from "../components/TaskServiceDialog.tsx";
+import { ResetRecordButton } from "../components/record_components/ResetRecordDialog.tsx";
+import { RecordActionsMenu } from "../components/record_components/RecordActionsMenu.tsx";
 import { dateStringToLocalTime } from "../Utils.ts";
 
 interface RecordHeaderProps {
@@ -58,6 +60,20 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
                 ? recordData.name.trim()
                 : `Record ${recordData.id}`}
             </Typography>
+          </Stack>
+
+          {/* Record actions */}
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
+            <ResetRecordButton
+              recordId={recordData.id}
+              status={recordData.status}
+            />
+            <RecordActionsMenu
+              recordId={recordData.id}
+              recordType={recordData.record_type}
+              isService={recordData.is_service}
+              status={recordData.status}
+            />
           </Stack>
 
           {/* Description */}
@@ -146,9 +162,6 @@ export const RecordHeader: React.FC<RecordHeaderProps> = ({ recordData }) => {
           <Button variant="outlined" size="small" disabled>
             Native Files
           </Button>
-          <Button variant="outlined" size="small" disabled>
-            Reset
-          </Button>
           <TaskServiceButton
             recordId={recordData.id}
             recordType={recordData.record_type}
@@ -192,8 +205,8 @@ function Record() {
     enabled: validRecordId,
   });
 
-  const pageTitle = recordData ?
-    `Record ${recordData.id}${recordData.name ? ": " + recordData.name.trim() : ""}`
+  const pageTitle = recordData
+    ? `Record ${recordData.id}${recordData.name ? ": " + recordData.name.trim() : ""}`
     : `Record ${parsedRecordId}`;
   usePageTitle(pageTitle);
 

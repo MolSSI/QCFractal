@@ -176,26 +176,32 @@ export type ServiceDependency = {
   extras: object;
 };
 
-export type RecordService = {
+// Note the asymmetry, the same one the dataset defaults have: the server
+// returns these as tag/priority, while the PATCH body takes compute_tag/
+// compute_priority. Newer servers send the compute_ spelling, so read both.
+type ComputeQueueFields = {
+  tag?: string;
+  priority?: number;
+  compute_tag?: string;
+  compute_priority?: number;
+};
+
+export type RecordService = ComputeQueueFields & {
   id: number;
   record_id: string;
 
-  compute_tag: string;
-  compute_priority: number;
   find_existing: boolean;
 
   service_state: object | null;
   dependencies: Array<ServiceDependency>;
 };
 
-export type RecordTask = {
+export type RecordTask = ComputeQueueFields & {
   id: number;
   record_id: string;
 
   function: string | null;
 
-  compute_tag: string;
-  compute_priority: number;
   required_program: string[];
 };
 
@@ -228,6 +234,51 @@ export type BaseRecord = {
   native_files?: Record<string, any>;
   extras: Record<string, any>;
   properties: Record<string, any>;
+};
+
+// Body for PATCH api/v1/records. Single-record actions use a one-element
+// record_ids array; the server resolves the record type from the id.
+// Send one concern per request - the returned metadata only describes the
+// last field the backend handled.
+export type RecordModifyBody = {
+  record_ids: number[];
+  status?: RecordStatus;
+  compute_priority?: PriorityEnum;
+  compute_tag?: string;
+  comment?: string;
+};
+
+// Body for POST api/v1/records/revert. revert_status is the status being
+// *undone* - so uncancelling sends "cancelled". The record goes back to
+// whatever status it held before, not necessarily waiting.
+export type RecordRevertBody = {
+  record_ids: number[];
+  revert_status: RecordStatus;
+};
+
+// Body for POST api/v1/records/bulkDelete. Deletion never goes through the
+// PATCH endpoint - sending status: "deleted" there 500s.
+export type RecordDeleteBody = {
+  record_ids: number[];
+  soft_delete: boolean;
+  delete_children: boolean;
+};
+
+// Returned by the bulk record modification endpoints. A rejected action still
+// comes back 200, with an empty updated_idx and the reason in errors.
+export type UpdateMetadata = {
+  updated_idx: number[];
+  n_children_updated: number;
+  errors: [number, string][];
+  error_description: string | null;
+};
+
+// Same shape as UpdateMetadata, returned by the bulkDelete endpoints.
+export type DeleteMetadata = {
+  deleted_idx: number[];
+  n_children_deleted: number;
+  errors: [number, string][];
+  error_description: string | null;
 };
 
 export type RecordComment = {
