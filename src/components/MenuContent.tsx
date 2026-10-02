@@ -15,6 +15,7 @@ import ComputerIcon from "@mui/icons-material/Computer";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
+import KeyIcon from "@mui/icons-material/Key";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import CodeIcon from "@mui/icons-material/Code";
 import { NavLink, useLocation } from "react-router-dom";
@@ -49,6 +50,12 @@ const adminListItems: {
     text: "User Management",
     icon: <PeopleRoundedIcon />,
     path: "/users",
+    requiredPermissions: ["users", "read"],
+  },
+  {
+    text: "API Key Management",
+    icon: <KeyIcon />,
+    path: "/api_keys",
     requiredPermissions: ["users", "read"],
   },
   {

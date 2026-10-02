@@ -22,8 +22,10 @@ export default function OptionsMenu() {
     setAnchorEl(null);
   };
 
-  const { logout } = useAuth();
+  const { logout, has_permission } = useAuth();
   const navigate = useNavigate();
+
+  const canManageApiKeys = has_permission("me", "modify");
 
   return (
     <React.Fragment>
@@ -62,6 +64,16 @@ export default function OptionsMenu() {
         >
           <ListItemText>Profile</ListItemText>
         </MenuItem>
+        {canManageApiKeys && (
+          <MenuItem
+            component={Link}
+            to="/me/api_keys"
+            onClick={handleClose}
+            sx={{ my: "2px" }}
+          >
+            <ListItemText>API Keys</ListItemText>
+          </MenuItem>
+        )}
         <Divider />
         <MenuItem onClick={handleClose} sx={{ my: "2px" }}>
           Add another account

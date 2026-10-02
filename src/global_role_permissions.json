@@ -13,8 +13,7 @@
       "*": "Allow"
     },
     "users": {
-      "read": "Allow",
-      "modify": "Allow"
+      "read": "Allow"
     },
     "groups": {
       "*": "Allow"
@@ -90,8 +89,7 @@
       "read": "Allow",
       "add": "Allow",
       "modify": "Allow",
-      "delete": "Allow",
-      "create_view": "Allow"
+      "delete": "Allow"
     },
     "projects": {
       "read": "Allow",

@@ -9,7 +9,6 @@ maintain:
     "*": Allow
   users:
     read: Allow
-    modify: Allow
   groups:
     "*": Allow
   access_log:
@@ -62,7 +61,6 @@ submit:
     add: Allow
     modify: Allow
     delete: Allow
-    create_view: Allow
   projects:
     read: Allow
     add: Allow
