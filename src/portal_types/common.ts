@@ -349,6 +349,16 @@ export type ProjectUnlinkLinkDatasetBody = {
 
 export type DatasetStatus = Record<string, Record<RecordStatus, number>>;
 
+// Response row from POST api/v1/datasets/queryrecords.
+export type DatasetRecordLocation = {
+  record_id: number;
+  dataset_id: number;
+  dataset_type: RecordType;
+  dataset_name: string;
+  entry_name: string;
+  specification_name: string;
+};
+
 export type DatasetListEntry = {
   id: number;
   dataset_type: RecordType;

@@ -44,6 +44,13 @@ const CHANGELOG: ChangelogEntry[] = [
       {
         kind: "Improved",
         text: "Actions that do not apply to a record stay visible but disabled, with a hover note explaining why, and every action confirms before it is applied",
+
+        kind: "Fixed",
+        text: "Filtering dataset records by status, and clicking a count in the dataset status table, no longer load indefinitely on large datasets",
+      },
+      {
+        kind: "Improved",
+        text: "Dataset records now load progressively, with a progress indicator, instead of waiting for the whole search to finish",
       },
     ],
   },
