@@ -10,7 +10,6 @@ import {
   RecordComponentProps,
   SpecificationComponentProps,
 } from "./types";
-import { Specification as OptimizationSpecification } from "./optimization";
 import { RenderSpecification } from "./RenderSpecification.tsx";
 import { RenderEntry } from "./RenderEntry.tsx";
 import { usePortalClient } from "../../PortalClient.tsx";
@@ -61,19 +60,7 @@ export const Specification: React.FC<
   return (
     <RenderSpecification
       data={specification}
-      keys={[
-        "program",
-        "keywords",
-        {
-          key: "optimization_specification",
-          label: "Optimization Specification",
-          render: () => (
-            <OptimizationSpecification
-              specification={specification.optimization_specification}
-            />
-          ),
-        },
-      ]}
+      keys={["program", "keywords", "optimization_specification"]}
     />
   );
 };

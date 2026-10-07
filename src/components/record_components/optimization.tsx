@@ -9,7 +9,6 @@ import {
   RecordComponentProps,
   SpecificationComponentProps,
 } from "./types";
-import { Specification as SinglepointSpecification } from "./singlepoint";
 import { RenderSpecification } from "./RenderSpecification.tsx";
 import { RenderEntry } from "./RenderEntry.tsx";
 import { usePortalClient } from "../../PortalClient.tsx";
@@ -40,20 +39,7 @@ export const Specification: React.FC<
   return (
     <RenderSpecification
       data={specification}
-      keys={[
-        "program",
-        "protocols",
-        "keywords",
-        {
-          key: "qc_specification",
-          label: "QC Specification",
-          render: () => (
-            <SinglepointSpecification
-              specification={specification.qc_specification}
-            />
-          ),
-        },
-      ]}
+      keys={["program", "protocols", "keywords", "qc_specification"]}
     />
   );
 };
