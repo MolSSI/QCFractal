@@ -27,6 +27,15 @@ interface ChangelogEntry {
 // skip purely internal refactors.
 const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-10-07",
+    items: [
+      {
+        kind: "Improved",
+        text: "Record specifications and properties are shown as a collapsible tree, with long arrays such as gradients collapsed and a copy button on each value",
+      },
+    ],
+  },
+  {
     date: "2026-09-28",
     items: [
       {
@@ -44,7 +53,8 @@ const CHANGELOG: ChangelogEntry[] = [
       {
         kind: "Improved",
         text: "Actions that do not apply to a record stay visible but disabled, with a hover note explaining why, and every action confirms before it is applied",
-
+      },
+      {
         kind: "Fixed",
         text: "Filtering dataset records by status, and clicking a count in the dataset status table, no longer load indefinitely on large datasets",
       },
