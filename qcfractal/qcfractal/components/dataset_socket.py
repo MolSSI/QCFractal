@@ -307,7 +307,8 @@ class DatasetSocket:
         stmt = stmt.where(DatasetDirectRecordsView.c.record_id.in_(record_id))
 
         if dataset_type is not None:
-            stmt = stmt.where(BaseDatasetORM.dataset_type == dataset_type)
+            dataset_type = [x.lower() for x in dataset_type]
+            stmt = stmt.where(BaseDatasetORM.dataset_type.in_(dataset_type))
 
         with self.root_socket.optional_session(session, True) as session:
             ret = session.execute(stmt).all()
