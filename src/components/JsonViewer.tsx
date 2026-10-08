@@ -6,6 +6,7 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CheckIcon from "@mui/icons-material/Check";
 
 const LONG_ARRAY_LENGTH = 10;
+const SHORTEN_TEXT_LENGTH = 60;
 
 const renderCopyButton: SectionElement<"svg">["render"] = (
   props,
@@ -44,6 +45,33 @@ const renderCopyButton: SectionElement<"svg">["render"] = (
   );
 };
 
+const renderLongString: React.ComponentProps<
+  typeof JsonView.String
+>["render"] = (props, { type, value }) => {
+  if (type !== "value" || String(value).length <= SHORTEN_TEXT_LENGTH) {
+    return undefined;
+  }
+  const shortened = props.className?.includes("w-rjv-value-short");
+  const quote = (
+    <span style={{ color: "var(--w-rjv-quotes-string-color)" }}>"</span>
+  );
+
+  return (
+    <>
+      {quote}
+      <Tooltip
+        title={shortened ? "Click to show full text" : "Click to collapse"}
+        placement="top"
+        followCursor
+        disableInteractive
+      >
+        <span {...props} />
+      </Tooltip>
+      {quote}
+    </>
+  );
+};
+
 const copyStringsUnquoted = (
   copyText: string,
   _keyName?: string | number,
@@ -79,6 +107,7 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
     "--w-rjv-brackets-color": palette.text.secondary,
     "--w-rjv-ellipsis-color": palette.text.secondary,
     "--w-rjv-type-string-color": palette.warning.main,
+    "--w-rjv-quotes-string-color": palette.warning.main,
     "--w-rjv-type-int-color": palette.primary.main,
     "--w-rjv-type-float-color": palette.primary.main,
     "--w-rjv-type-bigint-color": palette.primary.main,
@@ -87,7 +116,7 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
     "--w-rjv-type-undefined-color": palette.text.secondary,
     fontSize: 13,
     textIndent: 0,
-    whiteSpace: "nowrap",
+    whiteSpace: "pre",
   } as React.CSSProperties;
 
   return (
@@ -100,13 +129,14 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({
         }
         objectSortKeys={sortKeys}
         displayDataTypes={false}
-        shortenTextAfterLength={60}
+        shortenTextAfterLength={SHORTEN_TEXT_LENGTH}
         highlightUpdates={false}
         beforeCopy={copyStringsUnquoted}
         style={style}
       >
         <JsonView.Quote render={() => <span />} />
         <JsonView.Copied render={renderCopyButton} />
+        <JsonView.String render={renderLongString} />
       </JsonView>
     </Box>
   );

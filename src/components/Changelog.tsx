@@ -31,7 +31,7 @@ const CHANGELOG: ChangelogEntry[] = [
     items: [
       {
         kind: "Improved",
-        text: "Record specifications and properties are shown as a collapsible tree, with long arrays such as gradients collapsed and a copy button on each value",
+        text: "Record specifications, properties and errors are shown as a collapsible tree, with long arrays such as gradients collapsed and a copy button on each value",
       },
     ],
   },
