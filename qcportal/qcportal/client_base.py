@@ -848,12 +848,21 @@ class PortalClientBase:
             True if the server is up and responded to the ping. False otherwise
         """
 
-        uri = f"{self.address}/api/v1/ping"
+        uri = f"{self.address}api/v1/ping"
 
         try:
-            r = requests.get(uri)
-            return r.json()["success"]
+            r = requests.get(uri, verify=self._verify, timeout=self.timeout)
         except AllowedConnectionExceptions:
+            return False
+
+        # A down server behind a reverse proxy gives an error page (502/503/504, often HTML) rather than
+        # refusing the connection
+        if r.status_code != 200:
+            return False
+
+        try:
+            return r.json()["success"]
+        except (ValueError, KeyError, TypeError):
             return False
 
     def get_server_information(self) -> dict[str, Any]:
