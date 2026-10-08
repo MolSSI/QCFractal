@@ -2,6 +2,7 @@ import time
 
 import jwt
 import pytest
+import requests
 
 from qcarchivetesting.testing_classes import (
     QCATestingSnowflake,
@@ -144,3 +145,31 @@ def test_jwt_refresh_user_deleted(postgres_server, client_encoding):
 
         with pytest.raises(AuthenticationFailure, match="User account no longer exists"):
             client.list_datasets()
+
+
+def test_jwt_login_server_error(secure_snowflake):
+    # A login that fails because the server (or a proxy in front of it) is having problems
+    # is not an authentication failure - the credentials may be fine
+    client = secure_snowflake.user_client("submit_user")
+
+    # Force a fresh login on the next request
+    client._jwt_refresh_exp = 1
+
+    def _send(*args, **kwargs):
+        r = requests.Response()
+        r.status_code = 502
+        r.reason = "Bad Gateway"
+        r.headers["Content-Type"] = "text/html"
+        r._content = b"<html><body>Bad Gateway</body></html>"
+        return r
+
+    client._req_session.send = _send
+    try:
+        with pytest.raises(PortalRequestError) as err:
+            client.list_datasets()
+        assert err.value.status_code == 502
+    finally:
+        del client._req_session.send
+
+    # Logs in again once the server is back
+    client.list_datasets()

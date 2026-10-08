@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field, ConfigDict
 
 from qcfractalcompute.apps.app_manager import AppManager
 from qcportal import ManagerClient
-from qcportal.client_base import AllowedConnectionExceptions
+from qcportal.client_base import AllowedConnectionExceptions, PortalRequestError
 from qcportal.managers import ManagerName
 from qcportal.metadata_models import TaskReturnMetadata
 from qcportal.record_models import RecordTask
@@ -34,6 +34,42 @@ from .executors import build_executor
 
 if TYPE_CHECKING:
     from parsl.executors.base import ParslExecutor
+
+
+def _is_temporary_server_error(ex: BaseException) -> bool:
+    """
+    Determines if an error from communicating with the server is likely to be temporary
+
+    This includes being unable to connect at all, and HTTP errors that mean the server - or a reverse proxy
+    or load balancer in front of it - could not handle the request right now (down, restarting, overloaded,
+    database unavailable, etc). The manager should keep working and try again later.
+
+    500 is included, since a server whose database is restarting or being upgraded may return it.
+    """
+
+    if isinstance(ex, AllowedConnectionExceptions):
+        return True
+
+    if isinstance(ex, PortalRequestError):
+        return ex.status_code >= 500 or ex.status_code in (408, 429)
+
+    return False
+
+
+def _is_manager_inactive_error(ex: BaseException) -> bool:
+    """
+    Determines if an error from the server means that this manager is no longer active on the server
+
+    This happens if the server deactivated the manager (for example, after missing too many heartbeats during
+    a long outage). The server will have already returned the manager's tasks to the queue.
+    """
+
+    # The server signals this with a 400 and a message only. Messages vary between endpoints
+    # ("Manager X is not active", "Cannot update resource stats for manager X - does not exist", etc)
+    if isinstance(ex, PortalRequestError) and ex.status_code == 400:
+        return "is not active" in ex.msg or "does not exist" in ex.msg
+
+    return False
 
 
 class InterruptableScheduler(sched.scheduler):
@@ -353,6 +389,32 @@ class ComputeManager:
         # This interrupts the scheduler, which will cause the rest of the start() method to run
         self.scheduler.interrupt()
 
+    def _handle_server_error(self, ex: Exception) -> None:
+        """
+        Handles an error from communicating with the server
+
+        If the error is temporary, this just returns, and the caller should try again later.
+
+        If the server says this manager is no longer active, the manager is stopped. The caller
+        should then treat it like a temporary error (results that could not be returned will be
+        reported at shutdown).
+
+        All other errors are re-raised.
+        """
+
+        if _is_manager_inactive_error(ex):
+            if not self._is_stopping:
+                self.logger.error(
+                    f"The server reports that this manager is no longer active: {str(ex).strip()}. "
+                    "It was probably deactivated after missing heartbeats, and its tasks were returned to the "
+                    "queue. Shutting down."
+                )
+                self.stop()
+            return
+
+        if not _is_temporary_server_error(ex):
+            raise ex
+
     def heartbeat(self) -> None:
         """
         Provides a heartbeat to the connected Server.
@@ -367,7 +429,11 @@ class ComputeManager:
             )
             self._failed_heartbeats = 0
 
-        except AllowedConnectionExceptions as ex:
+        except Exception as ex:
+            self._handle_server_error(ex)
+            if self._is_stopping:
+                return
+
             self._failed_heartbeats += 1
             self.logger.warning(f"Heartbeat failed: {str(ex).strip()}. QCFractal server down?")
             self.logger.warning(f"Missed {self._failed_heartbeats} heartbeats so far")
@@ -498,7 +564,9 @@ class ComputeManager:
                         f"Did not successfully push jobs from {attempts+1} updates ago. Error: {return_meta.error_string}"
                     )
 
-            except AllowedConnectionExceptions:
+            except Exception as ex:
+                self._handle_server_error(ex)
+
                 # Tried and failed
                 attempts += 1
 
@@ -553,8 +621,11 @@ class ComputeManager:
                     status_rows.extend([(task_id, "rejected", reason) for task_id, reason in return_meta.rejected_info])
                     self.statistics.total_rejected_tasks += return_meta.n_rejected
 
-                except AllowedConnectionExceptions:
-                    self.logger.warning("Returning complete tasks failed. Attempting again on next update.")
+                except Exception as ex:
+                    self._handle_server_error(ex)
+                    self.logger.warning(
+                        f"Returning complete tasks failed: {str(ex).strip()}. Attempting again on next update."
+                    )
                     self._deferred_tasks[0].update(executor_results)
 
                     status_rows.extend([(task_id, "deferred", "") for task_id in executor_results.keys()])
@@ -629,7 +700,7 @@ class ComputeManager:
         self.logger.info(worker_stats_str)
         self.statistics.last_update_time = time.time()
 
-        if new_tasks and server_up:
+        if new_tasks and server_up and not self._is_stopping:
             # What do we have for each executor?
             active_tasks = self.n_active_tasks
 
@@ -648,7 +719,8 @@ class ComputeManager:
                     try:
                         executor_programs = self.executor_programs[executor_label]
                         new_task_info = self.client.claim(executor_programs, executor_config.compute_tags, open_slots)
-                    except AllowedConnectionExceptions as ex:
+                    except Exception as ex:
+                        self._handle_server_error(ex)
                         self.logger.warning(f"Acquisition of new tasks failed: {str(ex).strip()}")
                         return
 

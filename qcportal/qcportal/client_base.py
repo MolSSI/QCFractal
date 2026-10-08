@@ -47,6 +47,8 @@ AllowedConnectionExceptions = (
     ConnectionError,
     requests.exceptions.Timeout,
     requests.exceptions.ConnectionError,
+    # The connection was dropped while the response was being read (eg, the server was stopped mid-request)
+    requests.exceptions.ChunkedEncodingError,
     urllib3.exceptions.TimeoutError,
 )
 
@@ -500,6 +502,11 @@ class PortalClientBase:
             self._jwt_access_exp = decoded_access_token["exp"]
             self._jwt_refresh_exp = decoded_refresh_token["exp"]
             self.user_id = int(decoded_access_token["sub"])  # "identity" "subject"
+        elif ret.status_code >= 500:
+            # The server (or a proxy in front of it) is having problems - this says nothing
+            # about whether the credentials are valid
+            msg = _response_msg(ret)
+            raise PortalRequestError(f"Login failed: {msg}", ret.status_code, {"msg": msg})
         else:
             raise AuthenticationFailure(_response_msg(ret))
 
