@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field, ConfigDict
 
 from qcfractalcompute.apps.app_manager import AppManager
 from qcportal import ManagerClient
-from qcportal.client_base import AllowedConnectionExceptions, PortalRequestError
+from qcportal.client_base import PortalRequestError, is_temporary_server_error
 from qcportal.managers import ManagerName
 from qcportal.metadata_models import TaskReturnMetadata
 from qcportal.record_models import RecordTask
@@ -34,26 +34,6 @@ from .executors import build_executor
 
 if TYPE_CHECKING:
     from parsl.executors.base import ParslExecutor
-
-
-def _is_temporary_server_error(ex: BaseException) -> bool:
-    """
-    Determines if an error from communicating with the server is likely to be temporary
-
-    This includes being unable to connect at all, and HTTP errors that mean the server - or a reverse proxy
-    or load balancer in front of it - could not handle the request right now (down, restarting, overloaded,
-    database unavailable, etc). The manager should keep working and try again later.
-
-    500 is included, since a server whose database is restarting or being upgraded may return it.
-    """
-
-    if isinstance(ex, AllowedConnectionExceptions):
-        return True
-
-    if isinstance(ex, PortalRequestError):
-        return ex.status_code >= 500 or ex.status_code in (408, 429)
-
-    return False
 
 
 def _is_manager_inactive_error(ex: BaseException) -> bool:
@@ -412,7 +392,7 @@ class ComputeManager:
                 self.stop()
             return
 
-        if not _is_temporary_server_error(ex):
+        if not is_temporary_server_error(ex):
             raise ex
 
     def heartbeat(self) -> None:

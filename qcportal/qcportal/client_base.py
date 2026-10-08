@@ -98,6 +98,38 @@ class PortalRequestError(Exception):
         return f"{self.msg} (HTTP status {self.status_code})"
 
 
+def is_temporary_server_error(ex: BaseException) -> bool:
+    """
+    Determines if an exception from communicating with a server is likely to be temporary
+
+    This includes being unable to connect at all, and HTTP errors meaning that the server - or a reverse
+    proxy or load balancer in front of it - could not handle the request right now (down, restarting,
+    overloaded, rate limiting, etc). Trying the same request again later may succeed.
+
+    500 (Internal Server Error) is included, since a server whose database is restarting or being upgraded
+    may return it. However, it can also come from a request that will always fail, so anything retrying on
+    this should eventually give up.
+
+    Parameters
+    ----------
+    ex
+        An exception raised while communicating with the server (for example, by a client method)
+
+    Returns
+    -------
+    :
+        True if the error is likely temporary, False otherwise
+    """
+
+    if isinstance(ex, AllowedConnectionExceptions):
+        return True
+
+    if isinstance(ex, PortalRequestError):
+        return ex.status_code >= 500 or ex.status_code in (408, 429)
+
+    return False
+
+
 class PortalClientBase:
     def __init__(
         self,
