@@ -1,6 +1,63 @@
 Release Notes
 =============
 
+0.71 / 2026-10-08
+-----------------
+
+This release contains many bugfixes and improvements, particularly related to authentication and security.
+Users can now create long-lived **API tokens** (:pr:`1035`, :pr:`1043`), which can be used instead of a
+username/password by both the PortalClient and compute managers (and the raw API).
+Tokens can be named, renamed, given an expiration, and revoked. Server admins can control default and
+maximum token lifetimes with the new ``api_token_default_lifetime`` and ``api_token_max_lifetime`` options.
+See the user guide for details.
+
+Authentication in general has been hardened (:pr:`1030`, :pr:`1031`). Failed logins are now
+rate limited, failed logins no longer reveal whether a user exists or is disabled, password hashes
+are upgraded, browser session keys are rotated on login and stored only as hashes in the database,
+expired sessions are periodically cleaned up, and cookie-authenticated (browser) requests now have CSRF protection.
+
+**Warning**: Some defaults have changed that may affect existing deployments:
+
+- The session cookie now defaults to ``Secure``, ``HttpOnly``, and ``SameSite=Lax``. If you serve
+  a browser-based client over plain HTTP, set ``user_session_cookie_secure`` to false.
+- Compute managers now verify the server's SSL certificate by default (:pr:`1027`). If your server uses
+  a self-signed certificate, set ``verify: false`` in the manager's server configuration.
+- CORS with ``supports_credentials`` enabled can no longer be used with a wildcard (``*``) origin.
+
+Records and datasets now have an ``owner_user`` field alongside the existing ``creator_user``,
+and projects have a ``creator_user`` and ``owner_groups`` (:pr:`1042`). For now, the owner is just the creator,
+but this lays the groundwork for future permission/ownership features. Older clients should be able to work
+with this server, except when using projects. If you use projects, upgrade your client.
+
+There are also a few database migrations in this release, although none of them should take very long.
+For records that failed with nested errors, stdout/stderr were being lost (:pr:`1041`). This is fixed, and
+the script ``server_admin/backfill_nested_error_stdout.py`` can be used to recover the stdout/stderr
+of existing affected records.
+
+This release is also fixes compatibility with SQLAlchemy 2.1 (:pr:`1038`, :pr:`1039`).
+
+Notable PRs:
+
+- (:pr:`1027`) Default to verifying SSL certificates for compute managers
+- (:pr:`1028`) Always use batching with ``ds.modify_records``
+- (:pr:`1029`) Background dataset record modification & filtering of dataset records by status
+- (:pr:`1030`) Authentication hardening (rate limiting, CSRF protection, secure cookie defaults, and more)
+- (:pr:`1031`) Store only hashes of browser session keys in the database
+- (:pr:`1032`) Improve typing for QCPortal and fix ``reset()`` in query iterators
+- (:pr:`1033`) Simplify flask storage socket bookkeeping
+- (:pr:`1034`) Fix some issues with OpenAPI specification generation
+- (:pr:`1035`) Add API tokens
+- (:pr:`1036`) Lots of small fixes for projects, and the ability to update project metadata
+- (:pr:`1037`) Allow separate QCEngine and worker memory limits (``qcengine_memory_per_worker``) (:contrib:`esingh41`)
+- (:pr:`1038`, :pr:`1039`) SQLAlchemy 2.1 compatibility and better handling of database connection URIs
+  (special characters, IPv6, multi-host)
+- (:pr:`1040`) Remove the unused ``reset_running`` record function
+- (:pr:`1041`) Fix stdout/stderr being lost for failed records with nested errors
+- (:pr:`1042`) Add ``owner_user`` to records and datasets, and ``creator_user``/``owner_groups`` to projects
+- (:pr:`1043`) Ability to rename API tokens
+- (:pr:`1044`) Fix race conditions in internal jobs and remove internal job ``after_function``
+- (:pr:`1046`) Fix error when querying dataset records of specified dataset types
+
 0.70 / 2026-08-16
 -----------------
 
