@@ -248,6 +248,14 @@ def test_dataset_client_query_dataset_records(snowflake: QCATestingSnowflake):
     assert rec_info[0]["dataset_id"] == 1
     assert rec_info[0]["entry_name"] == "test_molecule_2"
 
+    # Filter by dataset type (single string or list)
+    rec_info = snowflake_client.query_dataset_records([rec_id_2], dataset_type="singlepoint")
+    assert len(rec_info) == 1
+    rec_info = snowflake_client.query_dataset_records([rec_id_2], dataset_type=["optimization", "singlepoint"])
+    assert len(rec_info) == 1
+    rec_info = snowflake_client.query_dataset_records([rec_id_2], dataset_type="optimization")
+    assert len(rec_info) == 0
+
     # Query which dataset contains a record
     ds.remove_records(entry_names="test_molecule_2", specification_names="spec_1", delete_records=True)
     rec_info = snowflake_client.query_dataset_records([rec_id_2])
