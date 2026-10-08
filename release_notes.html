@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -36,12 +36,12 @@
     <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=68b739ae" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=dc712c2d"></script>
+    <script src="_static/documentation_options.js?v=efc8fe8b"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,8 +54,9 @@
     <link rel="next" title="QCFractal Server User Guide" href="admin_guide/index.html" />
     <link rel="prev" title="NEB Records" href="user_guide/qcportal_reference/records/neb.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post138+g0a40c5ea7" />
+  <meta name="docsearch:version" content="0.70.post140+gdadd3e339" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -476,7 +477,59 @@
   <section id="release-notes">
 <h1>Release Notes<a class="headerlink" href="#release-notes" title="Link to this heading">#</a></h1>
 <section id="id1">
-<h2>0.70 / 2026-08-16<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<h2>0.71 / 2026-10-08<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<p>This release contains many bugfixes and improvements, particularly related to authentication and security.
+Users can now create long-lived <strong>API tokens</strong> (<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1035">PR 1035</a>, <a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1043">PR 1043</a>), which can be used instead of a
+username/password by both the PortalClient and compute managers (and the raw API).
+Tokens can be named, renamed, given an expiration, and revoked. Server admins can control default and
+maximum token lifetimes with the new <code class="docutils literal notranslate"><span class="pre">api_token_default_lifetime</span></code> and <code class="docutils literal notranslate"><span class="pre">api_token_max_lifetime</span></code> options.
+See the user guide for details.</p>
+<p>Authentication in general has been hardened (<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1030">PR 1030</a>, <a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1031">PR 1031</a>). Failed logins are now
+rate limited, failed logins no longer reveal whether a user exists or is disabled, password hashes
+are upgraded, browser session keys are rotated on login and stored only as hashes in the database,
+expired sessions are periodically cleaned up, and cookie-authenticated (browser) requests now have CSRF protection.</p>
+<p><strong>Warning</strong>: Some defaults have changed that may affect existing deployments:</p>
+<ul class="simple">
+<li><p>The session cookie now defaults to <code class="docutils literal notranslate"><span class="pre">Secure</span></code>, <code class="docutils literal notranslate"><span class="pre">HttpOnly</span></code>, and <code class="docutils literal notranslate"><span class="pre">SameSite=Lax</span></code>. If you serve
+a browser-based client over plain HTTP, set <code class="docutils literal notranslate"><span class="pre">user_session_cookie_secure</span></code> to false.</p></li>
+<li><p>Compute managers now verify the server’s SSL certificate by default (<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1027">PR 1027</a>). If your server uses
+a self-signed certificate, set <code class="docutils literal notranslate"><span class="pre">verify:</span> <span class="pre">false</span></code> in the manager’s server configuration.</p></li>
+<li><p>CORS with <code class="docutils literal notranslate"><span class="pre">supports_credentials</span></code> enabled can no longer be used with a wildcard (<code class="docutils literal notranslate"><span class="pre">*</span></code>) origin.</p></li>
+</ul>
+<p>Records and datasets now have an <code class="docutils literal notranslate"><span class="pre">owner_user</span></code> field alongside the existing <code class="docutils literal notranslate"><span class="pre">creator_user</span></code>,
+and projects have a <code class="docutils literal notranslate"><span class="pre">creator_user</span></code> and <code class="docutils literal notranslate"><span class="pre">owner_groups</span></code> (<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1042">PR 1042</a>). For now, the owner is just the creator,
+but this lays the groundwork for future permission/ownership features. Older clients should be able to work
+with this server, except when using projects. If you use projects, upgrade your client.</p>
+<p>There are also a few database migrations in this release, although none of them should take very long.
+For records that failed with nested errors, stdout/stderr were being lost (<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1041">PR 1041</a>). This is fixed, and
+the script <code class="docutils literal notranslate"><span class="pre">server_admin/backfill_nested_error_stdout.py</span></code> can be used to recover the stdout/stderr
+of existing affected records.</p>
+<p>This release is also fixes compatibility with SQLAlchemy 2.1 (<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1038">PR 1038</a>, <a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1039">PR 1039</a>).</p>
+<p>Notable PRs:</p>
+<ul class="simple">
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1027">PR 1027</a>) Default to verifying SSL certificates for compute managers</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1028">PR 1028</a>) Always use batching with <code class="docutils literal notranslate"><span class="pre">ds.modify_records</span></code></p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1029">PR 1029</a>) Background dataset record modification &amp; filtering of dataset records by status</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1030">PR 1030</a>) Authentication hardening (rate limiting, CSRF protection, secure cookie defaults, and more)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1031">PR 1031</a>) Store only hashes of browser session keys in the database</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1032">PR 1032</a>) Improve typing for QCPortal and fix <code class="docutils literal notranslate"><span class="pre">reset()</span></code> in query iterators</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1033">PR 1033</a>) Simplify flask storage socket bookkeeping</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1034">PR 1034</a>) Fix some issues with OpenAPI specification generation</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1035">PR 1035</a>) Add API tokens</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1036">PR 1036</a>) Lots of small fixes for projects, and the ability to update project metadata</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1037">PR 1037</a>) Allow separate QCEngine and worker memory limits (<code class="docutils literal notranslate"><span class="pre">qcengine_memory_per_worker</span></code>) (<a class="extlink-contrib reference external" href="https://github.com/esingh41">&#64;esingh41</a>)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1038">PR 1038</a>, <a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1039">PR 1039</a>) SQLAlchemy 2.1 compatibility and better handling of database connection URIs
+(special characters, IPv6, multi-host)</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1040">PR 1040</a>) Remove the unused <code class="docutils literal notranslate"><span class="pre">reset_running</span></code> record function</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1041">PR 1041</a>) Fix stdout/stderr being lost for failed records with nested errors</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1042">PR 1042</a>) Add <code class="docutils literal notranslate"><span class="pre">owner_user</span></code> to records and datasets, and <code class="docutils literal notranslate"><span class="pre">creator_user</span></code>/<code class="docutils literal notranslate"><span class="pre">owner_groups</span></code> to projects</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1043">PR 1043</a>) Ability to rename API tokens</p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1044">PR 1044</a>) Fix race conditions in internal jobs and remove internal job <code class="docutils literal notranslate"><span class="pre">after_function</span></code></p></li>
+<li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1046">PR 1046</a>) Fix error when querying dataset records of specified dataset types</p></li>
+</ul>
+</section>
+<section id="id2">
+<h2>0.70 / 2026-08-16<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
 <p>The big v0.70 release is here! Main thing is full pydantic v2. support (which was holding
 back python 3.14 compatibility). This has been fairly thoroughly test, although
 I wouldn’t be surprised for compatibility bugs to pop up.</p>
@@ -507,8 +560,8 @@ future deployments - see <a class="extlink-pr reference external" href="https://
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1024">PR 1024</a>) Better handling of testing command line options and remove unneeded dependencies</p></li>
 </ul>
 </section>
-<section id="id2">
-<h2>0.65 / 2026-06-02<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
+<section id="id3">
+<h2>0.65 / 2026-06-02<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
 <p>A few more bugfixes and cleanup. This is a small release before the much more consequential
 v0.70 release (which will be the first with full python 3.14 and pydantic v2 compatibility).
 That release is tentatively scheduled for later this month.</p>
@@ -524,8 +577,8 @@ That release is tentatively scheduled for later this month.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/1011">PR 1011</a>) Swallow/ignore stdout/stderr from qcengine to prevent json parsing issues</p></li>
 </ul>
 </section>
-<section id="id3">
-<h2>0.64 / 2026-03-04<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
+<section id="id4">
+<h2>0.64 / 2026-03-04<a class="headerlink" href="#id4" title="Link to this heading">#</a></h2>
 <p>Some cleanup and some small bug fixes. Some old code and migrations were removed and some
 incorrect endpoints were fixed.</p>
 <p>One bigger change is the improved use of upserts (ON CONFLICT DO NOTHING) in postgres, particularly
@@ -549,8 +602,8 @@ coming the next version.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/995">PR 995</a>) Faster record count in dataset list</p></li>
 </ul>
 </section>
-<section id="id4">
-<h2>0.63 / 2025-09-26<a class="headerlink" href="#id4" title="Link to this heading">#</a></h2>
+<section id="id5">
+<h2>0.63 / 2025-09-26<a class="headerlink" href="#id5" title="Link to this heading">#</a></h2>
 <p>The main big change is moving the snowflake from using multiprocessing to threads. This should
 be even cleaner than before at the expense of a bit of performance (maybe). There were reports
 of multiprocessing still causing problems on certain architectures. This hopefully fixes that for everyone.</p>
@@ -570,8 +623,8 @@ and invisible to the user.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/975">PR 975</a>) Check if native files has been set before fetching</p></li>
 </ul>
 </section>
-<section id="id5">
-<h2>0.61 / 2025-05-15<a class="headerlink" href="#id5" title="Link to this heading">#</a></h2>
+<section id="id6">
+<h2>0.61 / 2025-05-15<a class="headerlink" href="#id6" title="Link to this heading">#</a></h2>
 <p>Some good bug fixes, and important features. Mainly, an initial beta version of projects.</p>
 <p>This release also adds lots of functionality useful for building web applications against the server.</p>
 <p>Internally, one big change - roles and permissions is now handled in a streamlined fashion, rather than using
@@ -598,8 +651,8 @@ believe anyone did).</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/944">PR 944</a>) Initial implementation of projects</p></li>
 </ul>
 </section>
-<section id="id6">
-<h2>0.60 / 2025-04-05<a class="headerlink" href="#id6" title="Link to this heading">#</a></h2>
+<section id="id7">
+<h2>0.60 / 2025-04-05<a class="headerlink" href="#id7" title="Link to this heading">#</a></h2>
 <p>Some good bug fixes, and important features. Mainly, the ability to add entries in the background, and
 import/export of dataset scaffolds (Thanks to <a class="extlink-contrib reference external" href="https://github.com/jaclark5">&#64;jaclark5</a>)!</p>
 <p>There some interfaces changes related to datasets and record submission. <strong>These are intended to be
@@ -629,8 +682,8 @@ still work (if not, open an issue). For example, <code class="docutils literal n
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/923">PR 923</a>, <a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/924">PR 924</a>) Better error handling in running conda commands in compute workers (J. Clark <a class="extlink-contrib reference external" href="https://github.com/jaclark5">&#64;jaclark5</a>)</p></li>
 </ul>
 </section>
-<section id="id7">
-<h2>0.59 / 2025-02-17<a class="headerlink" href="#id7" title="Link to this heading">#</a></h2>
+<section id="id8">
+<h2>0.59 / 2025-02-17<a class="headerlink" href="#id8" title="Link to this heading">#</a></h2>
 <p>A few bug fixes in this, but one big new feature - the ability to copy entries, specifications,
 and records from another dataset! See
 <a class="reference external" href="https://docs.qcarchive.molssi.org/user_guide/datasets/creating.html#cloning-a-dataset">documentation</a>
@@ -642,8 +695,8 @@ for details.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/896">PR 896</a>) Ability to clone datasets and copy entries/specifications/records from other datasets</p></li>
 </ul>
 </section>
-<section id="id8">
-<h2>0.58 / 2025-01-31<a class="headerlink" href="#id8" title="Link to this heading">#</a></h2>
+<section id="id9">
+<h2>0.58 / 2025-01-31<a class="headerlink" href="#id9" title="Link to this heading">#</a></h2>
 <p>This release has some big new features! These new features should be stable, but report
 any bugs you may find.</p>
 <p>1. Dataset views can now be attached to a dataset and stored in S3-compatible storage. The views are
@@ -675,8 +728,8 @@ cause issues, but if it does, contact me.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/889">PR 889</a>) Implement jitter for manager heartbeats and updates</p></li>
 </ul>
 </section>
-<section id="id9">
-<h2>0.57 / 2024-12-12<a class="headerlink" href="#id9" title="Link to this heading">#</a></h2>
+<section id="id10">
+<h2>0.57 / 2024-12-12<a class="headerlink" href="#id10" title="Link to this heading">#</a></h2>
 <p>A couple new features, some nice improvements, and of course some bug fixes!
 This update should be backwards compatible - new clients can access old servers, and old clients can
 access new servers. Same for compute managers.</p>
@@ -696,8 +749,8 @@ access new servers. Same for compute managers.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/863">PR 863</a>) Remove channels from Parsl config</p></li>
 </ul>
 </section>
-<section id="id10">
-<h2>0.56 / 2024-07-09<a class="headerlink" href="#id10" title="Link to this heading">#</a></h2>
+<section id="id11">
+<h2>0.56 / 2024-07-09<a class="headerlink" href="#id11" title="Link to this heading">#</a></h2>
 <p>Two small bugfixes. One is related to how the cache works, the other is a slight modification of the NEB specification.</p>
 <p>The fix to the caching behavior should help with a lot of unexpected behavior related to caching. See <a class="extlink-issue reference external" href="https://github.com/MolSSI/QCFractal/issues/844">Issue 844</a>.</p>
 <ul class="simple">
@@ -705,8 +758,8 @@ access new servers. Same for compute managers.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/843">PR 843</a>) Write records to cache immediately after fetching</p></li>
 </ul>
 </section>
-<section id="id11">
-<h2>0.55 / 2024-05-23<a class="headerlink" href="#id11" title="Link to this heading">#</a></h2>
+<section id="id12">
+<h2>0.55 / 2024-05-23<a class="headerlink" href="#id12" title="Link to this heading">#</a></h2>
 <p>Some moderate improvements - mainly, the use of ASPW for SQLite, and the removal of the never-used manager log and
 serverinfo log tables. Also adds maintenance jobs for removing old access log and completed internal jobs.</p>
 <p>This release also adds the ability to more-strictly handle queue tags (to prevent managers with <cite>*</cite> as a tag from pulling
@@ -730,16 +783,16 @@ everything).</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/838">PR 838</a>) Better handling of passwords with <cite>init-db</cite></p></li>
 </ul>
 </section>
-<section id="id12">
-<h2>0.54.1 / 2024-04-12<a class="headerlink" href="#id12" title="Link to this heading">#</a></h2>
+<section id="id13">
+<h2>0.54.1 / 2024-04-12<a class="headerlink" href="#id13" title="Link to this heading">#</a></h2>
 <p>This is a minor fix-up release that fixes a few issues from the v0.54 release.</p>
 <ul class="simple">
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/815">PR 815</a>) Adds tag to the task queue sort index</p></li>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/816">PR 816</a>) Fixes a few issues related to caching</p></li>
 </ul>
 </section>
-<section id="id13">
-<h2>0.54 / 2024-04-09<a class="headerlink" href="#id13" title="Link to this heading">#</a></h2>
+<section id="id14">
+<h2>0.54 / 2024-04-09<a class="headerlink" href="#id14" title="Link to this heading">#</a></h2>
 <p>Two big features of this release is client-side caching (including views) and the ability to download more of records.
 As part of this, fetching lots of records from a server will automatically scale to keep a relatively constant
 request time, rather than use a fixed batch size.</p>
@@ -752,8 +805,8 @@ request time, rather than use a fixed batch size.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/811">PR 811</a>) Improve task queue performance by storing time in the task queue table directly</p></li>
 </ul>
 </section>
-<section id="id14">
-<h2>0.53 / 2024-01-09<a class="headerlink" href="#id14" title="Link to this heading">#</a></h2>
+<section id="id15">
+<h2>0.53 / 2024-01-09<a class="headerlink" href="#id15" title="Link to this heading">#</a></h2>
 <p>The only real thing to report is fixing of molecules returned from the server. Other than that,
 a little bit of cleanup in preparation for implementing new features in the future
 No breaking changes. Upgrading qcportal is recommended, but is not required.</p>
@@ -762,8 +815,8 @@ No breaking changes. Upgrading qcportal is recommended, but is not required.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/798">PR 798</a>) Mark molecules coming from the server as already validated, and remove <cite>fix_com</cite> and <cite>fix_orientation</cite> from the database.</p></li>
 </ul>
 </section>
-<section id="id15">
-<h2>0.52 / 2023-11-29<a class="headerlink" href="#id15" title="Link to this heading">#</a></h2>
+<section id="id16">
+<h2>0.52 / 2023-11-29<a class="headerlink" href="#id16" title="Link to this heading">#</a></h2>
 <p>Some improvements and bugfixes, but no breaking changes. Upgrading qcportal is recommended
 due to fixes related to JWTs, but is not required. The same is true with compute managers.</p>
 <p>Notable pull requests and features:</p>
@@ -776,8 +829,8 @@ due to fixes related to JWTs, but is not required. The same is true with compute
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/794">PR 794</a>) Remove use of now-deprecated <cite>utctime</cite> function and improve handling of timezones</p></li>
 </ul>
 </section>
-<section id="id16">
-<h2>0.51 / 2023-10-19<a class="headerlink" href="#id16" title="Link to this heading">#</a></h2>
+<section id="id17">
+<h2>0.51 / 2023-10-19<a class="headerlink" href="#id17" title="Link to this heading">#</a></h2>
 <p>Many new improvements, but very little in the way of breaking changes. Upgrading qcportal is recommended
 due to efficiency gains, but is not required.</p>
 <p>Notable pull requests and features:</p>
@@ -803,8 +856,8 @@ due to efficiency gains, but is not required.</p>
 <li><p>(<a class="extlink-pr reference external" href="https://github.com/MolSSI/QCFractal/pull/775">PR 775</a>) Add automatic batching in ds.add_entries() and ds.submit()</p></li>
 </ul>
 </section>
-<section id="id17">
-<h2>0.50 / 2023-09-12<a class="headerlink" href="#id17" title="Link to this heading">#</a></h2>
+<section id="id18">
+<h2>0.50 / 2023-09-12<a class="headerlink" href="#id18" title="Link to this heading">#</a></h2>
 <p>Major refactoring of everything. Too many changes to enumerate, but see <a class="reference external" href="https://molssi.github.io/QCFractal">docs</a> for details.</p>
 </section>
 </section>
@@ -856,23 +909,24 @@ due to efficiency gains, but is not required.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">0.70 / 2026-08-16</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">0.65 / 2026-06-02</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">0.64 / 2026-03-04</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">0.63 / 2025-09-26</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">0.61 / 2025-05-15</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">0.60 / 2025-04-05</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">0.59 / 2025-02-17</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">0.58 / 2025-01-31</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">0.57 / 2024-12-12</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">0.56 / 2024-07-09</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">0.55 / 2024-05-23</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">0.54.1 / 2024-04-12</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">0.54 / 2024-04-09</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">0.53 / 2024-01-09</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">0.52 / 2023-11-29</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">0.51 / 2023-10-19</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">0.50 / 2023-09-12</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">0.71 / 2026-10-08</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">0.70 / 2026-08-16</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">0.65 / 2026-06-02</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">0.64 / 2026-03-04</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">0.63 / 2025-09-26</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">0.61 / 2025-05-15</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">0.60 / 2025-04-05</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">0.59 / 2025-02-17</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">0.58 / 2025-01-31</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">0.57 / 2024-12-12</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">0.56 / 2024-07-09</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">0.55 / 2024-05-23</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">0.54.1 / 2024-04-12</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">0.54 / 2024-04-09</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">0.53 / 2024-01-09</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">0.52 / 2023-11-29</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">0.51 / 2023-10-19</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">0.50 / 2023-09-12</a></li>
 </ul>
   </nav></div>
 
@@ -898,8 +952,8 @@ due to efficiency gains, but is not required.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -940,7 +994,7 @@ due to efficiency gains, but is not required.</p>
         
 
         <p class="theme-version">
-        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+        Built with a customized <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
         </p>
 
     </div>
