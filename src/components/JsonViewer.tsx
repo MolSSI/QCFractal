@@ -1,9 +1,11 @@
 import React from "react";
 import JsonView, { type SectionElement } from "@uiw/react-json-view";
-import { Box, Tooltip } from "@mui/material";
+import { Box, ToggleButton, Tooltip } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CheckIcon from "@mui/icons-material/Check";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
 const LONG_ARRAY_LENGTH = 10;
 const SHORTEN_TEXT_LENGTH = 60;
@@ -51,6 +53,7 @@ const renderLongString: React.ComponentProps<
   if (type !== "value" || String(value).length <= SHORTEN_TEXT_LENGTH) {
     return undefined;
   }
+  const { onClick: toggle, style, ...textProps } = props;
   const shortened = props.className?.includes("w-rjv-value-short");
   const quote = (
     <span style={{ color: "var(--w-rjv-quotes-string-color)" }}>"</span>
@@ -59,15 +62,33 @@ const renderLongString: React.ComponentProps<
   return (
     <>
       {quote}
-      <Tooltip
-        title={shortened ? "Click to show full text" : "Click to collapse"}
-        placement="top"
-        followCursor
-        disableInteractive
-      >
-        <span {...props} />
-      </Tooltip>
+      <span {...textProps} style={{ ...style, cursor: "text" }} />
       {quote}
+      <ToggleButton
+        value="expand"
+        selected
+        size="small"
+        onClick={toggle as React.MouseEventHandler}
+        aria-expanded={!shortened}
+        sx={(theme) => ({
+          gap: 0.25,
+          ml: 0.75,
+          px: 0.75,
+          py: 0,
+          fontSize: 12,
+          lineHeight: 1.6,
+          verticalAlign: "text-bottom",
+          ...theme.applyStyles("dark", { boxShadow: "none" }),
+          "&.Mui-selected, &.Mui-selected:hover": { color: "text.primary" },
+        })}
+      >
+        {shortened ? (
+          <ExpandMoreIcon sx={{ fontSize: 16 }} />
+        ) : (
+          <ExpandLessIcon sx={{ fontSize: 16 }} />
+        )}
+        {shortened ? "Show all" : "Show less"}
+      </ToggleButton>
     </>
   );
 };
