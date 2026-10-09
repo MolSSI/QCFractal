@@ -10,8 +10,6 @@ import {
   RecordComponentProps,
   SpecificationComponentProps,
 } from "./types";
-import { Specification as SinglepointSpecification } from "./singlepoint";
-import { Specification as OptimizationSpecification } from "./optimization";
 import { RenderSpecification } from "./RenderSpecification.tsx";
 import { RenderEntry } from "./RenderEntry.tsx";
 import { Box, Grid, Typography } from "@mui/material";
@@ -32,29 +30,10 @@ export const Specification: React.FC<
       keys={[
         "program",
         "keywords",
-        {
-          key: "singlepoint_specification",
-          label: "Singlepoint Specification",
-          showIfEmpty: false,
-          render: () =>
-            specification.singlepoint_specification ? (
-              <SinglepointSpecification
-                specification={specification.singlepoint_specification}
-              />
-            ) : null,
-        },
-        {
-          key: "optimization_specification",
-          label: "Optimization Specification",
-          showIfEmpty: false,
-          render: () =>
-            specification.optimization_specification ? (
-              <OptimizationSpecification
-                specification={specification.optimization_specification}
-              />
-            ) : null,
-        },
+        "singlepoint_specification",
+        "optimization_specification",
       ]}
+      hideIfEmpty={["singlepoint_specification", "optimization_specification"]}
     />
   );
 };

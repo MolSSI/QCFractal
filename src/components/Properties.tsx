@@ -1,36 +1,10 @@
 import React from "react";
-import { Typography, List, ListItem, ListItemText, Box } from "@mui/material";
+import { Typography, Box } from "@mui/material";
+import JsonViewer from "./JsonViewer.tsx";
 
 interface PropertiesProps {
-  properties: Record<string, any>;
+  properties: Record<string, unknown>;
 }
-
-const renderValue = (value: any) => {
-  if (Array.isArray(value)) {
-    return value.length > 0 ? value.join(", ") : "None";
-  }
-  if (value === null || value === undefined || value === "") {
-    return "None";
-  }
-  if (typeof value === "object") {
-    return (
-      <List dense sx={{ pl: 2 }}>
-        {Object.entries(value).map(([k, v]) => (
-          <ListItem key={k} disablePadding>
-            <ListItemText
-              primary={
-                <>
-                  <strong>{k}:</strong> {renderValue(v)}
-                </>
-              }
-            />
-          </ListItem>
-        ))}
-      </List>
-    );
-  }
-  return String(value);
-};
 
 const Properties: React.FC<PropertiesProps> = ({ properties }) => (
   <Box sx={{ p: 2, height: "100%" }}>
@@ -38,19 +12,7 @@ const Properties: React.FC<PropertiesProps> = ({ properties }) => (
       Properties
     </Typography>
     {properties && Object.keys(properties).length > 0 ? (
-      <List dense>
-        {Object.entries(properties).map(([key, value]) => (
-          <ListItem key={key} alignItems="flex-start" disablePadding>
-            <ListItemText
-              primary={
-                <>
-                  <strong>{key}:</strong> {renderValue(value)}
-                </>
-              }
-            />
-          </ListItem>
-        ))}
-      </List>
+      <JsonViewer value={properties} sortKeys />
     ) : (
       <Typography>No properties for this record</Typography>
     )}

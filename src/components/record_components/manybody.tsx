@@ -9,7 +9,6 @@ import {
   RecordComponentProps,
   SpecificationComponentProps,
 } from "./types";
-import { Specification as SinglepointSpecification } from "./singlepoint";
 import { RenderSpecification } from "./RenderSpecification.tsx";
 import { RenderEntry } from "./RenderEntry.tsx";
 
@@ -19,20 +18,8 @@ export const Specification: React.FC<
   return (
     <RenderSpecification
       data={specification}
-      keys={[
-        "program",
-        "keywords",
-        {
-          key: "singlepoint_specification",
-          label: "Singlepoint Specification",
-          showIfEmpty: false,
-          render: () => (
-            <SinglepointSpecification
-              specification={specification.singlepoint_specification}
-            />
-          ),
-        },
-      ]}
+      keys={["program", "keywords", "singlepoint_specification"]}
+      hideIfEmpty={["singlepoint_specification"]}
     />
   );
 };

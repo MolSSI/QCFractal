@@ -16,6 +16,8 @@ import {
   Tab,
   Tabs,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Tooltip,
   Typography,
   useMediaQuery,
@@ -34,6 +36,7 @@ import { usePortalClient } from "../PortalClient.tsx";
 import * as qcpTypes from "../PortalTypes";
 import LoadingIndicator from "./LoadingIndicator";
 import ErrorIndicator from "./ErrorIndicator";
+import JsonViewer from "./JsonViewer.tsx";
 import { stripAnsi } from "../Utils.ts";
 
 // Line height must match: font-size 0.85rem (~13.6px) × line-height 1.5 ≈ 20.4px → round up
@@ -55,6 +58,8 @@ interface ViewOutputButtonProps {
   recordId: number;
   computeHistoryId: number | undefined;
 }
+
+type ViewMode = "text" | "tree";
 
 interface MatchPosition {
   lineIndex: number;
@@ -138,6 +143,7 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
   const [copyTooltip, setCopyTooltip] = useState("Copy to clipboard");
   const [scrollTop, setScrollTop] = useState(0);
   const [containerHeight, setContainerHeight] = useState(600);
+  const [viewMode, setViewMode] = useState<ViewMode>("tree");
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -218,6 +224,10 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
     enabled: open && effectiveComputeHistoryId !== undefined && !!effectiveKey,
   });
 
+  const isStructured =
+    outputContentData !== null && typeof outputContentData === "object";
+  const showTree = isStructured && viewMode === "tree";
+
   const plainText = useMemo(
     () => (outputContentData ? getPlainText(outputContentData) : ""),
     [outputContentData],
@@ -273,7 +283,7 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
     if (scrollContainerRef.current) {
       setContainerHeight(scrollContainerRef.current.clientHeight);
     }
-  }, [open, effectiveKey]);
+  }, [open, effectiveKey, showTree]);
 
   // Focus the output container once its content loads so arrow/page keys scroll
   // immediately without requiring a click first.
@@ -281,7 +291,7 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
     if (outputContentStatus === "success" && scrollContainerRef.current) {
       scrollContainerRef.current.focus({ preventScroll: true });
     }
-  }, [outputContentStatus, effectiveKey]);
+  }, [outputContentStatus, effectiveKey, showTree]);
 
   // Scroll the virtual container so the current match is centered in the viewport.
   // No DOM refs to marks needed — we know exactly which line the match is on.
@@ -305,6 +315,7 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
     setSearchInputValue("");
     setCurrentMatchIndex(0);
     setScrollTop(0);
+    setViewMode("tree");
     onClose();
   }, [initialKey, onClose]);
 
@@ -353,23 +364,30 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
     el.scrollTop += delta;
   }, []);
 
+  const exportText = useMemo(
+    () => (showTree ? JSON.stringify(outputContentData, null, 2) : plainText),
+    [showTree, outputContentData, plainText],
+  );
+
   const handleCopy = useCallback(async () => {
-    if (!plainText) return;
-    await navigator.clipboard.writeText(plainText);
+    if (!exportText) return;
+    await navigator.clipboard.writeText(exportText);
     setCopyTooltip("Copied!");
     setTimeout(() => setCopyTooltip("Copy to clipboard"), 1500);
-  }, [plainText]);
+  }, [exportText]);
 
   const handleDownload = useCallback(() => {
-    if (!plainText || !effectiveKey) return;
-    const blob = new Blob([plainText], { type: "text/plain" });
+    if (!exportText || !effectiveKey) return;
+    const blob = new Blob([exportText], {
+      type: showTree ? "application/json" : "text/plain",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${recordId}_${effectiveKey}.txt`;
+    a.download = `${recordId}_${effectiveKey}.${showTree ? "json" : "txt"}`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [plainText, effectiveKey, recordId]);
+  }, [exportText, showTree, effectiveKey, recordId]);
 
   const handlePrevMatch = useCallback(() => {
     setCurrentMatchIndex((prev) =>
@@ -438,7 +456,9 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
             value={searchInputValue}
             onChange={(e) => setSearchInputValue(e.target.value)}
             onKeyDown={handleSearchKeyDown}
-            disabled={!hasContent || outputContentStatus !== "success"}
+            disabled={
+              !hasContent || outputContentStatus !== "success" || showTree
+            }
             slotProps={{
               input: {
                 startAdornment: (
@@ -450,17 +470,17 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
             }}
             sx={{ minWidth: 200, maxWidth: 350 }}
           />
-          {deferredSearch && totalMatches > 0 && (
+          {!showTree && deferredSearch && totalMatches > 0 && (
             <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
               {currentMatchIndex + 1} / {totalMatches}
             </Typography>
           )}
-          {deferredSearch && totalMatches === 0 && (
+          {!showTree && deferredSearch && totalMatches === 0 && (
             <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
               No matches
             </Typography>
           )}
-          {deferredSearch && totalMatches > 0 && (
+          {!showTree && deferredSearch && totalMatches > 0 && (
             <>
               <IconButton size="small" onClick={handlePrevMatch} aria-label="Previous match">
                 <KeyboardArrowUpIcon fontSize="small" />
@@ -473,24 +493,44 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
 
           <Box sx={{ flex: 1 }} />
 
+          {isStructured && (
+            <ToggleButtonGroup
+              size="small"
+              exclusive
+              value={viewMode}
+              onChange={(_event, value: ViewMode | null) => {
+                if (value) {
+                  setViewMode(value);
+                  setScrollTop(0);
+                }
+              }}
+              aria-label="output view mode"
+            >
+              <ToggleButton value="text">Text</ToggleButton>
+              <ToggleButton value="tree">Tree</ToggleButton>
+            </ToggleButtonGroup>
+          )}
+
           <Tooltip title={copyTooltip}>
             <span>
               <IconButton
                 size="small"
                 onClick={handleCopy}
-                disabled={!plainText}
+                disabled={!exportText}
                 aria-label="Copy to clipboard"
               >
                 <ContentCopyIcon fontSize="small" />
               </IconButton>
             </span>
           </Tooltip>
-          <Tooltip title="Download as text file">
+          <Tooltip
+            title={showTree ? "Download as JSON file" : "Download as text file"}
+          >
             <span>
               <IconButton
                 size="small"
                 onClick={handleDownload}
-                disabled={!plainText}
+                disabled={!exportText}
                 aria-label="Download output"
               >
                 <DownloadIcon fontSize="small" />
@@ -571,7 +611,14 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
                 ))}
               </Tabs>
 
+              {showTree && (
+                <Box sx={{ flex: 1, overflow: "auto", px: 2, py: 1 }}>
+                  <JsonViewer value={outputContentData as object} />
+                </Box>
+              )}
+
               {/* Virtual scroll output container */}
+              {!showTree && (
               <Box sx={{ flex: 1, position: "relative", display: "flex", overflow: "hidden" }}>
               <Box
                 ref={scrollContainerRef}
@@ -698,6 +745,7 @@ export const ViewOutputDialog: React.FC<ViewOutputDialogProps> = ({
                 </Box>
               )}
               </Box>
+              )}
             </Box>
           )}
         </Box>
