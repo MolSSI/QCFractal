@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import threading
 import time
+from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 import pytest
+import requests
 
 from qcarchivetesting import wait_until
 from qcfractalcompute.compute_manager import ComputeManager
@@ -16,6 +18,55 @@ from qcportal.utils import now_at_utc
 
 if TYPE_CHECKING:
     from qcarchivetesting.testing_classes import QCATestingSnowflake
+
+
+@contextmanager
+def server_outage(snowflake: QCATestingSnowflake, compute: ComputeManager, error):
+    """
+    Simulates the server being unavailable to the manager
+
+    error is either "stop_api" (actually stop the server, so connections are refused), an HTTP status
+    code (returned as an HTML error page, as a reverse proxy in front of a down server would), or an
+    exception to raise from the connection
+    """
+
+    if error == "stop_api":
+        snowflake.stop_api()
+        try:
+            yield
+        finally:
+            snowflake.start_api()
+        return
+
+    def _send(*args, **kwargs):
+        if isinstance(error, int):
+            r = requests.Response()
+            r.status_code = error
+            r.reason = "Gateway Problems"
+            r.headers["Content-Type"] = "text/html"
+            r._content = b"<html><body>The server is unavailable</body></html>"
+            return r
+        raise error
+
+    session = compute.client._req_session
+    session.send = _send
+    try:
+        yield
+    finally:
+        del session.send
+
+
+# Errors the manager should ride out
+outage_errors = [
+    "stop_api",
+    500,
+    502,
+    503,
+    504,
+    429,
+    requests.exceptions.ChunkedEncodingError("Connection broken"),
+    requests.exceptions.ReadTimeout("Read timed out"),
+]
 
 
 def test_manager_keepalive(snowflake: QCATestingSnowflake):
@@ -143,7 +194,7 @@ def test_manager_tags_duplicate(snowflake: QCATestingSnowflake, tmp_path):
     assert compute.all_compute_tags == ["tag1", "tag2", "*"]
 
 
-@pytest.mark.filterwarnings("ignore:Exception in thread")
+@pytest.mark.filterwarnings("error::pytest.PytestUnhandledThreadExceptionWarning")
 def test_manager_claim_inactive(snowflake: QCATestingSnowflake):
     storage_socket = snowflake.get_storage_socket()
     snowflake.start_job_runner()
@@ -161,12 +212,13 @@ def test_manager_claim_inactive(snowflake: QCATestingSnowflake):
     # Mark as inactive from the server side
     storage_socket.managers.deactivate([manager_name])
 
-    # Next update should kill the process
+    # Next update should cleanly shut down the manager
     wait_until(
         lambda: not compute.is_alive(),
         timeout=compute._compute._compute_config.update_frequency + 60,
         message="Manager was not shut down after being deactivated",
     )
+    assert compute._compute._is_stopping
 
 
 def test_manager_claim_return(snowflake: QCATestingSnowflake):
@@ -186,7 +238,11 @@ def test_manager_claim_return(snowflake: QCATestingSnowflake):
     assert r is True
 
 
-def test_manager_deferred_return(snowflake: QCATestingSnowflake):
+@pytest.mark.parametrize("error", outage_errors)
+def test_manager_deferred_return(snowflake: QCATestingSnowflake, error):
+    # The server becomes unavailable in various ways (not accepting connections at all, a reverse
+    # proxy returning 502/503/504, etc). The manager should hold on to its results and return them
+    # once the server is back
     storage_socket = snowflake.get_storage_socket()
     all_id, result_data = populate_db(storage_socket)
 
@@ -195,39 +251,116 @@ def test_manager_deferred_return(snowflake: QCATestingSnowflake):
     compute = compute_thread._compute
 
     time.sleep(1)  # wait for manager to register
-    managers = storage_socket.managers.query(ManagerQueryFilters())
-    assert len(managers) == 1
-    assert compute.n_total_active_tasks == 0  # haven't updated - we are doing manual updates
 
-    # Get some tasks
     compute.update(new_tasks=True)
     assert compute.n_total_active_tasks > 0
     assert compute.n_deferred_tasks == 0
 
-    # Sever goes down
-    snowflake.stop_api()
-
-    # Let manager complete some tasks
     time.sleep(3)  # Mock testing adapter waits for two seconds before returning result
+
+    with server_outage(snowflake, compute, error):
+        compute.update(new_tasks=True)
+        assert compute.n_deferred_tasks > 0
+        deferred_task_ids = list(compute._deferred_tasks[0].keys())
+
+        # Retrying the deferred tasks also fails, but that is fine too
+        compute.update(new_tasks=True)
+        assert set(compute._deferred_tasks[1].keys()) == set(deferred_task_ids)
+
+        # Missed heartbeats are counted, but the manager keeps going
+        compute.heartbeat()
+        assert compute._failed_heartbeats == 1
+
+    assert compute_thread.is_alive()
+    assert not compute._is_stopping
+
+    compute.heartbeat()
+    assert compute._failed_heartbeats == 0
+
     compute.update(new_tasks=True)
-    assert compute.n_deferred_tasks > 0
-    deferred_task_ids = list(compute._deferred_tasks[0].keys())
-    deferred_record_ids = [compute._record_id_map[x] for x in deferred_task_ids]
-
-    # Now server comes back
-    snowflake.start_api()
-
-    # Manager can now update
-    compute.update(new_tasks=True)
-
-    # No more deferred tasks
     assert compute.n_deferred_tasks == 0
-    assert compute.n_total_active_tasks > 0
+    assert compute.n_total_active_tasks > 0  # claimed more tasks
 
-    # Record is complete on the server
+    deferred_record_ids = [compute._record_id_map[x] for x in deferred_task_ids]
     r = storage_socket.records.get(deferred_record_ids)
     assert all(x["status"] == "complete" for x in r)
     assert all(x["manager_name"] == compute.name for x in r)
+
+    compute_thread.stop()
+
+
+@pytest.mark.parametrize("error", [502, 504])
+def test_manager_claim_outage(snowflake: QCATestingSnowflake, error):
+    storage_socket = snowflake.get_storage_socket()
+
+    compute_thread = QCATestingComputeThread(snowflake._qcf_config, {})
+    compute_thread.start(manual_updates=True)
+    compute = compute_thread._compute
+
+    time.sleep(1)  # wait for manager to register
+
+    with server_outage(snowflake, compute, error):
+        compute.update(new_tasks=True)
+
+    assert compute_thread.is_alive()
+    assert compute.n_total_active_tasks == 0
+
+    # Claims work again once the server is back
+    all_id, _ = populate_db(storage_socket)
+    compute.update(new_tasks=True)
+    assert compute.n_total_active_tasks > 0
+
+    compute_thread.stop()
+
+
+def test_manager_outage_missed_heartbeats_shutdown(snowflake: QCATestingSnowflake):
+    compute_thread = QCATestingComputeThread(snowflake._qcf_config)
+    compute_thread.start(manual_updates=True)
+    compute = compute_thread._compute
+
+    max_missed = compute.client.server_info["manager_heartbeat_max_missed"]
+
+    with server_outage(snowflake, compute, 504):
+        for i in range(max_missed):
+            compute.heartbeat()
+            assert not compute._is_stopping
+
+        compute.heartbeat()
+        assert compute._is_stopping
+
+    compute_thread._compute_thread.join(30)
+    assert compute_thread.is_alive() is False
+
+
+@pytest.mark.filterwarnings("error::pytest.PytestUnhandledThreadExceptionWarning")
+def test_manager_deactivated_during_outage(snowflake: QCATestingSnowflake):
+    # The server was down long enough that it deactivated the manager (missed heartbeats) once it
+    # came back. The manager can no longer return its results, and should shut down cleanly
+    storage_socket = snowflake.get_storage_socket()
+    all_id, result_data = populate_db(storage_socket)
+
+    compute_thread = QCATestingComputeThread(snowflake._qcf_config, result_data)
+    compute_thread.start(manual_updates=True)
+    compute = compute_thread._compute
+
+    time.sleep(1)  # wait for manager to register
+
+    compute.update(new_tasks=True)
+    assert compute.n_total_active_tasks > 0
+
+    time.sleep(3)  # Mock testing adapter waits for two seconds before returning result
+
+    with server_outage(snowflake, compute, 503):
+        compute.update(new_tasks=True)
+        assert compute.n_deferred_tasks > 0
+
+    storage_socket.managers.deactivate([compute.name])
+
+    compute.update(new_tasks=True)
+    assert compute._is_stopping
+
+    compute_thread._compute_thread.join(30)
+    assert compute_thread.is_alive() is False
 
 
 def test_manager_missed_heartbeats_shutdown(snowflake: QCATestingSnowflake):

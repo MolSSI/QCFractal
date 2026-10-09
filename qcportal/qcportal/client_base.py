@@ -47,6 +47,8 @@ AllowedConnectionExceptions = (
     ConnectionError,
     requests.exceptions.Timeout,
     requests.exceptions.ConnectionError,
+    # The connection was dropped while the response was being read (eg, the server was stopped mid-request)
+    requests.exceptions.ChunkedEncodingError,
     urllib3.exceptions.TimeoutError,
 )
 
@@ -94,6 +96,38 @@ class PortalRequestError(Exception):
 
     def __str__(self) -> str:
         return f"{self.msg} (HTTP status {self.status_code})"
+
+
+def is_temporary_server_error(ex: BaseException) -> bool:
+    """
+    Determines if an exception from communicating with a server is likely to be temporary
+
+    This includes being unable to connect at all, and HTTP errors meaning that the server - or a reverse
+    proxy or load balancer in front of it - could not handle the request right now (down, restarting,
+    overloaded, rate limiting, etc). Trying the same request again later may succeed.
+
+    500 (Internal Server Error) is included, since a server whose database is restarting or being upgraded
+    may return it. However, it can also come from a request that will always fail, so anything retrying on
+    this should eventually give up.
+
+    Parameters
+    ----------
+    ex
+        An exception raised while communicating with the server (for example, by a client method)
+
+    Returns
+    -------
+    :
+        True if the error is likely temporary, False otherwise
+    """
+
+    if isinstance(ex, AllowedConnectionExceptions):
+        return True
+
+    if isinstance(ex, PortalRequestError):
+        return ex.status_code >= 500 or ex.status_code in (408, 429)
+
+    return False
 
 
 class PortalClientBase:
@@ -500,6 +534,11 @@ class PortalClientBase:
             self._jwt_access_exp = decoded_access_token["exp"]
             self._jwt_refresh_exp = decoded_refresh_token["exp"]
             self.user_id = int(decoded_access_token["sub"])  # "identity" "subject"
+        elif ret.status_code >= 500:
+            # The server (or a proxy in front of it) is having problems - this says nothing
+            # about whether the credentials are valid
+            msg = _response_msg(ret)
+            raise PortalRequestError(f"Login failed: {msg}", ret.status_code, {"msg": msg})
         else:
             raise AuthenticationFailure(_response_msg(ret))
 
@@ -809,12 +848,21 @@ class PortalClientBase:
             True if the server is up and responded to the ping. False otherwise
         """
 
-        uri = f"{self.address}/api/v1/ping"
+        uri = f"{self.address}api/v1/ping"
 
         try:
-            r = requests.get(uri)
-            return r.json()["success"]
+            r = requests.get(uri, verify=self._verify, timeout=self.timeout)
         except AllowedConnectionExceptions:
+            return False
+
+        # A down server behind a reverse proxy gives an error page (502/503/504, often HTML) rather than
+        # refusing the connection
+        if r.status_code != 200:
+            return False
+
+        try:
+            return r.json()["success"]
+        except (ValueError, KeyError, TypeError):
             return False
 
     def get_server_information(self) -> dict[str, Any]:
