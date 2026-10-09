@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=efc8fe8b"></script>
+    <script src="../../_static/documentation_options.js?v=75371ee5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post140+gdadd3e339" />
+  <meta name="docsearch:version" content="0.71.post4+g1a06aefd6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -543,7 +543,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.auth.models.APITokenScopeEnum">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">APITokenScopeEnum</span></span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#APITokenScopeEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.APITokenScopeEnum" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
 <p>Named scopes for API tokens</p>
 <p>A token’s scope is what it is allowed to do, relative to its owner’s role - the effective
 permission can only ever be a restriction of the role, never an extension. A scope is stored
@@ -575,10 +575,10 @@ parameterized scopes extend the grammar here, without changing any field or colu
 <p>Raises ValueError for a scope this version does not recognize.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>scope</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference internal" href="#qcportal.auth.models.APITokenScopeEnum" title="qcportal.auth.models.APITokenScopeEnum"><em>APITokenScopeEnum</em></a>)</p>
+<dd class="field-odd"><p><strong>scope</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference internal" href="#qcportal.auth.models.APITokenScopeEnum" title="qcportal.auth.models.APITokenScopeEnum"><em>APITokenScopeEnum</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -592,10 +592,10 @@ fast before a network round trip) and the server (to reject obviously-bad input 
 It says nothing about whether the token actually exists or is valid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>raw</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+<dd class="field-odd"><p><strong>raw</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -603,7 +603,7 @@ It says nothing about whether the token actually exists or is valid.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.auth.models.AuthTypeEnum">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">AuthTypeEnum</span></span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#AuthTypeEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.AuthTypeEnum" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.AuthTypeEnum.password">
 <span class="sig-name descname"><span class="pre">password</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'password'</span></span><a class="headerlink" href="#qcportal.auth.models.AuthTypeEnum.password" title="Link to this definition">#</a></dt>
@@ -627,7 +627,7 @@ this policy would otherwise lock out existing users with older, weaker passwords
 <p>Raises an InvalidPasswordError if the password is not acceptable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>password</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+<dd class="field-odd"><p><strong>password</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -640,7 +640,7 @@ this policy would otherwise lock out existing users with older, weaker passwords
 <span class="sig-name descname"><span class="pre">is_valid_username</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#is_valid_username"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.is_valid_username" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>username</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+<dd class="field-odd"><p><strong>username</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -653,7 +653,7 @@ this policy would otherwise lock out existing users with older, weaker passwords
 <span class="sig-name descname"><span class="pre">is_valid_groupname</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">groupname</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/auth/models.html#is_valid_groupname"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.auth.models.is_valid_groupname" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>groupname</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
+<dd class="field-odd"><p><strong>groupname</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -677,17 +677,17 @@ this policy would otherwise lock out existing users with older, weaker passwords
 </thead>
 <tbody>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.auth.models.GroupInfo.description" title="qcportal.auth.models.GroupInfo.description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">description</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">''</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.auth.models.GroupInfo.groupname" title="qcportal.auth.models.GroupInfo.groupname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groupname</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.auth.models.GroupInfo.id" title="qcportal.auth.models.GroupInfo.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
@@ -696,19 +696,19 @@ this policy would otherwise lock out existing users with older, weaker passwords
 </div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.GroupInfo.id">
-<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.auth.models.GroupInfo.id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.auth.models.GroupInfo.id" title="Link to this definition">#</a></dt>
 <dd><p>ID of the group</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.GroupInfo.groupname">
-<span class="sig-name descname"><span class="pre">groupname</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.GroupInfo.groupname" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">groupname</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.GroupInfo.groupname" title="Link to this definition">#</a></dt>
 <dd><p>The name of the group</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.GroupInfo.description">
-<span class="sig-name descname"><span class="pre">description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.GroupInfo.description" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.GroupInfo.description" title="Link to this definition">#</a></dt>
 <dd><p>Text description of the group</p>
 </dd></dl>
 
@@ -737,49 +737,49 @@ this policy would otherwise lock out existing users with older, weaker passwords
 <td></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.email" title="qcportal.auth.models.UserInfo.email"><code class="xref py py-obj docutils literal notranslate"><span class="pre">email</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">''</span></code></p></td>
 <td><p>max_length=128</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.enabled" title="qcportal.auth.models.UserInfo.enabled"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enabled</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.fullname" title="qcportal.auth.models.UserInfo.fullname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fullname</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">''</span></code></p></td>
 <td><p>max_length=128</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.groups" title="qcportal.auth.models.UserInfo.groups"><code class="xref py py-obj docutils literal notranslate"><span class="pre">groups</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.id" title="qcportal.auth.models.UserInfo.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.organization" title="qcportal.auth.models.UserInfo.organization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">organization</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">''</span></code></p></td>
 <td><p>max_length=128</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.role" title="qcportal.auth.models.UserInfo.role"><code class="xref py py-obj docutils literal notranslate"><span class="pre">role</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.auth.models.UserInfo.username" title="qcportal.auth.models.UserInfo.username"><code class="xref py py-obj docutils literal notranslate"><span class="pre">username</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 <td></td>
@@ -789,7 +789,7 @@ this policy would otherwise lock out existing users with older, weaker passwords
 </div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.id">
-<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.id" title="Link to this definition">#</a></dt>
 <dd><p>The id of the user</p>
 </dd></dl>
 
@@ -801,31 +801,31 @@ this policy would otherwise lock out existing users with older, weaker passwords
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.username">
-<span class="sig-name descname"><span class="pre">username</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.username" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">username</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.username" title="Link to this definition">#</a></dt>
 <dd><p>The username of this user</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.role">
-<span class="sig-name descname"><span class="pre">role</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.role" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">role</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.role" title="Link to this definition">#</a></dt>
 <dd><p>The role this user belongs to</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.groups">
-<span class="sig-name descname"><span class="pre">groups</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.groups" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">groups</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.groups" title="Link to this definition">#</a></dt>
 <dd><p>Groups this user belongs to</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.enabled">
-<span class="sig-name descname"><span class="pre">enabled</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.enabled" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">enabled</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.enabled" title="Link to this definition">#</a></dt>
 <dd><p>Whether this user is enabled or not</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.fullname">
-<span class="sig-name descname"><span class="pre">fullname</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="(in Python v3.14)"><span class="pre">Annotated</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><span class="pre">StringConstraints</span></a><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strip_whitespace</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_upper</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">128</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ascii_only</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.fullname" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fullname</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="(in Python v3.15)"><span class="pre">Annotated</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><span class="pre">StringConstraints</span></a><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strip_whitespace</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_upper</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">128</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ascii_only</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.fullname" title="Link to this definition">#</a></dt>
 <dd><p>The full name or description of the user</p>
 <dl class="field-list simple">
 <dt class="field-odd">Constraints<span class="colon">:</span></dt>
@@ -838,7 +838,7 @@ this policy would otherwise lock out existing users with older, weaker passwords
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.organization">
-<span class="sig-name descname"><span class="pre">organization</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="(in Python v3.14)"><span class="pre">Annotated</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><span class="pre">StringConstraints</span></a><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strip_whitespace</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_upper</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">128</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ascii_only</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.organization" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">organization</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="(in Python v3.15)"><span class="pre">Annotated</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><span class="pre">StringConstraints</span></a><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strip_whitespace</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_upper</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">128</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ascii_only</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.organization" title="Link to this definition">#</a></dt>
 <dd><p>The organization the user belongs to</p>
 <dl class="field-list simple">
 <dt class="field-odd">Constraints<span class="colon">:</span></dt>
@@ -851,7 +851,7 @@ this policy would otherwise lock out existing users with older, weaker passwords
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.UserInfo.email">
-<span class="sig-name descname"><span class="pre">email</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="(in Python v3.14)"><span class="pre">Annotated</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><span class="pre">StringConstraints</span></a><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strip_whitespace</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_upper</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">128</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ascii_only</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.email" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">email</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="(in Python v3.15)"><span class="pre">Annotated</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.StringConstraints" title="(in Pydantic v0.0.0)"><span class="pre">StringConstraints</span></a><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">strip_whitespace</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_upper</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">to_lower</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">128</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ascii_only</span></span><span class="o"><span class="pre">=</span></span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#qcportal.auth.models.UserInfo.email" title="Link to this definition">#</a></dt>
 <dd><p>The email address for the user</p>
 <dl class="field-list simple">
 <dt class="field-odd">Constraints<span class="colon">:</span></dt>
@@ -882,42 +882,42 @@ token is created (see NewAPIToken); afterwards only this metadata is available.<
 </thead>
 <tbody>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.auth.models.APIToken.created_at" title="qcportal.auth.models.APIToken.created_at"><code class="xref py py-obj docutils literal notranslate"><span class="pre">created_at</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.auth.models.APIToken.expires_at" title="qcportal.auth.models.APIToken.expires_at"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expires_at</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.auth.models.APIToken.id" title="qcportal.auth.models.APIToken.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.auth.models.APIToken.last_used_at" title="qcportal.auth.models.APIToken.last_used_at"><code class="xref py py-obj docutils literal notranslate"><span class="pre">last_used_at</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.auth.models.APIToken.name" title="qcportal.auth.models.APIToken.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.auth.models.APIToken.scope" title="qcportal.auth.models.APIToken.scope"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scope</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'unlimited'</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.auth.models.APIToken.token_prefix" title="qcportal.auth.models.APIToken.token_prefix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">token_prefix</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.auth.models.APIToken.user_id" title="qcportal.auth.models.APIToken.user_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">user_id</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
@@ -926,31 +926,31 @@ token is created (see NewAPIToken); afterwards only this metadata is available.<
 </div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.APIToken.id">
-<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.id" title="Link to this definition">#</a></dt>
 <dd><p>The id of the token (used to revoke it)</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.APIToken.user_id">
-<span class="sig-name descname"><span class="pre">user_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.user_id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">user_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.user_id" title="Link to this definition">#</a></dt>
 <dd><p>The id of the user the token authenticates as</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.APIToken.token_prefix">
-<span class="sig-name descname"><span class="pre">token_prefix</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.token_prefix" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">token_prefix</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.token_prefix" title="Link to this definition">#</a></dt>
 <dd><p>The first few characters of the token, for identifying it in a listing</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.APIToken.name">
-<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.name" title="Link to this definition">#</a></dt>
 <dd><p>The name given to the token when it was created (unique among the user’s tokens)</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.APIToken.scope">
-<span class="sig-name descname"><span class="pre">scope</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.scope" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">scope</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.scope" title="Link to this definition">#</a></dt>
 <dd><p>What the token is allowed to do (see APITokenScopeEnum). Deliberately a plain string here,
 like UserInfo.role, so an older client can still parse listings from a newer server that has
 scopes this client does not know about</p>
@@ -958,19 +958,19 @@ scopes this client does not know about</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.APIToken.created_at">
-<span class="sig-name descname"><span class="pre">created_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><span class="pre">datetime</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.created_at" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">created_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><span class="pre">datetime</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.created_at" title="Link to this definition">#</a></dt>
 <dd><p>When the token was created</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.APIToken.expires_at">
-<span class="sig-name descname"><span class="pre">expires_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><span class="pre">datetime</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.expires_at" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">expires_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><span class="pre">datetime</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.expires_at" title="Link to this definition">#</a></dt>
 <dd><p>When the token expires, or null if it never expires</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.APIToken.last_used_at">
-<span class="sig-name descname"><span class="pre">last_used_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><span class="pre">datetime</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.last_used_at" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">last_used_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><span class="pre">datetime</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.auth.models.APIToken.last_used_at" title="Link to this definition">#</a></dt>
 <dd><p>Approximate time the token was last presented on a request, or null if never used</p>
 </dd></dl>
 
@@ -999,7 +999,7 @@ stored and cannot be retrieved later.</p>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.auth.models.NewAPIToken.token" title="qcportal.auth.models.NewAPIToken.token"><code class="xref py py-obj docutils literal notranslate"><span class="pre">token</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 </tr>
@@ -1008,7 +1008,7 @@ stored and cannot be retrieved later.</p>
 </div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.NewAPIToken.token">
-<span class="sig-name descname"><span class="pre">token</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.NewAPIToken.token" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">token</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.NewAPIToken.token" title="Link to this definition">#</a></dt>
 <dd><p>The plaintext token. Paste this into a client’s Authorization header. Store it securely - it
 cannot be retrieved again</p>
 </dd></dl>
@@ -1038,19 +1038,19 @@ cannot be retrieved again</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.auth.models.APITokenCreateBody.expires_at" title="qcportal.auth.models.APITokenCreateBody.expires_at"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expires_at</span></code></a></p></td>
-<td><p><a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.AwareDatetime" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AwareDatetime</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
+<td><p><a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.AwareDatetime" title="(in Pydantic v0.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AwareDatetime</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#qcportal.auth.models.APITokenCreateBody.name" title="qcportal.auth.models.APITokenCreateBody.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 <td><p>min_length=1, max_length=128</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.auth.models.APITokenCreateBody.scope" title="qcportal.auth.models.APITokenCreateBody.scope"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scope</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'unlimited'</span></code></p></td>
 <td></td>
@@ -1060,7 +1060,7 @@ cannot be retrieved again</p>
 </div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.APITokenCreateBody.name">
-<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.APITokenCreateBody.name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.APITokenCreateBody.name" title="Link to this definition">#</a></dt>
 <dd><p>A name to identify the token. Must be unique among the user’s tokens.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Constraints<span class="colon">:</span></dt>
@@ -1074,7 +1074,7 @@ cannot be retrieved again</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.APITokenCreateBody.scope">
-<span class="sig-name descname"><span class="pre">scope</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.APITokenCreateBody.scope" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">scope</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.APITokenCreateBody.scope" title="Link to this definition">#</a></dt>
 <dd><p>What the token should be allowed to do. Currently only “unlimited” (the owner’s full role)
 exists. A plain (but validated) string, so the public schema never changes when new scopes
 are added; a scope this server does not recognize is rejected</p>
@@ -1082,7 +1082,7 @@ are added; a scope this server does not recognize is rejected</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.APITokenCreateBody.expires_at">
-<span class="sig-name descname"><span class="pre">expires_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.AwareDatetime" title="(in Pydantic v0.0.0)"><span class="pre">AwareDatetime</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.auth.models.APITokenCreateBody.expires_at" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">expires_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://pydantic.dev/docs/validation/latest/api/pydantic/types/#pydantic.types.AwareDatetime" title="(in Pydantic v0.0.0)"><span class="pre">AwareDatetime</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><a class="headerlink" href="#qcportal.auth.models.APITokenCreateBody.expires_at" title="Link to this definition">#</a></dt>
 <dd><p>When the token should expire. Must be timezone-aware. Null requests a non-expiring token,
 subject to the server’s api_token_default_lifetime and api_token_max_lifetime policy</p>
 </dd></dl>
@@ -1108,7 +1108,7 @@ expiration) is fixed at creation; to change those, create a new token and delete
 </thead>
 <tbody>
 <tr class="row-even"><td><p><a class="reference internal" href="#qcportal.auth.models.APITokenModifyBody.name" title="qcportal.auth.models.APITokenModifyBody.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Yes</p></td>
 <td></td>
 <td><p>min_length=1, max_length=128</p></td>
@@ -1118,7 +1118,7 @@ expiration) is fixed at creation; to change those, create a new token and delete
 </div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qcportal.auth.models.APITokenModifyBody.name">
-<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.APITokenModifyBody.name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#qcportal.auth.models.APITokenModifyBody.name" title="Link to this definition">#</a></dt>
 <dd><p>The new name for the token. Must be unique among the user’s tokens.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Constraints<span class="colon">:</span></dt>

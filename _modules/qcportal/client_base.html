@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=efc8fe8b"></script>
+    <script src="../../_static/documentation_options.js?v=75371ee5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.70.post140+gdadd3e339" />
+  <meta name="docsearch:version" content="0.71.post4+g1a06aefd6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -505,6 +505,8 @@
     <span class="ne">ConnectionError</span><span class="p">,</span>
     <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Timeout</span><span class="p">,</span>
     <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">,</span>
+    <span class="c1"># The connection was dropped while the response was being read (eg, the server was stopped mid-request)</span>
+    <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ChunkedEncodingError</span><span class="p">,</span>
     <span class="n">urllib3</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -563,6 +565,41 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="si">}</span><span class="s2"> (HTTP status </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">)"</span></div>
+
+
+
+<div class="viewcode-block" id="is_temporary_server_error">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/clients.html#qcportal.client_base.is_temporary_server_error">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_temporary_server_error</span><span class="p">(</span><span class="n">ex</span><span class="p">:</span> <span class="ne">BaseException</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Determines if an exception from communicating with a server is likely to be temporary</span>
+
+<span class="sd">    This includes being unable to connect at all, and HTTP errors meaning that the server - or a reverse</span>
+<span class="sd">    proxy or load balancer in front of it - could not handle the request right now (down, restarting,</span>
+<span class="sd">    overloaded, rate limiting, etc). Trying the same request again later may succeed.</span>
+
+<span class="sd">    500 (Internal Server Error) is included, since a server whose database is restarting or being upgraded</span>
+<span class="sd">    may return it. However, it can also come from a request that will always fail, so anything retrying on</span>
+<span class="sd">    this should eventually give up.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ex</span>
+<span class="sd">        An exception raised while communicating with the server (for example, by a client method)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :</span>
+<span class="sd">        True if the error is likely temporary, False otherwise</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ex</span><span class="p">,</span> <span class="n">AllowedConnectionExceptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ex</span><span class="p">,</span> <span class="n">PortalRequestError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ex</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&gt;=</span> <span class="mi">500</span> <span class="ow">or</span> <span class="n">ex</span><span class="o">.</span><span class="n">status_code</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">408</span><span class="p">,</span> <span class="mi">429</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">False</span></div>
 
 
 
@@ -981,6 +1018,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_access_exp</span> <span class="o">=</span> <span class="n">decoded_access_token</span><span class="p">[</span><span class="s2">"exp"</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_jwt_refresh_exp</span> <span class="o">=</span> <span class="n">decoded_refresh_token</span><span class="p">[</span><span class="s2">"exp"</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">decoded_access_token</span><span class="p">[</span><span class="s2">"sub"</span><span class="p">])</span>  <span class="c1"># "identity" "subject"</span>
+        <span class="k">elif</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&gt;=</span> <span class="mi">500</span><span class="p">:</span>
+            <span class="c1"># The server (or a proxy in front of it) is having problems - this says nothing</span>
+            <span class="c1"># about whether the credentials are valid</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">_response_msg</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">PortalRequestError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Login failed: </span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">ret</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="p">{</span><span class="s2">"msg"</span><span class="p">:</span> <span class="n">msg</span><span class="p">})</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">AuthenticationFailure</span><span class="p">(</span><span class="n">_response_msg</span><span class="p">(</span><span class="n">ret</span><span class="p">))</span>
 
@@ -1298,12 +1340,21 @@
 <span class="sd">            True if the server is up and responded to the ping. False otherwise</span>
 <span class="sd">        """</span>
 
-        <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">/api/v1/ping"</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">api/v1/ping"</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">uri</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"success"</span><span class="p">]</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_verify</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">AllowedConnectionExceptions</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># A down server behind a reverse proxy gives an error page (502/503/504, often HTML) rather than</span>
+        <span class="c1"># refusing the connection</span>
+        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"success"</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span></div>
 
 
