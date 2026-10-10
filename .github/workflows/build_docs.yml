@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'qcwebportal/**'
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - 'qcwebportal/**'
 
 permissions: write-all
 

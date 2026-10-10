@@ -1,0 +1,54 @@
+name: Web Portal Build
+
+on:
+  push:
+    branches:
+      - main
+      - next
+    paths:
+      - 'qcwebportal/**'
+      - 'qcfractal/qcfractal/components/auth/global_role_permissions.yaml'
+      - '.github/workflows/webportal_build.yml'
+  pull_request:
+    branches:
+      - main
+      - next
+    paths:
+      - 'qcwebportal/**'
+      - 'qcfractal/qcfractal/components/auth/global_role_permissions.yaml'
+      - '.github/workflows/webportal_build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: qcwebportal
+
+    steps:
+      - name: Clone the QCArchive repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Check role permissions match the server
+        run: |
+          python -m pip install pyyaml
+          python dev/convert_role_permissions.py --check
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: qcwebportal/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
