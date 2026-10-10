@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" type="image/png" href="/favicon.png" sizes="512x512" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#0080C7" />
+    <title>QCArchive Web GUI</title>
+    <meta name="description" content="Browse, submit, and manage quantum chemistry computations, datasets, and projects on QCArchive, a MolSSI project." />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="QCArchive" />
+    <meta property="og:title" content="QCArchive Web GUI" />
+    <meta property="og:description" content="Browse, submit, and manage quantum chemistry computations, datasets, and projects on QCArchive, a MolSSI project." />
+    <meta property="og:image" content="__SITE_ORIGIN__/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="QCArchive logo" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script>
+      // Get theme from localStorage or default to browser preference
+      const browserTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+      const savedTheme = localStorage.getItem('mui-mode') || browserTheme;
+      const themeMode = (savedTheme === 'system') ? browserTheme : savedTheme;
+
+      // Set the attribute that Material-UI looks for
+      document.documentElement.setAttribute('data-mui-color-scheme', themeMode);
+
+      // Set the background color of the body and the text color
+      document.documentElement.style.backgroundColor = themeMode === 'dark' ? 'rgb(5,7,10)' : 'rgb(252,252,252)';
+      document.documentElement.style.color = themeMode === 'dark' ? 'rgb(252,252,252)' : 'rgb(5,7,10)';
+
+      // Optional: Set a CSS class as well for additional styling
+      document.documentElement.className = themeMode;
+    </script>
+
+
+
+  <style>
+    #initial-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      gap: 16px;
+    }
+
+    .spinner-circle {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 4px solid transparent;
+      border-top-color: #1976d2;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .spinner-label {
+      font-family: sans-serif;
+      font-size: 0.875rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+  </head>
+  <body>
+    <!-- the root for react; spinner is replaced automatically when React mounts -->
+    <div id="root">
+      <div id="initial-spinner">
+        <div class="spinner-circle"></div>
+        <span class="spinner-label">Loading...</span>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.tsx"></script>
+
+  </body>
+</html>

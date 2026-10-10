@@ -4,15 +4,15 @@ on:
   push:
     branches:
       - main
-      - next
     paths-ignore:
       - 'docs/**'
+      - 'qcwebportal/**'
   pull_request:
     branches:
       - main
-      - next
     paths-ignore:
       - 'docs/**'
+      - 'qcwebportal/**'
 
 jobs:
   test:
