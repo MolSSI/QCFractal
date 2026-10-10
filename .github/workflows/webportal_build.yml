@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - next
     paths:
       - 'qcwebportal/**'
       - 'qcfractal/qcfractal/components/auth/global_role_permissions.yaml'
@@ -12,7 +11,6 @@ on:
   pull_request:
     branches:
       - main
-      - next
     paths:
       - 'qcwebportal/**'
       - 'qcfractal/qcfractal/components/auth/global_role_permissions.yaml'
