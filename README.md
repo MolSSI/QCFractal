@@ -45,12 +45,13 @@ pip install -e ./qcportal -e ./qcfractal -e ./qcfractalcompute -e ./qcarchivetes
 
 This repository follows a [monorepo](https://en.wikipedia.org/wiki/Monorepo) layout.
 That is, this single repository contains several different python packages, each with its
-own setup information (`pyproject.toml`).
+own setup information (`pyproject.toml`), as well as the web portal.
 
  * `qcfractal` - The main QCFractal server (database and web API)
  * `qcportal` - Python client for interacting with the server
  * `qcfractalcompute` - Workers that are deployed to run computations
  * `qcarchivetesting` - Helpers and pytest harnesses for testing QCArchive components
+ * `qcwebportal` - Web interface for the QCFractal server (not a python package; see `qcwebportal/README.md`)
 
 The reason for this is that at this stage, these components are very dependent on each other, and
 change one often requires changing others. This layout allows for that, while also being able

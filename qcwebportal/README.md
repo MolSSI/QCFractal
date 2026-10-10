@@ -1,54 +1,49 @@
-# React + TypeScript + Vite
+# QCFractal Web Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web interface for a QCFractal server, for browsing projects, datasets, records, and managers, and for
+administering users and the server. It is a React + TypeScript single-page application built with
+[Vite](https://vite.dev/), and talks to the QCFractal server's REST API.
 
-Currently, two official plugins are available:
+## Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Requires Node.js 22 or newer.
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-});
+```shell
+npm ci
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The portal needs to know where the QCFractal server is. Set this in a `.env.local` file:
 
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
+```
+VITE_QCFRACTAL_URI=http://localhost:7777
+```
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    "react-x": reactX,
-    "react-dom": reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs["recommended-typescript"].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-});
+Alternatively, set `PROXY_TARGET=http://localhost:7777` and `VITE_QCFRACTAL_URI=` (empty), and the Vite dev server
+will proxy `/api` and `/auth` requests to the server, avoiding cross-origin issues.
+
+Other useful commands:
+
+```shell
+npm run build      # Type-check and build the production bundle into dist/
+npm run typecheck  # Type-check only
+npm run lint       # Run ESLint
+npm run format     # Format with Prettier
+```
+
+## Role permissions
+
+`src/global_role_permissions.json` is generated from the server's role definitions
+(`qcfractal/qcfractal/components/auth/global_role_permissions.yaml`). After changing those, regenerate it with
+
+```shell
+python dev/convert_role_permissions.py
+```
+
+## Deployment
+
+The `Dockerfile` builds the portal and serves it with nginx. The server address is baked in at build time:
+
+```shell
+docker build --build-arg VITE_QCFRACTAL_URI=https://qcfractal.example.com -t qcwebportal .
 ```

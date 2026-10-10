@@ -1,1 +1,5 @@
 qcfractal/_version.py export-subst
+qcwebportal/package-lock.json linguist-generated
+qcwebportal/dev/qcfractal_openapi_spec.json linguist-generated
+qcwebportal/dev/endpoint_permission_map.json linguist-generated
+qcwebportal/src/global_role_permissions.json linguist-generated

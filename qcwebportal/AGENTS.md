@@ -1,6 +1,8 @@
 # AGENTS.md
 
-This file provides guidance to AI agents when working with code in this repository.
+This file provides guidance to AI agents when working with the QCFractal web portal. The web portal lives in the
+`qcwebportal/` directory of the QCFractal repository; the QCFractal server it talks to is in `../qcfractal`.
+All paths and commands below are relative to `qcwebportal/`.
 
 ## Commands
 
@@ -14,7 +16,8 @@ npm run format       # Format with Prettier
 npm run preview      # Preview production build
 ```
 
-There are no test scripts in this project.
+There are no test scripts in this project. CI (`.github/workflows/webportal_build.yml` at the repository root) runs
+`npm run build` and checks that `src/global_role_permissions.json` matches the server.
 
 ## Environment
 
@@ -24,49 +27,127 @@ The app requires a `VITE_QCFRACTAL_URI` environment variable pointing to the QCF
 VITE_QCFRACTAL_URI=http://localhost:7777
 ```
 
+## Backend API Reference
+
+`dev/qcfractal_openapi_spec.json` contains the full OpenAPI spec for the QCFractal backend (a snapshot of the
+server's `/api/v1/openapi` endpoint). Use this to look up available endpoints, request/response schemas, and query
+parameters. Keep it updated when backend endpoints change. The server source is also available in this repository
+(routes are in `../qcfractal/qcfractal/components/*/routes.py`).
+
+`dev/endpoint_permission_map.json` maps endpoints and HTTP methods to the resource and action required to access them.
+
 ## Architecture
 
-This is a React + TypeScript + Vite single-page application for the QCFractal quantum chemistry compute platform, deployed to Azure Static Web Apps.
+This is a React 19 + TypeScript + Vite SPA for the QCFractal quantum chemistry compute platform. All routes are lazy-loaded via React Suspense.
+
+### Source Layout
+
+```
+src/
+├── App.tsx                    # Router + provider stack
+├── Auth.tsx                   # Auth context
+├── PortalClient.tsx           # API client context
+├── PreferencesProvider.tsx    # User preferences context
+├── ProtectedRoute.tsx         # Redirects to /login if not authorized
+├── PortalTypes.ts             # Re-exports all API types
+├── portal_types/              # Type definitions split by domain
+│   ├── common.ts              # Shared types (User, Manager, Project, Dataset, etc.)
+│   ├── record_types.ts        # RecordType enum + RecordData union
+│   ├── singlepoint.ts
+│   ├── optimization.ts
+│   ├── torsiondrive.ts
+│   ├── gridoptimization.ts
+│   ├── reaction.ts
+│   ├── manybody.ts
+│   └── neb.ts
+├── pages/                     # Route-level page components (14 pages)
+├── components/                # Reusable UI components
+│   ├── dataset_components/    # Dataset-specific components
+│   ├── project_components/    # Project-specific components
+│   └── record_components/     # Per-record-type renderers
+├── layouts/                   # MainLayout (sidebar + header + outlet)
+├── RequestHelpers.ts          # Low-level HTTP helpers
+├── request_config.ts          # server_address + default headers
+├── Exceptions.ts              # AuthenticationError, AuthorizationError
+├── Utils.ts                   # Shared utility functions
+├── MoleculeUtils.ts           # Molecule SDF conversion
+├── global_role_permissions.json  # Permission matrix by role
+└── shared-theme/ + theme/     # MUI theme config and customizations
+```
 
 ### Context Provider Hierarchy
 
 `App.tsx` wraps the app in nested providers (order matters):
 
 1. **`AppTheme`** — MUI theme with customizations from `src/theme/customizations/`
-2. **`AuthProvider`** (`src/Auth.tsx`) — Session auth state, login/logout, server connectivity, and permissions.
-3. **`PortalClientProvider`** (`src/PortalClient.tsx`) — Wraps `makeRequest()` to intercept 401s and trigger auth re-check via `ping()`.
+2. **`AuthProvider`** (`Auth.tsx`) — Session auth state, login/logout, server connectivity. On load, calls `/api/v1/ping` to detect login status. Exposes `useAuth()`.
+3. **`PortalClientProvider`** (`PortalClient.tsx`) — Intercepts 401s and retriggers `ping()`. Exposes `usePortalClient()` which returns `makeRequest<T>(method, endpoint, body?, url_params?)`.
 4. **`QueryClientProvider`** — TanStack React Query for data fetching/caching.
-5. **`PreferencesProvider`** (`src/PreferencesProvider.tsx`) — User preferences stored server-side at `/api/v1/me/preferences`. Full prefs object is fetched/replaced on every update (no partial update endpoint).
+5. **`PreferencesProvider`** (`PreferencesProvider.tsx`) — User preferences stored server-side at `/api/v1/me/preferences`. Full prefs object is fetched/replaced on every update (no partial update endpoint). Exposes `usePreferences()`.
 
-### API Communication and Permissions
+### API Communication
 
-- `src/request_config.ts` — Exports `server_address` (`VITE_QCFRACTAL_URI`) and default headers.
-- `src/RequestHelpers.ts` — `rawRequest()` and `rawMakeRequest()` handle HTTP and error mapping. 401 → `AuthenticationError`, 403 → `AuthorizationError` (both from `src/Exceptions.ts`).
-- `usePortalClient()` hook from `src/PortalClient.tsx` exposes `makeRequest()` for use in components — all components should use this rather than calling request helpers directly.
-- **`dev/qcfractal_openapi_spec.json`** — Contains the various endpoints and data structures (request/response) for the QCFractal server.
-- **`dev/endpoint_permission_map.json`** — Maps endpoints and HTTP methods to specific resources and actions.
-- **`has_permission(resource, action)`** — Available via `useAuth()`. Used to check if the current user has permission to perform an action on a resource.
+All components should use `makeRequest` from `usePortalClient()` rather than calling request helpers directly:
+
+```typescript
+const { makeRequest } = usePortalClient();
+const data = await makeRequest<ResponseType>("GET", "api/v1/endpoint", undefined, { param: value });
+```
+
+For file uploads, pass `FormData` as the body (do not set `Content-Type` manually).
 
 ### Routing
 
-All authenticated routes are nested under `<ProtectedRoute>` → `<MainLayout>`. `MainLayout` renders a persistent `<SideMenu>` on the left and `<Header>` at the top, with the page content via `<Outlet>`.
+All authenticated routes are nested under `<ProtectedRoute>` → `<MainLayout>`. Key routes:
 
-Key routes:
-- `/` — Home (sandbox/dev page)
-- `/projects` — `ProjectList`
-- `/projects/:projectId` — `Project` (tabs: Datasets, Records)
-- `/projects/:projectId/records/:recordId` — `Record`
-- `/records/:recordId` — `Record` (direct link)
-- `/managers` / `/managers/:managerName` — `Manager` / `ManagerList`
-- `/me`, `/users/:userName` — `UserInfo`
+| Path | Page |
+|------|------|
+| `/` | `HomePage` — dashboard with favorited projects/datasets/records |
+| `/projects` | `ProjectList` |
+| `/projects/:projectId` | `Project` (tabs: Datasets, Records) |
+| `/projects/:projectId/records/:recordId` | `Record` |
+| `/projects/:projectId/addRecord` | `AddProjectRecord` |
+| `/records/:recordId` | `Record` (direct link) |
+| `/datasets` | `DatasetList` |
+| `/datasets/:datasetId` | `Dataset` (tabs: Status, Specs, Entries, Records, Attachments) |
+| `/managers` | `ManagerList` |
+| `/managers/:managerName` | `Manager` |
+| `/internal_jobs` | `InternalJobList` |
+| `/server_errors` | `ServerErrorList` |
+| `/me`, `/users/:userName` | `UserInfo` |
 
-### Data Types
+### Data Fetching Pattern
 
-All QCFractal API types are in `src/PortalTypes.ts`. Key types: `RecordData`, `Project`, `ProjectListEntry`, `Manager`, `Molecule`, `UserInfo`, `UserPreferences`.
+React Query is used throughout. Standard pattern:
+
+```typescript
+const { data, isLoading, error } = useQuery({
+  queryKey: ["entityType", id, filter],
+  queryFn: () => makeRequest<T>("GET", "api/v1/endpoint", undefined, { id }),
+  enabled: !!id,
+});
+```
+
+Mutations follow the pattern of fetching current state, modifying, then PUTting the full object (no PATCH endpoints). Cache invalidation is done via `queryClient.invalidateQueries()`.
+
+### Record Types
+
+Seven computation record types, each with a dedicated renderer under `src/components/record_components/`:
+`singlepoint`, `optimization`, `torsiondrive`, `gridoptimization`, `reaction`, `manybody`, `neb`
+
+`src/Utils.ts:getRecordReprMolecule()` maps each type to its representative molecule field.
 
 ### Molecule Visualization
 
 `src/components/Molecule.tsx` uses the NGL library. Components must be wrapped in `<MoleculeStageProvider width height>` before using `<MoleculeViewer moleculeData={...}>`.
+
+### Permissions
+
+`src/global_role_permissions.json` defines what actions each role can perform on each resource.
+`useAuth().has_permission(resource, action)` checks against the logged-in user's role.
+
+The json file is generated from the server's `../qcfractal/qcfractal/components/auth/global_role_permissions.yaml`
+by `dev/convert_role_permissions.py`. Do not edit it by hand; change the server's yaml and rerun the script.
 
 ### Changelog
 
@@ -78,4 +159,6 @@ The home page shows a "What's New / Changelog" section, rendered by `src/compone
 
 ### Deployment
 
-CI/CD deploys to Azure Static Web Apps on push to `main`. The `VITE_QCFRACTAL_URI` is injected at build time via GitHub Actions secrets. `staticwebapp.config.json` rewrites all non-asset routes to `/` for SPA support.
+The portal is deployed as a Docker image (`Dockerfile`), served by nginx (`docker/nginx.conf`), which falls back to
+`index.html` for all non-file routes for SPA support. `VITE_QCFRACTAL_URI` and `VITE_FEEDBACK_URL` are baked in at
+build time, either as Docker build args or from a `.env.production`/`.env.local` file in the build context.
