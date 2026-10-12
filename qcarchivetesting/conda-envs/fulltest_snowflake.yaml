@@ -46,7 +46,7 @@ dependencies:
 
   # Worker codes below
   - qcengine>=0.50,<0.70a0
-  - psi4=1.11=*_3
+  - psi4
   - rdkit
 
   # Testing packages
