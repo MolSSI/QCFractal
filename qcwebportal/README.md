@@ -9,7 +9,7 @@ the QCFractal server.
 
 ## Building
 
-Requires Node.js 22 or newer.
+Requires Node.js 22.12 or newer.
 
 ```shell
 npm ci
@@ -60,8 +60,8 @@ The portal can be served by a separate web server (allowing it to be updated ind
 QCFractal server), with requests under `/api/` and `/auth/` forwarded to the QCFractal server. To the browser,
 everything is on the same origin, so no further configuration is needed.
 
-The proxy must pass along the original `Host` header (for nginx, `proxy_set_header Host $host;`). The server
-compares it with the browser's `Origin` header to reject cross-site requests, so logins and other changes
+The proxy must pass along the original `Host` header, including the port (for nginx,
+`proxy_set_header Host $http_host;`, since `$host` drops the port). The server compares it with the browser's `Origin` header to reject cross-site requests, so logins and other changes
 fail with a 403 error if the proxy replaces it with the address of the QCFractal server.
 
 The `Dockerfile` builds an image that serves the portal with nginx (it does not include the proxy
