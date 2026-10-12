@@ -21,11 +21,19 @@ There are no test scripts in this project. CI (`.github/workflows/webportal_buil
 
 ## Environment
 
-The app requires a `VITE_QCFRACTAL_URI` environment variable pointing to the QCFractal server. Set this in a `.env.local` file for local development:
+By default the app talks to a QCFractal server on its own origin. For local development, either proxy to a server
+through the Vite dev server, or point the app directly at one with `VITE_QCFRACTAL_URI` (which requires CORS to be
+configured on the server). In `.env.local`:
 
 ```
-VITE_QCFRACTAL_URI=http://localhost:7777
+PROXY_TARGET=http://localhost:7777
+VITE_QCFRACTAL_URI=
 ```
+
+See `README.md` for details.
+
+Routes must not start with `/api/`, `/auth/`, or `/compute/`, which are reserved for the server
+(checked by `dev/check_routes.mjs` in CI).
 
 ## Backend API Reference
 
@@ -159,6 +167,6 @@ The home page shows a "What's New / Changelog" section, rendered by `src/compone
 
 ### Deployment
 
-The portal is deployed as a Docker image (`Dockerfile`), served by nginx (`docker/nginx.conf`), which falls back to
-`index.html` for all non-file routes for SPA support. `VITE_QCFRACTAL_URI` is baked in at
-build time, either as Docker build args or from a `.env.production`/`.env.local` file in the build context.
+The built portal (`dist/`) can be served by the QCFractal server itself (`homepage_directory` setting), or
+separately, such as with the nginx Docker image (`Dockerfile`, `docker/nginx.conf`). Either way, it must be at the root
+of a host, with non-file paths answered with `index.html`. See `README.md` for the supported setups.

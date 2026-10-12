@@ -13,11 +13,11 @@ export default defineConfig(({ mode }) => {
           proxy: {
             "/api/": {
               target: proxyTarget,
-              changeOrigin: true,
+              changeOrigin: false,
             },
             "/auth/": {
               target: proxyTarget,
-              changeOrigin: true,
+              changeOrigin: false,
             },
           },
         }

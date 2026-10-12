@@ -4,46 +4,137 @@ A web interface for a QCFractal server, for browsing projects, datasets, records
 administering users and the server. It is a React + TypeScript single-page application built with
 [Vite](https://vite.dev/), and talks to the QCFractal server's REST API.
 
-## Development
+The web portal is still under active development, and may be released separately from (and more often than)
+the QCFractal server.
+
+## Building
 
 Requires Node.js 22 or newer.
+
+```shell
+npm ci
+npm run build
+```
+
+The result is a static site in `dist/`, which can be served by any web server (see [Deployment](#deployment)).
+
+### Server address
+
+By default, the portal expects the QCFractal server to be on the same origin (scheme, host, and port) as the
+portal itself. That is, if the portal is at `https://qcarchive.example.com/`, it uses
+`https://qcarchive.example.com/api/v1/...`. This means one build can be used with any server, and is the
+recommended setup.
+
+To use a server at a different address instead, set `VITE_QCFRACTAL_URI` when building. This can be an
+environment variable or a line in a `.env.production` or `.env.local` file:
+
+```shell
+VITE_QCFRACTAL_URI=https://api.example.com npm run build
+```
+
+The address is baked into the built files; changing it requires rebuilding. A server at a different origin
+must also be configured to allow the portal (see [Separate origin](#separate-origin)).
+
+## Deployment
+
+The portal must be served from the root of a host (`https://host/`, not `https://host/portal/`). Requests
+for paths that are not files (such as `/projects/123`) must be answered with `index.html`, since those are
+routes handled by the portal itself.
+
+The QCFractal server owns all paths under `/api/`, `/auth/`, and `/compute/`. The portal never uses those
+paths for its own routes (this is checked in CI by `dev/check_routes.mjs`).
+
+### Served by the QCFractal server
+
+The simplest setup. Point the server's `homepage_directory` setting at the built files:
+
+```yaml
+homepage_directory: /path/to/qcwebportal/dist
+```
+
+The server then serves the portal at its root, alongside the API.
+
+### Behind a reverse proxy
+
+The portal can be served by a separate web server (allowing it to be updated independently of the
+QCFractal server), with requests under `/api/` and `/auth/` forwarded to the QCFractal server. To the browser,
+everything is on the same origin, so no further configuration is needed.
+
+The proxy must pass along the original `Host` header (for nginx, `proxy_set_header Host $host;`). The server
+compares it with the browser's `Origin` header to reject cross-site requests, so logins and other changes
+fail with a 403 error if the proxy replaces it with the address of the QCFractal server.
+
+The `Dockerfile` builds an image that serves the portal with nginx (it does not include the proxy
+configuration):
+
+```shell
+docker build -t qcwebportal .
+docker build --build-arg VITE_QCFRACTAL_URI=https://api.example.com -t qcwebportal .
+```
+
+### Separate origin
+
+The portal can be on a different origin than the server, as long as both are on the same site, such as
+`https://portal.example.com` and `https://api.example.com`. Different sites (different registrable domains)
+are not supported, since browsers increasingly block the cookies used for logging in across sites.
+
+Build the portal with `VITE_QCFRACTAL_URI` set to the server's address, and allow the portal's origin in the
+server configuration:
+
+```yaml
+cors:
+  enabled: true
+  origins:
+    - https://portal.example.com
+  supports_credentials: true
+```
+
+## Development
 
 ```shell
 npm ci
 npm run dev
 ```
 
-The portal needs to know where the QCFractal server is. Set this in a `.env.local` file:
+This starts a development server (by default at `http://localhost:5173`) that reloads as files change.
+There are two ways to connect it to a QCFractal server:
 
-```
-VITE_QCFRACTAL_URI=http://localhost:7777
-```
+1. **Proxy (recommended).** The development server forwards `/api/` and `/auth/` requests to the QCFractal
+   server, so no server configuration is needed. In `.env.local`:
 
-Alternatively, set `PROXY_TARGET=http://localhost:7777` and `VITE_QCFRACTAL_URI=` (empty), and the Vite dev server
-will proxy `/api` and `/auth` requests to the server, avoiding cross-origin issues.
+   ```
+   PROXY_TARGET=http://localhost:7777
+   VITE_QCFRACTAL_URI=
+   ```
+
+2. **Direct.** The portal talks to the server directly, which requires the server to allow the development
+   server's origin (see [Separate origin](#separate-origin), with `http://localhost:5173` as the origin).
+   In `.env.local`:
+
+   ```
+   VITE_QCFRACTAL_URI=http://localhost:7777
+   ```
+
+The session cookie is marked `Secure` by default. Browsers accept that over plain HTTP for `localhost`, but if
+the server is accessed over plain HTTP with any other hostname, set `api.user_session_cookie_secure: false` in
+the server configuration, or logins will not stick.
 
 Other useful commands:
 
 ```shell
-npm run build      # Type-check and build the production bundle into dist/
+npm run build      # Type-check and build into dist/
+npm run devbuild   # Build without type-checking
+npm run preview    # Serve the contents of dist/ locally
 npm run typecheck  # Type-check only
 npm run lint       # Run ESLint
 npm run format     # Format with Prettier
 ```
 
-## Role permissions
+### Role permissions
 
 `src/global_role_permissions.json` is generated from the server's role definitions
 (`qcfractal/qcfractal/components/auth/global_role_permissions.yaml`). After changing those, regenerate it with
 
 ```shell
 python dev/convert_role_permissions.py
-```
-
-## Deployment
-
-The `Dockerfile` builds the portal and serves it with nginx. The server address is baked in at build time:
-
-```shell
-docker build --build-arg VITE_QCFRACTAL_URI=https://qcfractal.example.com -t qcwebportal .
 ```
