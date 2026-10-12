@@ -18,3 +18,11 @@ export class RateLimitError extends Error {
     this.name = "RateLimitError";
   }
 }
+
+// Login succeeded, but the browser did not keep the session cookie the server sent
+export class SessionCookieBlockedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SessionCookieBlockedError";
+  }
+}

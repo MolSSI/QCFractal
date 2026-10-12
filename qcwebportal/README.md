@@ -74,12 +74,15 @@ docker build --build-arg VITE_QCFRACTAL_URI=https://api.example.com -t qcwebport
 
 ### Separate origin
 
-The portal can be on a different origin than the server, as long as both are on the same site, such as
-`https://portal.example.com` and `https://api.example.com`. Different sites (different registrable domains)
-are not supported, since browsers increasingly block the cookies used for logging in across sites.
+The portal can be on a different origin than the server. Build the portal with `VITE_QCFRACTAL_URI` set to
+the server's address, and allow the portal's origin in the server configuration. The server's defaults do not
+allow any of this, so the server configuration must be changed as below.
 
-Build the portal with `VITE_QCFRACTAL_URI` set to the server's address, and allow the portal's origin in the
-server configuration:
+The portal logs in with a session cookie, which works differently depending on whether the portal and server
+are on the same _site_ (the same registrable domain, such as `example.com`).
+
+**Same site, different origin** (such as `https://portal.example.com` and `https://api.example.com`). The
+browser treats the session cookie as a first-party cookie, so only CORS needs to be enabled:
 
 ```yaml
 cors:
@@ -88,6 +91,30 @@ cors:
     - https://portal.example.com
   supports_credentials: true
 ```
+
+**Different sites** (such as `https://portal.example.org` and `https://qcfractal.example.com`). In addition to
+the CORS settings above, the session cookie must be allowed to be sent cross-site:
+
+```yaml
+cors:
+  enabled: true
+  origins:
+    - https://portal.example.org
+  supports_credentials: true
+
+api:
+  user_session_cookie_samesite: "None"
+  user_session_cookie_secure: true # required with SameSite=None (the default)
+  user_session_cookie_partitioned: true
+```
+
+The server must be served over HTTPS. Even then, the session cookie is now a third-party cookie, which some
+browsers block (Safari by default, others depending on user settings or private browsing). Users of those
+browsers cannot log in; the portal tells them their browser did not keep the login cookie. Browsing data
+anonymously (if the server allows it) still works. Prefer a same-origin or same-site setup if possible.
+
+The `origins` must exactly match the portal's origin (scheme, host, and port if not the default), with no
+trailing slash. Requests from origins not listed are rejected by the server's cross-site request checks.
 
 ## Development
 

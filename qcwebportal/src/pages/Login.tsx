@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../Auth.tsx";
-import { RateLimitError } from "../Exceptions.ts";
+import { RateLimitError, SessionCookieBlockedError } from "../Exceptions.ts";
 import { alpha } from "@mui/material/styles";
 
 const LoginPage: React.FC = () => {
@@ -36,7 +36,10 @@ const LoginPage: React.FC = () => {
       await login(username, password);
       navigate(redirectTo, { replace: true });
     } catch (err) {
-      if (err instanceof RateLimitError) {
+      if (
+        err instanceof RateLimitError ||
+        err instanceof SessionCookieBlockedError
+      ) {
         setError(err.message);
       } else {
         setError("Invalid credentials or login failed");

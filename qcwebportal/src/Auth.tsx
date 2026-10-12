@@ -9,6 +9,7 @@ import {
 import * as qcpTypes from "./PortalTypes.ts";
 import { rawMakeRequest, rawRequest } from "./RequestHelpers.ts";
 import { server_address, server_headers } from "./request_config.ts";
+import { SessionCookieBlockedError } from "./Exceptions.ts";
 import global_role_permissions from "./global_role_permissions.json";
 
 const all_role_permissions = global_role_permissions as Record<string, any>;
@@ -191,6 +192,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const pingResults = await ping();
+
+      // The login itself succeeded (or it would have thrown), so if the server doesn't know who we are,
+      // the browser didn't send back the session cookie. This happens when the server is on a different
+      // site and the browser blocks third-party cookies
+      if (username && pingResults && !pingResults.user_info) {
+        throw new SessionCookieBlockedError(
+          "Login succeeded, but your browser did not keep the login cookie. " +
+            "This usually happens when the QCFractal server is on a different site than this web portal " +
+            "and the browser blocks third-party cookies. Try a different browser, or allow cookies for the server.",
+        );
+      }
+
       if (!pingResults?.authorized) {
         throw new Error("Login failed or not authorized");
       }
