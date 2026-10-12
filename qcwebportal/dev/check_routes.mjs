@@ -51,6 +51,19 @@ const sourceFile = ts.createSourceFile(
 const routePaths = [];
 
 function visit(node) {
+  // A spread could hide a path attribute
+  if (
+    ts.isJsxSpreadAttribute(node) &&
+    node.parent.parent.tagName.getText(sourceFile) === "Route"
+  ) {
+    const { line } = sourceFile.getLineAndCharacterOfPosition(
+      node.getStart(sourceFile),
+    );
+    fail(
+      `Route at ${appPath}:${line + 1} uses spread attributes, so its path can't be checked`,
+    );
+  }
+
   if (ts.isJsxAttribute(node) && node.name.getText(sourceFile) === "path") {
     let value = node.initializer;
     if (value && ts.isJsxExpression(value)) {
