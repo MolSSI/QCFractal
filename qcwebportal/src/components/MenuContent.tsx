@@ -20,9 +20,8 @@ import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import CodeIcon from "@mui/icons-material/Code";
 import { NavLink, useLocation } from "react-router-dom";
 import FeedbackIcon from "@mui/icons-material/Feedback";
+import { issuesUrl } from "../Utils.ts";
 import { useAuth } from "../Auth.tsx";
-
-const feedbackUrl: string = import.meta.env.VITE_FEEDBACK_URL;
 
 const mainListItems: {
   text: string;
@@ -82,14 +81,12 @@ const bottomListItems: {
   //  { text: "Theme Playground", icon: <CarpenterIcon />, path: "/themeplayground" },
 ];
 
-if (feedbackUrl) {
-  mainListItems.push({
-    text: "Feedback",
-    icon: <FeedbackIcon />,
-    path: feedbackUrl,
-    target: "_blank",
-  });
-}
+mainListItems.push({
+  text: "Report an Issue",
+  icon: <FeedbackIcon />,
+  path: issuesUrl,
+  target: "_blank",
+});
 
 interface MenuContentProps {
   onNavigate?: () => void;

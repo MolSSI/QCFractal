@@ -1,6 +1,9 @@
 import * as qcpTypes from "./PortalTypes";
 import { AuthenticationError, AuthorizationError } from "./Exceptions.ts";
 
+// Where users can report problems or give feedback
+export const issuesUrl = "https://github.com/MolSSI/QCFractal/issues";
+
 /**
  * Turns a failed request into something worth showing a user. Auth failures
  * get an explanation and a way forward instead of the raw server message,

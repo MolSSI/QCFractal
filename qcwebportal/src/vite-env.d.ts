@@ -1,8 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_QCFRACTAL_URI: string;
-  readonly VITE_FEEDBACK_URL: string;
+  readonly VITE_QCFRACTAL_URI?: string;
 }
 
 interface ImportMeta {

@@ -160,5 +160,5 @@ The home page shows a "What's New / Changelog" section, rendered by `src/compone
 ### Deployment
 
 The portal is deployed as a Docker image (`Dockerfile`), served by nginx (`docker/nginx.conf`), which falls back to
-`index.html` for all non-file routes for SPA support. `VITE_QCFRACTAL_URI` and `VITE_FEEDBACK_URL` are baked in at
+`index.html` for all non-file routes for SPA support. `VITE_QCFRACTAL_URI` is baked in at
 build time, either as Docker build args or from a `.env.production`/`.env.local` file in the build context.

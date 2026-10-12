@@ -11,11 +11,11 @@ export default defineConfig(({ mode }) => {
     server: proxyTarget
       ? {
           proxy: {
-            "/api": {
+            "/api/": {
               target: proxyTarget,
               changeOrigin: true,
             },
-            "/auth": {
+            "/auth/": {
               target: proxyTarget,
               changeOrigin: true,
             },

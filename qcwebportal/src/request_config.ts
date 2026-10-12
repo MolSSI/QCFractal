@@ -1,4 +1,6 @@
-export const server_address = import.meta.env.VITE_QCFRACTAL_URI;
+// Address of the QCFractal server. If not specified at build time, the server is assumed
+// to be on the same origin as the web portal
+export const server_address: string = import.meta.env.VITE_QCFRACTAL_URI ?? "";
 
 // The server requires this header on every state-changing request authenticated
 // by the session cookie (CSRF protection). Its value is not checked, only its presence.
