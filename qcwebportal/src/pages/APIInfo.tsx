@@ -17,7 +17,7 @@ import {
   oneLight,
 } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { usePageTitle } from "../UsePageTitle.ts";
-import { server_address } from "../request_config.ts";
+import { server_display_address } from "../request_config.ts";
 import { useResolvedColorMode } from "../shared-theme/useResolvedColorMode.ts";
 
 interface CopyableCodeBlockProps {
@@ -113,7 +113,7 @@ conda activate qcportal`;
 
 const pythonCode = `from qcportal import PortalClient
 
-client = PortalClient("${server_address}", username="user", password="pass")`;
+client = PortalClient("${server_display_address}", username="user", password="pass")`;
 
 const APIInfo: React.FC = () => {
   usePageTitle("API Access");
@@ -124,8 +124,8 @@ const APIInfo: React.FC = () => {
         API Access
       </Typography>
       <Typography variant="body1" sx={{ mb: 3 }}>
-        The QCFractal API provides programmatic access to quantum chemistry
-        data and compute capabilities through the QCPortal Python client.
+        The QCFractal API provides programmatic access to quantum chemistry data
+        and compute capabilities through the QCPortal Python client.
       </Typography>
 
       <Stack spacing={4}>

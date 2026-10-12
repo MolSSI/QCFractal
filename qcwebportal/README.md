@@ -124,27 +124,26 @@ npm run dev
 ```
 
 This starts a development server (by default at `http://localhost:5173`) that reloads as files change.
-There are two ways to connect it to a QCFractal server:
+Point it at a QCFractal server with `VITE_QCFRACTAL_URI`, either on the command line or in `.env.local`:
 
-1. **Proxy (recommended).** The development server forwards `/api/` and `/auth/` requests to the QCFractal
-   server, so no server configuration is needed. In `.env.local`:
+```shell
+VITE_QCFRACTAL_URI=https://qcfractal.example.com npm run dev
+```
 
-   ```
-   PROXY_TARGET=http://localhost:7777
-   VITE_QCFRACTAL_URI=
-   ```
+The development server proxies `/api/` and `/auth/` requests to that server, so to the browser the server is on
+the same origin as the portal, and no server configuration is needed. This works with local and remote servers.
 
-2. **Direct.** The portal talks to the server directly, which requires the server to allow the development
-   server's origin (see [Separate origin](#separate-origin), with `http://localhost:5173` as the origin).
-   In `.env.local`:
+The proxy makes requests from the portal look like they come from the server's own origin, so that the server's
+cross-site request checks accept them. Requests from other origins (such as other sites open in the same browser)
+are passed through unchanged, and so are still rejected by the server. As with any development server, don't
+expose it beyond your own machine.
 
-   ```
-   VITE_QCFRACTAL_URI=http://localhost:7777
-   ```
+To have the portal talk to the server directly instead, also set `QCFRACTAL_DEV_DIRECT=1`. This requires the
+server to allow the development server's origin (see [Separate origin](#separate-origin), with
+`http://localhost:5173` as the origin), and is mainly useful for testing such setups.
 
-The session cookie is marked `Secure` by default. Browsers accept that over plain HTTP for `localhost`, but if
-the server is accessed over plain HTTP with any other hostname, set `api.user_session_cookie_secure: false` in
-the server configuration, or logins will not stick.
+The server's session cookie is marked `Secure` by default. Most browsers accept that on `http://localhost`, but if
+you access the development server through a different hostname over plain HTTP, logins will not stick.
 
 Other useful commands:
 

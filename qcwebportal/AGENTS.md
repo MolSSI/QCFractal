@@ -21,14 +21,16 @@ There are no test scripts in this project. CI (`.github/workflows/webportal_buil
 
 ## Environment
 
-By default the app talks to a QCFractal server on its own origin. For local development, either proxy to a server
-through the Vite dev server, or point the app directly at one with `VITE_QCFRACTAL_URI` (which requires CORS to be
-configured on the server). In `.env.local`:
+By default the app talks to a QCFractal server on its own origin. For local development, set `VITE_QCFRACTAL_URI`
+(on the command line or in `.env.local`); the Vite dev server then proxies `/api/` and `/auth/` to that server
+(see `vite.config.ts`):
 
 ```
-PROXY_TARGET=http://localhost:7777
-VITE_QCFRACTAL_URI=
+VITE_QCFRACTAL_URI=http://localhost:7777
 ```
+
+Use `src/request_config.ts`'s `server_address` for requests and `server_display_address` when showing the server's
+address to users.
 
 See `README.md` for details.
 
