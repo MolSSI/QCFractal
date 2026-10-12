@@ -5,6 +5,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 
 const myDir = dirname(fileURLToPath(import.meta.url));
 const homePath = join(
@@ -38,21 +39,43 @@ if (reservedPrefixes.length === 0) {
   fail(`RESERVED_PATH_PREFIXES in ${homePath} is empty`);
 }
 
-// Every route path must be a string literal, so that it can be checked here
+// Find every path attribute in the routing. Each must be a plain string, so that it can be checked here
 const appSource = readFileSync(appPath, "utf8");
-const pathAttrs = [...appSource.matchAll(/\bpath=(\S+)/g)].map((m) => m[1]);
+const sourceFile = ts.createSourceFile(
+  appPath,
+  appSource,
+  ts.ScriptTarget.Latest,
+  true,
+  ts.ScriptKind.TSX,
+);
 const routePaths = [];
-for (const attr of pathAttrs) {
-  const literal = attr.match(
-    /^(?:"([^"]*)"|'([^']*)'|\{["'`]([^"'`$]*)["'`]\})/,
-  );
-  if (!literal) {
-    fail(
-      `Route path ${attr} in ${appPath} is not a string literal, so it can't be checked`,
-    );
+
+function visit(node) {
+  if (ts.isJsxAttribute(node) && node.name.getText(sourceFile) === "path") {
+    let value = node.initializer;
+    if (value && ts.isJsxExpression(value)) {
+      value = value.expression;
+    }
+
+    // Strings with html entities (&...;) are decoded at runtime, so can't be checked as written
+    const isPlainString =
+      value &&
+      (ts.isStringLiteral(value) ||
+        ts.isNoSubstitutionTemplateLiteral(value)) &&
+      !value.text.includes("&");
+    if (!isPlainString) {
+      const { line } = sourceFile.getLineAndCharacterOfPosition(
+        node.getStart(sourceFile),
+      );
+      fail(
+        `Route path at ${appPath}:${line + 1} is not a plain string literal, so it can't be checked`,
+      );
+    }
+    routePaths.push(value.text);
   }
-  routePaths.push(literal[1] ?? literal[2] ?? literal[3]);
+  ts.forEachChild(node, visit);
 }
+visit(sourceFile);
 
 if (routePaths.length === 0) {
   fail(`No routes found in ${appPath}. Has the routing moved?`);

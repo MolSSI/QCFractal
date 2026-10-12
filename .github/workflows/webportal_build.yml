@@ -47,11 +47,11 @@ jobs:
           cache: 'npm'
           cache-dependency-path: qcwebportal/package-lock.json
 
-      - name: Check routes don't collide with the server
-        run: node dev/check_routes.mjs
-
       - name: Install dependencies
         run: npm ci
+
+      - name: Check routes don't collide with the server
+        run: node dev/check_routes.mjs
 
       - name: Build
         run: npm run build
