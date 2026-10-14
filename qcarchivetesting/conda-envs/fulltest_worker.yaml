@@ -16,7 +16,7 @@ dependencies:
   - pydantic-settings
   - zstandard
   - apsw>=3.42
-  - qcelemental>=0.50.2,<0.70a0
+  - qcelemental>=0.51.3,<0.70a0  # 0.51.3 needed for py3.14
   - tabulate
   - tqdm
   - pandas

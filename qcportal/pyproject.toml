@@ -30,7 +30,8 @@ dependencies = [
     "pydantic-settings",
     "zstandard",
     "apsw>=3.42",
-    "qcelemental>=0.50.2,<0.70a0",
+    "qcelemental>=0.50.2,<0.70a0; python_version < '3.14'",
+    "qcelemental>=0.51.3,<0.70a0; python_version >= '3.14'",  # 0.51.3 fixes v1v2 shim conversion of optimizations
     "tabulate",
     "tqdm",
     "pandas",
