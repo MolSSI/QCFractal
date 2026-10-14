@@ -365,10 +365,8 @@ def test_cli_start(cli_runner):
 
 def test_cli_start_options(cli_runner, tmp_path):
 
-    log_dir = tmp_path / "logs"
-    log_dir.mkdir()
-
-    log_path = str(log_dir / "qca_test.logfile")
+    # Log directory does not exist yet - the server should create it
+    log_path = str(tmp_path / "logs" / "nested" / "qca_test.logfile")
 
     port = find_open_port()
     full_cmd = [

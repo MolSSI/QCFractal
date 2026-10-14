@@ -462,6 +462,13 @@ class PostgresHarness:
                 f"A process is already running on port {self.config.port} that is not associated with this QCFractal instance's database"
             )
         else:
+            # pg_ctl will not create the directory for the log file
+            log_dir = os.path.dirname(self.config.logfile)
+            try:
+                os.makedirs(log_dir, exist_ok=True)
+            except OSError as e:
+                raise RuntimeError(f"Could not create directory {log_dir} for the database log file: {e}") from e
+
             retcode, stdout, stderr = self.pg_ctl(["start"])
 
             err_msg = f"Error starting PostgreSQL. Did you remember to initialize it (qcfractal-server init)?\noutput:\n{stdout}\nstderr:\n{stderr}"
