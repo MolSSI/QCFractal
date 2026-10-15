@@ -27,6 +27,15 @@ interface ChangelogEntry {
 // skip purely internal refactors.
 const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-10-14",
+    items: [
+      {
+        kind: "Added",
+        text: "Summary table on the managers page showing how many active managers serve each compute tag on each cluster",
+      },
+    ],
+  },
+  {
     date: "2026-10-07",
     items: [
       {
