@@ -229,6 +229,22 @@ class FractalComputeConfig(BaseSettings):
     See https://parsl.readthedocs.io/en/stable/userguide/advanced/usage_tracking.html
     """
 
+    parsl_strategy: Literal["simple", "htex_auto_scale"] = "simple"
+    """Strategy parsl uses to scale the number of blocks (batch jobs) up and down.
+
+    Both scale out the same way. They differ in scaling in:
+
+    * ``simple`` only scales in once the executor has had no tasks at all for ``parsl_max_idletime``,
+      and then cancels every block (above the minimum).
+    * ``htex_auto_scale`` also cancels individual blocks that have been idle for ``parsl_max_idletime``
+      while other blocks are still busy. This is useful when there are fewer tasks than workers.
+
+    See https://parsl.readthedocs.io/en/latest/userguide/configuration/providers/elasticity.html
+    """
+
+    parsl_max_idletime: float = Field(120.0, ge=0)
+    """How long blocks must be idle before parsl may scale them in (units of seconds, or a duration string)"""
+
     server: FractalServerSettings
     environments: PackageEnvironmentSettings = Field(default_factory=PackageEnvironmentSettings)
     executors: dict[str, AllExecutorTypes]
@@ -260,7 +276,7 @@ class FractalComputeConfig(BaseSettings):
         self.parsl_run_dir = _make_abs_path(self.parsl_run_dir, self.base_folder, "parsl_run_dir")
         return self
 
-    @field_validator("update_frequency", "max_idle_time", mode="before")
+    @field_validator("update_frequency", "max_idle_time", "parsl_max_idletime", mode="before")
     @classmethod
     def _convert_durations(cls, v):
         if v is None:

@@ -101,6 +101,21 @@ def test_manager_keepalive(snowflake: QCATestingSnowflake):
     assert m[0]["status"] == ManagerStatusEnum.inactive
 
 
+def test_manager_parsl_strategy(snowflake: QCATestingSnowflake):
+    compute = QCATestingComputeThread(
+        snowflake._qcf_config, {}, {"parsl_strategy": "htex_auto_scale", "parsl_max_idletime": 37}
+    )
+    compute.start(manual_updates=True)
+
+    time.sleep(1)  # wait for the manager to set up parsl
+
+    parsl_config = compute._compute.dflow_kernel.config
+    assert parsl_config.strategy == "htex_auto_scale"
+    assert parsl_config.max_idletime == 37
+
+    compute.stop()
+
+
 def test_manager_tags(snowflake: QCATestingSnowflake, tmp_path):
     storage_socket = snowflake.get_storage_socket()
 
