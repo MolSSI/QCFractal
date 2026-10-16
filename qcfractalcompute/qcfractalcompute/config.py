@@ -239,7 +239,7 @@ class FractalComputeConfig(BaseSettings):
     * ``htex_auto_scale`` also cancels individual blocks that have been idle for ``parsl_max_idletime``
       while other blocks are still busy. This is useful when there are fewer tasks than workers.
 
-    See https://parsl.readthedocs.io/en/stable/userguide/configuration/elasticity.html
+    See https://parsl.readthedocs.io/en/latest/userguide/configuration/providers/elasticity.html
     """
 
     parsl_max_idletime: float = Field(120.0, ge=0)
