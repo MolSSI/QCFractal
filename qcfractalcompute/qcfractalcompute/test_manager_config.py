@@ -95,3 +95,24 @@ def test_manager_config_api_token_mutually_exclusive():
     base["server"]["username"] = "bill"
     with pytest.raises(ValueError, match="not both"):
         FractalComputeConfig(base_folder="/tmp", **base)
+
+
+def test_manager_config_parsl_strategy(tmp_path):
+    base_folder = str(tmp_path)
+    base_config = copy.deepcopy(_base_config)
+
+    # Defaults match parsl's own
+    manager_config = FractalComputeConfig(base_folder=base_folder, **base_config)
+    assert manager_config.parsl_strategy == "simple"
+    assert manager_config.parsl_max_idletime == 120
+
+    base_config["parsl_strategy"] = "htex_auto_scale"
+    base_config["parsl_max_idletime"] = "5m"
+    manager_config = FractalComputeConfig(base_folder=base_folder, **base_config)
+    assert manager_config.parsl_strategy == "htex_auto_scale"
+    assert manager_config.parsl_max_idletime == 300
+
+    # "none" would never start any blocks, since executors are built with init_blocks=0
+    base_config["parsl_strategy"] = "none"
+    with pytest.raises(ValueError):
+        FractalComputeConfig(base_folder=base_folder, **base_config)
