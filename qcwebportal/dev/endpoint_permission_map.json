@@ -1,0 +1,1070 @@
+{
+  "/": {
+    "action": "none",
+    "endpoint": "home.homepage",
+    "method": "get",
+    "resource": "none"
+  },
+  "/<path:file_path>": {
+    "action": "none",
+    "endpoint": "home.homepage",
+    "method": "get",
+    "resource": "none"
+  },
+  "/api/v1/access_logs/bulkDelete": {
+    "action": "delete",
+    "endpoint": "api.delete_access_log_v1",
+    "method": "post",
+    "resource": "access_log"
+  },
+  "/api/v1/access_logs/query": {
+    "action": "read",
+    "endpoint": "api.query_access_log_v1",
+    "method": "post",
+    "resource": "access_log"
+  },
+  "/api/v1/access_logs/summary": {
+    "action": "read",
+    "endpoint": "api.query_access_summary_v1",
+    "method": "get",
+    "resource": "access_log"
+  },
+  "/api/v1/all_routes": {
+    "action": "none",
+    "endpoint": "api.get_all_routes_v1",
+    "method": "get",
+    "resource": "none"
+  },
+  "/api/v1/datasets": {
+    "action": "read",
+    "endpoint": "api.list_dataset_v1",
+    "method": "get",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<int:dataset_id>": {
+    "action": "delete",
+    "endpoint": "api.delete_dataset_v1",
+    "method": "delete",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<int:dataset_id>/attachments": {
+    "action": "read",
+    "endpoint": "api.fetch_dataset_attachments_v1",
+    "method": "get",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<int:dataset_id>/attachments/<int:attachment_id>": {
+    "action": "modify",
+    "endpoint": "api.delete_dataset_attachment_v1",
+    "method": "delete",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<int:dataset_id>/contributed_values": {
+    "action": "read",
+    "endpoint": "api.fetch_dataset_contributed_values_v1",
+    "method": "get",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<int:dataset_id>/internal_jobs": {
+    "action": "read",
+    "endpoint": "api.list_dataset_internal_jobs_v1",
+    "method": "get",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<int:dataset_id>/internal_jobs/<int:job_id>": {
+    "action": "read",
+    "endpoint": "api.get_dataset_internal_job_v1",
+    "method": "get",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<int:dataset_id>/status": {
+    "action": "read",
+    "endpoint": "api.get_base_dataset_status_v1",
+    "method": "get",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>": {
+    "action": "modify",
+    "endpoint": "api.add_dataset_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>": {
+    "action": "modify",
+    "endpoint": "api.modify_dataset_metadata_v1",
+    "method": "patch",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/background_add_entries": {
+    "action": "modify",
+    "endpoint": "api.background_add_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/background_submit": {
+    "action": "modify",
+    "endpoint": "api.background_submit_dataset_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/computed_properties": {
+    "action": "read",
+    "endpoint": "api.get_dataset_computed_properties_v1",
+    "method": "get",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/copy_from": {
+    "action": "modify",
+    "endpoint": "api.copy_from_dataset_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/create_view": {
+    "action": "modify",
+    "endpoint": "api.create_dataset_view_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/detailed_status": {
+    "action": "read",
+    "endpoint": "api.get_dataset_detailed_status_v1",
+    "method": "get",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/entries": {
+    "action": "modify",
+    "endpoint": "api.rename_dataset_entries_v1",
+    "method": "patch",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkDelete": {
+    "action": "modify",
+    "endpoint": "api.delete_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkFetch": {
+    "action": "read",
+    "endpoint": "api.fetch_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/entries/modify": {
+    "action": "modify",
+    "endpoint": "api.modify_dataset_entries_v1",
+    "method": "patch",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/entry_names": {
+    "action": "read",
+    "endpoint": "api.fetch_dataset_entry_names_v1",
+    "method": "get",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/record_count": {
+    "action": "read",
+    "endpoint": "api.get_dataset_record_count_v1",
+    "method": "get",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/records": {
+    "action": "modify",
+    "endpoint": "api.modify_dataset_records_v1",
+    "method": "patch",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkDelete": {
+    "action": "modify",
+    "endpoint": "api.remove_dataset_records_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkFetch": {
+    "action": "read",
+    "endpoint": "api.fetch_dataset_records_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/records/revert": {
+    "action": "modify",
+    "endpoint": "api.revert_dataset_records_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/specification_names": {
+    "action": "read",
+    "endpoint": "api.fetch_dataset_specification_names_v1",
+    "method": "get",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/specifications": {
+    "action": "modify",
+    "endpoint": "api.rename_dataset_specifications_v1",
+    "method": "patch",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkDelete": {
+    "action": "modify",
+    "endpoint": "api.delete_dataset_specifications_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkFetch": {
+    "action": "read",
+    "endpoint": "api.fetch_dataset_specifications_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/status": {
+    "action": "read",
+    "endpoint": "api.get_dataset_status_v1",
+    "method": "get",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/status_by_tag": {
+    "action": "read",
+    "endpoint": "api.get_dataset_status_by_tag_v1",
+    "method": "get",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/<string:dataset_type>/<int:dataset_id>/submit": {
+    "action": "modify",
+    "endpoint": "api.submit_dataset_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/clone": {
+    "action": "modify",
+    "endpoint": "api.clone_dataset_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/gridoptimization/<int:dataset_id>/background_add_entries": {
+    "action": "modify",
+    "endpoint": "api.background_add_gridoptimization_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/gridoptimization/<int:dataset_id>/entries/bulkCreate": {
+    "action": "modify",
+    "endpoint": "api.add_gridoptimization_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/gridoptimization/<int:dataset_id>/specifications": {
+    "action": "modify",
+    "endpoint": "api.add_gridoptimization_dataset_specifications_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/manybody/<int:dataset_id>/background_add_entries": {
+    "action": "modify",
+    "endpoint": "api.background_add_manybody_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/manybody/<int:dataset_id>/entries/bulkCreate": {
+    "action": "modify",
+    "endpoint": "api.add_manybody_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/manybody/<int:dataset_id>/specifications": {
+    "action": "modify",
+    "endpoint": "api.add_manybody_dataset_specifications_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/neb/<int:dataset_id>/background_add_entries": {
+    "action": "modify",
+    "endpoint": "api.background_add_neb_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/neb/<int:dataset_id>/entries/bulkCreate": {
+    "action": "modify",
+    "endpoint": "api.add_neb_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/neb/<int:dataset_id>/specifications": {
+    "action": "modify",
+    "endpoint": "api.add_neb_dataset_specifications_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/optimization/<int:dataset_id>/background_add_entries": {
+    "action": "modify",
+    "endpoint": "api.background_add_optimization_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/optimization/<int:dataset_id>/entries/bulkCreate": {
+    "action": "modify",
+    "endpoint": "api.add_optimization_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/optimization/<int:dataset_id>/specifications": {
+    "action": "modify",
+    "endpoint": "api.add_optimization_dataset_specifications_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/query": {
+    "action": "read",
+    "endpoint": "api.query_general_dataset_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/queryrecords": {
+    "action": "read",
+    "endpoint": "api.query_dataset_records_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/reaction/<int:dataset_id>/background_add_entries": {
+    "action": "modify",
+    "endpoint": "api.background_add_reaction_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/reaction/<int:dataset_id>/entries/bulkCreate": {
+    "action": "modify",
+    "endpoint": "api.add_reaction_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/reaction/<int:dataset_id>/specifications": {
+    "action": "modify",
+    "endpoint": "api.add_reaction_dataset_specifications_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/singlepoint/<int:dataset_id>/background_add_entries": {
+    "action": "modify",
+    "endpoint": "api.background_add_singlepoint_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/singlepoint/<int:dataset_id>/entries/addFrom": {
+    "action": "modify",
+    "endpoint": "api.add_singlepoint_dataset_entries_from_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/singlepoint/<int:dataset_id>/entries/bulkCreate": {
+    "action": "modify",
+    "endpoint": "api.add_singlepoint_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/singlepoint/<int:dataset_id>/specifications": {
+    "action": "modify",
+    "endpoint": "api.add_singlepoint_dataset_specifications_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/torsiondrive/<int:dataset_id>/background_add_entries": {
+    "action": "modify",
+    "endpoint": "api.background_add_torsiondrive_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/torsiondrive/<int:dataset_id>/entries/bulkCreate": {
+    "action": "modify",
+    "endpoint": "api.add_torsiondrive_dataset_entries_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/datasets/torsiondrive/<int:dataset_id>/specifications": {
+    "action": "modify",
+    "endpoint": "api.add_torsiondrive_dataset_specifications_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/external_files/<int:file_id>": {
+    "action": "read",
+    "endpoint": "api.get_external_file_metadata_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/external_files/<int:file_id>/direct_link": {
+    "action": "read",
+    "endpoint": "api.get_direct_link_external_file_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/external_files/<int:file_id>/download": {
+    "action": "read",
+    "endpoint": "api.download_external_file_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/groups": {
+    "action": "add",
+    "endpoint": "api.add_group_v1",
+    "method": "post",
+    "resource": "groups"
+  },
+  "/api/v1/groups/<groupname_or_id>": {
+    "action": "delete",
+    "endpoint": "api.delete_group_v1",
+    "method": "delete",
+    "resource": "groups"
+  },
+  "/api/v1/information": {
+    "action": "read",
+    "endpoint": "api.get_information",
+    "method": "get",
+    "resource": "information"
+  },
+  "/api/v1/internal_jobs/<int:job_id>": {
+    "action": "delete",
+    "endpoint": "api.delete_internal_job_v1",
+    "method": "delete",
+    "resource": "internal_jobs"
+  },
+  "/api/v1/internal_jobs/<int:job_id>/status": {
+    "action": "modify",
+    "endpoint": "api.cancel_internal_job_v1",
+    "method": "put",
+    "resource": "internal_jobs"
+  },
+  "/api/v1/internal_jobs/query": {
+    "action": "read",
+    "endpoint": "api.query_internal_jobs_v1",
+    "method": "post",
+    "resource": "internal_jobs"
+  },
+  "/api/v1/managers/<string:name>": {
+    "action": "read",
+    "endpoint": "api.get_managers_v1",
+    "method": "get",
+    "resource": "managers"
+  },
+  "/api/v1/managers/<string:name>/log": {
+    "action": "read",
+    "endpoint": "api.get_manager_log_v1",
+    "method": "get",
+    "resource": "managers"
+  },
+  "/api/v1/managers/bulkGet": {
+    "action": "read",
+    "endpoint": "api.bulk_get_managers_v1",
+    "method": "post",
+    "resource": "managers"
+  },
+  "/api/v1/managers/query": {
+    "action": "read",
+    "endpoint": "api.query_managers_v1",
+    "method": "post",
+    "resource": "managers"
+  },
+  "/api/v1/managers/queryActive": {
+    "action": "read",
+    "endpoint": "api.query_active_managers_v1",
+    "method": "post",
+    "resource": "managers"
+  },
+  "/api/v1/me": {
+    "action": "modify",
+    "endpoint": "api.modify_my_user_v1",
+    "method": "patch",
+    "resource": "me"
+  },
+  "/api/v1/me/password": {
+    "action": "modify",
+    "endpoint": "api.change_my_password_v1",
+    "method": "put",
+    "resource": "me"
+  },
+  "/api/v1/me/preferences": {
+    "action": "modify",
+    "endpoint": "api.set_my_preferences_v1",
+    "method": "put",
+    "resource": "me"
+  },
+  "/api/v1/me/sessions": {
+    "action": "read",
+    "endpoint": "api.list_my_sessions_v1",
+    "method": "get",
+    "resource": "me"
+  },
+  "/api/v1/molecules/<int:molecule_id>": {
+    "action": "modify",
+    "endpoint": "api.modify_molecules_v1",
+    "method": "patch",
+    "resource": "records"
+  },
+  "/api/v1/molecules/bulkCreate": {
+    "action": "add",
+    "endpoint": "api.add_molecules_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/molecules/bulkDelete": {
+    "action": "delete",
+    "endpoint": "api.bulk_delete_molecules_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/molecules/bulkGet": {
+    "action": "read",
+    "endpoint": "api.bulk_get_molecules_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/molecules/fromFiles": {
+    "action": "add",
+    "endpoint": "api.add_molecules_from_files_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/molecules/query": {
+    "action": "read",
+    "endpoint": "api.query_molecules_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/motd": {
+    "action": "modify",
+    "endpoint": "api.set_motd",
+    "method": "put",
+    "resource": "information"
+  },
+  "/api/v1/ping": {
+    "action": "none",
+    "endpoint": "api.ping",
+    "method": "get",
+    "resource": "none"
+  },
+  "/api/v1/projects": {
+    "action": "add",
+    "endpoint": "api.add_project_v1",
+    "method": "post",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>": {
+    "action": "delete",
+    "endpoint": "api.delete_project_v1",
+    "method": "delete",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/attachments": {
+    "action": "modify",
+    "endpoint": "api.upload_project_attachment_v1",
+    "method": "post",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/attachments/<int:attachment_id>": {
+    "action": "modify",
+    "endpoint": "api.delete_project_attachment_v1",
+    "method": "delete",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/dataset_metadata": {
+    "action": "read",
+    "endpoint": "api.get_project_dataset_metadata_v1",
+    "method": "get",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/datasets": {
+    "action": "modify",
+    "endpoint": "api.add_project_dataset_v1",
+    "method": "post",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/datasets/<int:dataset_id>": {
+    "action": "read",
+    "endpoint": "api.get_project_dataset_v1",
+    "method": "get",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/datasets/link": {
+    "action": "modify",
+    "endpoint": "api.project_link_dataset_v1",
+    "method": "post",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/datasets/unlink": {
+    "action": "modify",
+    "endpoint": "api.project_unlink_datasets_v1",
+    "method": "post",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/record_metadata": {
+    "action": "read",
+    "endpoint": "api.get_project_record_metadata_v1",
+    "method": "get",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/records": {
+    "action": "modify",
+    "endpoint": "api.add_project_record_v1",
+    "method": "post",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/records/<int:record_id>": {
+    "action": "read",
+    "endpoint": "api.get_project_record_v1",
+    "method": "get",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/records/import": {
+    "action": "modify",
+    "endpoint": "api.import_project_record_v1",
+    "method": "post",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/records/link": {
+    "action": "modify",
+    "endpoint": "api.project_link_record_v1",
+    "method": "post",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/records/unlink": {
+    "action": "modify",
+    "endpoint": "api.project_unlink_records_v1",
+    "method": "post",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/status": {
+    "action": "read",
+    "endpoint": "api.get_project_status_v1",
+    "method": "get",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/worker_images": {
+    "action": "modify",
+    "endpoint": "api.add_project_worker_image_v1",
+    "method": "post",
+    "resource": "projects"
+  },
+  "/api/v1/projects/<int:project_id>/worker_images/<int:file_id>": {
+    "action": "modify",
+    "endpoint": "api.delete_project_worker_image_v1",
+    "method": "delete",
+    "resource": "projects"
+  },
+  "/api/v1/projects/query": {
+    "action": "read",
+    "endpoint": "api.query_general_project_v1",
+    "method": "post",
+    "resource": "projects"
+  },
+  "/api/v1/records": {
+    "action": "modify",
+    "endpoint": "api.modify_records_v1",
+    "method": "patch",
+    "resource": "records"
+  },
+  "/api/v1/records/<int:record_id>": {
+    "action": "read",
+    "endpoint": "api.get_general_records_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<int:record_id>/waiting_reason": {
+    "action": "read",
+    "endpoint": "api.get_record_waiting_reason_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>": {
+    "action": "read",
+    "endpoint": "api.get_general_records_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>/children_errors": {
+    "action": "read",
+    "endpoint": "api.get_record_children_errors_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>/children_status": {
+    "action": "read",
+    "endpoint": "api.get_record_children_status_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>/comments": {
+    "action": "read",
+    "endpoint": "api.get_record_comments_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>/compute_history": {
+    "action": "read",
+    "endpoint": "api.get_record_history_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>/compute_history/<int:history_id>": {
+    "action": "read",
+    "endpoint": "api.get_record_history_single_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>/compute_history/<int:history_id>/outputs": {
+    "action": "read",
+    "endpoint": "api.get_record_outputs_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>/compute_history/<int:history_id>/outputs/<string:output_type>": {
+    "action": "read",
+    "endpoint": "api.get_record_outputs_single_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>/compute_history/<int:history_id>/outputs/<string:output_type>/data": {
+    "action": "read",
+    "endpoint": "api.get_record_outputs_data_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>/compute_history/<int:history_id>/outputs/<string:output_type>/uncompressed_data": {
+    "action": "read",
+    "endpoint": "api.get_record_outputs_uncompressed_data_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>/native_files": {
+    "action": "read",
+    "endpoint": "api.get_record_native_files_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>/native_files/<string:name>": {
+    "action": "read",
+    "endpoint": "api.get_record_native_file_single_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>/native_files/<string:name>/data": {
+    "action": "read",
+    "endpoint": "api.get_record_native_file_data_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>/native_files/<string:name>/uncompressed_data": {
+    "action": "read",
+    "endpoint": "api.get_record_native_file_uncompressed_data_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>/service": {
+    "action": "read",
+    "endpoint": "api.get_record_service_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/<int:record_id>/task": {
+    "action": "read",
+    "endpoint": "api.get_record_task_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/<string:record_type>/bulkGet": {
+    "action": "read",
+    "endpoint": "api.bulk_get_records_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/bulkDelete": {
+    "action": "delete",
+    "endpoint": "api.bulk_delete_records_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/bulkGet": {
+    "action": "read",
+    "endpoint": "api.bulk_get_records_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/gridoptimization/<int:record_id>/optimizations": {
+    "action": "read",
+    "endpoint": "api.get_gridoptimization_optimizations_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/gridoptimization/bulkCreate": {
+    "action": "add",
+    "endpoint": "api.add_gridoptimization_records_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/gridoptimization/query": {
+    "action": "read",
+    "endpoint": "api.query_gridoptimization_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/manybody/<int:record_id>/clusters": {
+    "action": "read",
+    "endpoint": "api.get_manybody_clusters_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/manybody/bulkCreate": {
+    "action": "add",
+    "endpoint": "api.add_manybody_records_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/manybody/query": {
+    "action": "read",
+    "endpoint": "api.query_manybody_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/neb/<int:record_id>/initial_chain": {
+    "action": "read",
+    "endpoint": "api.get_neb_initial_chain_molecule_ids_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/neb/<int:record_id>/neb_result": {
+    "action": "read",
+    "endpoint": "api.get_neb_result_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/neb/<int:record_id>/optimizations": {
+    "action": "read",
+    "endpoint": "api.get_neb_optimizations_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/neb/<int:record_id>/singlepoints": {
+    "action": "read",
+    "endpoint": "api.get_neb_singlepoints_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/neb/bulkCreate": {
+    "action": "add",
+    "endpoint": "api.add_neb_records_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/neb/query": {
+    "action": "read",
+    "endpoint": "api.query_neb_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/optimization/<int:record_id>/trajectory": {
+    "action": "read",
+    "endpoint": "api.get_optimization_trajectory_ids_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/optimization/bulkCreate": {
+    "action": "add",
+    "endpoint": "api.add_optimization_records_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/optimization/query": {
+    "action": "read",
+    "endpoint": "api.query_optimization_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/query": {
+    "action": "read",
+    "endpoint": "api.query_records_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/reaction/<int:record_id>/components": {
+    "action": "read",
+    "endpoint": "api.get_reaction_components_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/reaction/bulkCreate": {
+    "action": "add",
+    "endpoint": "api.add_reaction_records_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/reaction/query": {
+    "action": "read",
+    "endpoint": "api.query_reaction_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/revert": {
+    "action": "modify",
+    "endpoint": "api.revert_records_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/singlepoint/<int:record_id>/wavefunction": {
+    "action": "read",
+    "endpoint": "api.get_singlepoint_wavefunction_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/singlepoint/<int:record_id>/wavefunction/data": {
+    "action": "read",
+    "endpoint": "api.get_singlepoint_wavefunction_data_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/singlepoint/bulkCreate": {
+    "action": "add",
+    "endpoint": "api.add_singlepoint_records_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/singlepoint/query": {
+    "action": "read",
+    "endpoint": "api.query_singlepoint_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/torsiondrive/<int:record_id>/initial_molecules": {
+    "action": "read",
+    "endpoint": "api.get_torsiondrive_initial_molecules_ids_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/torsiondrive/<int:record_id>/minimum_optimizations": {
+    "action": "read",
+    "endpoint": "api.get_torsiondrive_minimum_optimizations_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/torsiondrive/<int:record_id>/optimizations": {
+    "action": "read",
+    "endpoint": "api.get_torsiondrive_optimizations_v1",
+    "method": "get",
+    "resource": "records"
+  },
+  "/api/v1/records/torsiondrive/bulkCreate": {
+    "action": "add",
+    "endpoint": "api.add_torsiondrive_records_v1",
+    "method": "post",
+    "resource": "records"
+  },
+  "/api/v1/records/torsiondrive/query": {
+    "action": "read",
+    "endpoint": "api.query_torsiondrive_v1",
+    "method": "post",
+    "resource": "datasets"
+  },
+  "/api/v1/server_errors/bulkDelete": {
+    "action": "delete",
+    "endpoint": "api.delete_server_error_log_v1",
+    "method": "post",
+    "resource": "server_errors"
+  },
+  "/api/v1/server_errors/query": {
+    "action": "read",
+    "endpoint": "api.query_error_log_v1",
+    "method": "post",
+    "resource": "server_errors"
+  },
+  "/api/v1/sessions": {
+    "action": "read",
+    "endpoint": "api.list_all_user_sessions_v1",
+    "method": "get",
+    "resource": "users"
+  },
+  "/api/v1/users": {
+    "action": "modify",
+    "endpoint": "api.modify_user_v1",
+    "method": "patch",
+    "resource": "users"
+  },
+  "/api/v1/users/<username_or_id>": {
+    "action": "delete",
+    "endpoint": "api.delete_user_v1",
+    "method": "delete",
+    "resource": "users"
+  },
+  "/api/v1/users/<username_or_id>/password": {
+    "action": "modify",
+    "endpoint": "api.change_password_v1",
+    "method": "put",
+    "resource": "users"
+  },
+  "/api/v1/users/<username_or_id>/preferences": {
+    "action": "modify",
+    "endpoint": "api.set_user_preferences_v1",
+    "method": "put",
+    "resource": "users"
+  },
+  "/api/v1/users/<username_or_id>/sessions": {
+    "action": "read",
+    "endpoint": "api.list_user_sessions_v1",
+    "method": "get",
+    "resource": "users"
+  },
+  "/auth/v1/allowed": {
+    "action": "none",
+    "endpoint": "auth.get_allowed_actions",
+    "method": "get",
+    "resource": "none"
+  },
+  "/auth/v1/login": {
+    "action": "none",
+    "endpoint": "auth.login",
+    "method": "post",
+    "resource": "none"
+  },
+  "/auth/v1/refresh": {
+    "action": "none",
+    "endpoint": "auth.refresh",
+    "method": "post",
+    "resource": "none"
+  },
+  "/auth/v1/session_login": {
+    "action": "none",
+    "endpoint": "auth.user_session_login",
+    "method": "post",
+    "resource": "none"
+  },
+  "/auth/v1/session_logout": {
+    "action": "none",
+    "endpoint": "auth.user_session_logout",
+    "method": "post",
+    "resource": "none"
+  },
+  "/compute/v1/information": {
+    "action": "read",
+    "endpoint": "compute.get_information",
+    "method": "get",
+    "resource": "information"
+  },
+  "/compute/v1/managers": {
+    "action": "add",
+    "endpoint": "compute.activate_manager_v1",
+    "method": "post",
+    "resource": "managers"
+  },
+  "/compute/v1/managers/<string:name>": {
+    "action": "modify",
+    "endpoint": "compute.update_manager_v1",
+    "method": "patch",
+    "resource": "managers"
+  },
+  "/compute/v1/tasks/claim": {
+    "action": "claim",
+    "endpoint": "compute.claim_tasks_v1",
+    "method": "post",
+    "resource": "tasks"
+  },
+  "/compute/v1/tasks/return": {
+    "action": "return",
+    "endpoint": "compute.return_tasks_v1",
+    "method": "post",
+    "resource": "tasks"
+  }
+}

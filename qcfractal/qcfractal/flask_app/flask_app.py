@@ -125,7 +125,7 @@ def create_flask_app(qcfractal_config: FractalConfig, finished_queue: Optional[q
     from .compute_v1 import routes
     from ..components import register_all
 
-    from .home_v1 import home_v1
+    from .home_v1 import home_v1, RESERVED_PATH_PREFIXES
     from .api_v1.blueprint import api_v1
     from .auth_v1.blueprint import auth_v1
     from .compute_v1.blueprint import compute_v1
@@ -141,6 +141,14 @@ def create_flask_app(qcfractal_config: FractalConfig, finished_queue: Optional[q
             continue
         if not hasattr(view, "_has_permission_check"):
             raise RuntimeError(f"Route {endpoint} does not have permission check")
+
+    # Check that all routes (other than the homepage) are under the reserved prefixes, so they
+    # can't collide with paths of the homepage (such as routes of the web portal)
+    for rule in app.url_map.iter_rules():
+        if rule.endpoint in ("static", "home.homepage"):
+            continue
+        if rule.rule.split("/")[1] not in RESERVED_PATH_PREFIXES:
+            raise RuntimeError(f"Route {rule.rule} is not under one of the reserved prefixes {RESERVED_PATH_PREFIXES}")
 
     # A copy of the URL map excluding the homepage blueprint's catch-all route, used by
     # handlers.handle_method_not_allowed to tell a genuine 405 apart from an unknown route
