@@ -17,7 +17,7 @@ dependencies:
   - pydantic-settings
   - zstandard
   - apsw>=3.42
-  - qcelemental>=0.50.2,<0.70a0
+  - qcelemental>=0.51.3,<0.70a0  # 0.51.3 needed for py3.14
   - tabulate
   - tqdm
   - pandas
@@ -46,8 +46,7 @@ dependencies:
 
   # Worker codes below
   - qcengine>=0.50,<0.70a0
-  - psi4>=1.10.1
-  - libxc-c=7.0.0 # pinned due to errors. Remove eventually
+  - psi4
   - rdkit
 
   # Testing packages
