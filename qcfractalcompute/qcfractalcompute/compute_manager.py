@@ -290,6 +290,8 @@ class ComputeManager:
             initialize_logging=False,
             run_dir=self.manager_config.parsl_run_dir,
             usage_tracking=self.manager_config.parsl_usage_tracking,
+            strategy=self.manager_config.parsl_strategy,
+            max_idletime=self.manager_config.parsl_max_idletime,
         )
         self.dflow_kernel = DataFlowKernel(self.parsl_config)
 
