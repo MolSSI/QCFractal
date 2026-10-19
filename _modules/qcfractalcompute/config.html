@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=961dc0be"></script>
+    <script src="../../_static/documentation_options.js?v=9aeeba06"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.71.post11+g257d092ee" />
+  <meta name="docsearch:version" content="0.71.post13+g3309f94f9" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -705,6 +705,22 @@
 <span class="sd">    See https://parsl.readthedocs.io/en/stable/userguide/advanced/usage_tracking.html</span>
 <span class="sd">    """</span>
 
+    <span class="n">parsl_strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"simple"</span><span class="p">,</span> <span class="s2">"htex_auto_scale"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"simple"</span>
+<span class="w">    </span><span class="sd">"""Strategy parsl uses to scale the number of blocks (batch jobs) up and down.</span>
+
+<span class="sd">    Both scale out the same way. They differ in scaling in:</span>
+
+<span class="sd">    * ``simple`` only scales in once the executor has had no tasks at all for ``parsl_max_idletime``,</span>
+<span class="sd">      and then cancels every block (above the minimum).</span>
+<span class="sd">    * ``htex_auto_scale`` also cancels individual blocks that have been idle for ``parsl_max_idletime``</span>
+<span class="sd">      while other blocks are still busy. This is useful when there are fewer tasks than workers.</span>
+
+<span class="sd">    See https://parsl.readthedocs.io/en/stable/userguide/configuration/elasticity.html</span>
+<span class="sd">    """</span>
+
+    <span class="n">parsl_max_idletime</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mf">120.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""How long blocks must be idle before parsl may scale them in (units of seconds, or a duration string)"""</span>
+
     <span class="n">server</span><span class="p">:</span> <span class="n">FractalServerSettings</span>
     <span class="n">environments</span><span class="p">:</span> <span class="n">PackageEnvironmentSettings</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">PackageEnvironmentSettings</span><span class="p">)</span>
     <span class="n">executors</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AllExecutorTypes</span><span class="p">]</span>
@@ -736,7 +752,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">parsl_run_dir</span> <span class="o">=</span> <span class="n">_make_abs_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parsl_run_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_folder</span><span class="p">,</span> <span class="s2">"parsl_run_dir"</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"update_frequency"</span><span class="p">,</span> <span class="s2">"max_idle_time"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"update_frequency"</span><span class="p">,</span> <span class="s2">"max_idle_time"</span><span class="p">,</span> <span class="s2">"parsl_max_idletime"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_durations</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
