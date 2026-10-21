@@ -117,6 +117,85 @@ const ManagerRow: React.FC<{ manager: qcpTypes.Manager }> = ({ manager }) => {
   );
 };
 
+type TagClusterCount = { tag: string; cluster: string; count: number };
+
+const ComputeTagSummary: React.FC<{ managers: qcpTypes.Manager[] }> = ({
+  managers,
+}) => {
+  const rows = useMemo(() => {
+    const counts = new Map<string, TagClusterCount>();
+    for (const manager of managers) {
+      for (const tag of manager.tags ?? []) {
+        const key = JSON.stringify([tag, manager.cluster]);
+        const row = counts.get(key);
+        if (row) {
+          row.count += 1;
+        } else {
+          counts.set(key, { tag, cluster: manager.cluster, count: 1 });
+        }
+      }
+    }
+    return [...counts.values()].sort(
+      (a, b) =>
+        a.tag.localeCompare(b.tag) || a.cluster.localeCompare(b.cluster),
+    );
+  }, [managers]);
+
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  if (rows.length === 0) return null;
+
+  const lastPage = Math.max(0, Math.ceil(rows.length / rowsPerPage) - 1);
+  const currentPage = Math.min(page, lastPage);
+
+  return (
+    <Box mb={4} maxWidth={600}>
+      <Typography variant="h6">Compute Tags by Cluster</Typography>
+      <Typography variant="body2" color="text.secondary" mb={1}>
+        A manager is counted once for each compute tag it serves.
+      </Typography>
+      <TableContainer component={Paper} variant="outlined">
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Compute Tag</TableCell>
+              <TableCell>Cluster</TableCell>
+              <TableCell align="right">Count</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {rows
+              .slice(
+                currentPage * rowsPerPage,
+                currentPage * rowsPerPage + rowsPerPage,
+              )
+              .map((row) => (
+                <TableRow key={JSON.stringify([row.tag, row.cluster])} hover>
+                  <TableCell>{row.tag}</TableCell>
+                  <TableCell>{row.cluster}</TableCell>
+                  <TableCell align="right">{row.count}</TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <TablePagination
+        rowsPerPageOptions={[10, 20, 50]}
+        component="div"
+        count={rows.length}
+        rowsPerPage={rowsPerPage}
+        page={currentPage}
+        onPageChange={(_event, newPage) => setPage(newPage)}
+        onRowsPerPageChange={(event) => {
+          setRowsPerPage(parseInt(event.target.value, 10));
+          setPage(0);
+        }}
+      />
+    </Box>
+  );
+};
+
 export default function ManagerList() {
   usePageTitle("Compute Managers");
   const managerQueryBody = useMemo<qcpTypes.ManagerQueryFilters>(
@@ -124,6 +203,7 @@ export default function ManagerList() {
       status: ["active"],
       include: [
         "cluster",
+        "compute_tags",
         "name",
         "created_on",
         "modified_on",
@@ -133,7 +213,6 @@ export default function ManagerList() {
         "failures",
         "rejected",
       ],
-      limit: 200,
     }),
     [],
   );
@@ -221,6 +300,7 @@ export default function ManagerList() {
         <Typography variant="h4" marginBottom={3}>
           Active Managers
         </Typography>
+        {managerData && <ComputeTagSummary managers={managerData} />}
         <Box width={"30%"} mb={2}>
           <TextField
             fullWidth
