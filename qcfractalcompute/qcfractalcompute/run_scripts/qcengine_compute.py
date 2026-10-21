@@ -3,6 +3,7 @@ import sys
 from contextlib import redirect_stdout, redirect_stderr
 
 import qcengine
+import qcelemental.models._v1v2  # convert_v(QCEL_V1V2_SHIM_CODE) needs it; qcelemental only imports it on py314+
 from qcelemental.models import QCEL_V1V2_SHIM_CODE
 
 # From psi4/driver/p4util/python_helpers.py
