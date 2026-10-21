@@ -369,6 +369,13 @@ def setup_logging(config, logger: Logger):
     if config.logfile is not None:
         stdout_logging = False
         logger.info(f"Logging to {config.logfile} at level {config.loglevel}")
+
+        log_dir = os.path.dirname(config.logfile)
+        try:
+            os.makedirs(log_dir, exist_ok=True)
+        except OSError as e:
+            raise RuntimeError(f"Could not create directory {log_dir} for the server log file: {e}") from e
+
         log_handler = logging.FileHandler(config.logfile)
     else:
         logger.info(f"Logging to stdout at level {config.loglevel}")

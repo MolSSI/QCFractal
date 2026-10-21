@@ -71,3 +71,45 @@ def test_postgres_harness_locale_env(tmp_path, monkeypatch, lang):
             assert encoding == "UTF8"
     finally:
         pg_harness.shutdown()
+
+
+def test_postgres_harness_creates_logfile_dir(tmp_path):
+    log_path = tmp_path / "logs" / "nested" / "postgres.log"
+
+    db_config = DatabaseConfig(
+        port=find_open_port(),
+        data_directory=str(tmp_path / "db_data"),
+        logfile=str(log_path),
+        base_folder=str(tmp_path),
+        username="test_user",
+        password="test_password",
+        own=True,
+    )
+
+    pg_harness = PostgresHarness(db_config)
+    pg_harness.initialize_postgres()
+
+    try:
+        assert log_path.is_file()
+    finally:
+        pg_harness.shutdown()
+
+
+def test_postgres_harness_logfile_dir_not_creatable(tmp_path):
+    # A file is in the way of the log directory
+    (tmp_path / "logs").touch()
+
+    db_config = DatabaseConfig(
+        port=find_open_port(),
+        data_directory=str(tmp_path / "db_data"),
+        logfile=str(tmp_path / "logs" / "postgres.log"),
+        base_folder=str(tmp_path),
+        username="test_user",
+        password="test_password",
+        own=True,
+    )
+
+    pg_harness = PostgresHarness(db_config)
+
+    with pytest.raises(RuntimeError, match="Could not create directory"):
+        pg_harness.initialize_postgres()
