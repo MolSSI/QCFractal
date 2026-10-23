@@ -11,7 +11,6 @@ export interface OpenAttachmentButtonProps {
 }
 
 export const OpenAttachmentButton: React.FC<OpenAttachmentButtonProps> = ({
-  attachment: _attachment,
   disabled = false,
 }) => {
   return (

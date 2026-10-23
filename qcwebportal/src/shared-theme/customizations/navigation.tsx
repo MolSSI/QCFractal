@@ -10,7 +10,6 @@ import UnfoldMoreRoundedIcon from "@mui/icons-material/UnfoldMoreRounded";
 import { Link as RouterLink } from "react-router-dom";
 import { gray, brand } from "../themePrimitives";
 
-/* eslint-disable import/prefer-default-export */
 export const navigationCustomizations: Components<Theme> = {
   MuiMenuItem: {
     styleOverrides: {

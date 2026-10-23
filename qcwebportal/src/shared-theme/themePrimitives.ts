@@ -250,7 +250,7 @@ export const shape = {
   borderRadius: 8,
 };
 
-// @ts-ignore
+// @ts-expect-error slice() loses the 25-element tuple type of Shadows
 const defaultShadows: Shadows = [
   "none",
   "var(--template-palette-baseShadow)",
