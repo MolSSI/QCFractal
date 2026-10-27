@@ -27,6 +27,7 @@ import { describeRequestError } from "../../Utils.ts";
 import { getSpecificationComponent } from "../record_components/lookup.tsx";
 import {
   DeleteSpecificationDialog,
+  useModifySpecificationDescription,
   useRenameSpecification,
 } from "./DatasetSpecificationActions.tsx";
 
@@ -111,6 +112,38 @@ export default function DatasetSpecificationTable({
   const [specToDelete, setSpecToDelete] = React.useState<string | null>(null);
 
   const renameMutation = useRenameSpecification(datasetType, datasetId);
+
+  const [editingDescSpecName, setEditingDescSpecName] = React.useState<
+    string | null
+  >(null);
+  const [editingDescValue, setEditingDescValue] = React.useState("");
+  const descriptionMutation = useModifySpecificationDescription(
+    datasetType,
+    datasetId,
+  );
+
+  const startEditingDescription = (specName: string) => {
+    descriptionMutation.reset();
+    setEditingDescSpecName(specName);
+    setEditingDescValue(specificationsData[specName].description ?? "");
+  };
+
+  const cancelEditingDescription = () => {
+    descriptionMutation.reset();
+    setEditingDescSpecName(null);
+    setEditingDescValue("");
+  };
+
+  const saveDescription = () => {
+    if (!editingDescSpecName || descriptionMutation.isPending) {
+      return;
+    }
+
+    descriptionMutation.mutate(
+      { name: editingDescSpecName, description: editingDescValue },
+      { onSuccess: cancelEditingDescription },
+    );
+  };
 
   const startEditing = (specName: string) => {
     renameMutation.reset();
@@ -317,11 +350,101 @@ export default function DatasetSpecificationTable({
                       )}
                     </TableCell>
                     <TableCell sx={{ maxWidth: 0, width: "60%" }}>
-                      {/* Collapsed rows show only the first line; the full
-                          text is in the expanded section below */}
-                      <Typography variant="body2" color="text.secondary" noWrap>
-                        {firstLine(specificationsData[specName].description)}
-                      </Typography>
+                      {editingDescSpecName === specName ? (
+                        // Clicks inside the editor must not toggle the row
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            gap: 0.5,
+                          }}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <TextField
+                            size="small"
+                            autoFocus
+                            fullWidth
+                            multiline
+                            maxRows={8}
+                            value={editingDescValue}
+                            onChange={(e) =>
+                              setEditingDescValue(e.target.value)
+                            }
+                            onKeyDown={(event) => {
+                              // Enter inserts a newline; Ctrl/Cmd+Enter saves
+                              if (
+                                event.key === "Enter" &&
+                                (event.ctrlKey || event.metaKey)
+                              ) {
+                                event.preventDefault();
+                                saveDescription();
+                              } else if (event.key === "Escape") {
+                                event.preventDefault();
+                                cancelEditingDescription();
+                              }
+                            }}
+                            error={descriptionMutation.isError}
+                            helperText={
+                              descriptionMutation.isError
+                                ? describeRequestError(
+                                    descriptionMutation.error,
+                                    "Failed to update description",
+                                  )
+                                : undefined
+                            }
+                          />
+                          <Tooltip title="Save">
+                            <span>
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                disabled={descriptionMutation.isPending}
+                                onClick={saveDescription}
+                              >
+                                <CheckIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                          <Tooltip title="Cancel">
+                            <span>
+                              <IconButton
+                                size="small"
+                                disabled={descriptionMutation.isPending}
+                                onClick={cancelEditingDescription}
+                              >
+                                <CloseIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        </Box>
+                      ) : (
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          {/* Collapsed rows show only the first line; the full
+                              text is in the expanded section below */}
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            noWrap
+                          >
+                            {firstLine(
+                              specificationsData[specName].description,
+                            )}
+                          </Typography>
+                          {canModify && (
+                            <Tooltip title="Edit description">
+                              <IconButton
+                                size="small"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  startEditingDescription(specName);
+                                }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </Box>
+                      )}
                     </TableCell>
                   </TableRow>
                   <TableRow>

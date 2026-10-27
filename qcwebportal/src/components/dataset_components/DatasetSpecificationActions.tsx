@@ -63,6 +63,36 @@ export function useRenameSpecification(
   });
 }
 
+/**
+ * Sets the description of a specification. An empty description clears it.
+ */
+export function useModifySpecificationDescription(
+  datasetType: qcpTypes.RecordType,
+  datasetId: number,
+) {
+  const { makeRequest } = usePortalClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      name,
+      description,
+    }: {
+      name: string;
+      description: string;
+    }) =>
+      makeRequest<null>(
+        "PATCH",
+        `api/v1/datasets/${datasetType}/${datasetId}/specifications/modify`,
+        { name, description: description.trim() === "" ? null : description },
+      ),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["datasetSpecifications", datasetType, datasetId],
+      }),
+  });
+}
+
 interface DeleteSpecificationDialogProps {
   datasetType: qcpTypes.RecordType;
   datasetId: number;
