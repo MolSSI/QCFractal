@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=f8f24ce5"></script>
+    <script src="../../_static/documentation_options.js?v=2061de68"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.71.post369+g0c018193d" />
+  <meta name="docsearch:version" content="0.71.post375+g6f5296848" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -591,13 +591,25 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </div>
 </div>
+<p>The description of a specification can be changed with
+<a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.modify_specification" title="qcportal.dataset_models.BaseDataset.modify_specification"><code class="xref py py-meth docutils literal notranslate"><span class="pre">modify_specification()</span></code></a>. Only one specification can be modified
+at a time, and only the description can be changed.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
+PYTHON</label><div class="sd-tab-content docutils">
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">modify_specification</span><span class="p">(</span><span class="s1">'spec_1'</span><span class="p">,</span> <span class="s1">'B3LYP/def2-SVP with tight convergence'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
 <p>Entries and specifications are deleted with
 <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.delete_entries" title="qcportal.dataset_models.BaseDataset.delete_entries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_entries()</span></code></a> and
 <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.delete_specification" title="qcportal.dataset_models.BaseDataset.delete_specification"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_specification()</span></code></a>.
 Note that deleting entries and specifications by default do not delete the records</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-2">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-3">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keeps any records, but removes from dataset</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">delete_entries</span><span class="p">([</span><span class="s1">'carbon monoxide'</span><span class="p">])</span>
@@ -623,8 +635,8 @@ However, datasets have convenient methods for management, which use entry and sp
 <p>In addition, individual records can be removed from a dataset (and optionally deleted) with
 <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.remove_records" title="qcportal.dataset_models.BaseDataset.remove_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove_records()</span></code></a>.</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-3">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Reset carbon monoxide records</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">reset_records</span><span class="p">(</span><span class="n">entry_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'carbon monoxide'</span><span class="p">])</span>
@@ -641,8 +653,8 @@ PYTHON</label><div class="sd-tab-content docutils">
 <p>Internal jobs associated with a dataset can be listed using <a class="reference internal" href="../qcportal_reference/records/base_record_models.html#qcportal.dataset_models.BaseDataset.list_internal_jobs" title="qcportal.dataset_models.BaseDataset.list_internal_jobs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">list_internal_jobs()</span></code></a>.
 These are <a class="reference internal" href="../qcportal_reference/internal_jobs.html#qcportal.internal_jobs.models.InternalJob" title="qcportal.internal_jobs.models.InternalJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">InternalJob</span></code></a> objects.</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-4" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-4">
+<input checked="checked" id="sd-tab-item-5" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
 PYTHON</label><div class="sd-tab-content docutils">
 <div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">list_internal_jobs</span><span class="p">()</span>
 <span class="go">[InternalJob(id=1614530, name='create_attach_view_ds_414', status=&lt;InternalJobStatusEnum.complete: 'complete'&gt;, ...</span>

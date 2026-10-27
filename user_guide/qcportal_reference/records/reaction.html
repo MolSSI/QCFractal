@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=f8f24ce5"></script>
+    <script src="../../../_static/documentation_options.js?v=2061de68"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.71.post369+g0c018193d" />
+  <meta name="docsearch:version" content="0.71.post375+g6f5296848" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -2307,7 +2307,7 @@ index as a specification, and a second level index as the appropriate value name
 Values are extracted from records using ‘value_call’.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.6)">pandas.DataFrame</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)">pandas.DataFrame</a></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If the length of ‘value_names’ does not match the number of values returned by ‘value_call’ when
@@ -2864,6 +2864,24 @@ specified attributes will be updated, leaving others unchanged.</p></li>
 <li><p><strong>status_filter</strong> (<a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><em>Iterable</em></a><em>[</em><a class="reference internal" href="base_record_models.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><em>RecordStatusEnum</em></a><em>] </em><em>| </em><em>None</em>) – Only modify records with these statuses. If None, modify records regardless of status.</p></li>
 <li><p><strong>refetch_records</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – If True, refetch the modified records from the server.</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcportal.reaction.dataset_models.ReactionDataset.modify_specification">
+<span class="sig-name descname"><span class="pre">modify_specification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcportal.reaction.dataset_models.ReactionDataset.modify_specification" title="Link to this definition">#</a></dt>
+<dd><p>Modifies a specification of this dataset</p>
+<p>Currently, only the description can be changed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Name of the specification to modify</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><em>None</em>) – New description of the specification. If None, the description is cleared.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#AssertionError" title="(in Python v3.15)"><strong>AssertionError</strong></a> – If the dataset is a view or if the client is offline.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -3587,6 +3605,7 @@ records created for those that don’t match. If False, new records will always 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.reaction.dataset_models.ReactionDataset.model_post_init"><code class="docutils literal notranslate"><span class="pre">ReactionDataset.model_post_init()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.reaction.dataset_models.ReactionDataset.modify_entries"><code class="docutils literal notranslate"><span class="pre">ReactionDataset.modify_entries()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.reaction.dataset_models.ReactionDataset.modify_records"><code class="docutils literal notranslate"><span class="pre">ReactionDataset.modify_records()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.reaction.dataset_models.ReactionDataset.modify_specification"><code class="docutils literal notranslate"><span class="pre">ReactionDataset.modify_specification()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.reaction.dataset_models.ReactionDataset.offline"><code class="docutils literal notranslate"><span class="pre">ReactionDataset.offline</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.reaction.dataset_models.ReactionDataset.preload_cache"><code class="docutils literal notranslate"><span class="pre">ReactionDataset.preload_cache()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.reaction.dataset_models.ReactionDataset.print_status"><code class="docutils literal notranslate"><span class="pre">ReactionDataset.print_status()</span></code></a></li>
