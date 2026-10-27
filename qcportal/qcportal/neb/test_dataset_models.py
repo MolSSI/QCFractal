@@ -159,6 +159,11 @@ def test_neb_dataset_model_rename_spec(snowflake_client: PortalClient):
     ds_helpers.run_dataset_model_rename_spec(snowflake_client, ds, test_entries, test_specs)
 
 
+def test_neb_dataset_model_modify_spec(snowflake_client: PortalClient):
+    ds = snowflake_client.add_dataset("neb", "Test dataset")
+    ds_helpers.run_dataset_model_modify_spec(snowflake_client, ds, test_entries, test_specs)
+
+
 def test_neb_dataset_model_delete_spec(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("neb", "Test dataset")
     ds_helpers.run_dataset_model_delete_spec(snowflake_client, ds, test_entries, test_specs)
