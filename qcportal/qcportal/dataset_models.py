@@ -1055,6 +1055,35 @@ class BaseDataset(BaseModel):
 
         self._cache_data.rename_specification(old_name, new_name)
 
+    def modify_specification(self, name: str, description: str | None):
+        """
+        Modifies a specification of this dataset
+
+        Currently, only the description can be changed.
+
+        Parameters
+        ----------
+        name
+            Name of the specification to modify
+        description
+            New description of the specification. If None, the description is cleared.
+
+        Raises
+        ------
+        AssertionError
+            If the dataset is a view or if the client is offline.
+        """
+
+        self.assert_is_not_view()
+        self.assert_online()
+
+        body = DatasetModifySpecificationBody(name=name, description=description)
+
+        self._client.make_request("patch", f"{self._base_url}/specifications/modify", None, body=body)
+
+        # Sync local cache with updated server.
+        self.fetch_specifications([name], force_refetch=True)
+
     def delete_specification(self, name: str, delete_records: bool = False) -> DeleteMetadata:
         self.assert_is_not_view()
         self.assert_online()
@@ -2815,6 +2844,11 @@ class DatasetModifyEntryBody(RestModelBase):
     attribute_map: dict[str, dict[str, Any]] | None = None
     comment_map: dict[str, str] | None = None
     overwrite_attributes: bool = False
+
+
+class DatasetModifySpecificationBody(RestModelBase):
+    name: str
+    description: str | None = None
 
 
 class DatasetGetInternalJobParams(RestModelBase):

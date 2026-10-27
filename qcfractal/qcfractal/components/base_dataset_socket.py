@@ -775,6 +775,48 @@ class BaseDatasetSocket:
             for spec in specs:
                 spec.name = specification_name_map[spec.name]
 
+    def modify_specification(
+        self,
+        dataset_id: int,
+        specification_name: str,
+        description: Optional[str],
+        *,
+        session: Optional[Session] = None,
+    ):
+        """
+        Modifies a single specification of a dataset
+
+        Currently, only the description can be changed. If the specification does not exist,
+        an exception is raised.
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        specification_name
+            Name of the specification to modify
+        description
+            New description of the specification (or None to clear it)
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+
+        stmt = select(self.specification_orm)
+        stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
+        stmt = stmt.where(self.specification_orm.name == specification_name)
+        stmt = stmt.options(load_only(self.specification_orm.name, self.specification_orm.description))
+        stmt = stmt.options(lazyload("*"))
+        stmt = stmt.with_for_update(skip_locked=False)
+
+        with self.root_socket.optional_session(session) as session:
+            spec = session.execute(stmt).scalar_one_or_none()
+
+            if spec is None:
+                raise MissingDataError(f"Cannot modify specification {specification_name} - it does not exist")
+
+            spec.description = description
+
     def add_entries(
         self, dataset_id: int, new_entries: Sequence[Any], *, session: Optional[Session] = None
     ) -> InsertMetadata:

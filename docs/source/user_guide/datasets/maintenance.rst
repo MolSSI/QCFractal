@@ -57,6 +57,18 @@ take a dictionary of old name to new name
       >>> print(ent.initial_molecule)
       initial_molecule=Molecule(name='F2', formula='F2', hash='7ffa835')
 
+The description of a specification can be changed with
+:meth:`~qcportal.dataset_models.BaseDataset.modify_specification`. Only one specification can be modified
+at a time, and only the description can be changed.
+
+.. tab-set::
+
+  .. tab-item:: PYTHON
+
+    .. code-block:: py3
+
+      >>> ds.modify_specification('spec_1', 'B3LYP/def2-SVP with tight convergence')
+
 Entries and specifications are deleted with
 :meth:`~qcportal.dataset_models.BaseDataset.delete_entries` and
 :meth:`~qcportal.dataset_models.BaseDataset.delete_specification`.
