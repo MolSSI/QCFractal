@@ -46,10 +46,14 @@ function countRecordsForSpec(
   );
 }
 
+function firstLine(text: string | undefined): string {
+  return (text ?? "").trim().split(/\r?\n/, 1)[0];
+}
+
 interface DatasetSpecificationTableProps {
   specificationsData: Record<
     string,
-    { specification: qcpTypes.DatasetSpecificationData }
+    { specification: qcpTypes.DatasetSpecificationData; description?: string }
   >;
   datasetType: qcpTypes.RecordType;
   datasetId: number;
@@ -176,6 +180,7 @@ export default function DatasetSpecificationTable({
             <TableRow>
               <TableCell width="50px" />
               <TableCell>Name</TableCell>
+              <TableCell>Description</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -311,11 +316,18 @@ export default function DatasetSpecificationTable({
                         </Box>
                       )}
                     </TableCell>
+                    <TableCell sx={{ maxWidth: 0, width: "60%" }}>
+                      {/* Collapsed rows show only the first line; the full
+                          text is in the expanded section below */}
+                      <Typography variant="body2" color="text.secondary" noWrap>
+                        {firstLine(specificationsData[specName].description)}
+                      </Typography>
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell
                       style={{ paddingBottom: 0, paddingTop: 0 }}
-                      colSpan={2}
+                      colSpan={3}
                     >
                       <Collapse
                         in={expandedSpecName === specName}
@@ -323,6 +335,14 @@ export default function DatasetSpecificationTable({
                         unmountOnExit
                       >
                         <Box>
+                          {specificationsData[specName].description?.trim() && (
+                            <Typography
+                              variant="body2"
+                              sx={{ whiteSpace: "pre-wrap", py: 1 }}
+                            >
+                              {specificationsData[specName].description}
+                            </Typography>
+                          )}
                           <SpecificationComponent
                             specification={
                               specificationsData[specName].specification
