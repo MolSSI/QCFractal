@@ -306,6 +306,37 @@ def run_dataset_model_add_spec_duplicate(snowflake_client, ds, test_specs):
     assert ds.specifications["spec_1"].description is None
 
 
+def run_dataset_model_modify_spec(snowflake_client, ds, test_entries, test_specs):
+    ds.add_specification("spec_1", test_specs[0], description="original 1")
+    ds.add_specification("spec_2", test_specs[1], description="original 2")
+
+    assert ds.specifications["spec_1"].description == "original 1"
+
+    ds.modify_specification("spec_1", "new description")
+
+    # Updated locally (in memory and cache), other specs untouched
+    assert ds.specifications["spec_1"].description == "new description"
+    assert ds._cache_data.get_specification("spec_1").description == "new description"
+    assert ds.specifications["spec_2"].description == "original 2"
+    assert ds.specifications["spec_1"].specification == test_specs[0]
+
+    # Updated on the server
+    ds = snowflake_client.get_dataset_by_id(ds.id)
+    assert ds.specifications["spec_1"].description == "new description"
+    assert ds.specifications["spec_2"].description == "original 2"
+
+    # Clearing the description
+    ds.modify_specification("spec_1", None)
+    assert ds.specifications["spec_1"].description is None
+
+    ds = snowflake_client.get_dataset_by_id(ds.id)
+    assert ds.specifications["spec_1"].description is None
+
+    # Nonexistent specification
+    with pytest.raises(PortalRequestError, match=r"does not exist"):
+        ds.modify_specification("spec_missing", "abc")
+
+
 def run_dataset_model_rename_spec(snowflake_client, ds, test_entries, test_specs):
     ds.add_specification("spec_1", test_specs[0])
     ds.add_specification("spec_2", test_specs[1])

@@ -24,6 +24,7 @@ from qcportal.dataset_models import (
     DatasetQueryRecords,
     DatasetDeleteParams,
     DatasetModifyEntryBody,
+    DatasetModifySpecificationBody,
     DatasetGetInternalJobParams,
     DatasetCloneBody,
     DatasetCopyFromBody,
@@ -294,6 +295,16 @@ def delete_dataset_specifications_v1(
 def rename_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: dict[str, str]) -> None:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.rename_specifications(dataset_id, body_data)
+
+
+@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/specifications/modify", methods=["PATCH"])
+@check_permissions("datasets", "modify")
+@serialization()
+def modify_dataset_specification_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetModifySpecificationBody
+) -> None:
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    return ds_socket.modify_specification(dataset_id, body_data.name, body_data.description)
 
 
 ###################
