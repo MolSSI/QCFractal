@@ -16,7 +16,7 @@ from typing import (
 import pydantic
 from pydantic import BaseModel, PrivateAttr, Field, ConfigDict, field_validator, model_validator
 from tabulate import tabulate
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from qcportal.base_models import RestModelBase, validate_list_to_single, CommonBulkGetBody
 from qcportal.cache import DatasetCache, read_dataset_metadata, get_records_with_cache
