@@ -316,11 +316,6 @@ class WebAPIConfig(QCFConfigBase):
     num_threads_per_worker: int = 4
     """Number of threads per worker"""
 
-    worker_timeout: int = 120
-    """If the master process does not hear from a worker for the given amount of time (in seconds),kill it. This
-    effectively limits the time a worker has to respond to a request
-    """
-
     host: str = "localhost"
     """The IP address or hostname to bind to"""
 
@@ -407,6 +402,17 @@ class WebAPIConfig(QCFConfigBase):
         if v is None:
             return None
         return duration_to_seconds(v)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _deprecated_config(cls, values):
+        if isinstance(values, dict):
+            if "worker_timeout" in values:
+                logging.getLogger(__name__).warning(
+                    "worker_timeout has no effect and is ignore. It will be removed in a future version."
+                )
+                del values["worker_timeout"]
+        return values
 
     @model_validator(mode="after")
     def _check_api_token_lifetimes(self):
