@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=2061de68"></script>
+    <script src="../../_static/documentation_options.js?v=eca8dfaa"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.71.post375+g6f5296848" />
+  <meta name="docsearch:version" content="0.71.post377+gd3f1c2fa8" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -785,11 +785,6 @@
     <span class="n">num_threads_per_worker</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
 <span class="w">    </span><span class="sd">"""Number of threads per worker"""</span>
 
-    <span class="n">worker_timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">120</span>
-<span class="w">    </span><span class="sd">"""If the master process does not hear from a worker for the given amount of time (in seconds),kill it. This</span>
-<span class="sd">    effectively limits the time a worker has to respond to a request</span>
-<span class="sd">    """</span>
-
     <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"localhost"</span>
 <span class="w">    </span><span class="sd">"""The IP address or hostname to bind to"""</span>
 
@@ -876,6 +871,17 @@
         <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">duration_to_seconds</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_deprecated_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s2">"worker_timeout"</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">"worker_timeout has no effect and is ignore. It will be removed in a future version."</span>
+                <span class="p">)</span>
+                <span class="k">del</span> <span class="n">values</span><span class="p">[</span><span class="s2">"worker_timeout"</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">values</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_api_token_lifetimes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

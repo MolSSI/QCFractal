@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=2061de68"></script>
+    <script src="../_static/documentation_options.js?v=eca8dfaa"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.71.post375+g6f5296848" />
+  <meta name="docsearch:version" content="0.71.post377+gd3f1c2fa8" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1088,11 +1088,6 @@ top level and is not set in this section.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">4</span></code></p></td>
 <td><p>Number of threads per worker</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">worker_timeout</span></code>
-<em>(int)</em></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">120</span></code></p></td>
-<td><p>If the master process does not hear from a worker for the given amount of time (in seconds),kill it. This effectively limits the time a worker has to respond to a request</p></td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -1627,7 +1622,6 @@ hyphens only, ending in a letter or digit. Underscores are <strong>not</strong> 
 
 <span class="nt">api</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">num_threads_per_worker</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
-<span class="w">  </span><span class="nt">worker_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">120</span>
 <span class="w">  </span><span class="nt">host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">localhost</span>
 <span class="w">  </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7777</span>
 <span class="w">  </span><span class="nt">secret_key</span><span class="p">:</span><span class="w"> </span><span class="s">"&lt;secret&gt;"</span>
@@ -2523,11 +2517,6 @@ own == True</p>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">86400</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#qcfractal.config.WebAPIConfig.worker_timeout" title="qcfractal.config.WebAPIConfig.worker_timeout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">worker_timeout</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
-<td><p>No</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">120</span></code></p></td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -2535,13 +2524,6 @@ own == True</p>
 <dt class="sig sig-object py" id="qcfractal.config.WebAPIConfig.num_threads_per_worker">
 <span class="sig-name descname"><span class="pre">num_threads_per_worker</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcfractal.config.WebAPIConfig.num_threads_per_worker" title="Link to this definition">#</a></dt>
 <dd><p>Number of threads per worker</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="qcfractal.config.WebAPIConfig.worker_timeout">
-<span class="sig-name descname"><span class="pre">worker_timeout</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#qcfractal.config.WebAPIConfig.worker_timeout" title="Link to this definition">#</a></dt>
-<dd><p>If the master process does not hear from a worker for the given amount of time (in seconds),kill it. This
-effectively limits the time a worker has to respond to a request</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -3291,7 +3273,6 @@ to reach S3 themselves.</p>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractal.config.WebAPIConfig"><code class="docutils literal notranslate"><span class="pre">WebAPIConfig</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractal.config.WebAPIConfig.num_threads_per_worker"><code class="docutils literal notranslate"><span class="pre">WebAPIConfig.num_threads_per_worker</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractal.config.WebAPIConfig.worker_timeout"><code class="docutils literal notranslate"><span class="pre">WebAPIConfig.worker_timeout</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractal.config.WebAPIConfig.host"><code class="docutils literal notranslate"><span class="pre">WebAPIConfig.host</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractal.config.WebAPIConfig.port"><code class="docutils literal notranslate"><span class="pre">WebAPIConfig.port</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qcfractal.config.WebAPIConfig.secret_key"><code class="docutils literal notranslate"><span class="pre">WebAPIConfig.secret_key</span></code></a></li>
