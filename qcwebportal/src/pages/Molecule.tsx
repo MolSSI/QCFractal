@@ -22,6 +22,7 @@ import * as qcpTypes from "../PortalTypes";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
 import { usePageTitle } from "../UsePageTitle.ts";
+import { isNotFoundError, retryUnlessNotFound } from "../Utils.ts";
 import {
   MolecularFormula,
   SingleMoleculeViewer,
@@ -135,6 +136,7 @@ function Molecule() {
         `/api/v1/molecules/${parsedMoleculeId}`,
       ),
     enabled: validMoleculeId,
+    retry: retryUnlessNotFound,
   });
 
   const pageTitle = molecule?.name
@@ -149,7 +151,10 @@ function Molecule() {
     return <LoadingIndicator fullPage />;
   }
   if (moleculeStatus === "error") {
-    return <ErrorIndicator fullPage message={moleculeError.message} />;
+    const message = isNotFoundError(moleculeError)
+      ? `Molecule ${parsedMoleculeId} does not exist`
+      : moleculeError.message;
+    return <ErrorIndicator fullPage message={message} />;
   }
   if (!molecule) {
     return <ErrorIndicator fullPage message="Molecule not found" />;
