@@ -5,6 +5,7 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
+  Button,
   Divider,
   Grid,
   Stack,
@@ -17,6 +18,7 @@ import {
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import DownloadIcon from "@mui/icons-material/Download";
 import { usePortalClient } from "../PortalClient.tsx";
 import * as qcpTypes from "../PortalTypes";
 import LoadingIndicator from "../components/LoadingIndicator";
@@ -30,6 +32,20 @@ import {
 import { GenericDataList } from "../components/GenericDataList.tsx";
 import JsonViewer from "../components/JsonViewer.tsx";
 import MoleculeRecordTable from "../components/MoleculeRecordTable.tsx";
+
+function downloadMolecule(molecule: qcpTypes.Molecule) {
+  const blob = new Blob([JSON.stringify(molecule, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `molecule_${molecule.id}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 function MoleculeGeometryTable({ molecule }: { molecule: qcpTypes.Molecule }) {
   return (
@@ -162,10 +178,20 @@ function Molecule() {
 
   return (
     <>
-      <Stack spacing={0.5}>
-        <Typography variant="h5" fontWeight="bold">
-          {molecule.name ? molecule.name.trim() : `Molecule ${molecule.id}`}
-        </Typography>
+      <Stack spacing={0.5} sx={{ width: "100%" }}>
+        <Stack direction="row" alignItems="center" flexWrap="wrap" gap={2}>
+          <Typography variant="h5" fontWeight="bold">
+            {molecule.name ? molecule.name.trim() : `Molecule ${molecule.id}`}
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<DownloadIcon />}
+            onClick={() => downloadMolecule(molecule)}
+          >
+            Download
+          </Button>
+        </Stack>
         <Typography variant="body1">
           <MolecularFormula molecule={molecule} />
         </Typography>
