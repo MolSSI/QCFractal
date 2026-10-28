@@ -8,6 +8,11 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
 const LONG_ARRAY_LENGTH = 10;
+
+// The copy button only appears while hovering a line, which makes the viewer
+// wider. Where that would shift the layout (such as in a table column), this
+// class can be used to take the button out of the layout.
+export const JSON_VIEWER_COPY_BUTTON_CLASS = "json-viewer-copy-button";
 const SHORTEN_TEXT_LENGTH = 60;
 
 const renderCopyButton: SectionElement<"svg">["render"] = (
@@ -27,6 +32,7 @@ const renderCopyButton: SectionElement<"svg">["render"] = (
         component="span"
         role="button"
         aria-label={label}
+        className={JSON_VIEWER_COPY_BUTTON_CLASS}
         onClick={props.onClick as React.MouseEventHandler}
         sx={{
           display: "inline-flex",
