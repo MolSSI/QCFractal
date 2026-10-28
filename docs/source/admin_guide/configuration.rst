@@ -295,7 +295,6 @@ Runtime
    host
    port
    num_threads_per_worker
-   worker_timeout
 
 Security and sessions
 ~~~~~~~~~~~~~~~~~~~~~
@@ -531,7 +530,6 @@ Full skeleton (all options with defaults; adjust as needed):
 
   api:
     num_threads_per_worker: 4
-    worker_timeout: 120
     host: localhost
     port: 7777
     secret_key: "<secret>"
