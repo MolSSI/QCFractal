@@ -16,7 +16,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
 import { usePortalClient } from "../PortalClient.tsx";
 import { useAuth } from "../Auth.tsx";
 import * as qcpTypes from "../PortalTypes.ts";
@@ -27,6 +27,7 @@ import { asRecord, dateStringToLocalTime } from "../Utils.ts";
 import { getMoleculeRecordOptions } from "./record_components/lookup.tsx";
 
 const moleculeRecordOptions = getMoleculeRecordOptions();
+const MAX_COUNTED_RECORDS = 100;
 
 type MoleculeRecordPage = {
   records: qcpTypes.RecordData[];
@@ -89,22 +90,60 @@ export default function MoleculeRecordTable({
 
   const resetPaging = () => setPageCursors([undefined]);
 
-  const { status, data, error, isFetching } = useQuery({
-    queryKey: ["moleculeRecords", moleculeId, option.key, cursor, rowsPerPage],
-    queryFn: async (): Promise<MoleculeRecordPage> => {
-      const queryBody: Record<string, unknown> = {
-        [option.field]: [moleculeId],
-        limit: rowsPerPage + 1,
-      };
-      if (cursor !== undefined) {
-        queryBody.cursor = cursor;
-      }
+  // Newest-first ids per option, capped; "N+" when the cap is hit. They also
+  // serve as the first page of the table, which is always smaller than the cap
+  const countLimit = Math.min(MAX_COUNTED_RECORDS, recordLimit);
+  const countQueries = useQueries({
+    queries: moleculeRecordOptions.map((o) => ({
+      queryKey: ["moleculeRecordIds", moleculeId, o.key, countLimit],
+      queryFn: () =>
+        makeRequest<number[]>(
+          "POST",
+          `api/v1/records/${o.recordType}/query`,
+          { ...o.extraFilters, [o.field]: [moleculeId], limit: countLimit },
+        ),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
 
-      const ids = await makeRequest<number[]>(
-        "POST",
-        `api/v1/records/${option.recordType}/query`,
-        queryBody,
-      );
+  const formatOptionCount = (ids: number[] | undefined) => {
+    if (ids === undefined) return "…";
+    return ids.length >= countLimit ? `${ids.length}+` : String(ids.length);
+  };
+
+  const countsLoading = countQueries.some((q) => q.isPending);
+  const noRecords = countQueries.every((q) => q.data?.length === 0);
+
+  const selectedCountQuery =
+    countQueries[moleculeRecordOptions.indexOf(option)];
+  const firstPageIds = cursor === undefined ? selectedCountQuery.data : undefined;
+
+  const { status, data, error, isFetching } = useQuery({
+    queryKey: [
+      "moleculeRecords",
+      moleculeId,
+      option.key,
+      cursor,
+      rowsPerPage,
+      firstPageIds,
+    ],
+    queryFn: async (): Promise<MoleculeRecordPage> => {
+      let ids = firstPageIds;
+      if (ids === undefined) {
+        const queryBody: Record<string, unknown> = {
+          ...option.extraFilters,
+          [option.field]: [moleculeId],
+          limit: rowsPerPage + 1,
+        };
+        if (cursor !== undefined) {
+          queryBody.cursor = cursor;
+        }
+        ids = await makeRequest<number[]>(
+          "POST",
+          `api/v1/records/${option.recordType}/query`,
+          queryBody,
+        );
+      }
 
       const pageIds = ids.slice(0, rowsPerPage);
       const records: qcpTypes.RecordData[] = [];
@@ -120,6 +159,7 @@ export default function MoleculeRecordTable({
       return { records, hasMore: ids.length > rowsPerPage };
     },
     placeholderData: keepPreviousData,
+    enabled: cursor !== undefined || !selectedCountQuery.isPending,
   });
 
   const records = data?.records ?? [];
@@ -135,6 +175,30 @@ export default function MoleculeRecordTable({
       setPageCursors(pageCursors.slice(0, newPage + 1));
     }
   };
+
+  if (countsLoading) {
+    return (
+      <>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Records Using This Molecule
+        </Typography>
+        <LoadingIndicator message="Loading records..." />
+      </>
+    );
+  }
+
+  if (noRecords) {
+    return (
+      <>
+        <Typography variant="h6" sx={{ mb: 1 }}>
+          Records Using This Molecule
+        </Typography>
+        <Typography color="text.secondary">
+          There are currently no records that use this molecule.
+        </Typography>
+      </>
+    );
+  }
 
   return (
     <>
@@ -158,15 +222,21 @@ export default function MoleculeRecordTable({
               resetPaging();
             }}
           >
-            {moleculeRecordOptions.map((o) => (
-              <MenuItem
-                key={o.key}
-                value={o.key}
-                sx={{ textTransform: "capitalize" }}
-              >
-                {o.label}
-              </MenuItem>
-            ))}
+            {moleculeRecordOptions.map((o, i) => {
+              const countQuery = countQueries[i];
+              return (
+                <MenuItem
+                  key={o.key}
+                  value={o.key}
+                  disabled={countQuery.data?.length === 0}
+                  sx={{ textTransform: "capitalize" }}
+                >
+                  {o.label}
+                  {!countQuery.isError &&
+                    ` (${formatOptionCount(countQuery.data)})`}
+                </MenuItem>
+              );
+            })}
           </Select>
         </FormControl>
       </Stack>

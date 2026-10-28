@@ -48,6 +48,7 @@ export type MoleculeRecordOption = {
   label: string;
   recordType: qcpTypes.RecordType;
   field: string;
+  extraFilters: Record<string, unknown>;
 };
 
 export const getMoleculeRecordOptions = (): MoleculeRecordOption[] => {
@@ -58,6 +59,7 @@ export const getMoleculeRecordOptions = (): MoleculeRecordOption[] => {
         label: option.label ? `${recordType} (${option.label})` : recordType,
         recordType,
         field: option.field,
+        extraFilters: option.extraFilters ?? {},
       })),
   );
 };

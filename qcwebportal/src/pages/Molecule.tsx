@@ -173,6 +173,19 @@ function Molecule() {
       <Grid container spacing={2} sx={{ width: "100%" }}>
         <Grid size={{ xs: 12, md: 6 }}>
           <MoleculeDetails molecule={molecule} />
+          {/* Own wrapper so the theme's :last-of-type rule keeps its bottom border */}
+          <Box sx={{ mt: 2 }}>
+            <Accordion disableGutters>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Geometry ({molecule.symbols.length} atoms)
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <MoleculeGeometryTable molecule={molecule} />
+              </AccordionDetails>
+            </Accordion>
+          </Box>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <SingleMoleculeViewer
@@ -182,17 +195,6 @@ function Molecule() {
           />
         </Grid>
       </Grid>
-
-      <Accordion sx={{ mt: 2 }} disableGutters>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle1" fontWeight="bold">
-            Geometry ({molecule.symbols.length} atoms)
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <MoleculeGeometryTable molecule={molecule} />
-        </AccordionDetails>
-      </Accordion>
 
       <Divider sx={{ my: 2, width: "100%" }} />
       <MoleculeRecordTable key={molecule.id} moleculeId={molecule.id} />

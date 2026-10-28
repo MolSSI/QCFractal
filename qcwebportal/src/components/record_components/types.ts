@@ -21,6 +21,7 @@ export interface RecordComponentProps<R> {
 export type MoleculeQueryOption = {
   label?: string;
   field: string;
+  extraFilters?: Record<string, unknown>;
 };
 
 export type RecordModule = {

@@ -13,7 +13,10 @@ import {
 import { RenderSpecification } from "./RenderSpecification.tsx";
 import { RenderEntry } from "./RenderEntry.tsx";
 
-export const moleculeQueryOptions: MoleculeQueryOption[] = [{ field: "initial_molecule_id" }];
+// The server's query model requires optimization_program; null means no filter
+export const moleculeQueryOptions: MoleculeQueryOption[] = [
+  { field: "initial_molecule_id", extraFilters: { optimization_program: null } },
+];
 
 export const Specification: React.FC<
   SpecificationComponentProps<GridoptimizationSpecification>
