@@ -8,6 +8,7 @@ import {
 import {
   EntryComponentProps,
   RecordComponentProps,
+  MoleculeQueryOption,
   SpecificationComponentProps,
 } from "./types";
 import { RenderSpecification } from "./RenderSpecification.tsx";
@@ -53,6 +54,8 @@ const compareAngleArrays = (anglesA: number[], anglesB: number[]): number => {
 
 const sortableEnergy = (energy?: number): number =>
   energy ?? Number.POSITIVE_INFINITY;
+
+export const moleculeQueryOptions: MoleculeQueryOption[] = [{ field: "initial_molecule_id" }];
 
 export const Specification: React.FC<
   SpecificationComponentProps<TorsiondriveSpecification>

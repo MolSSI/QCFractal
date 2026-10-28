@@ -19,7 +19,8 @@ import { matchesTokens } from "../Utils.ts";
 type SearchOption =
   | { type: "project"; data: qcpTypes.ProjectListEntry }
   | { type: "dataset"; data: qcpTypes.DatasetListEntry }
-  | { type: "record"; id: string };
+  | { type: "record"; id: string }
+  | { type: "molecule"; id: string };
 
 export default function Search() {
   const navigate = useNavigate();
@@ -67,9 +68,10 @@ export default function Search() {
       }
     });
 
-    // Add record ID option if numeric
+    // Add record and molecule ID options if numeric
     if (/^\d+$/.test(trimmedInput)) {
       opts.push({ type: "record", id: trimmedInput });
+      opts.push({ type: "molecule", id: trimmedInput });
     }
 
     return opts;
@@ -97,6 +99,8 @@ export default function Search() {
               navigate(`/datasets/${newValue.data.id}`);
             } else if (newValue.type === "record") {
               navigate(`/records/${newValue.id}`);
+            } else if (newValue.type === "molecule") {
+              navigate(`/molecules/${newValue.id}`);
             }
             setInputValue("");
           }
@@ -106,6 +110,7 @@ export default function Search() {
         groupBy={(option) => {
           if (option.type === "project") return "Projects";
           if (option.type === "dataset") return "Datasets";
+          if (option.type === "molecule") return "Molecules";
           return "Records";
         }}
         getOptionLabel={(option) => {
@@ -121,13 +126,15 @@ export default function Search() {
             return option.data.id === value.data.id;
           if (option.type === "record" && value.type === "record")
             return option.id === value.id;
+          if (option.type === "molecule" && value.type === "molecule")
+            return option.id === value.id;
           return false;
         }}
         renderInput={(params) => (
           <TextField
             {...params}
             size="small"
-            placeholder="Search Projects, Datasets, Records…"
+            placeholder="Search Projects, Datasets, Records, Molecules…"
             InputProps={{
               ...params.InputProps,
               startAdornment: (
@@ -175,6 +182,11 @@ export default function Search() {
                 {option.type === "record" && (
                   <Typography variant="body1">
                     Go to record ID: {option.id}
+                  </Typography>
+                )}
+                {option.type === "molecule" && (
+                  <Typography variant="body1">
+                    Go to molecule ID: {option.id}
                   </Typography>
                 )}
               </Box>

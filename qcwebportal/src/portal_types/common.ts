@@ -158,6 +158,17 @@ export type ActiveManagerQuery = {
 export type MoleculeIdentifiers = {
   molecule_hash: string;
   molecular_formula: string;
+  smiles?: string;
+  inchi?: string;
+  inchikey?: string;
+  canonical_smiles?: string;
+  canonical_isomeric_smiles?: string;
+  canonical_explicit_hydrogen_smiles?: string;
+  canonical_isomeric_explicit_hydrogen_smiles?: string;
+  canonical_isomeric_explicit_hydrogen_mapped_smiles?: string;
+  pubchem_cid?: string;
+  pubchem_sid?: string;
+  pubchem_conformerid?: string;
 };
 
 export type Molecule = {
@@ -169,6 +180,21 @@ export type Molecule = {
   real: boolean[];
 
   identifiers: MoleculeIdentifiers;
+
+  comment?: string | null;
+  molecular_charge?: number;
+  molecular_multiplicity?: number;
+  masses?: number[];
+  atom_labels?: string[];
+  atomic_numbers?: number[];
+  fragments?: number[][];
+  fragment_charges?: number[];
+  fragment_multiplicities?: number[];
+  fix_com?: boolean;
+  fix_orientation?: boolean;
+  fix_symmetry?: string | null;
+  validated?: boolean;
+  extras?: Record<string, unknown> | null;
 };
 
 export type ServiceDependency = {

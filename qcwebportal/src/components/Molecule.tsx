@@ -9,6 +9,7 @@ import React, {
 import {
   Box,
   FormControl,
+  Link as MuiLink,
   MenuItem,
   Select,
   Typography,
@@ -64,6 +65,24 @@ function MolecularFormula({ molecule }: MolecularFormulaProps) {
         </span>
       ))}
     </>
+  );
+}
+
+type MoleculeTitleProps = {
+  molecule: qcpTypes.Molecule;
+  linkTitle: boolean;
+  children: ReactNode;
+};
+
+function MoleculeTitle({ molecule, linkTitle, children }: MoleculeTitleProps) {
+  return (
+    <Typography variant="subtitle2" sx={{ textAlign: "center" }}>
+      {linkTitle && molecule.id !== undefined ? (
+        <MuiLink to={`/molecules/${molecule.id}`}>{children}</MuiLink>
+      ) : (
+        children
+      )}
+    </Typography>
   );
 }
 
@@ -162,6 +181,7 @@ type SingleMoleculeViewerProps = {
   title?: string;
   width?: number | string;
   height?: number;
+  linkTitle?: boolean;
 };
 
 const SingleMoleculeViewer: React.FC<SingleMoleculeViewerProps> = ({
@@ -169,6 +189,7 @@ const SingleMoleculeViewer: React.FC<SingleMoleculeViewerProps> = ({
   title,
   width = "100%",
   height = 400,
+  linkTitle = true,
 }) => {
   const theme = useTheme();
 
@@ -191,7 +212,7 @@ const SingleMoleculeViewer: React.FC<SingleMoleculeViewerProps> = ({
       }}
     >
       <Box sx={{ p: 0.5 }}>
-        <Typography variant="subtitle2" sx={{ textAlign: "center" }}>
+        <MoleculeTitle molecule={molecule} linkTitle={linkTitle}>
           {title && (
             <>
               {title} (<MolecularFormula molecule={molecule} />)
@@ -202,7 +223,7 @@ const SingleMoleculeViewer: React.FC<SingleMoleculeViewerProps> = ({
               <MolecularFormula molecule={molecule} />
             </>
           )}
-        </Typography>
+        </MoleculeTitle>
         <Typography variant="caption" sx={{ display: "block", textAlign: "center" }}>
           ID {molecule.id}
         </Typography>
@@ -221,6 +242,7 @@ type MultiMoleculeViewerProps = {
   title?: string;
   width?: number | string;
   height?: number;
+  linkTitle?: boolean;
 };
 
 const MultiMoleculeViewer: React.FC<MultiMoleculeViewerProps> = ({
@@ -228,6 +250,7 @@ const MultiMoleculeViewer: React.FC<MultiMoleculeViewerProps> = ({
   title,
   width = "100%",
   height = 400,
+  linkTitle = true,
 }) => {
   const [index, setIndex] = useState(0);
   const theme = useTheme();
@@ -261,14 +284,14 @@ const MultiMoleculeViewer: React.FC<MultiMoleculeViewerProps> = ({
       }}
     >
       <Box sx={{ p: 0.5 }}>
-        <Typography variant="subtitle2" sx={{ textAlign: "center" }}>
+        <MoleculeTitle molecule={currentMolecule} linkTitle={linkTitle}>
           {title && <>{title}</>}
           {!title && (
             <>
               <MolecularFormula molecule={currentMolecule} />
             </>
           )}
-        </Typography>
+        </MoleculeTitle>
         <Typography variant="caption" sx={{ display: "block", textAlign: "center" }}>
           ID {currentMolecule.id}
         </Typography>

@@ -8,6 +8,7 @@ import {
 import {
   EntryComponentProps,
   RecordComponentProps,
+  MoleculeQueryOption,
   SpecificationComponentProps,
 } from "./types";
 import { RenderSpecification } from "./RenderSpecification.tsx";
@@ -20,6 +21,8 @@ import { MultiMoleculeViewer } from "../Molecule.tsx";
 import { useQuery } from "@tanstack/react-query";
 import * as qcpTypes from "../../PortalTypes.ts";
 import { usePortalClient } from "../../PortalClient.tsx";
+
+export const moleculeQueryOptions: MoleculeQueryOption[] = [{ field: "molecule_id" }];
 
 export const Specification: React.FC<
   SpecificationComponentProps<ReactionSpecification>

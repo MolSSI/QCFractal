@@ -7,10 +7,13 @@ import {
 import {
   EntryComponentProps,
   RecordComponentProps,
+  MoleculeQueryOption,
   SpecificationComponentProps,
 } from "./types";
 import { RenderSpecification } from "./RenderSpecification.tsx";
 import { RenderEntry } from "./RenderEntry.tsx";
+
+export const moleculeQueryOptions: MoleculeQueryOption[] = [{ field: "initial_molecule_id" }];
 
 export const Specification: React.FC<
   SpecificationComponentProps<GridoptimizationSpecification>
