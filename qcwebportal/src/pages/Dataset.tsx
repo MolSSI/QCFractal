@@ -312,7 +312,13 @@ export default function Dataset() {
     ],
     queryFn: () =>
       makeRequest<
-        Record<string, { specification: qcpTypes.DatasetSpecificationData }>
+        Record<
+          string,
+          {
+            specification: qcpTypes.DatasetSpecificationData;
+            description?: string;
+          }
+        >
       >(
         "GET",
         `api/v1/datasets/${datasetData?.dataset_type}/${datasetId}/specifications`,
