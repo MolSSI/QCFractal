@@ -222,7 +222,7 @@ function Molecule() {
           <SingleMoleculeViewer
             molecule={molecule}
             height={400}
-            linkTitle={false}
+            linkId={false}
           />
         </Grid>
       </Grid>
