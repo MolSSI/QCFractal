@@ -537,7 +537,7 @@ class BaseDataset(BaseModel):
         self,
         attachment_id: int,
         destination_path: str | None = None,
-        overwrite: bool = True,
+        overwrite: bool = False,
     ):
         """
         Downloads an attachment
@@ -552,7 +552,8 @@ class BaseDataset(BaseModel):
         destination_path
             Full path to the destination file (including filename)
         overwrite
-            If True, any existing file will be overwritten
+            If True, allow for overwriting an existing file. If False, and a file already exists at the given
+            destination path, an exception will be raised.
         """
 
         attachment_map = {x.id: x for x in self.attachments}
@@ -575,7 +576,7 @@ class BaseDataset(BaseModel):
         self,
         view_file_id: int | None = None,
         destination_path: str | None = None,
-        overwrite: bool = True,
+        overwrite: bool = False,
     ):
         """
         Downloads a view for this dataset
@@ -592,7 +593,8 @@ class BaseDataset(BaseModel):
         destination_path
             Full path to the destination file (including filename)
         overwrite
-            If True, any existing file will be overwritten
+            If True, allow for overwriting an existing file. If False, and a file already exists at the given
+            destination path, an exception will be raised.
         """
 
         my_views = self.list_views()

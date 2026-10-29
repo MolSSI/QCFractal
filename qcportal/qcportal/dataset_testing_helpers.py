@@ -915,6 +915,11 @@ def run_dataset_model_view(ds, test_entries, test_spec, entry_extra_compare, tmp
     ds.download_view(views[0].id, str(destfile))
     assert destfile.exists()
 
+    # Existing files are not overwritten by default
+    with pytest.raises(RuntimeError, match="already exists"):
+        ds.download_view(views[0].id, str(destfile))
+    ds.download_view(views[0].id, str(destfile), overwrite=True)
+
     dsv = load_dataset_view(destfile)
     assert dsv.specifications == ds.specifications
     assert dsv.entry_names == ds.entry_names
