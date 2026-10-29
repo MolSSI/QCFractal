@@ -339,6 +339,8 @@ export type ComputeHistory = {
     hostname: string;
     qcengine_version: string;
     wall_time: number;
+    // Programs may add extra fields, including nested objects (e.g. Psi4's module_roles)
+    [key: string]: unknown;
   };
 };
 
