@@ -988,10 +988,7 @@ class Project(BaseModel):
             attachment_map = {x.id: x for x in self.attachments}
 
         if attachment_id not in attachment_map:
-            raise ValueError(
-                f"File id {attachment_id} is not a valid attachment for this project. "
-                f"Existing attachment ids: {sorted(attachment_map.keys())}"
-            )
+            raise ValueError(f"File id {attachment_id} is not a valid attachment for this project")
 
         if destination_path is None:
             destination_path = os.path.join(os.getcwd(), attachment_map[attachment_id].file_name)

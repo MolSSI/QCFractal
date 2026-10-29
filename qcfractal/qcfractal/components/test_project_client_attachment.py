@@ -136,7 +136,7 @@ def test_project_client_attachment_download_invalid(submitter_client: PortalClie
     att_id = proj.upload_attachment(test_file, "other", ["tag1"])
 
     dest_path = tmp_path / "nope.json"
-    with pytest.raises(ValueError, match=rf"not a valid attachment.*\[{att_id}\]"):
+    with pytest.raises(ValueError, match="not a valid attachment"):
         proj.download_attachment(att_id + 1000, str(dest_path))
     assert not dest_path.exists()
 
