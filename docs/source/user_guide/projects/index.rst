@@ -259,7 +259,8 @@ file metadata but not the contents.
       14 20418 barriers.csv ['analysis']
       15 1044 lab_notes.md []
 
-Download the contents with :meth:`~qcportal.external_files.models.ExternalFile.download`, and
+Download the contents with :meth:`~qcportal.project_models.Project.download_attachment` (or
+:meth:`~qcportal.external_files.models.ExternalFile.download` on the attachment object), and
 remove an attachment with :meth:`~qcportal.project_models.Project.delete_attachment`.
 
 .. tab-set::
@@ -268,7 +269,10 @@ remove an attachment with :meth:`~qcportal.project_models.Project.delete_attachm
 
     .. code-block:: py3
 
-      >>> proj.attachments[0].download("/path/to/barriers.csv")
+      >>> proj.download_attachment(14, "/path/to/barriers.csv")
+      '/path/to/barriers.csv'
+
+      >>> proj.attachments[0].download("/path/to/barriers.csv", overwrite=True)
 
       >>> proj.delete_attachment(15)
 
