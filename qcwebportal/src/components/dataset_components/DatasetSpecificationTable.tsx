@@ -158,7 +158,7 @@ export default function DatasetSpecificationTable({
                     <TableCell sx={{ maxWidth: 0, width: "60%" }}>
                       {/* Collapsed rows show only the first line; the full
                           text is in the expanded section below */}
-                      <Typography variant="body2" color="text.secondary" noWrap>
+                      <Typography variant="body2" noWrap>
                         {firstLine(specificationsData[specName].description)}
                       </Typography>
                     </TableCell>
