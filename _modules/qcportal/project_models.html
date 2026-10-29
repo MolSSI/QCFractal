@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=eca8dfaa"></script>
+    <script src="../../_static/documentation_options.js?v=bf49cd6f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.71.post377+gd3f1c2fa8" />
+  <meta name="docsearch:version" content="0.71.post398+gc43f699ba" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1536,6 +1536,56 @@
         <span class="c1"># Force refetch next time</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">attachments_</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">file_id</span></div>
+
+
+<div class="viewcode-block" id="Project.download_attachment">
+<a class="viewcode-back" href="../../user_guide/qcportal_reference/projects.html#qcportal.project_models.Project.download_attachment">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">download_attachment</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">attachment_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">destination_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Downloads an attachment of this project</span>
+
+<span class="sd">        If destination path is not given, the file will be placed in the current directory, and the</span>
+<span class="sd">        filename determined by what is stored on the server.</span>
+
+<span class="sd">        The file size and checksum will be checked against the metadata stored on the server.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        attachment_id</span>
+<span class="sd">            ID of the attachment to download. See the :attr:`attachments` property</span>
+<span class="sd">        destination_path</span>
+<span class="sd">            Full path to the destination file (including filename)</span>
+<span class="sd">        overwrite</span>
+<span class="sd">            If True, allow for overwriting an existing file. If False, and a file already exists at the given</span>
+<span class="sd">            destination path, an exception will be raised.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :</span>
+<span class="sd">            The path the file was downloaded to</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assert_online</span><span class="p">()</span>
+
+        <span class="n">attachment_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attachments</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">attachment_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attachment_map</span><span class="p">:</span>
+            <span class="c1"># The cached list may be out of date (ie, uploaded by someone else)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fetch_attachments</span><span class="p">()</span>
+            <span class="n">attachment_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attachments</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">attachment_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attachment_map</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"File id </span><span class="si">{</span><span class="n">attachment_id</span><span class="si">}</span><span class="s2"> is not a valid attachment for this project"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">destination_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">destination_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">attachment_map</span><span class="p">[</span><span class="n">attachment_id</span><span class="p">]</span><span class="o">.</span><span class="n">file_name</span><span class="p">)</span>
+
+        <span class="n">attachment_map</span><span class="p">[</span><span class="n">attachment_id</span><span class="p">]</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">destination_path</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">destination_path</span></div>
 
 
 <div class="viewcode-block" id="Project.delete_attachment">

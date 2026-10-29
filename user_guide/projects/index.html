@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=eca8dfaa"></script>
+    <script src="../../_static/documentation_options.js?v=bf49cd6f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.71.post377+gd3f1c2fa8" />
+  <meta name="docsearch:version" content="0.71.post398+gc43f699ba" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -772,13 +772,17 @@ PYTHON</label><div class="sd-tab-content docutils">
 </div>
 </div>
 </div>
-<p>Download the contents with <a class="reference internal" href="../qcportal_reference/external_files.html#qcportal.external_files.models.ExternalFile.download" title="qcportal.external_files.models.ExternalFile.download"><code class="xref py py-meth docutils literal notranslate"><span class="pre">download()</span></code></a>, and
+<p>Download the contents with <a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.download_attachment" title="qcportal.project_models.Project.download_attachment"><code class="xref py py-meth docutils literal notranslate"><span class="pre">download_attachment()</span></code></a> (or
+<a class="reference internal" href="../qcportal_reference/external_files.html#qcportal.external_files.models.ExternalFile.download" title="qcportal.external_files.models.ExternalFile.download"><code class="xref py py-meth docutils literal notranslate"><span class="pre">download()</span></code></a> on the attachment object), and
 remove an attachment with <a class="reference internal" href="../qcportal_reference/projects.html#qcportal.project_models.Project.delete_attachment" title="qcportal.project_models.Project.delete_attachment"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_attachment()</span></code></a>.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-9" name="sd-tab-set-9" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-9">
 PYTHON</label><div class="sd-tab-content docutils">
-<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">attachments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">"/path/to/barriers.csv"</span><span class="p">)</span>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">download_attachment</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="s2">"/path/to/barriers.csv"</span><span class="p">)</span>
+<span class="go">'/path/to/barriers.csv'</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">attachments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">"/path/to/barriers.csv"</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span><span class="o">.</span><span class="n">delete_attachment</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
 </pre></div>

@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=eca8dfaa"></script>
+    <script src="../../_static/documentation_options.js?v=bf49cd6f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.71.post377+gd3f1c2fa8" />
+  <meta name="docsearch:version" content="0.71.post398+gc43f699ba" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -2386,6 +2386,31 @@ The returned objects contain only the file metadata - use
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qcportal.project_models.Project.download_attachment">
+<span class="sig-name descname"><span class="pre">download_attachment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attachment_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/project_models.html#Project.download_attachment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.Project.download_attachment" title="Link to this definition">#</a></dt>
+<dd><p>Downloads an attachment of this project</p>
+<p>If destination path is not given, the file will be placed in the current directory, and the
+filename determined by what is stored on the server.</p>
+<p>The file size and checksum will be checked against the metadata stored on the server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attachment_id</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – ID of the attachment to download. See the <a class="reference internal" href="#qcportal.project_models.Project.attachments" title="qcportal.project_models.Project.attachments"><code class="xref py py-attr docutils literal notranslate"><span class="pre">attachments</span></code></a> property</p></li>
+<li><p><strong>destination_path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><em>None</em>) – Full path to the destination file (including filename)</p></li>
+<li><p><strong>overwrite</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – If True, allow for overwriting an existing file. If False, and a file already exists at the given
+destination path, an exception will be raised.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The path the file was downloaded to</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qcportal.project_models.Project.delete_attachment">
 <span class="sig-name descname"><span class="pre">delete_attachment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/project_models.html#Project.delete_attachment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.project_models.Project.delete_attachment" title="Link to this definition">#</a></dt>
 <dd><p>Deletes an attachment from this project</p>
@@ -2654,6 +2679,7 @@ The returned objects contain only the file metadata - use
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.fetch_attachments"><code class="docutils literal notranslate"><span class="pre">Project.fetch_attachments()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.attachments"><code class="docutils literal notranslate"><span class="pre">Project.attachments</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.upload_attachment"><code class="docutils literal notranslate"><span class="pre">Project.upload_attachment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.download_attachment"><code class="docutils literal notranslate"><span class="pre">Project.download_attachment()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.delete_attachment"><code class="docutils literal notranslate"><span class="pre">Project.delete_attachment()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qcportal.project_models.Project.model_post_init"><code class="docutils literal notranslate"><span class="pre">Project.model_post_init()</span></code></a></li>
 </ul>
