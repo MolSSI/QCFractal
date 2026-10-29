@@ -8,6 +8,7 @@ import {
 import {
   EntryComponentProps,
   RecordComponentProps,
+  MoleculeQueryOption,
   SpecificationComponentProps,
 } from "./types";
 import { RenderSpecification } from "./RenderSpecification.tsx";
@@ -53,6 +54,11 @@ const compareAngleArrays = (anglesA: number[], anglesB: number[]): number => {
 
 const sortableEnergy = (energy?: number): number =>
   energy ?? Number.POSITIVE_INFINITY;
+
+// The server's query model requires optimization_program; null means no filter
+export const moleculeQueryOptions: MoleculeQueryOption[] = [
+  { field: "initial_molecule_id", extraFilters: { optimization_program: null } },
+];
 
 export const Specification: React.FC<
   SpecificationComponentProps<TorsiondriveSpecification>

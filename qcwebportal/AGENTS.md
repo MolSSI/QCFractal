@@ -118,6 +118,7 @@ All authenticated routes are nested under `<ProtectedRoute>` → `<MainLayout>`.
 | `/projects/:projectId/records/:recordId` | `Record` |
 | `/projects/:projectId/addRecord` | `AddProjectRecord` |
 | `/records/:recordId` | `Record` (direct link) |
+| `/molecules/:moleculeId` | `Molecule` (details, viewer, records using the molecule) |
 | `/datasets` | `DatasetList` |
 | `/datasets/:datasetId` | `Dataset` (tabs: Status, Specs, Entries, Records, Attachments) |
 | `/managers` | `ManagerList` |
@@ -145,7 +146,8 @@ Mutations follow the pattern of fetching current state, modifying, then PUTting 
 Seven computation record types, each with a dedicated renderer under `src/components/record_components/`:
 `singlepoint`, `optimization`, `torsiondrive`, `gridoptimization`, `reaction`, `manybody`, `neb`
 
-`src/Utils.ts:getRecordReprMolecule()` maps each type to its representative molecule field.
+Each record module exports `moleculeQueryOptions`, the query filter field(s) that reference a molecule;
+`lookup.tsx:getMoleculeRecordOptions()` flattens them for the molecule page's record-type dropdown.
 
 ### Molecule Visualization
 

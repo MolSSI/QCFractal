@@ -1,5 +1,9 @@
 import * as qcpTypes from "./PortalTypes";
-import { AuthenticationError, AuthorizationError } from "./Exceptions.ts";
+import {
+  ApiError,
+  AuthenticationError,
+  AuthorizationError,
+} from "./Exceptions.ts";
 
 // Where users can report problems or give feedback
 export const issuesUrl = "https://github.com/MolSSI/QCFractal/issues";
@@ -19,6 +23,19 @@ export function describeRequestError(error: unknown, fallback: string): string {
   }
 
   return error instanceof Error && error.message ? error.message : fallback;
+}
+
+// For a GET of a single object by id, the server answers a missing id with 400
+export function isNotFoundError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 400;
+}
+
+// React Query retry policy: a missing object will not appear on retry
+export function retryUnlessNotFound(
+  failureCount: number,
+  error: Error,
+): boolean {
+  return !isNotFoundError(error) && failureCount < 3;
 }
 
 export const parseToDate = (isoString?: string): Date | undefined => {

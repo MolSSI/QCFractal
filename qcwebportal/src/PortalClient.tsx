@@ -1,6 +1,10 @@
 import { createContext, ReactNode, useCallback, useContext } from "react";
 import * as requestHelpers from "./RequestHelpers.ts";
-import { AuthenticationError, AuthorizationError } from "./Exceptions.ts";
+import {
+  ApiError,
+  AuthenticationError,
+  AuthorizationError,
+} from "./Exceptions.ts";
 import { useAuth } from "./Auth.tsx";
 
 type ClientContextType = {
@@ -52,6 +56,9 @@ export function PortalClientProvider({ children }: { children: ReactNode }) {
             : new AuthorizationError(errmsg);
         }
 
+        if (err instanceof ApiError) {
+          throw new ApiError(errmsg, err.status);
+        }
         throw new Error(errmsg);
       }
     },

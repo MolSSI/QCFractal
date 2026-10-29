@@ -40,3 +40,20 @@ export function moleculeToSDF(qc: qcpTypes.Molecule): string {
   lines.push("$$$$");
   return lines.join("\n");
 }
+
+export function moleculeToXYZ(qc: qcpTypes.Molecule): string {
+  const natoms = qc.symbols.length;
+  const lines: string[] = [];
+
+  lines.push(natoms.toString());
+  lines.push(qc.name ? qc.name : qc.identifiers.molecular_formula);
+
+  for (let i = 0; i < natoms; i++) {
+    const coords = [0, 1, 2].map((axis) =>
+      (bohr_to_angstrom * qc.geometry[i * 3 + axis]).toFixed(8).padStart(16),
+    );
+    lines.push(`${qc.symbols[i].padEnd(3)}${coords.join("")}`);
+  }
+
+  return lines.join("\n") + "\n";
+}

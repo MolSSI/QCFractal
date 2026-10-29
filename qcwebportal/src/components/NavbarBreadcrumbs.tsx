@@ -77,6 +77,14 @@ export default function NavbarBreadcrumbs() {
           label = "Datasets";
         } else if (pathnames[index - 1] === "datasets") {
           label = `Dataset ${value}`;
+        } else if (value === "molecules") {
+          const next = pathnames[index + 1];
+          if (next && /^\d+$/.test(next)) {
+            return null; // 👈 Skip this breadcrumb if followed by an ID
+          }
+          label = "Molecules";
+        } else if (pathnames[index - 1] === "molecules") {
+          label = `Molecule ${value}`;
         } else {
           label = formatBreadcrumbLabel(value);
         }

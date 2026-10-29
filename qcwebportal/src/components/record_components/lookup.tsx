@@ -42,3 +42,24 @@ export const getSpecificationComponent = (
 ): React.FC<SpecificationComponentProps<any>> => {
   return recordModules[recordType].Specification;
 };
+
+export type MoleculeRecordOption = {
+  key: string;
+  label: string;
+  recordType: qcpTypes.RecordType;
+  field: string;
+  extraFilters: Record<string, unknown>;
+};
+
+export const getMoleculeRecordOptions = (): MoleculeRecordOption[] => {
+  return (Object.keys(recordModules) as qcpTypes.RecordType[]).flatMap(
+    (recordType) =>
+      recordModules[recordType].moleculeQueryOptions.map((option) => ({
+        key: option.label ? `${recordType}:${option.label}` : recordType,
+        label: option.label ? `${recordType} (${option.label})` : recordType,
+        recordType,
+        field: option.field,
+        extraFilters: option.extraFilters ?? {},
+      })),
+  );
+};

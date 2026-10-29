@@ -10,6 +10,7 @@ const ProtectedRoute = lazy(() => import("./ProtectedRoute"));
 const Project = lazy(() => import("./pages/Project.tsx"));
 const ProjectList = lazy(() => import("./pages/ProjectList.tsx"));
 const Record = lazy(() => import("./pages/Record.tsx"));
+const Molecule = lazy(() => import("./pages/Molecule.tsx"));
 const Manager = lazy(() => import("./pages/Manager.tsx"));
 const ManagerList = lazy(() => import("./pages/ManagerList.tsx"));
 const InternalJobList = lazy(() => import("./pages/InternalJobList.tsx"));
@@ -87,6 +88,10 @@ function App() {
                           element={<Record />}
                         />
                         <Route path="/records/:recordId" element={<Record />} />
+                        <Route
+                          path="/molecules/:moleculeId"
+                          element={<Molecule />}
+                        />
                         <Route
                           path="/projects/:projectId/addRecord"
                           element={<AddProjectRecord />}

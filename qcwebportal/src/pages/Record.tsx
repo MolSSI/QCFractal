@@ -28,7 +28,11 @@ import { ViewOutputButton } from "../components/ViewOutputDialog.tsx";
 import { TaskServiceButton } from "../components/TaskServiceDialog.tsx";
 import { ResetRecordButton } from "../components/record_components/ResetRecordDialog.tsx";
 import { RecordActionsMenu } from "../components/record_components/RecordActionsMenu.tsx";
-import { dateStringToLocalTime } from "../Utils.ts";
+import {
+  dateStringToLocalTime,
+  isNotFoundError,
+  retryUnlessNotFound,
+} from "../Utils.ts";
 
 interface RecordHeaderProps {
   recordData: qcpTypes.RecordData;
@@ -203,6 +207,7 @@ function Record() {
         { include: ["*", "compute_history", "comments"] },
       ),
     enabled: validRecordId,
+    retry: retryUnlessNotFound,
   });
 
   const pageTitle = recordData
@@ -218,7 +223,10 @@ function Record() {
     return <LoadingIndicator fullPage />;
   }
   if (recordStatus === "error") {
-    return <ErrorIndicator fullPage message={recordError.message} />;
+    const message = isNotFoundError(recordError)
+      ? `Record ${parsedRecordId} does not exist`
+      : recordError.message;
+    return <ErrorIndicator fullPage message={message} />;
   }
   if (!recordData) {
     return <ErrorIndicator fullPage message="Record not found" />;

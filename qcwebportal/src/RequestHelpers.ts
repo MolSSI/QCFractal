@@ -27,7 +27,7 @@ export async function rawRequest<T>(
   // Handles appropriate errors. Will throw:
   //     AuthenticationError if the user is not logged in and needs to be
   //     AuthorizationError if the user is logged in, but can't access the resource
-  //     Error on other errors
+  //     ApiError on other error responses
 
   const response = await fetch(full_url, req_options);
   const content_type = response.headers.get("Content-Type");
@@ -68,13 +68,15 @@ export async function rawRequest<T>(
           `API request failed (403 ${response.statusText}) - ${message}`,
         );
       } else {
-        throw new Error(
+        throw new qcpExceptions.ApiError(
           `API request failed (${response.status}): ${response.statusText} - ${rjson.msg}`,
+          response.status,
         );
       }
     } else {
-      throw new Error(
+      throw new qcpExceptions.ApiError(
         `API request failed with unexpected response type (${response.status}): ${response.statusText}`,
+        response.status,
       );
     }
   }

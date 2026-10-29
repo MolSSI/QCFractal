@@ -7,6 +7,7 @@ import {
 import {
   EntryComponentProps,
   RecordComponentProps,
+  MoleculeQueryOption,
   SpecificationComponentProps,
 } from "./types";
 import { RenderSpecification } from "./RenderSpecification.tsx";
@@ -32,6 +33,11 @@ import Properties from "../Properties.tsx";
 import LoadingIndicator from "../LoadingIndicator.tsx";
 import ErrorIndicator from "../ErrorIndicator.tsx";
 import { MultiMoleculeViewer } from "../Molecule.tsx";
+
+export const moleculeQueryOptions: MoleculeQueryOption[] = [
+  { label: "initial", field: "initial_molecule_id" },
+  { label: "final", field: "final_molecule_id" },
+];
 
 export const Specification: React.FC<
   SpecificationComponentProps<OptimizationSpecification>

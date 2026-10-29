@@ -27,6 +27,19 @@ interface ChangelogEntry {
 // skip purely internal refactors.
 const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-10-28",
+    items: [
+      {
+        kind: "Added",
+        text: "Molecule page with the molecule's details, geometry, a 3D view, a download as JSON or XYZ, and the records that use it, filterable by record type with a count for each. Open it from the search bar by molecule ID, or by clicking a molecule viewer's title",
+      },
+      {
+        kind: "Fixed",
+        text: "Searching for a number only offers records and molecules with that ID that exist, and opening a missing record or molecule says so right away instead of loading for a long time",
+      },
+    ],
+  },
+  {
     date: "2026-10-14",
     items: [
       {
