@@ -10,6 +10,7 @@ import {
   FormControlLabel,
   Radio,
   RadioGroup,
+  TextField,
   Typography,
 } from "@mui/material";
 import {
@@ -62,6 +63,181 @@ export function useRenameSpecification(
       invalidateSpecificationQueries(queryClient, datasetType, datasetId),
   });
 }
+
+/**
+ * Sets the description of a specification. An empty description clears it.
+ */
+export function useModifySpecificationDescription(
+  datasetType: qcpTypes.RecordType,
+  datasetId: number,
+) {
+  const { makeRequest } = usePortalClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      name,
+      description,
+    }: {
+      name: string;
+      description: string;
+    }) =>
+      makeRequest<null>(
+        "PATCH",
+        `api/v1/datasets/${datasetType}/${datasetId}/specifications/modify`,
+        { name, description: description.trim() === "" ? null : description },
+      ),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["datasetSpecifications", datasetType, datasetId],
+      }),
+  });
+}
+
+interface EditSpecificationDialogProps {
+  datasetType: qcpTypes.RecordType;
+  datasetId: number;
+  specName: string;
+  description: string;
+  existingNames: string[];
+  onRenamed: (oldName: string, newName: string) => void;
+  onClose: () => void;
+}
+
+/**
+ * Edits the name and description of a specification. These are two separate
+ * server calls; the rename goes first so the description update can use the
+ * new name.
+ */
+export const EditSpecificationDialog: React.FC<
+  EditSpecificationDialogProps
+> = ({
+  datasetType,
+  datasetId,
+  specName,
+  description,
+  existingNames,
+  onRenamed,
+  onClose,
+}) => {
+  const renameMutation = useRenameSpecification(datasetType, datasetId);
+  const descriptionMutation = useModifySpecificationDescription(
+    datasetType,
+    datasetId,
+  );
+  const [name, setName] = React.useState(specName);
+  const [newDescription, setNewDescription] = React.useState(description);
+  // After a rename succeeds, later retries must not rename again
+  const [currentName, setCurrentName] = React.useState(specName);
+  const [error, setError] = React.useState<string | null>(null);
+  const [saving, setSaving] = React.useState(false);
+
+  const trimmedName = name.trim();
+  const nameChanged = trimmedName !== currentName;
+  const descriptionChanged = newDescription !== description;
+  const isDuplicateName = nameChanged && existingNames.includes(trimmedName);
+  const canSave =
+    trimmedName !== "" &&
+    !isDuplicateName &&
+    (nameChanged || descriptionChanged) &&
+    !saving;
+
+  const handleClose = () => {
+    if (!saving) {
+      onClose();
+    }
+  };
+
+  const save = async () => {
+    if (!canSave) {
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    let workingName = currentName;
+
+    try {
+      if (nameChanged) {
+        await renameMutation.mutateAsync({
+          oldName: currentName,
+          newName: trimmedName,
+        });
+        onRenamed(currentName, trimmedName);
+        workingName = trimmedName;
+        setCurrentName(trimmedName);
+      }
+    } catch (e) {
+      setError(describeRequestError(e, "Failed to rename specification"));
+      setSaving(false);
+      return;
+    }
+
+    try {
+      if (descriptionChanged) {
+        await descriptionMutation.mutateAsync({
+          name: workingName,
+          description: newDescription,
+        });
+      }
+    } catch (e) {
+      setError(
+        describeRequestError(e, "Failed to update description") +
+          (workingName !== specName ? " (the name was changed)" : ""),
+      );
+      setSaving(false);
+      return;
+    }
+
+    setSaving(false);
+    onClose();
+  };
+
+  return (
+    <Dialog open onClose={handleClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Edit Specification</DialogTitle>
+      <DialogContent>
+        <TextField
+          autoFocus
+          fullWidth
+          margin="dense"
+          label="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          error={isDuplicateName}
+          helperText={
+            isDuplicateName
+              ? "A specification with that name already exists"
+              : undefined
+          }
+        />
+        <TextField
+          fullWidth
+          multiline
+          minRows={4}
+          maxRows={20}
+          margin="dense"
+          label="Description"
+          value={newDescription}
+          onChange={(e) => setNewDescription(e.target.value)}
+        />
+        {error && (
+          <Box sx={{ mt: 2 }}>
+            <ErrorIndicator message={error} />
+          </Box>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose} disabled={saving}>
+          Cancel
+        </Button>
+        <Button onClick={save} variant="contained" disabled={!canSave}>
+          {saving ? "Saving..." : "Save"}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 interface DeleteSpecificationDialogProps {
   datasetType: qcpTypes.RecordType;
