@@ -8,6 +8,31 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
 import { gray, brand, red } from "../themePrimitives";
 
+// Inputs have a fixed height (see MuiOutlinedInput below), but multi-selects
+// and Autocompletes showing chips need to grow when the chips wrap onto more
+// lines. Otherwise the chips spill out of the input, into the focus outline
+// and under the label. A multi-select's own inset is also dropped, so its
+// chips sit within the input's padding.
+const growWithChips = (minHeight: string) => ({
+  "&:has(.MuiSelect-multiple), &.MuiAutocomplete-inputRoot:has(.MuiAutocomplete-tag)":
+    {
+      height: "auto",
+      minHeight,
+    },
+  "&:has(.MuiSelect-multiple)": {
+    alignItems: "flex-start",
+    "& .MuiSelect-multiple": {
+      height: "auto",
+      minHeight: "1.4375em",
+      margin: 0,
+      // Not the right padding, which leaves room for the dropdown icon
+      paddingTop: 0,
+      paddingBottom: 0,
+      paddingLeft: 0,
+    },
+  },
+});
+
 export const inputsCustomizations: Components<Theme> = {
   MuiButtonBase: {
     defaultProps: {
@@ -509,6 +534,7 @@ export const inputsCustomizations: Components<Theme> = {
             },
             style: {
               height: "2.25rem",
+              ...growWithChips("2.25rem"),
             },
           },
           {
@@ -517,6 +543,7 @@ export const inputsCustomizations: Components<Theme> = {
             },
             style: {
               height: "2.5rem",
+              ...growWithChips("2.5rem"),
             },
           },
         ],

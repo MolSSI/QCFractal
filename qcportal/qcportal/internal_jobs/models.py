@@ -5,7 +5,7 @@ from typing import Any
 
 from dateutil.parser import parse as date_parser
 from pydantic import BaseModel, ConfigDict, field_validator, PrivateAttr
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from qcportal.base_models import QueryProjModelBase
 from qcportal.utils import seconds_to_hms
@@ -118,33 +118,33 @@ class InternalJob(BaseModel):
         if timeout is not None:
             end_time = begin_time + timeout
 
-        pbar = tqdm(initial=self.progress, total=100, desc=self.progress_description)
+        # Closed even if waiting fails (such as on a timeout), so a notebook widget doesn't linger
+        with tqdm(initial=self.progress, total=100, desc=self.progress_description) as pbar:
+            while True:
+                t = time.time()
 
-        while True:
-            t = time.time()
+                self.refresh()
+                pbar.update(self.progress - pbar.n)
+                pbar.set_description(self.progress_description)
 
-            self.refresh()
-            pbar.update(self.progress - pbar.n)
-            pbar.set_description(self.progress_description)
+                if end_time is not None and t >= end_time:
+                    raise TimeoutError("Timed out waiting for job to complete")
 
-            if end_time is not None and t >= end_time:
-                raise TimeoutError("Timed out waiting for job to complete")
+                if self.status == InternalJobStatusEnum.error:
+                    print("Internal job resulted in an error:")
+                    print(self.result)
+                    break
+                elif self.status not in [InternalJobStatusEnum.waiting, InternalJobStatusEnum.running]:
+                    print(f"Internal job final status: {self.status.value}")
+                    break
 
-            if self.status == InternalJobStatusEnum.error:
-                print("Internal job resulted in an error:")
-                print(self.result)
-                break
-            elif self.status not in [InternalJobStatusEnum.waiting, InternalJobStatusEnum.running]:
-                print(f"Internal job final status: {self.status.value}")
-                break
+                curtime = time.time()
 
-            curtime = time.time()
-
-            if end_time is not None:
-                #  sleep the normal interval, or up to the timeout time
-                time.sleep(min(interval, end_time - curtime + 0.1))
-            else:
-                time.sleep(interval)
+                if end_time is not None:
+                    #  sleep the normal interval, or up to the timeout time
+                    time.sleep(min(interval, end_time - curtime + 0.1))
+                else:
+                    time.sleep(interval)
 
     @property
     def duration(self) -> timedelta:

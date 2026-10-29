@@ -2,7 +2,16 @@ import numpy as np
 import pytest
 
 from qcportal.record_models import RecordQueryFilters, RecordStatusEnum
-from qcportal.utils import chunk_iterable, seconds_to_hms, duration_to_seconds, is_included, is_scalar, make_list
+from qcportal.exceptions import InvalidArgumentsError
+from qcportal.utils import (
+    calculate_limit,
+    chunk_iterable,
+    seconds_to_hms,
+    duration_to_seconds,
+    is_included,
+    is_scalar,
+    make_list,
+)
 
 # Things that represent a single value, even if some of them are iterable
 # (RecordStatusEnum is a str-based enum, so it is a single value the same way a str is)
@@ -79,6 +88,16 @@ def test_make_list_generator():
     # If that changes, is_scalar must change with it (see test_is_scalar_matches_make_list)
     gen = (x for x in [1, 2])
     assert make_list(gen) == [gen]
+
+
+def test_calculate_limit():
+    assert calculate_limit(100, None) == 100
+    assert calculate_limit(100, 10) == 10
+    assert calculate_limit(100, 1000) == 100
+    assert calculate_limit(100, 0) == 0
+
+    with pytest.raises(InvalidArgumentsError, match="must not be negative"):
+        calculate_limit(100, -1)
 
 
 def test_chunk_iterable():

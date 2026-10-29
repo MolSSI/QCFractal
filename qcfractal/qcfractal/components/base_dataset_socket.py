@@ -4,7 +4,7 @@ import logging
 from typing import Tuple, Optional, Sequence, Iterable, Any, Union, Dict, List
 
 import pydantic_core
-from sqlalchemy import select, func, text, delete, and_, literal
+from sqlalchemy import select, func, text, delete, and_, literal, tuple_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, lazyload, joinedload, load_only, raiseload
@@ -17,7 +17,7 @@ from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket import SQLAlchemySocket, BaseORM
 from qcfractal.db_socket.helpers import get_general, get_query_proj_options, get_count
-from qcportal.dataset_models import DatasetModifyMetadata
+from qcportal.dataset_models import DatasetModifyMetadata, DatasetFetchPropertiesResult
 from qcportal.exceptions import MissingDataError, AlreadyExistsError, UserReportableError
 from qcportal.metadata_models import InsertMetadata, InsertCountsMetadata, DeleteMetadata, UpdateMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
@@ -358,6 +358,102 @@ class BaseDatasetSocket:
         with self.root_socket.optional_session(session, True) as session:
             rows = session.execute(stmt).all()
             return {r[0]: r[1] for r in rows}
+
+    def fetch_properties(
+        self,
+        dataset_id: int,
+        properties: Sequence[str],
+        entry_names: Optional[Iterable[str]] = None,
+        specification_names: Optional[Iterable[str]] = None,
+        cursor: Optional[Tuple[str, str]] = None,
+        limit: Optional[int] = None,
+        include_total: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> DatasetFetchPropertiesResult:
+        """
+        Obtain values from the properties dictionary of complete records in a dataset
+
+        Only the requested properties are extracted (by the database), so this is much cheaper than
+        fetching the records themselves. Rows are ordered by (entry name, specification name), and
+        are paginated with a cursor so that large datasets can be fetched in batches.
+
+        Each page (and the total, if requested) reflects the database at the time it is fetched,
+        not a snapshot of the whole walk. If the dataset changes between pages (records complete,
+        or entries/specifications are renamed, added, or removed), rows may be missed or repeated,
+        and the total may not match the number of rows returned.
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        properties
+            Names of the properties to obtain. Properties missing from a record are returned as None.
+        entry_names
+            Fetch properties of records belonging to these entries. If None, consider all entries.
+        specification_names
+            Fetch properties of records belonging to these specifications. If None, consider all specifications.
+        cursor
+            (entry name, specification name) of the last row of the previous page. Only rows after
+            this are returned. If None, start from the beginning.
+        limit
+            Maximum number of rows to return. If None, return all rows.
+        include_total
+            If True, also count all rows matching the filters (ignoring cursor and limit)
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Rows of (entry name, specification name, record id, property values), and the cursor
+            for the next page (None if there are no more rows).
+        """
+
+        item_orm = self.record_item_orm
+
+        filters = [item_orm.dataset_id == dataset_id, BaseRecordORM.status == RecordStatusEnum.complete]
+        if entry_names is not None:
+            filters.append(item_orm.entry_name.in_(entry_names))
+        if specification_names is not None:
+            filters.append(item_orm.specification_name.in_(specification_names))
+
+        # Labeled so that requesting the same property twice still gives two columns
+        property_columns = [BaseRecordORM.properties[p].label(f"prop_{i}") for i, p in enumerate(properties)]
+
+        # Ordering by (and paginating on) the primary key of the record item table
+        # lets the database walk its index, so later pages are as cheap as the first
+        stmt = select(item_orm.entry_name, item_orm.specification_name, item_orm.record_id, *property_columns)
+        stmt = stmt.join(BaseRecordORM, BaseRecordORM.id == item_orm.record_id)
+        stmt = stmt.where(*filters)
+        if cursor is not None:
+            stmt = stmt.where(tuple_(item_orm.entry_name, item_orm.specification_name) > tuple_(*cursor))
+        stmt = stmt.order_by(item_orm.entry_name, item_orm.specification_name)
+        if limit is not None:
+            # Get one extra row to tell if there is another page
+            stmt = stmt.limit(limit + 1)
+
+        with self.root_socket.optional_session(session, True) as session:
+            rows = session.execute(stmt).all()
+
+            next_cursor = None
+            if limit is not None and len(rows) > limit:
+                rows = rows[:limit]
+                next_cursor = (rows[-1][0], rows[-1][1])
+
+            total = None
+            if include_total:
+                count_stmt = select(func.count()).select_from(item_orm)
+                count_stmt = count_stmt.join(BaseRecordORM, BaseRecordORM.id == item_orm.record_id)
+                count_stmt = count_stmt.where(*filters)
+                total = session.execute(count_stmt).scalar_one()
+
+            return DatasetFetchPropertiesResult(
+                rows=[(r[0], r[1], r[2], list(r[3:])) for r in rows],
+                next_cursor=next_cursor,
+                total=total,
+            )
 
     def add(
         self,

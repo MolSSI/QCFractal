@@ -26,15 +26,20 @@ import DatasetActions from "../components/dataset_components/DatasetActions";
 import DatasetSpecificationTable from "../components/dataset_components/DatasetSpecificationTable";
 import DatasetEntryTable from "../components/dataset_components/DatasetEntryTable";
 import DatasetRecords from "../components/dataset_components/DatasetRecords";
+import DatasetProperties, {
+  type PropertiesLoadControl,
+} from "../components/dataset_components/DatasetProperties";
 import { AttachmentTable } from "../components/AttachmentTable";
 import { asRecord, formatPriority } from "../Utils.ts";
 import MarkdownContent from "../components/MarkdownContent";
 import {
   areDatasetViewStatesEqual,
   createDefaultDatasetViewState,
+  DATASET_PROPERTIES_TAB_INDEX,
   DATASET_RECORDS_TAB_INDEX,
   createSavedDatasetPageState,
   DatasetLocationState,
+  DatasetPropertiesViewState,
   DatasetRecordViewState,
   DatasetStatusViewState,
   DatasetViewState,
@@ -45,7 +50,6 @@ import {
   EditDatasetMetadataButton,
   EditDatasetNameButton,
 } from "../components/dataset_components/EditDatasetDialog.tsx";
-
 
 const REFRESH_SPINNER_MIN_MS = 300;
 
@@ -225,6 +229,46 @@ export default function Dataset() {
     }));
   };
 
+  // Kept here (not in the Properties tab) so it survives switching tabs
+  const [propertiesLoadControl, setPropertiesLoadControl] =
+    React.useState<PropertiesLoadControl>({
+      stoppedQueryKey: null,
+      uncappedQueryKey: null,
+    });
+
+  const updatePropertiesView = (
+    updates: Partial<DatasetPropertiesViewState>,
+  ) => {
+    setViewState((currentViewState) => ({
+      ...currentViewState,
+      propertiesView: {
+        ...currentViewState.propertiesView,
+        ...updates,
+      },
+    }));
+  };
+
+  const handlePropertiesSelectionChange = (selectedProperties: string[]) => {
+    updatePropertiesView({
+      selectedProperties,
+      page: 0,
+    });
+  };
+
+  const handlePropertiesSpecsChange = (selectedSpecifications: string[]) => {
+    updatePropertiesView({
+      selectedSpecifications,
+      page: 0,
+    });
+  };
+
+  const handlePropertiesRowsPerPageChange = (rowsPerPage: number) => {
+    updatePropertiesView({
+      rowsPerPage,
+      page: 0,
+    });
+  };
+
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   const handleRefresh = async () => {
@@ -256,6 +300,16 @@ export default function Dataset() {
               datasetIdNumber,
             ],
             ["datasetAttachments", datasetIdNumber],
+            [
+              "datasetComputedProperties",
+              datasetData.dataset_type,
+              datasetIdNumber,
+            ],
+            [
+              "datasetPropertiesValues",
+              datasetData.dataset_type,
+              datasetIdNumber,
+            ],
           ]
         : []),
     ];
@@ -573,6 +627,7 @@ export default function Dataset() {
                   id="tab-3"
                   aria-controls="tabpanel-3"
                 />
+                <Tab label="Properties" id="tab-4" aria-controls="tabpanel-4" />
               </Tabs>
 
               {/* Tab 0: Specifications */}
@@ -641,6 +696,36 @@ export default function Dataset() {
                 )}
                 {attachmentsStatus === "error" && (
                   <ErrorIndicator message="Failed to load attachments" />
+                )}
+              </TabPanel>
+
+              {/* Tab 4: Properties */}
+              <TabPanel
+                value={viewState.tabValue}
+                index={DATASET_PROPERTIES_TAB_INDEX}
+              >
+                {!specificationsData ? (
+                  <LoadingIndicator />
+                ) : (
+                  <DatasetProperties
+                    datasetId={datasetIdNumber}
+                    datasetType={datasetData.dataset_type}
+                    specifications={Object.keys(specificationsData)}
+                    selectedProperties={
+                      viewState.propertiesView.selectedProperties
+                    }
+                    selectedSpecifications={
+                      viewState.propertiesView.selectedSpecifications
+                    }
+                    page={viewState.propertiesView.page}
+                    rowsPerPage={viewState.propertiesView.rowsPerPage}
+                    onSelectedPropertiesChange={handlePropertiesSelectionChange}
+                    onSelectedSpecificationsChange={handlePropertiesSpecsChange}
+                    onPageChange={(page) => updatePropertiesView({ page })}
+                    loadControl={propertiesLoadControl}
+                    onLoadControlChange={setPropertiesLoadControl}
+                    onRowsPerPageChange={handlePropertiesRowsPerPageChange}
+                  />
                 )}
               </TabPanel>
             </Paper>
