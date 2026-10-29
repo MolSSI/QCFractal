@@ -949,6 +949,56 @@ class Project(BaseModel):
         self.attachments_ = None
         return file_id
 
+    def download_attachment(
+        self,
+        attachment_id: int,
+        destination_path: str | None = None,
+        overwrite: bool = False,
+    ) -> str:
+        """
+        Downloads an attachment of this project
+
+        If destination path is not given, the file will be placed in the current directory, and the
+        filename determined by what is stored on the server.
+
+        The file size and checksum will be checked against the metadata stored on the server.
+
+        Parameters
+        ----------
+        attachment_id
+            ID of the attachment to download. See the :attr:`attachments` property
+        destination_path
+            Full path to the destination file (including filename)
+        overwrite
+            If True, allow for overwriting an existing file. If False, and a file already exists at the given
+            destination path, an exception will be raised.
+
+        Returns
+        -------
+        :
+            The path the file was downloaded to
+        """
+        self.assert_online()
+
+        attachment_map = {x.id: x for x in self.attachments}
+
+        if attachment_id not in attachment_map:
+            # The cached list may be out of date (ie, uploaded by someone else)
+            self.fetch_attachments()
+            attachment_map = {x.id: x for x in self.attachments}
+
+        if attachment_id not in attachment_map:
+            raise ValueError(
+                f"File id {attachment_id} is not a valid attachment for this project. "
+                f"Existing attachment ids: {sorted(attachment_map.keys())}"
+            )
+
+        if destination_path is None:
+            destination_path = os.path.join(os.getcwd(), attachment_map[attachment_id].file_name)
+
+        attachment_map[attachment_id].download(destination_path, overwrite=overwrite)
+        return destination_path
+
     def delete_attachment(self, file_id: int):
         """
         Deletes an attachment from this project

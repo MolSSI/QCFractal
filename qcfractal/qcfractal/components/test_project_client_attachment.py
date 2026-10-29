@@ -77,3 +77,70 @@ def test_project_client_attachment_delete(submitter_client: PortalClient):
     proj.delete_attachment(id_1)
     assert len(proj.attachments) == 1
     assert proj.attachments[0].id == id_2
+
+
+@pytest.mark.skipif(not s3_tests_enabled, reason="S3 tests are not enabled.")
+def test_project_client_attachment_download(submitter_client: PortalClient, tmp_path):
+    proj = submitter_client.add_project("test project", "Test Description", "a Tagline")
+
+    test_file = os.path.join(testdata_path, "molecule_data", "hooh.json")
+    att_id = proj.upload_attachment(test_file, "other", ["tag1"])
+
+    source_bytes = open(test_file, "rb").read()
+
+    # Explicit destination; returns the path
+    dest_path = str(tmp_path / "downloaded.json")
+    assert proj.download_attachment(att_id, dest_path) == dest_path
+    assert open(dest_path, "rb").read() == source_bytes
+
+    # Default destination is the current directory, with the stored file name
+    cwd = os.getcwd()
+    os.chdir(tmp_path)
+    try:
+        assert proj.download_attachment(att_id) == os.path.join(str(tmp_path), "hooh.json")
+    finally:
+        os.chdir(cwd)
+    assert open(tmp_path / "hooh.json", "rb").read() == source_bytes
+
+    # Works on a freshly-fetched project, too
+    proj2 = submitter_client.get_project_by_id(proj.id)
+    dest_path_2 = str(tmp_path / "downloaded2.json")
+    proj2.download_attachment(att_id, dest_path_2)
+    assert open(dest_path_2, "rb").read() == source_bytes
+
+
+@pytest.mark.skipif(not s3_tests_enabled, reason="S3 tests are not enabled.")
+def test_project_client_attachment_download_overwrite(submitter_client: PortalClient, tmp_path):
+    proj = submitter_client.add_project("test project", "Test Description", "a Tagline")
+
+    test_file = os.path.join(testdata_path, "molecule_data", "hooh.json")
+    att_id = proj.upload_attachment(test_file, "other", ["tag1"])
+    source_bytes = open(test_file, "rb").read()
+
+    dest_path = tmp_path / "existing.json"
+    dest_path.write_bytes(b"existing")
+
+    with pytest.raises(RuntimeError, match="already exists"):
+        proj.download_attachment(att_id, str(dest_path))
+    assert dest_path.read_bytes() == b"existing"
+
+    proj.download_attachment(att_id, str(dest_path), overwrite=True)
+    assert dest_path.read_bytes() == source_bytes
+
+
+@pytest.mark.skipif(not s3_tests_enabled, reason="S3 tests are not enabled.")
+def test_project_client_attachment_download_invalid(submitter_client: PortalClient, tmp_path):
+    proj = submitter_client.add_project("test project", "Test Description", "a Tagline")
+
+    test_file = os.path.join(testdata_path, "molecule_data", "hooh.json")
+    att_id = proj.upload_attachment(test_file, "other", ["tag1"])
+
+    dest_path = tmp_path / "nope.json"
+    with pytest.raises(ValueError, match=rf"not a valid attachment.*\[{att_id}\]"):
+        proj.download_attachment(att_id + 1000, str(dest_path))
+    assert not dest_path.exists()
+
+    # Attachment of another project is not valid
+    proj_other = submitter_client.add_project("other project", "Test Description", "a Tagline")
+    with pytest.raises(ValueError, match="not a valid attachment"):
+        proj_other.download_attachment(att_id, str(dest_path))
