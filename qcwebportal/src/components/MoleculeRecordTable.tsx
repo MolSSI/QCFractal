@@ -259,9 +259,6 @@ export default function MoleculeRecordTable({
                     <strong>Record ID</strong>
                   </TableCell>
                   <TableCell>
-                    <strong>Name</strong>
-                  </TableCell>
-                  <TableCell>
                     <strong>Status</strong>
                   </TableCell>
                   <TableCell>
@@ -275,7 +272,7 @@ export default function MoleculeRecordTable({
               <TableBody>
                 {records.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} align="center">
+                    <TableCell colSpan={4} align="center">
                       No {option.label} records use this molecule.
                     </TableCell>
                   </TableRow>
@@ -287,7 +284,6 @@ export default function MoleculeRecordTable({
                           {record.id}
                         </MuiLink>
                       </TableCell>
-                      <TableCell>{record.name}</TableCell>
                       <TableCell>
                         <StatusChip
                           status={record.status}

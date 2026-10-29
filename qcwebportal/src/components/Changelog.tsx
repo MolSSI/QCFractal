@@ -31,7 +31,7 @@ const CHANGELOG: ChangelogEntry[] = [
     items: [
       {
         kind: "Added",
-        text: "Molecule page with the molecule's details, geometry, a 3D view, a JSON download, and the records that use it, filterable by record type with a count for each. Open it from the search bar by molecule ID, or by clicking a molecule viewer's title",
+        text: "Molecule page with the molecule's details, geometry, a 3D view, a download as JSON or XYZ, and the records that use it, filterable by record type with a count for each. Open it from the search bar by molecule ID, or by clicking a molecule viewer's title",
       },
       {
         kind: "Fixed",

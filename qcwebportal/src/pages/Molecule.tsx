@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -8,6 +9,8 @@ import {
   Button,
   Divider,
   Grid,
+  Menu,
+  MenuItem,
   Stack,
   Table,
   TableBody,
@@ -19,7 +22,9 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DownloadIcon from "@mui/icons-material/Download";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { usePortalClient } from "../PortalClient.tsx";
+import { moleculeToXYZ } from "../MoleculeUtils.ts";
 import * as qcpTypes from "../PortalTypes";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ErrorIndicator from "../components/ErrorIndicator";
@@ -33,18 +38,61 @@ import { GenericDataList } from "../components/GenericDataList.tsx";
 import JsonViewer from "../components/JsonViewer.tsx";
 import MoleculeRecordTable from "../components/MoleculeRecordTable.tsx";
 
-function downloadMolecule(molecule: qcpTypes.Molecule) {
-  const blob = new Blob([JSON.stringify(molecule, null, 2)], {
-    type: "application/json",
-  });
+type MoleculeDownloadFormat = "json" | "xyz";
+
+function downloadMolecule(
+  molecule: qcpTypes.Molecule,
+  format: MoleculeDownloadFormat,
+) {
+  const blob =
+    format === "json"
+      ? new Blob([JSON.stringify(molecule, null, 2)], {
+          type: "application/json",
+        })
+      : new Blob([moleculeToXYZ(molecule)], { type: "chemical/x-xyz" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `molecule_${molecule.id}.json`;
+  link.download = `molecule_${molecule.id}.${format}`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+function MoleculeDownloadButton({ molecule }: { molecule: qcpTypes.Molecule }) {
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
+  const handleDownload = (format: MoleculeDownloadFormat) => {
+    setAnchorEl(null);
+    downloadMolecule(molecule, format);
+  };
+
+  return (
+    <>
+      <Button
+        variant="outlined"
+        size="small"
+        startIcon={<DownloadIcon />}
+        endIcon={<ArrowDropDownIcon />}
+        onClick={(e) => setAnchorEl(e.currentTarget)}
+      >
+        Download
+      </Button>
+      <Menu
+        anchorEl={anchorEl}
+        open={anchorEl !== null}
+        onClose={() => setAnchorEl(null)}
+      >
+        <MenuItem onClick={() => handleDownload("json")}>
+          Full molecule (.json)
+        </MenuItem>
+        <MenuItem onClick={() => handleDownload("xyz")}>
+          Geometry (.xyz)
+        </MenuItem>
+      </Menu>
+    </>
+  );
 }
 
 function MoleculeGeometryTable({ molecule }: { molecule: qcpTypes.Molecule }) {
@@ -183,14 +231,7 @@ function Molecule() {
           <Typography variant="h5" fontWeight="bold">
             {molecule.name ? molecule.name.trim() : `Molecule ${molecule.id}`}
           </Typography>
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<DownloadIcon />}
-            onClick={() => downloadMolecule(molecule)}
-          >
-            Download
-          </Button>
+          <MoleculeDownloadButton molecule={molecule} />
         </Stack>
         <Typography variant="body1">
           <MolecularFormula molecule={molecule} />
