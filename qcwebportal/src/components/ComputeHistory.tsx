@@ -23,6 +23,41 @@ interface ComputeHistoryProps {
   recordData: qcpTypes.RecordData;
 }
 
+const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+  v !== null && typeof v === "object" && !Array.isArray(v);
+
+// Provenance may contain nested objects (e.g. Psi4's module_roles), which are
+// listed as indented sub-items
+const ProvenanceList: React.FC<{ data: Record<string, unknown> }> = ({
+  data,
+}) => (
+  <Box
+    component="ul"
+    sx={{
+      pl: 2,
+      m: 0,
+      listStyleType: "none", // Remove bullet points
+    }}
+  >
+    {Object.entries(data).map(([key, value]) => (
+      <li key={key}>
+        <Typography variant="body2" component="div">
+          <strong>{key}:</strong>{" "}
+          {isPlainObject(value) ? (
+            <ProvenanceList data={value} />
+          ) : value === null || value === undefined || value === "" ? (
+            "N/A"
+          ) : Array.isArray(value) ? (
+            JSON.stringify(value)
+          ) : (
+            String(value)
+          )}
+        </Typography>
+      </li>
+    ))}
+  </Box>
+);
+
 const ComputeHistory: React.FC<ComputeHistoryProps> = ({ recordData }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -122,24 +157,7 @@ const ComputeHistory: React.FC<ComputeHistoryProps> = ({ recordData }) => {
                       </TableCell>
                       <TableCell>
                         {history.provenance ? (
-                          <Box
-                            component="ul"
-                            sx={{
-                              pl: 2,
-                              m: 0,
-                              listStyleType: "none", // Remove bullet points
-                            }}
-                          >
-                            {Object.entries(history.provenance).map(
-                              ([key, value]) => (
-                                <li key={key}>
-                                  <Typography variant="body2">
-                                    <strong>{key}:</strong> {value || "N/A"}
-                                  </Typography>
-                                </li>
-                              ),
-                            )}
-                          </Box>
+                          <ProvenanceList data={history.provenance} />
                         ) : (
                           <Typography variant="body2">None</Typography>
                         )}
