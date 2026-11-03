@@ -77,13 +77,6 @@ def bulk_get_managers_v1(body_data: CommonBulkGetNamesBody) -> list[dict[str, An
     return storage_socket.managers.get(body_data.names, body_data.include, body_data.exclude, body_data.missing_ok)
 
 
-@api_v1.route("/managers/<string:name>/log", methods=["GET"])
-@check_permissions("managers", "read")
-@serialization()
-def get_manager_log_v1(name: str) -> list[dict[str, Any]]:
-    return storage_socket.managers.get_log(name)
-
-
 @api_v1.route("/managers/query", methods=["POST"])
 @check_permissions("managers", "read")
 @serialization()
