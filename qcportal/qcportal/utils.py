@@ -21,6 +21,7 @@ from typing import Any, TypeVar, overload
 
 import numpy as np
 
+from qcportal.exceptions import InvalidArgumentsError
 from qcportal.serialization import _JSONEncoder
 
 _T = TypeVar("_T")
@@ -425,10 +426,15 @@ def calculate_limit(max_limit: int, given_limit: int | None) -> int:
 
     If 'given_limit' is given (ie, by the user), this will return min(limit, max_limit)
     where max_limit is the set value for the table/type of object
+
+    A negative 'given_limit' raises an InvalidArgumentsError (which is reportable to the user)
     """
 
     if given_limit is None:
         return max_limit
+
+    if given_limit < 0:
+        raise InvalidArgumentsError(f"Limit must not be negative (got {given_limit})")
 
     return min(given_limit, max_limit)
 

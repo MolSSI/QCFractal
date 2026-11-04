@@ -27,6 +27,15 @@ interface ChangelogEntry {
 // skip purely internal refactors.
 const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-10-29",
+    items: [
+      {
+        kind: "Added",
+        text: "Properties tab on the dataset page: select properties and specifications and view the computed values for every entry in a table, or download them as CSV or JSON",
+      },
+    ],
+  },
+  {
     date: "2026-10-28",
     items: [
       {

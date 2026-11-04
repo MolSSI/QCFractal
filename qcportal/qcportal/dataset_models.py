@@ -16,13 +16,14 @@ from typing import (
 import pydantic
 from pydantic import BaseModel, PrivateAttr, Field, ConfigDict, field_validator, model_validator
 from tabulate import tabulate
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from qcportal.base_models import RestModelBase, validate_list_to_single, CommonBulkGetBody
 from qcportal.cache import DatasetCache, read_dataset_metadata, get_records_with_cache
 from qcportal.common_types import LowerStr
 from qcportal.external_files import ExternalFile
 from qcportal.internal_jobs import InternalJob, InternalJobStatusEnum
+from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import DeleteMetadata, InsertMetadata, InsertCountsMetadata, UpdateMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, BaseRecord
 from qcportal.utils import make_list, chunk_iterable
@@ -2433,7 +2434,16 @@ class BaseDataset(BaseModel):
 
             return first_value
 
-        first_value = _check_first()
+        try:
+            first_value = _check_first()
+        except StopIteration:
+            # No complete records match. Give an empty DataFrame of the usual shape, if the
+            # column names are known without seeing a value
+            if unpack and isinstance(value_names, str):
+                return pd.DataFrame()
+            column_names = [value_names] if not unpack else list(value_names)
+            df = pd.DataFrame([], columns=("entry", "specification", *column_names))
+            return df.pivot(index="entry", columns="specification", values=column_names).swaplevel(axis=1)
 
         if unpack and isinstance(first_value, Sequence) and not isinstance(first_value, str):
             if isinstance(value_names, str):
@@ -2456,11 +2466,155 @@ class BaseDataset(BaseModel):
         # Make specification top level index.
         return return_val.swaplevel(axis=1)
 
+    def _check_names_exist(
+        self, names: list[str], argument: str, get_known: Callable[[], list[str]], refetch: Callable[[], None]
+    ):
+        """
+        Raise a MissingDataError if any of the given names are not in this dataset
+
+        The known names (from ``get_known``) are refreshed from the server with ``refetch`` before giving up.
+        """
+
+        missing = set(names) - set(get_known())
+        if missing and not self.is_view and not self.offline:
+            refetch()
+            missing = set(names) - set(get_known())
+
+        if missing:
+            raise MissingDataError(f"{argument} contains names not in this dataset: {', '.join(sorted(missing))}")
+
+    def iterate_properties(
+        self,
+        properties_list: str | Sequence[str],
+        entry_names: str | Iterable[str] | None = None,
+        specification_names: str | Iterable[str] | None = None,
+        fetch_records: bool = False,
+    ) -> Iterable[tuple[str, str, int, list[Any]]]:
+        """
+        Iterate over values from the properties dictionary of complete records in this dataset
+
+        By default, the values are extracted by the server, so only the requested properties are downloaded
+        rather than whole records, and the local cache is neither used nor updated. Rows are returned in order
+        of entry name, then specification name. If many entry names are given, they are sent to the server in
+        batches, and the order only holds within each batch. Each page of values reflects the dataset at the
+        time it is fetched, so if the dataset is being modified while iterating (records completing, or entries
+        or specifications being renamed, added, or removed), rows may be missed or repeated.
+
+        With ``fetch_records=True``, whole records are fetched instead, which uses and fills the local cache.
+        This can be faster when the records are already cached, or will be needed later anyway. Datasets loaded
+        from views, or without a connection to a server, always use their records, as does requesting more
+        than 20 properties. Rows from records are not in any particular order.
+
+        Parameters
+        ----------
+        properties_list
+            Names of the properties to retrieve. Properties missing from a record are returned as None.
+        entry_names
+            Only return values for records belonging to these entries. If None, consider all entries.
+        specification_names
+            Only return values for records belonging to these specifications. If None, consider all specifications.
+        fetch_records
+            If True, fetch whole records (using the cache) rather than only the requested properties.
+
+        Returns
+        -------
+        :
+            An iterator of (entry name, specification name, record id, property values), with
+            the values in the same order as ``properties_list``.
+
+        Raises
+        ------
+        MissingDataError
+            If any of the given entry or specification names are not part of this dataset.
+        """
+
+        properties_list = make_list(properties_list)
+        if not properties_list:
+            raise ValueError("properties_list must contain at least one property name")
+
+        # Unknown names are an error (rather than silently giving no rows), whichever way the values are fetched.
+        # Duplicate names are removed, since they could otherwise be returned more than once
+        if entry_names is not None:
+            entry_names = list(dict.fromkeys(make_list(entry_names)))
+            self._check_names_exist(entry_names, "entry_names", lambda: self.entry_names, self.fetch_entry_names)
+        if specification_names is not None:
+            specification_names = list(dict.fromkeys(make_list(specification_names)))
+            self._check_names_exist(
+                specification_names,
+                "specification_names",
+                lambda: self.specification_names,
+                self.fetch_specification_names,
+            )
+
+        if fetch_records or self.is_view or self.offline or len(properties_list) > MAX_FETCH_PROPERTIES:
+            yield from self._iterate_properties_from_records(properties_list, entry_names, specification_names)
+        else:
+            yield from self._iterate_properties_from_server(properties_list, entry_names, specification_names)
+
+    def _iterate_properties_from_records(
+        self, properties_list: list[str], entry_names: list[str] | None, specification_names: list[str] | None
+    ) -> Iterable[tuple[str, str, int, list[Any]]]:
+        records = self.iterate_records(
+            entry_names=entry_names,
+            specification_names=specification_names,
+            status=RecordStatusEnum.complete,
+            fetch_updated=True,
+            force_refetch=False,
+        )
+
+        # The number of complete records isn't known in advance, so this just counts
+        for entry_name, spec_name, record in tqdm(records, unit="records", disable=None):
+            properties = record.properties or {}
+            yield entry_name, spec_name, record.id, [properties.get(p) for p in properties_list]
+
+    def _iterate_properties_from_server(
+        self, properties_list: list[str], entry_names: list[str] | None, specification_names: list[str] | None
+    ) -> Iterable[tuple[str, str, int, list[Any]]]:
+        # Batch long lists of entry names so the request body stays a reasonable size
+        if entry_names is None:
+            entry_batches = [None]
+        else:
+            batch_size = self._client.api_limits["get_dataset_entries"]
+            entry_batches = chunk_iterable(entry_names, batch_size)
+
+        # The total number of rows (for the progress bar) comes with the first page of each batch.
+        # Counting can take a while on large datasets, so only ask if the progress bar is shown
+        progress = tqdm(total=0, unit="records", disable=None)
+        try:
+            for entry_batch in entry_batches:
+                cursor = None
+                while True:
+                    body = DatasetFetchPropertiesBody(
+                        properties=properties_list,
+                        entry_names=entry_batch,
+                        specification_names=specification_names,
+                        cursor=cursor,
+                        include_total=cursor is None and not progress.disable,
+                    )
+
+                    result = self._client.make_request(
+                        "post", f"{self._base_url}/properties/bulkFetch", DatasetFetchPropertiesResult, body=body
+                    )
+
+                    if result.total is not None:
+                        progress.total += result.total
+                        progress.refresh()
+                    progress.update(len(result.rows))
+
+                    yield from result.rows
+
+                    cursor = result.next_cursor
+                    if cursor is None:
+                        break
+        finally:
+            progress.close()
+
     def get_properties_df(
         self,
         properties_list: Sequence[str],
         entry_names: Sequence[str] | None = None,
         specification_names: Sequence[str] | None = None,
+        fetch_records: bool = False,
     ) -> "DataFrame":
         """
         Retrieve a DataFrame populated with the specified properties from dataset records.
@@ -2470,6 +2624,13 @@ class BaseDataset(BaseModel):
         each record. Each column corresponds has a top level index as a specification,
         and a second level index as the appropriate value name. Columns with all
         NaN values are dropped.
+
+        The values are obtained with :meth:`iterate_properties`. By default, only the requested
+        properties are downloaded from the server. With ``fetch_records=True``, whole records are
+        fetched instead, which uses and fills the local cache. This can be faster when the records
+        are already cached, or will be needed later anyway. Datasets loaded from views, or
+        without a connection to a server, always use the records, as does requesting more
+        than 20 properties.
 
         Parameters:
         -----------
@@ -2482,23 +2643,43 @@ class BaseDataset(BaseModel):
         specification_names
             Specification names to filter records. If not provided, considers all specifications.
 
+        fetch_records
+            If True, fetch whole records (using the cache) rather than only the requested properties.
+
         Returns:
         --------
         pandas.DataFrame
             A DataFrame populated with the specified properties for each record.
+
+        Raises:
+        -------
+        MissingDataError
+            If any of the given entry or specification names are not part of this dataset.
         """
 
-        # create lambda function to get all properties at once
-        extract_properties = lambda x: [x.properties.get(property_name) for property_name in properties_list]
+        import pandas as pd
 
-        # retrieve values.
-        result = self.compile_values(
-            extract_properties,
-            value_names=properties_list,
-            unpack=True,
-            specification_names=specification_names,
-            entry_names=entry_names,
-        )
+        properties_list = list(properties_list)
+
+        if len(set(properties_list)) != len(properties_list):
+            raise ValueError("properties_list contains duplicate property names")
+
+        rows = [
+            (entry_name, spec_name, *values)
+            for entry_name, spec_name, _, values in self.iterate_properties(
+                properties_list,
+                entry_names=entry_names,
+                specification_names=specification_names,
+                fetch_records=fetch_records,
+            )
+        ]
+
+        # Pivot to entries x (specification, property). The values are pivoted with their indices as
+        # column labels, so property names can't collide with the entry/specification columns
+        value_columns = list(range(len(properties_list)))
+        df = pd.DataFrame(rows, columns=("entry", "specification", *value_columns))
+        result = df.pivot(index="entry", columns="specification", values=value_columns)
+        result = result.rename(columns=dict(enumerate(properties_list)), level=0).swaplevel(axis=1)
 
         # Drop columns with all nan  values. This will occur if a property that is not part of a
         # specification is requested.
@@ -2766,6 +2947,45 @@ class DatasetFetchRecordsBody(RestModelBase):
     entry_names: list[str]
     specification_names: list[str]
     status: list[RecordStatusEnum] | None = None
+
+
+# Maximum number of properties that can be fetched at once with the properties/bulkFetch endpoint.
+# Each property is a separate column in the database query. To fetch many properties,
+# it is better to fetch the whole records instead.
+MAX_FETCH_PROPERTIES = 20
+
+
+class DatasetFetchPropertiesBody(RestModelBase):
+    properties: list[str] = Field(min_length=1, max_length=MAX_FETCH_PROPERTIES)
+    """Names of the properties to fetch from each record's properties dictionary"""
+
+    entry_names: list[str] | None = None
+    """Only fetch properties of records belonging to these entries. If None, consider all entries"""
+
+    specification_names: list[str] | None = None
+    """Only fetch properties of records belonging to these specifications. If None, consider all specifications"""
+
+    cursor: tuple[str, str] | None = None
+    """(entry name, specification name) of the last row of the previous page. If None, start from the beginning"""
+
+    limit: int | None = Field(None, gt=0)
+    """Maximum number of rows to return"""
+
+    include_total: bool = False
+    """Also return the total number of rows matching the filters (ignoring cursor and limit)"""
+
+
+class DatasetFetchPropertiesResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    rows: list[tuple[str, str, int, list[Any]]]
+    """Rows of (entry name, specification name, record id, property values in the requested order)"""
+
+    next_cursor: tuple[str, str] | None
+    """Cursor to pass to get the next page, or None if there are no more rows"""
+
+    total: int | None = None
+    """Total number of matching rows, if requested"""
 
 
 class DatasetCreateViewBody(RestModelBase):

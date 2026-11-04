@@ -12,6 +12,8 @@ from qcportal.dataset_models import (
     DatasetAddBody,
     DatasetQueryModel,
     DatasetFetchRecordsBody,
+    DatasetFetchPropertiesBody,
+    DatasetFetchPropertiesResult,
     DatasetFetchEntryBody,
     DatasetFetchSpecificationBody,
     DatasetCreateViewBody,
@@ -30,6 +32,7 @@ from qcportal.dataset_models import (
     DatasetCopyFromBody,
 )
 from qcportal.exceptions import LimitExceededError
+from qcportal.utils import calculate_limit
 
 
 @api_v1.route("/datasets", methods=["GET"])
@@ -173,6 +176,26 @@ def get_dataset_record_count_v1(dataset_type: str, dataset_id: int) -> int:
 def get_dataset_computed_properties_v1(dataset_type: str, dataset_id: int) -> dict[str, list[str]]:
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.get_computed_properties(dataset_id)
+
+
+@api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/properties/bulkFetch", methods=["POST"])
+@check_permissions("datasets", "read")
+@serialization()
+def fetch_dataset_properties_v1(
+    dataset_type: str, dataset_id: int, body_data: DatasetFetchPropertiesBody
+) -> DatasetFetchPropertiesResult:
+    max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
+
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    return ds_socket.fetch_properties(
+        dataset_id,
+        body_data.properties,
+        entry_names=body_data.entry_names,
+        specification_names=body_data.specification_names,
+        cursor=body_data.cursor,
+        limit=calculate_limit(max_limit, body_data.limit),
+        include_total=body_data.include_total,
+    )
 
 
 #########################

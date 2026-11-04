@@ -14,7 +14,7 @@ import requests
 import urllib3.exceptions
 import yaml
 from packaging.version import parse as parse_version
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from . import __version__
 from .auth import API_TOKEN_PREFIX, UserInfo, looks_like_api_token
