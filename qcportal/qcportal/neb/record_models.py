@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable
 from typing import Any, Literal
 
@@ -48,7 +49,7 @@ class NEBKeywords(BaseModel):
     average_force: float = 0.025
     """Convergence criteria. Converge when average RMS-gradient (ev/Ang) of the chain fall below average_force."""
 
-    maximum_cycle: int = 100
+    maximum_cycle: int = Field(100, gt=0)
     """Maximum iteration number for NEB calculation"""
 
     optimize_ts: bool = False
@@ -64,6 +65,13 @@ class NEBKeywords(BaseModel):
 
     epsilon: float = 1e-5
     """Small eigenvalue threshold for resetting Hessian"""
+
+    @field_validator("spring_constant", "maximum_force", "average_force", "epsilon")
+    @classmethod
+    def _check_positive_finite(cls, v: float) -> float:
+        if not math.isfinite(v) or v <= 0:
+            raise ValueError("must be finite and positive")
+        return v
 
     @model_validator(mode="before")
     @classmethod
