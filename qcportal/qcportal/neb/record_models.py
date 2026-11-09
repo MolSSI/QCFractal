@@ -49,7 +49,7 @@ class NEBKeywords(BaseModel):
     average_force: float = 0.025
     """Convergence criteria. Converge when average RMS-gradient (ev/Ang) of the chain fall below average_force."""
 
-    maximum_cycle: int = Field(100, gt=0)
+    maximum_cycle: int = 100
     """Maximum iteration number for NEB calculation"""
 
     optimize_ts: bool = False
@@ -65,13 +65,6 @@ class NEBKeywords(BaseModel):
 
     epsilon: float = 1e-5
     """Small eigenvalue threshold for resetting Hessian"""
-
-    @field_validator("spring_constant", "maximum_force", "average_force", "epsilon")
-    @classmethod
-    def _check_positive_finite(cls, v: float) -> float:
-        if not math.isfinite(v) or v <= 0:
-            raise ValueError("must be finite and positive")
-        return v
 
     @model_validator(mode="before")
     @classmethod
@@ -107,15 +100,42 @@ class NEBSinglepoint(BaseModel):
     position: int
 
 
+def _check_neb_keywords_finite_positive(keywords: NEBKeywords) -> None:
+    """
+    Reject non-finite or non-positive NEB numerical controls.
+
+    This runs on the submission models only (NEBInput / NEBMultiInput),
+    so malformed controls in a new submission are rejected early, while
+    NEBKeywords itself stays permissive and already-stored records
+    (e.g. with epsilon=0) keep loading.
+    """
+    for name in ("spring_constant", "maximum_force", "average_force", "epsilon"):
+        value = getattr(keywords, name)
+        if not math.isfinite(value) or value <= 0:
+            raise ValueError(f"{name} must be finite and positive")
+    if keywords.maximum_cycle <= 0:
+        raise ValueError("maximum_cycle must be positive")
+
+
 class NEBInput(RestModelBase):
     record_type: Literal["neb"] = "neb"
     specification: NEBSpecification
     initial_chain: list[int | Molecule]
 
+    @model_validator(mode="after")
+    def _check_keywords(self):
+        _check_neb_keywords_finite_positive(self.specification.keywords)
+        return self
+
 
 class NEBMultiInput(RestModelBase):
     specification: NEBSpecification
     initial_chains: list[list[int | Molecule]]
+
+    @model_validator(mode="after")
+    def _check_keywords(self):
+        _check_neb_keywords_finite_positive(self.specification.keywords)
+        return self
 
 
 class NEBAddBody(RecordAddBodyBase, NEBMultiInput):
