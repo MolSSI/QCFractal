@@ -26,7 +26,7 @@ export const PreferencesProvider: React.FC<{ children: ReactNode }> = ({ childre
     isError,
     error,
   } = useQuery({
-    queryKey: ["userPreferences"],
+    queryKey: ["userPreferences", userInfo?.username],
     queryFn: () => makeRequest<qcpTypes.UserPreferences>("GET", "/api/v1/me/preferences"),
     enabled: authorized && !!userInfo,
   });

@@ -90,9 +90,9 @@ src/
 `App.tsx` wraps the app in nested providers (order matters):
 
 1. **`AppTheme`** — MUI theme with customizations from `src/theme/customizations/`
-2. **`AuthProvider`** (`Auth.tsx`) — Session auth state, login/logout, server connectivity. On load, calls `/api/v1/ping` to detect login status. Exposes `useAuth()`.
-3. **`PortalClientProvider`** (`PortalClient.tsx`) — Intercepts 401s and retriggers `ping()`. Exposes `usePortalClient()` which returns `makeRequest<T>(method, endpoint, body?, url_params?)`.
-4. **`QueryClientProvider`** — TanStack React Query for data fetching/caching.
+2. **`QueryClientProvider`** — TanStack React Query for data fetching/caching.
+3. **`AuthProvider`** (`Auth.tsx`) — Session auth state, login/logout, server connectivity. On load, calls `/api/v1/ping` to detect login status. Clears the whole query cache whenever the logged-in user changes (login, logout, or session expiry), so cached data never carries over between accounts. Exposes `useAuth()`.
+4. **`PortalClientProvider`** (`PortalClient.tsx`) — Intercepts 401s and retriggers `ping()`. Exposes `usePortalClient()` which returns `makeRequest<T>(method, endpoint, body?, url_params?)`.
 5. **`PreferencesProvider`** (`PreferencesProvider.tsx`) — User preferences stored server-side at `/api/v1/me/preferences`. Full prefs object is fetched/replaced on every update (no partial update endpoint). Exposes `usePreferences()`.
 
 ### API Communication
