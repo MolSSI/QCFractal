@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable
 from typing import Any, Literal
 
@@ -99,15 +100,42 @@ class NEBSinglepoint(BaseModel):
     position: int
 
 
+def _check_neb_keywords_finite_positive(keywords: NEBKeywords) -> None:
+    """
+    Reject non-finite or non-positive NEB numerical controls.
+
+    This runs on the submission models only (NEBInput / NEBMultiInput),
+    so malformed controls in a new submission are rejected early, while
+    NEBKeywords itself stays permissive and already-stored records
+    (e.g. with epsilon=0) keep loading.
+    """
+    for name in ("spring_constant", "maximum_force", "average_force", "epsilon"):
+        value = getattr(keywords, name)
+        if not math.isfinite(value) or value <= 0:
+            raise ValueError(f"{name} must be finite and positive")
+    if keywords.maximum_cycle <= 0:
+        raise ValueError("maximum_cycle must be positive")
+
+
 class NEBInput(RestModelBase):
     record_type: Literal["neb"] = "neb"
     specification: NEBSpecification
     initial_chain: list[int | Molecule]
 
+    @model_validator(mode="after")
+    def _check_keywords(self):
+        _check_neb_keywords_finite_positive(self.specification.keywords)
+        return self
+
 
 class NEBMultiInput(RestModelBase):
     specification: NEBSpecification
     initial_chains: list[list[int | Molecule]]
+
+    @model_validator(mode="after")
+    def _check_keywords(self):
+        _check_neb_keywords_finite_positive(self.specification.keywords)
+        return self
 
 
 class NEBAddBody(RecordAddBodyBase, NEBMultiInput):
