@@ -117,6 +117,15 @@ class ScanDimension(BaseModel):
                 )
             )
 
+        if len(self.steps) == 0:
+            raise ValueError("Steps must not be empty.")
+
+        if len(set(self.indices)) != len(self.indices):
+            raise ValueError("Atom indices must be distinct.")
+
+        if any(i < 0 for i in self.indices):
+            raise ValueError("Atom indices must not be negative.")
+
         if not (
             all(x < y for x, y in zip(self.steps, self.steps[1:]))
             or all(x > y for x, y in zip(self.steps, self.steps[1:]))
