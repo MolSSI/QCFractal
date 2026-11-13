@@ -27,6 +27,15 @@ interface ChangelogEntry {
 // skip purely internal refactors.
 const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-11-11",
+    items: [
+      {
+        kind: "Fixed",
+        text: "After logging out and logging in as a different user, the portal no longer briefly shows the previous user's favorites and profile, and starring an item no longer risks saving the previous user's favorites",
+      },
+    ],
+  },
+  {
     date: "2026-10-28",
     items: [
       {

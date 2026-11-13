@@ -54,9 +54,9 @@ function App() {
   return (
     <AppTheme themeComponents={xThemeComponents}>
       <CssBaseline enableColorScheme />
-      <AuthProvider>
-        <PortalClientProvider>
-          <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <PortalClientProvider>
             <PreferencesProvider>
               <Router>
                 <Suspense fallback={<div>Loading...</div>}>
@@ -122,9 +122,9 @@ function App() {
                 </Suspense>
               </Router>
             </PreferencesProvider>
-          </QueryClientProvider>
-        </PortalClientProvider>
-      </AuthProvider>
+          </PortalClientProvider>
+        </AuthProvider>
+      </QueryClientProvider>
     </AppTheme>
   );
 }

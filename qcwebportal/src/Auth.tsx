@@ -4,8 +4,10 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import * as qcpTypes from "./PortalTypes.ts";
 import { rawMakeRequest, rawRequest } from "./RequestHelpers.ts";
 import { server_address, server_headers } from "./request_config.ts";
@@ -100,6 +102,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     undefined,
   );
 
+  const queryClient = useQueryClient();
+  const cachedUsername = useRef<string | undefined>(undefined);
+
+  // Cached query data belongs to whoever was logged in when it was fetched
+  const setUser = useCallback(
+    (info: qcpTypes.UserInfo | undefined) => {
+      if (info?.username !== cachedUsername.current) {
+        cachedUsername.current = info?.username;
+        queryClient.clear();
+      }
+      setUserInfo(info);
+    },
+    [queryClient],
+  );
+
   const ping = useCallback(async (): Promise<
     qcpTypes.PingResults | undefined
   > => {
@@ -110,15 +127,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
       setServerStatus("connected");
       setAuthorized(r.authorized);
-      setUserInfo(r.user_info);
+      setUser(r.user_info);
       return r;
     } catch {
       setServerStatus("disconnected");
       setAuthorized(false);
-      setUserInfo(undefined);
+      setUser(undefined);
       return undefined;
     }
-  }, []);
+  }, [setUser]);
 
   const fetchServerInfo: () => Promise<qcpTypes.ServerInfo | undefined> =
     useCallback(async () => {
@@ -158,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (username?: string, password?: string) => {
-      setUserInfo(undefined);
+      setUser(undefined);
       setAuthorized(false);
 
       if ((username && !password) || (password && !username)) {
@@ -188,7 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           req_options,
         );
 
-        setUserInfo(userInfo);
+        setUser(userInfo);
       }
 
       const pingResults = await ping();
@@ -210,7 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       await fetchServerInfo();
     },
-    [fetchServerInfo, ping],
+    [fetchServerInfo, ping, setUser],
   );
 
   const loggedIn = !!userInfo;
