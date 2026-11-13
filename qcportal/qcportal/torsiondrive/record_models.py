@@ -85,6 +85,31 @@ class TorsiondriveSpecification(BaseModel):
     keywords: TorsiondriveKeywords
 
 
+def _check_torsiondrive_keywords(keywords: TorsiondriveKeywords) -> None:
+    """
+    Reject invalid torsion-drive scan domains.
+
+    This runs on the submission models only (TorsiondriveInput /
+    TorsiondriveMultiInput), so malformed scan domains in a new submission
+    are rejected early, while TorsiondriveKeywords itself stays permissive
+    and already-stored records keep loading.
+    """
+    for spacing in keywords.grid_spacing:
+        if spacing <= 0:
+            raise ValueError("grid_spacing values must be positive")
+
+    if keywords.dihedral_ranges is not None:
+        for lower, upper in keywords.dihedral_ranges:
+            if lower >= upper:
+                raise ValueError(
+                    "dihedral_ranges lower bound must be less than upper bound"
+                )
+
+    for dihedral in keywords.dihedrals:
+        if len(set(dihedral)) != len(dihedral):
+            raise ValueError("dihedrals must contain four distinct atom indices")
+
+
 class TorsiondriveOptimization(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -100,11 +125,21 @@ class TorsiondriveInput(RestModelBase):
     initial_molecules: list[int | Molecule]
     as_service: bool
 
+    @model_validator(mode="after")
+    def _check_keywords(self):
+        _check_torsiondrive_keywords(self.specification.keywords)
+        return self
+
 
 class TorsiondriveMultiInput(RestModelBase):
     specification: TorsiondriveSpecification
     initial_molecules: list[list[int | Molecule]]
     as_service: bool
+
+    @model_validator(mode="after")
+    def _check_keywords(self):
+        _check_torsiondrive_keywords(self.specification.keywords)
+        return self
 
 
 class TorsiondriveAddBody(RecordAddBodyBase, TorsiondriveMultiInput):
